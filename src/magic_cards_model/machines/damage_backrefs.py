@@ -22,6 +22,8 @@ CR 105.2c, CR 608.2b.
 import re
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
@@ -95,7 +97,7 @@ def damage_backref_ability_effect(effect_text: str) -> Any:
     """The shape above, if `effect_text` reads as it, or None."""
     from .effects import _strip_non_effect_preamble
 
-    text = " ".join(_strip_non_effect_preamble(effect_text).split())
+    text = collapsed(_strip_non_effect_preamble(effect_text))
     return _parse_damage_target_and_each_other(text)
 
 

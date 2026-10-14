@@ -22,6 +22,8 @@ import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Type
 from .decisions import source_id_of
 from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE
@@ -202,7 +204,7 @@ _MAY_HAVE_PUMP_RE = re.compile(
 def may_have_pump(text: str) -> Any:
     """ "You may have target creature get +X/+X until end of turn, where X is ...": asked
     at resolution (CR 608.2d), then the plain pump."""
-    stripped = " ".join(text.split())
+    stripped = collapsed(text)
     if not stripped.lower().startswith("you may have ") or "where x is" not in stripped.lower():
         return None
     match = _MAY_HAVE_PUMP_RE.fullmatch(stripped)
@@ -244,7 +246,7 @@ def it_gets_pump(text: str) -> Any:
     for "it", the permanent the source is attached to for "equipped creature" and
     "enchanted creature" (CR 301.5, 303.4); X is taken once as the effect applies
     (CR 608.2h) and the pump is a one-shot continuous effect (CR 611.2a)."""
-    stripped = " ".join(text.split())
+    stripped = collapsed(text)
     lowered = stripped.lower()
     if "where x is" not in lowered or not lowered.startswith(("it get", "until end", "equipped")):
         return None
@@ -332,7 +334,7 @@ _BECOMES_CREATURE_RE = re.compile(
 
 
 def _becomes_creature_effect(text: str) -> Any:
-    flat = " ".join(text.split())
+    flat = collapsed(text)
     if "becomes a" not in flat.lower() or "mana value" not in flat.lower():
         return None
     match = _BECOMES_CREATURE_RE.fullmatch(flat)
@@ -419,7 +421,7 @@ def _grant_items(grants: str) -> list[str] | None:
 
 
 def _grant_list_effect(text: str) -> Any:
-    flat = " ".join(text.split())
+    flat = collapsed(text)
     lowered = flat.lower()
     if not lowered.startswith("until end of turn, target creature") or not (
         _NO_DEFENDER in lowered or _TOUGHNESS_DAMAGE in lowered

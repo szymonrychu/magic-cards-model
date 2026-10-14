@@ -66,6 +66,8 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
@@ -155,7 +157,7 @@ def _parse_then_remove_a_counter_from_self_clause(text: str, *, for_spell: bool)
     """
     if for_spell:
         return None
-    match = _THEN_REMOVE_A_COUNTER_FROM_SELF_RE.fullmatch(" ".join(text.split()))
+    match = _THEN_REMOVE_A_COUNTER_FROM_SELF_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     amount = parse_count(match.group("n"))
@@ -211,7 +213,7 @@ def _parse_return_self_loses_all_abilities_clause(text: str, *, for_spell: bool)
     """
     if for_spell:
         return None
-    match = _RETURN_SELF_LOSES_ALL_ABILITIES_RE.fullmatch(" ".join(text.split()))
+    match = _RETURN_SELF_LOSES_ALL_ABILITIES_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     control = match.group("control").lower()
@@ -399,7 +401,7 @@ def parse_resolution_text(text: str, *, for_spell: bool = False):  # noqa: ANN20
     one or both" is already generic in `machines/modes.py`), so nothing new
     has to be wired into `machines/effects.py` itself for this task's own
     readers to reach a real ability."""
-    whole = " ".join(text.split())
+    whole = collapsed(text)
     for reader in _WHOLE_TEXT_READERS:
         effect = reader(whole, for_spell=for_spell)
         if effect is not None:

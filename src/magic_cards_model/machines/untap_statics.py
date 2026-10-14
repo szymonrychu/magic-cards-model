@@ -25,6 +25,8 @@ from dataclasses import dataclass
 from functools import cache
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 if TYPE_CHECKING:
     from ..models.card_state import CardState
 
@@ -35,7 +37,7 @@ _ABILITY_WORD = re.compile(r"^[A-Z][\w' ]+ — ")
 def _clean(line: str) -> str:
     text = re.sub(r"\s*\([^)]*\)", "", line).strip()
     text = _ABILITY_WORD.sub("", text)
-    return " ".join(text.split()).rstrip(".")
+    return collapsed(text).rstrip(".")
 
 
 @dataclass(frozen=True)

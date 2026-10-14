@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from magic_cards_model.phrases import with_indefinite_article
+from magic_cards_model.text_norm import collapsed
 
 from ...models.card import Type
 from ...models.card_state import (
@@ -132,7 +133,7 @@ def _parse_discard_then_draw_token_per_nonland_clause(text: str) -> AbilityEffec
     cards" - lands on the *front* of the hand, reproducing the old hardcoded
     `hand[:2]` byte for byte when nobody answers.
     """
-    match = _DISCARD_THEN_DRAW_TOKEN_PER_NONLAND_RE.fullmatch(" ".join(text.strip().split()))
+    match = _DISCARD_THEN_DRAW_TOKEN_PER_NONLAND_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     discard_n = parse_count(match.group("discard_n"))
@@ -273,7 +274,7 @@ def _parse_draw_and_gain_off_sacrificed_clause(
     # additional-cost line ("As an additional cost to cast this spell,
     # sacrifice a creature.") is part of casting it (CR 601.2f/601.2h), not
     # part of its resolution, and it is already paid by the time this runs.
-    stripped = " ".join(_strip_non_effect_preamble(text).split())
+    stripped = collapsed(_strip_non_effect_preamble(text))
     if _DRAW_AND_GAIN_OFF_SACRIFICED_RE.fullmatch(stripped) is None:
         return None
 
@@ -387,7 +388,7 @@ def _parse_may_put_card_from_hand_clause(text: str, *, for_spell: bool) -> Targe
     nothing to choose, so the "you may" is not asked. CR 110.2a: it enters
     under their control. "If you don't" (CR 608.2c) runs the other effect when
     nothing was put onto the battlefield, for either reason."""
-    match = _MAY_PUT_CARD_FROM_HAND_RE.fullmatch(" ".join(text.strip().split()))
+    match = _MAY_PUT_CARD_FROM_HAND_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     if not _search_quality_is_readable(match.group("desc")):
@@ -492,7 +493,7 @@ def _parse_target_player_may_put_card_from_hand_clause(
     CR 110.2a: it enters under the target's control, not this ability's
     controller's.
     """
-    match = _TARGET_PLAYER_MAY_PUT_CARD_FROM_HAND_RE.fullmatch(" ".join(text.strip().split()))
+    match = _TARGET_PLAYER_MAY_PUT_CARD_FROM_HAND_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     if not _targets_understood(f"target {match.group('who')}", allow_player_targets=True):
@@ -868,7 +869,7 @@ def _parse_target_player_may_discard_up_to_then_draw_clauses(
     way")."""
     if "discarded this way" not in text.lower():
         return None
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     match = _TARGET_PLAYER_MAY_DISCARD_UP_TO_THEN_DRAW_RE.fullmatch(whole)
     if match is None or not _targets_understood("target player", allow_player_targets=True):
         return None
@@ -966,7 +967,7 @@ _DRAW_X_FROM_TARGET_GRAVEYARD_FROM_LIBRARY_RE = re.compile(
 def _parse_draw_x_from_target_graveyard_from_library_clause(text: str) -> Effect | None:
     """`_DRAW_X_FROM_TARGET_GRAVEYARD_FROM_LIBRARY_RE`'s shape - see the
     banner above."""
-    whole = " ".join(text.strip().split())
+    whole = collapsed(text.strip())
     if _DRAW_X_FROM_TARGET_GRAVEYARD_FROM_LIBRARY_RE.fullmatch(whole) is None:
         return None
     if not _targets_understood("target player", allow_player_targets=True):
@@ -1539,7 +1540,7 @@ def _parse_discard_all_cards_in_hand_clause(
     `parse_clause_effect` already reads."""
     if "cards in your hand" not in clause.lower():
         return None
-    if _DISCARD_ALL_CARDS_IN_HAND_RE.fullmatch(" ".join(clause.strip().split())) is None:
+    if _DISCARD_ALL_CARDS_IN_HAND_RE.fullmatch(collapsed(clause.strip())) is None:
         return None
     return _parse_mixed_clause("Discard your hand", for_spell=for_spell)
 
@@ -1549,7 +1550,7 @@ def _parse_draw_the_difference_clause(clause: str, *, for_spell: bool) -> Target
     """`_DRAW_THE_DIFFERENCE_RE`, on a triggered ability whose intervening if
     is `_FEWER_THAN_N_CARDS_IN_HAND_RE`: its controller draws N minus the
     cards in their hand now. Any other antecedent draws nothing."""
-    if for_spell or _DRAW_THE_DIFFERENCE_RE.fullmatch(" ".join(clause.strip().split())) is None:
+    if for_spell or _DRAW_THE_DIFFERENCE_RE.fullmatch(collapsed(clause.strip())) is None:
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -1900,7 +1901,7 @@ def _parse_target_player_draws_and_loses_life_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
     """`_TARGET_PLAYER_DRAWS_AND_LOSES_LIFE_RE`'s shape, or `None`."""
-    match = _TARGET_PLAYER_DRAWS_AND_LOSES_LIFE_RE.fullmatch(" ".join(clause.split()))
+    match = _TARGET_PLAYER_DRAWS_AND_LOSES_LIFE_RE.fullmatch(collapsed(clause))
     if match is None:
         return None
     if not _targets_understood("target player", allow_player_targets=True):
@@ -2128,7 +2129,7 @@ _DRAW_THEN_DELAYED_DISCARD_AT_RANDOM_RE = re.compile(
 @ABILITY_TEXT.rung("s36")
 def _parse_draw_then_delayed_discard_at_random_clause(text: str) -> AbilityEffect | None:
     """`_DRAW_THEN_DELAYED_DISCARD_AT_RANDOM_RE`'s shape, or `None`."""
-    match = _DRAW_THEN_DELAYED_DISCARD_AT_RANDOM_RE.fullmatch(" ".join(text.strip().split()))
+    match = _DRAW_THEN_DELAYED_DISCARD_AT_RANDOM_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     draw_count = parse_count(match.group("draw_n"))
@@ -2661,7 +2662,7 @@ _DRAW_IF_POWER_AT_LEAST_RE = re.compile(
 
 def _parse_draw_if_power_at_least(text: str) -> AbilityEffect | None:
     """`_DRAW_IF_POWER_AT_LEAST_RE`'s shape, or `None`."""
-    match = _DRAW_IF_POWER_AT_LEAST_RE.fullmatch(" ".join(text.strip().split()))
+    match = _DRAW_IF_POWER_AT_LEAST_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     count = parse_count(match.group("n"))
@@ -2713,7 +2714,7 @@ def _parse_put_two_card_groups_and_or_from_hand_clause(text: str) -> AbilityEffe
     is still asked (and can still answer yes to) the land half even though
     the creature half finds nothing to offer.
     """
-    match = _PUT_TWO_CARD_GROUPS_AND_OR_FROM_HAND_RE.fullmatch(" ".join(text.split()))
+    match = _PUT_TWO_CARD_GROUPS_AND_OR_FROM_HAND_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     first_predicate = _parse_card_group_qualifier(match.group("first"))
@@ -2798,7 +2799,7 @@ def _loot_then_reflexive_discard_effect(
     text: str, *, for_spell: bool
 ) -> "Callable[[Game, StackObject], None] | None":
     """`_LOOT_THEN_REFLEXIVE_DISCARD_RE`'s shape for a spell or an ability."""
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     match = _LOOT_THEN_REFLEXIVE_DISCARD_RE.fullmatch(whole)
     if match is None:
         return None
@@ -2900,7 +2901,7 @@ def _each_player_wheel(game: "Game") -> None:
 def _wheel_then_rest(
     text: str, run_rest: Callable[[str], object | None]
 ) -> tuple[object, ...] | None:
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     if "shuffles" not in whole.lower() or "that many cards" not in whole.lower():
         return None
     sentences = _plain_resolution_sentences(whole)
@@ -2967,7 +2968,7 @@ _THAT_PLAYER_DRAWS_THEN_HAND_SIZE_RE = re.compile(
 @ABILITY_TEXT.rung("s16")
 def _parse_that_player_draws_then_hand_size_clause(text: str) -> AbilityEffect | None:
     """`_THAT_PLAYER_DRAWS_THEN_HAND_SIZE_RE`'s shape; see the banner above."""
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     if not whole.lower().startswith("that player draws "):
         return None
     match = _THAT_PLAYER_DRAWS_THEN_HAND_SIZE_RE.fullmatch(whole)
@@ -3092,7 +3093,7 @@ def _parse_draw_if_life_at_least_noted_then_note_clause(text: str) -> AbilityEff
     noted either way."""
     if "last noted life total" not in text:
         return None
-    if _DRAW_IF_LIFE_AT_LEAST_NOTED_RE.fullmatch(" ".join(text.split())) is None:
+    if _DRAW_IF_LIFE_AT_LEAST_NOTED_RE.fullmatch(collapsed(text)) is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:

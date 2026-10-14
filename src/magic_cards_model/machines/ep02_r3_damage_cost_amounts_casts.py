@@ -24,6 +24,8 @@ import functools
 import re
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Type
 from ..models.card_state import CardState
 from ..models.zone import Zone
@@ -48,7 +50,7 @@ def _destroy_then_exile_hand_excess(text: str) -> Any:
         return None
     from .effects.text import _strip_non_effect_preamble
 
-    match = _DESTROY_THEN_EXILE_RE.fullmatch(" ".join(_strip_non_effect_preamble(text).split()))
+    match = _DESTROY_THEN_EXILE_RE.fullmatch(collapsed(_strip_non_effect_preamble(text)))
     limit = parse_count(match.group("n")) if match is not None else None
     if match is None or limit is None:
         return None
@@ -104,7 +106,7 @@ _CAST_TARGET_FREE_RE = re.compile(
 def _cast_target_graveyard_card_free(text: str) -> Any:
     if "from your graveyard without paying its mana cost" not in text.lower():
         return None
-    match = _CAST_TARGET_FREE_RE.fullmatch(" ".join(text.split()))
+    match = _CAST_TARGET_FREE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     from .effects._common import _targets_understood
@@ -152,7 +154,7 @@ _CAST_UP_TO_FREE_RE = re.compile(
 def _cast_up_to_n_free_within_total(text: str) -> Any:
     if "with total mana value" not in text.lower():
         return None
-    match = _CAST_UP_TO_FREE_RE.fullmatch(" ".join(text.split()))
+    match = _CAST_UP_TO_FREE_RE.fullmatch(collapsed(text))
     limit = parse_count(match.group("n")) if match is not None else None
     if match is None or limit is None:
         return None
@@ -220,7 +222,7 @@ _DRAW_THEN_FLIP_RE = re.compile(
 def _draw_then_flip_at_hand_size(text: str) -> Any:
     if "flip this" not in text.lower():
         return None
-    match = _DRAW_THEN_FLIP_RE.fullmatch(" ".join(text.split()))
+    match = _DRAW_THEN_FLIP_RE.fullmatch(collapsed(text))
     size = parse_count(match.group("n")) if match is not None else None
     if size is None:
         return None

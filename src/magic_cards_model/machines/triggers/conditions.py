@@ -5,6 +5,8 @@ from functools import cache
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
+from magic_cards_model.text_norm import collapsed
+
 from ...data.subtypes import subtype_vocabulary
 from ...models.card import Card, Color, Supertype, Type
 from ...models.card_state import CardState, ChoiceKind, Counter, ExileMarker
@@ -1694,13 +1696,13 @@ _STAT_EQUALS_CHOSEN_NUMBER_RE = re.compile(
 
 def reads_stat_equals_chosen_number_condition(condition: str) -> bool:
     """Whether `_cast_stat_equals_chosen_number` reads `condition`."""
-    return _STAT_EQUALS_CHOSEN_NUMBER_RE.fullmatch(" ".join(condition.split())) is not None
+    return _STAT_EQUALS_CHOSEN_NUMBER_RE.fullmatch(collapsed(condition)) is not None
 
 
 def _cast_stat_equals_chosen_number(
     game: "Game", source: CardState, controller: str, event: GameEvent, condition: str
 ) -> bool:
-    match = _STAT_EQUALS_CHOSEN_NUMBER_RE.fullmatch(" ".join(condition.split()))
+    match = _STAT_EQUALS_CHOSEN_NUMBER_RE.fullmatch(collapsed(condition))
     choice = source.choice
     if match is None or choice is None or not choice.value.lstrip("-").isdigit():
         return False

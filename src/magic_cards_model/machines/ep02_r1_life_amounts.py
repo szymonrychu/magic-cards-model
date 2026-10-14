@@ -31,6 +31,8 @@ import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.player import Player
 from ..numbers import AMOUNT, halve
@@ -165,7 +167,7 @@ def parse_life_loss_text(text: str, *, for_spell: bool) -> "Resolution | None":
     lowered = text.lower()
     if " loses " not in lowered:
         return None
-    pieces = _SEPARATOR_RE.split(" ".join(text.strip().split()), maxsplit=1)
+    pieces = _SEPARATOR_RE.split(collapsed(text.strip()), maxsplit=1)
     half = _HALF_LOSS_RE.fullmatch(pieces[0].strip().rstrip("."))
     amount: Amount | None
     if half is not None and half.group("who").lower() in _WHO:

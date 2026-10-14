@@ -37,6 +37,8 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.zone import Zone
 
@@ -104,7 +106,7 @@ def parse_return_self_transformed_clause(effect_text: str) -> AbilityEffect | No
     "return it to the battlefield ... under ... control" with neither is
     `machines/effects/returns._parse_return_self_to_battlefield_transformed_
     clause`'s (the Ojer cycle)."""
-    match = _RETURN_SELF_RE.fullmatch(" ".join(effect_text.split()))
+    match = _RETURN_SELF_RE.fullmatch(collapsed(effect_text))
     if match is None:
         return None
     attached = match.group("target") is not None
@@ -149,7 +151,7 @@ def parse_return_subject_then_self_transformed_clause(effect_text: str) -> Abili
     """`_RETURN_SUBJECT_THEN_SELF_RE`'s shape, or `None`: the creature the
     trigger event named returns first (if it is still in a graveyard, CR
     400.7), then the source card itself."""
-    match = _RETURN_SUBJECT_THEN_SELF_RE.fullmatch(" ".join(effect_text.split()))
+    match = _RETURN_SUBJECT_THEN_SELF_RE.fullmatch(collapsed(effect_text))
     if match is None:
         return None
     subject_tapped = match.group("subject_tapped") is not None
@@ -190,7 +192,7 @@ def parse_attached_controller_clause(effect_text: str) -> AbilityEffect | None:
     "that player sacrifices ... / loses N life / ..." shape already reads its
     player off the trigger event (CR 603.2) - with the event's player bound
     to that controller as the ability resolves."""
-    match = _ATTACHED_CONTROLLER_RE.fullmatch(" ".join(effect_text.split()))
+    match = _ATTACHED_CONTROLLER_RE.fullmatch(collapsed(effect_text))
     if match is None:
         return None
     from .effects import parse_mixed_effect

@@ -32,6 +32,8 @@ import re
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..data.subtypes import subtype_vocabulary
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState
@@ -246,7 +248,7 @@ def count_for(
         FixedCount,
     )
 
-    text = " ".join(each.lower().replace("’", "'").split()).removeprefix("the number of ")
+    text = collapsed(each.lower().replace("’", "'")).removeprefix("the number of ")
     if text in ("of its colors", "of its color"):
         return CountOwnCharacteristic(measure="colors", cap=cap)
     if text == "of its creature types":

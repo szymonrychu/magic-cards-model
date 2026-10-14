@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from magic_cards_model.phrases import with_indefinite_article
+from magic_cards_model.text_norm import collapsed
 
 from ...data.subtypes import canonical_subtype, creature_type_vocabulary, subtype_vocabulary
 from ...models.card import Color, Supertype, Type
@@ -121,7 +122,7 @@ def reflexive_consequence_effect(text: str) -> AbilityEffect | None:
     # A whole-ability sentence whose "it" is the ability's own source ("When you
     # do, prevent all combat damage that would be dealt to it this turn." -
     # Oketra's Avenger, CR 701.43d's linked trigger).
-    flat = " ".join(text.split())
+    flat = collapsed(text)
     # "target creature gets +X/+X until end of turn, where X is ..." (Hydra
     # Trainer): X is defined in the sentence and fixed as the ability resolves.
     return ABILITY_TEXT.run("s19", flat) or _parse_where_x_is_continuous_effect(flat)
@@ -574,7 +575,7 @@ def _parse_choose_target_return_chosen_card_clause(effect_text: str) -> Effect |
     resolve_targets`, so nothing here needs "the chosen card" resolved by
     hand - the anaphor and "target `<X>`" mean the identical object.
     """
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text))
     match = _CHOOSE_TARGET_RETURN_CHOSEN_CARD_RE.fullmatch(whole)
     if match is None:
         return None
@@ -666,7 +667,7 @@ def _parse_choose_pair_fight_or_bite_clause(effect_text: str) -> Effect | None:
     """`_CHOOSE_PAIR_RE`'s opening sentence, an optional conditional pump or
     +1/+1-counter rider on the creature you control, then a fight or a bite -
     see the banner above."""
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text))
     sentences = [part.strip().rstrip(".").strip() for part in re.split(r"(?<=\.)\s+", whole)]
     sentences = [part for part in sentences if part]
     if len(sentences) not in (2, 3) or _CHOOSE_PAIR_RE.fullmatch(sentences[0]) is None:
@@ -790,7 +791,7 @@ def _dies_this_turn_consequence_text(consequence: str) -> str | None:
 @SPELL_TEXT.rung("s12")
 def _parse_choose_target_then_dies_this_turn_clause(effect_text: str) -> Effect | None:
     """`_CHOOSE_THEN_DIES_THIS_TURN_RE`'s shape - see the banner above."""
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split()).rstrip(".")
+    whole = collapsed(_strip_non_effect_preamble(effect_text)).rstrip(".")
     match = _CHOOSE_THEN_DIES_THIS_TURN_RE.fullmatch(whole)
     if match is None:
         return None
@@ -873,7 +874,7 @@ def _parse_choose_target_then_put_into_graveyard_return_clause(
     effect_text: str,
 ) -> AbilityEffect | None:
     """`_CHOOSE_THEN_PUT_INTO_GRAVEYARD_RETURN_RE`'s shape - see the banner."""
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split()).rstrip(".")
+    whole = collapsed(_strip_non_effect_preamble(effect_text)).rstrip(".")
     match = _CHOOSE_THEN_PUT_INTO_GRAVEYARD_RETURN_RE.fullmatch(whole)
     if match is None or not _targets_understood(match.group("phrase"), count_agnostic=True):
         return None
@@ -944,7 +945,7 @@ def _group_bite_predicate(game_filter: str) -> "Callable[[Game, CardState], bool
 @SPELL_TEXT.rung("s12")
 def _parse_choose_target_then_group_bite_clause(effect_text: str) -> Effect | None:
     """`_CHOOSE_THEN_GROUP_BITE_RE`'s shape - see the banner above."""
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split()).rstrip(".")
+    whole = collapsed(_strip_non_effect_preamble(effect_text)).rstrip(".")
     match = _CHOOSE_THEN_GROUP_BITE_RE.fullmatch(whole)
     if match is None:
         return None
@@ -1100,7 +1101,7 @@ def _may_have_fight_fighter(
 @ABILITY_TEXT.rung("s16")
 def _parse_may_have_fight_clause(text: str) -> AbilityEffect | None:
     """`_MAY_HAVE_FIGHT_RE`'s shape; see the banner above."""
-    stripped = " ".join(text.split())
+    stripped = collapsed(text)
     if not stripped.lower().startswith("you may have "):
         return None
     match = _MAY_HAVE_FIGHT_RE.fullmatch(stripped)
@@ -1142,7 +1143,7 @@ def _parse_first_then_reflexive_subject_fights_clause(effect_text: str) -> Effec
     first sentence is read as an ordinary clause sequence and runs first (CR
     608.2c); the reflexive ability exists only if the object it acted on is
     still a creature on the battlefield afterwards."""
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text))
     match = _FIRST_THEN_REFLEXIVE_FIGHT_RE.fullmatch(whole.rstrip("."))
     if match is None:
         return None
@@ -1209,7 +1210,7 @@ _FIRST_THEN_MAY_ACTION_REFLEXIVE_RE = re.compile(
 @SPELL_TEXT.rung("s12")
 def _parse_first_then_may_action_reflexive_clause(effect_text: str) -> Effect | None:
     """`_FIRST_THEN_MAY_ACTION_REFLEXIVE_RE`'s shape - see the banner above."""
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text))
     match = _FIRST_THEN_MAY_ACTION_REFLEXIVE_RE.fullmatch(whole.rstrip("."))
     if match is None:
         return None
@@ -1329,7 +1330,7 @@ def _parse_choose_target_exile_until_leaves_then_instead_permanent_clause(
     text: str,
 ) -> AbilityEffect | None:
     """`_CHOOSE_TARGET_EXILE_UNTIL_LEAVES_THEN_INSTEAD_PERMANENT_RE`'s shape."""
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     match = _CHOOSE_TARGET_EXILE_UNTIL_LEAVES_THEN_INSTEAD_PERMANENT_RE.fullmatch(whole)
     if match is None:
         return None
@@ -1897,7 +1898,7 @@ def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
 def _parse_turn_damage_modifier_instead_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
-    text = _as_sentence(" ".join(clause.split()))
+    text = _as_sentence(collapsed(clause))
     lowered = text.lower()
     if not lowered.startswith("if ") or " this turn, it deals " not in lowered:
         return None
@@ -2472,7 +2473,7 @@ def _parse_punisher_action(
 @ABILITY_TEXT.rung("s7")
 def _parse_any_player_may_punisher_clause(text: str) -> AbilityEffect | None:
     """`_ANY_PLAYER_MAY_PUNISHER_RE`'s shape, or `None`."""
-    match = _ANY_PLAYER_MAY_PUNISHER_RE.fullmatch(" ".join(text.strip().split()))
+    match = _ANY_PLAYER_MAY_PUNISHER_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     offer = _parse_punisher_action(match.group("action").strip())
@@ -2535,7 +2536,7 @@ def _parse_choose_targets_then_return_to_hand_pair(text: str) -> Effect | None:
     `Game.return_to_hand` already obeys it, so "their owners' hands" needs no
     handling of its own here.
     """
-    match = _CHOOSE_TARGETS_THEN_RETURN_TO_HAND_RE.fullmatch(" ".join(text.split()))
+    match = _CHOOSE_TARGETS_THEN_RETURN_TO_HAND_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     if not _targets_understood(match.group("phrase"), count_agnostic=True):
@@ -2572,7 +2573,7 @@ def _parse_choose_target_then_return_to_your_hand_pair(text: str) -> AbilityEffe
     way rather than targeting directly, and `game.controller_of` needs a
     resolving ability or permanent, not a bare spell on the stack.
     """
-    match = _CHOOSE_TARGET_THEN_RETURN_TO_YOUR_HAND_RE.fullmatch(" ".join(text.split()))
+    match = _CHOOSE_TARGET_THEN_RETURN_TO_YOUR_HAND_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     if not _targets_understood(match.group("phrase"), count_agnostic=True, battlefield_only=False):
@@ -2617,7 +2618,7 @@ def _parse_choose_target_then_create_token_copies_pair(text: str) -> Effect | No
     sentence to announce. The exception tail is CR 707.9's own channel, read
     exactly as `_parse_create_token_copies_except_clause` reads it.
     """
-    match = _CHOOSE_TARGET_THEN_CREATE_TOKEN_COPIES_RE.fullmatch(" ".join(text.split()))
+    match = _CHOOSE_TARGET_THEN_CREATE_TOKEN_COPIES_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     if not _targets_understood(match.group("phrase")):
@@ -2669,7 +2670,7 @@ _CITYS_BLESSING_INSTEAD_RE = re.compile(
 @SPELL_TEXT.rung("s14", before=["modal._parse_condition_instead_clause"])
 def _parse_citys_blessing_instead_clause(effect_text: str) -> Effect | None:
     """`_CITYS_BLESSING_INSTEAD_RE`'s shape, or `None`."""
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text))
     match = _CITYS_BLESSING_INSTEAD_RE.fullmatch(whole)
     if match is None:
         return None
@@ -4972,7 +4973,7 @@ def _parse_condition_instead_clause(effect_text: str) -> Effect | None:
     read whole, or the card is left unread rather than half-run.
     """
 
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text))
     match = _CONDITION_INSTEAD_RE.fullmatch(whole)
     if match is None:
         return None
@@ -5061,9 +5062,9 @@ def _ability_instead_alternative_text(base: str, alternative: str) -> str | None
         # (Anax's Satyr "with "This token can't block."").
         if tail and not re.fullmatch(r'with "[^"]+"', tail):
             return None
-        return " ".join(
-            f"create {those.group('count')} {token.group('desc')} tokens {tail}".split()
-        ) + (those.group("where") or "")
+        return collapsed(f"create {those.group('count')} {token.group('desc')} tokens {tail}") + (
+            those.group("where") or ""
+        )
     return _anaphoric_target_substitution(base, alternative)
 
 
@@ -5111,7 +5112,7 @@ def _target_quality_test(word: str) -> Callable[["Game", CardState], bool] | Non
 @ABILITY_TEXT.rung("s16")
 def _parse_damage_instead_if_target_quality_clause(text: str) -> AbilityEffect | None:
     """`_DAMAGE_INSTEAD_IF_TARGET_QUALITY_RE`'s shape; see the banner above."""
-    stripped = " ".join(text.split())
+    stripped = collapsed(text)
     if " instead" not in stripped.lower():
         return None
     match = _DAMAGE_INSTEAD_IF_TARGET_QUALITY_RE.fullmatch(stripped)
@@ -5168,7 +5169,7 @@ def _parse_condition_instead_clause_for_ability(effect_text: str) -> AbilityEffe
 
     from ..conditions.objects import names_an_anaphor
 
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text))
     match = _CONDITION_INSTEAD_RE.fullmatch(whole)
     if match is None:
         return None
@@ -6406,7 +6407,7 @@ def _parse_choose_exactly_two_draw_pump_trample_clause(
     ability's own shape - nothing in the pool prints this off a permanent."""
     if not for_spell:
         return None
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text))
     if _CHOOSE_EXACTLY_TWO_DRAW_PUMP_TRAMPLE_RE.fullmatch(whole) is None:
         return None
 
@@ -6729,7 +6730,7 @@ def _parse_kicked_choose_return_delayed_clause(effect_text: str) -> Effect | Non
     "create N ..." goes through - so the tokens are created together, as one
     event. Nothing returned, nothing delayed.
     """
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text))
     match = _KICKED_CHOOSE_RETURN_DELAYED_RE.fullmatch(whole)
     if match is None:
         return None
@@ -6800,7 +6801,7 @@ _IF_SELF_ISNT_A_CREATURE_RE = re.compile(
 def _parse_if_self_isnt_a_creature_clause(effect_text: str) -> AbilityEffect | None:
     """`_IF_SELF_ISNT_A_CREATURE_RE`'s shape, when the rest is one of
     `machines/layers.py`'s own animation sentences - or `None`."""
-    match = _IF_SELF_ISNT_A_CREATURE_RE.fullmatch(" ".join(effect_text.split()))
+    match = _IF_SELF_ISNT_A_CREATURE_RE.fullmatch(collapsed(effect_text))
     if match is None:
         return None
     layer_sentence = f"This permanent {match.group('rest')}"

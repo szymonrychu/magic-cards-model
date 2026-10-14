@@ -102,6 +102,7 @@ from uuid import UUID
 from pydantic import ConfigDict
 
 from magic_cards_model.phrases import with_indefinite_article
+from magic_cards_model.text_norm import collapsed
 
 from ..data.subtypes import noncreature_subtype_card_type
 from ..models.card import Card, Color, Layout, Supertype, Type, has_changeling
@@ -5794,7 +5795,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             if source_type and source_card_type is None:
                 return None
             return TargetRequirement(
-                phrase="target " + " ".join(noun_phrase.split()).lower(),
+                phrase="target " + collapsed(noun_phrase).lower(),
                 count=count,
                 minimum=minimum,
                 unbounded=unbounded,
@@ -5819,7 +5820,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             # exist on the battlefield, and a spell may target one when it
             # says so.
             return TargetRequirement(
-                phrase="target " + " ".join(ability.group(0).split()).lower(),
+                phrase="target " + collapsed(ability.group(0)).lower(),
                 count=count,
                 minimum=minimum,
                 unbounded=unbounded,
@@ -5846,7 +5847,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             # interfere with each other on the same requirement.
             return TargetRequirement(
                 phrase="target "
-                + " ".join(ability.group(0).split()).lower()
+                + collapsed(ability.group(0)).lower()
                 + " or "
                 + compound.group("color_count").lower()
                 + " spell",

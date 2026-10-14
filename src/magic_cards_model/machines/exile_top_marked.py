@@ -27,6 +27,8 @@ import re
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.player import Player
 from ..models.zone import Zone
@@ -107,7 +109,7 @@ def parse_exile_top_marked(text: str) -> Any:
         return None
     if "face down" not in lowered and " counter on it" not in lowered:
         return None
-    match = _EXILE_TOP_RE.fullmatch(" ".join(re.sub(r"\([^)]*\)", "", text).split()))
+    match = _EXILE_TOP_RE.fullmatch(collapsed(re.sub(r"\([^)]*\)", "", text)))
     if match is None:
         return None
     count = parse_count(match.group("n")) if match.group("n") else 1
@@ -172,7 +174,7 @@ def parse_look_top_exile_one_face_down(text: str) -> Any:
     granted nothing."""
     if "face down" not in text.lower() or not text.lower().startswith("look at the top"):
         return None
-    match = _LOOK_EXILE_ONE_RE.fullmatch(" ".join(text.split()))
+    match = _LOOK_EXILE_ONE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     count = parse_count(match.group("n"))

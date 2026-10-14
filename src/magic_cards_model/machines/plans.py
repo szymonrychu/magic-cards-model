@@ -29,6 +29,8 @@ and each accepts "this <noun>" as well as "it" for the self-sacrifice.
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.zone import Zone
 from ..numbers import COUNT
 from .triggers import AbilityOnStack
@@ -133,7 +135,7 @@ def parse_sacrifice_self_then_series(text: str) -> "AbilityEffect | None":
 def parse_put_counters_on_two_objects(text: str) -> "AbilityEffect | None":
     """ "put `<counters>` on `<object>` and `<counters>` on this `<noun>`." -
     each half read as its own "put" instruction, in the order written."""
-    match = _PUT_COUNTERS_ON_TWO_OBJECTS_RE.fullmatch(" ".join(text.strip().split()))
+    match = _PUT_COUNTERS_ON_TWO_OBJECTS_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
 

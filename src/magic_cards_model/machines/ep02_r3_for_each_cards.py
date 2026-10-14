@@ -26,6 +26,8 @@ from functools import cache
 from typing import TYPE_CHECKING, Any, NamedTuple
 from uuid import UUID
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Type
 from ..models.card_state import CardState
 from ..models.player import Player
@@ -58,7 +60,7 @@ _N = r"^(?:the )?(?:(?:number|amount) of )?"
 
 
 def _norm(phrase: str) -> str:
-    return " ".join(phrase.replace("\u2019", "'").strip().rstrip(".").split())
+    return collapsed(phrase.replace("\u2019", "'").strip().rstrip("."))
 
 
 # --------------------------------------------------------------------------
@@ -700,7 +702,7 @@ def _parse_target_players_each_draw_equal_clause(clause: str, *, for_spell: bool
     player" is the enchanted player of the trigger's event. A target no longer
     legal draws nothing (CR 608.2b); "any number" may choose no one (CR 107.1c).
     """
-    text = " ".join(clause.split()).rstrip(".")
+    text = collapsed(clause).rstrip(".")
     if " each draw" not in text.lower() or "target players" not in text.lower():
         return None
     match = _PLAYERS_EACH_DRAW_RE.fullmatch(text)
@@ -776,7 +778,7 @@ def _parse_destroy_target_if_mana_value_within_count(clause: str, *, for_spell: 
     alone."""
     if " if its mana value is less than or equal to the number of " not in clause.lower():
         return None
-    match = _DESTROY_IF_MV_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    match = _DESTROY_IF_MV_RE.fullmatch(collapsed(clause).rstrip("."))
     read = None if match is None else _target_within_count(match, battlefield_only=True)
     if read is None:
         return None
@@ -799,7 +801,7 @@ def _parse_put_graveyard_card_if_mana_value_within_count(clause: str, *, for_spe
     else under its owner's."""
     if " if its mana value is less than or equal to the number of " not in clause.lower():
         return None
-    match = _PUT_ONTO_BATTLEFIELD_IF_MV_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    match = _PUT_ONTO_BATTLEFIELD_IF_MV_RE.fullmatch(collapsed(clause).rstrip("."))
     read = None if match is None else _target_within_count(match, battlefield_only=False)
     if read is None:
         return None
@@ -833,7 +835,7 @@ def _parse_return_to_the_battlefield_target_in_your_graveyard(
     value bound is a targeting restriction (CR 115.1, CR 601.2c) that
     `targeting.py` enforces, and is checked again as the spell resolves (CR
     608.2b); the card returns under its owner's control (CR 110.2)."""
-    match = _RETURN_TO_BATTLEFIELD_FRONTED_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    match = _RETURN_TO_BATTLEFIELD_FRONTED_RE.fullmatch(collapsed(clause).rstrip("."))
     if match is None:
         return None
     from .effects._common import _targets_understood
@@ -906,7 +908,7 @@ def _parse_attacker_pump_per_other_attacker_sharing_a_type(clause: str, *, for_s
     creature type with it." "It" is the creature the trigger's event names
     (CR 603.2); the other attackers are counted once as the ability resolves
     (CR 608.2h), a changeling sharing every type (CR 702.73a)."""
-    match = _ATTACKER_SHARING_PUMP_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    match = _ATTACKER_SHARING_PUMP_RE.fullmatch(collapsed(clause).rstrip("."))
     if match is None:
         return None
     power = int(match.group("power"))
@@ -957,7 +959,7 @@ def _parse_damage_to_each_batched_attacker_by_attacker_count(
     attacking creatures." "Those creatures" are the attackers the trigger's
     own condition counts (CR 508.3d); the amount is taken once (CR 608.2h) and
     dealt by the source to each at the same time (CR 120.1)."""
-    match = _DAMAGE_EACH_OF_THOSE_ATTACKERS_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    match = _DAMAGE_EACH_OF_THOSE_ATTACKERS_RE.fullmatch(collapsed(clause).rstrip("."))
     if match is None or for_spell:
         return None
     from .effects.amounts import count_expression
@@ -1056,7 +1058,7 @@ def _parse_player_creates_tokens_then_pump_per_their_kind(text: str, *, for_spel
     (CR 601.2c) - then gets the pump, counted once, after the tokens exist, on
     that player's board (CR 608.2c, CR 608.2h). No creature chosen ("up to
     one", CR 115.6) is a legal announcement that only makes the tokens."""
-    match = _PLAYER_TOKENS_THEN_PUMP_RE.fullmatch(" ".join(text.split()).rstrip("."))
+    match = _PLAYER_TOKENS_THEN_PUMP_RE.fullmatch(collapsed(text).rstrip("."))
     if match is None:
         return None
     from .effects._common import _targets_understood
@@ -1120,7 +1122,7 @@ def _parse_draw_for_each_thing_two_target_players_control(text: str, *, for_spel
     second controls - each count taken as that draw is performed (CR 608.2c,
     CR 608.2h). A player no longer a legal target contributes nothing (CR
     608.2b)."""
-    match = _DRAW_FOR_EACH_TARGET_PLAYERS_RE.fullmatch(" ".join(text.split()).rstrip("."))
+    match = _DRAW_FOR_EACH_TARGET_PLAYERS_RE.fullmatch(collapsed(text).rstrip("."))
     if match is None:
         return None
     from .effects._common import _targets_understood
@@ -1169,7 +1171,7 @@ def _parse_for_each_permanent_its_owner_puts_it_top_or_bottom(
     each one's owner - not the controller - makes their own top-or-bottom
     choice for it (CR 108.3, CR 608.2d), and it moves from the battlefield to
     that library (CR 401.1)."""
-    match = _FOR_EACH_OWNER_PUTS_IT_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    match = _FOR_EACH_OWNER_PUTS_IT_RE.fullmatch(collapsed(clause).rstrip("."))
     if match is None:
         return None
     from .targeting import permanent_description
@@ -1226,7 +1228,7 @@ def _parse_for_each_opponent_put_into_library_nth_from_top(clause: str, *, for_s
     `targeting._for_each_opponent_profile`'s); each permanent still on the
     battlefield goes into its *owner's* library at the printed depth (CR 401.1;
     CR 609.3: a library shorter than that takes it as deep as it goes)."""
-    match = _FOR_EACH_OPPONENT_TO_LIBRARY_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    match = _FOR_EACH_OPPONENT_TO_LIBRARY_RE.fullmatch(collapsed(clause).rstrip("."))
     if match is None:
         return None
     from .effects._common import _targets_understood
@@ -1270,7 +1272,7 @@ def _parse_for_each_opponent_may_reanimate_from_their_graveyard(
     controller chooses, for each, whether to put it onto the battlefield under
     their control (CR 608.2d, CR 110.2a). A card that has left the graveyard
     is no longer a legal target (CR 608.2b)."""
-    match = _FOR_EACH_OPPONENT_REANIMATE_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    match = _FOR_EACH_OPPONENT_REANIMATE_RE.fullmatch(collapsed(clause).rstrip("."))
     if match is None:
         return None
     from .effects._common import _targets_understood
@@ -1326,7 +1328,7 @@ def _parse_destroy_targets_then_each_controller_creates_a_token(
     permanents" is every legal target, one token per permanent whether or not
     destruction happened (an indestructible one is still one of those
     permanents)."""
-    match = _DESTROY_THEN_CONTROLLERS_CREATE_RE.fullmatch(" ".join(text.split()))
+    match = _DESTROY_THEN_CONTROLLERS_CREATE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     from .effects._common import _targets_understood
@@ -1382,10 +1384,7 @@ def _parse_each_planeswalker_may_activate_a_loyalty_ability_again(
     controls as the ability resolves (CR 608.2h). Nothing is written for a
     planeswalker whose limit is not used up, and the "may" is the controller's
     to leave unused - the permission costs nothing to hold."""
-    if (
-        for_spell
-        or _EXTRA_LOYALTY_ACTIVATION_RE.fullmatch(" ".join(clause.split()).rstrip(".")) is None
-    ):
+    if for_spell or _EXTRA_LOYALTY_ACTIVATION_RE.fullmatch(collapsed(clause).rstrip(".")) is None:
         return None
 
     def effect(game: "Game", stack_object: Any) -> None:

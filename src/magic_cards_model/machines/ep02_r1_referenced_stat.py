@@ -33,6 +33,8 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Type
 from ..models.card_state import CardState
 from ..models.player import Player
@@ -268,7 +270,7 @@ _WAS_A_RE = re.compile(r"^(?:that creature|it|that card) was an? (?P<kind>[a-z]+
 def normalize(sentence: str) -> str:
     """`sentence` lowercased, with straight apostrophes, no closing full stop
     and single spaces."""
-    return " ".join(sentence.replace("’", "'").split()).rstrip(".").lower()
+    return collapsed(sentence.replace("’", "'")).rstrip(".").lower()
 
 
 def _source_of(game: "Game", stack_object: Any) -> CardState | None:
@@ -492,7 +494,7 @@ def referenced_stat_effect(text: str, *, for_spell: bool) -> Callable[["Game", A
         return None
     from .effects.text import _plain_resolution_sentences, _strip_non_effect_preamble
 
-    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(" ".join(text.split())))
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(collapsed(text)))
     sentences = [part for sentence in sentences for part in _split_edict_then(sentence)]
     segments: list[str | AmountSentence] = []
     for sentence in sentences:

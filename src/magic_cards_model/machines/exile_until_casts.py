@@ -28,9 +28,12 @@ sentences point back ("exiled this way", "that card") at the first:
   owner's hand.
 """
 
+import functools
 import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
+
+from magic_cards_model.text_norm import collapsed
 
 from ..models.card_state import CardState
 from ..models.player import Player
@@ -69,10 +72,15 @@ _BOUND_BY_EXPRESSION_RE = re.compile(
 
 def _sentences(text: str) -> list[str]:
     """The instruction sentences, keyword-ability lines (Solstice
-    Revelations' own "Flashback {6}{R} (...)") and reminder text dropped."""
+    Revelations' own "Flashback {6}{R} (...)") and reminder text dropped.
+    Each caller gets a list of its own (`_sentences_memo`)."""
+    return list(_sentences_memo(text))
 
+
+@functools.lru_cache(maxsize=16384)
+def _sentences_memo(text: str) -> tuple[str, ...]:
     text = _strip_keyword_ability_lines(_INLINE_REMINDER_RE.sub("", text))
-    return [s.strip() for s in re.split(r"(?<=\.)\s+", " ".join(text.split())) if s.strip()]
+    return tuple(s.strip() for s in re.split(r"(?<=\.)\s+", collapsed(text)) if s.strip())
 
 
 def _players_in_apnap_order(game: "Game") -> list[Player]:
@@ -91,7 +99,7 @@ def each_exiles_until_total(sentence: str) -> Callable[["Game", Any], list[CardS
     """`_EACH_EXILES_UNTIL_TOTAL_RE`'s process, returning every card exiled."""
     from .keywords import exile_until
 
-    match = _EACH_EXILES_UNTIL_TOTAL_RE.fullmatch(" ".join(sentence.split()))
+    match = _EACH_EXILES_UNTIL_TOTAL_RE.fullmatch(collapsed(sentence))
     if match is None:
         return None
     threshold = int(match.group("n"))

@@ -8,6 +8,8 @@ tokens." Each instance triggers separately (CR 702.123b).
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Type
 from ..models.card_state import CardState, Counter
 from ..models.player import Player
@@ -147,7 +149,7 @@ def _parse_create_then_put_counters_for_each(
     plain "put N counters on it" riding on the new token."""
     if " then put " not in text.lower() or " token" not in text.lower():
         return None
-    split = _THEN_PUT_RE.fullmatch(" ".join(text.strip().split()))
+    split = _THEN_PUT_RE.fullmatch(collapsed(text.strip()))
     if split is None:
         return None
     put = parse_put_counters(f"put {split.group('put').rstrip('.')}")
@@ -203,7 +205,7 @@ def _parse_counters_on_entering_object_for_each_other_entered(
     (CR 608.2h)."""
     if "that entered the battlefield under your control this turn" not in effect_text.lower():
         return None
-    match = _ENTERED_THIS_TURN_COUNTERS_RE.fullmatch(" ".join(effect_text.strip().split()))
+    match = _ENTERED_THIS_TURN_COUNTERS_RE.fullmatch(collapsed(effect_text.strip()))
     if match is None:
         return None
     unit = parse_count(match.group("n"))
@@ -253,7 +255,7 @@ def _parse_search_animate_then_count_counters(
     itself, which entered as the first instruction ran)."""
     if "that land becomes" not in text.lower():
         return None
-    match = _SEARCH_ANIMATE_COUNT_RE.fullmatch(" ".join(text.strip().split()))
+    match = _SEARCH_ANIMATE_COUNT_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     unit = parse_count(match.group("n"))
@@ -324,7 +326,7 @@ def _parse_counters_equal_to_power_over_base(effect_text: str) -> AbilityEffect 
     one creature's new counters never feed another's difference."""
     if "greater than that creature's base power" not in effect_text.lower():
         return None
-    match = _POWER_OVER_BASE_RE.fullmatch(" ".join(effect_text.strip().split()))
+    match = _POWER_OVER_BASE_RE.fullmatch(collapsed(effect_text.strip()))
     if match is None:
         return None
     kind = _counter_kind(match.group("kind"))
@@ -365,7 +367,7 @@ def _parse_counter_on_each_other_creature_then_gain_per_creature(
     creature that was in that group as it resolved (CR 608.2h)."""
     if " for each of those creatures" not in effect_text.lower():
         return None
-    match = _COUNTER_EACH_OTHER_GAIN_RE.fullmatch(" ".join(effect_text.strip().split()))
+    match = _COUNTER_EACH_OTHER_GAIN_RE.fullmatch(collapsed(effect_text.strip()))
     if match is None:
         return None
     unit = parse_count(match.group("n"))
@@ -407,7 +409,7 @@ def _parse_create_half_x_tokens(effect_text: str) -> AbilityEffect | None:
     clause reader, once per unit."""
     if " rounded " not in effect_text.lower() or "create half " not in effect_text.lower():
         return None
-    match = _HALF_TOKENS_RE.fullmatch(" ".join(effect_text.strip().split()))
+    match = _HALF_TOKENS_RE.fullmatch(collapsed(effect_text.strip()))
     if match is None or match.group("amount").upper() == "X":
         return None if match is None else _unresolved_x_effect
     template = _parse_token_clause(f"create a {match.group('token')} token", for_spell=False)
@@ -446,7 +448,7 @@ def _parse_becomes_creature_then_counters_for_each(effect_text: str) -> AbilityE
     the instruction applies (CR 608.2h)."""
     if " becomes " not in effect_text.lower() or " counter" not in effect_text.lower():
         return None
-    match = _BECOMES_THEN_COUNTERS_RE.fullmatch(" ".join(effect_text.strip().split()))
+    match = _BECOMES_THEN_COUNTERS_RE.fullmatch(collapsed(effect_text.strip()))
     if match is None:
         return None
     animation = f"{match.group('becomes')}."
@@ -505,7 +507,7 @@ def _parse_look_put_lands_then_proliferate_for_shortfall(
     (`counters.proliferate_times`)."""
     if "proliferate a number of times equal to the difference" not in text.lower():
         return None
-    match = _LOOK_PUT_PROLIFERATE_RE.fullmatch(" ".join(text.strip().split()))
+    match = _LOOK_PUT_PROLIFERATE_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     top = parse_count(match.group("n"))
@@ -573,7 +575,7 @@ def _parse_pump_plus_additional_per_modified_as_cast(
     (CR 707.10), so it counts none."""
     if "as you cast this spell" not in text.lower() or "an additional" not in text.lower():
         return None
-    match = _ADDITIONAL_PER_AS_CAST_RE.fullmatch(" ".join(text.strip().split()))
+    match = _ADDITIONAL_PER_AS_CAST_RE.fullmatch(collapsed(text.strip()))
     if match is None or match.group("sign") != match.group("sign2"):
         return None
     base, extra, sign = int(match.group("a")), int(match.group("b")), match.group("sign")
@@ -611,7 +613,7 @@ def _parse_choose_creature_draw_total_toxic_value(effect_text: str) -> AbilityEf
     toxic ability it has (CR 702.164b), read as it is then (CR 608.2h)."""
     if "total toxic value" not in effect_text.lower():
         return None
-    if _CHOOSE_THEN_DRAW_TOXIC_RE.fullmatch(" ".join(effect_text.strip().split())) is None:
+    if _CHOOSE_THEN_DRAW_TOXIC_RE.fullmatch(collapsed(effect_text.strip())) is None:
         return None
 
     def effect(game: "Game", ability: "AbilityOnStack") -> None:
@@ -668,7 +670,7 @@ def _parse_create_then_choose_counter_for_each(
     token, in the order they were created."""
     if "your choice of" not in text.lower() or " for each of them," not in text.lower():
         return None
-    match = _CREATE_THEN_CHOICE_COUNTER_RE.fullmatch(" ".join(text.strip().split()))
+    match = _CREATE_THEN_CHOICE_COUNTER_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     kinds = [word.lower() for word in _CHOICE_KIND_RE.findall(match.group("choices"))]
@@ -717,7 +719,7 @@ def _parse_target_counter_then_transform_source(effect_text: str) -> AbilityEffe
     ability's source (CR 701.27a); a source that has left does nothing (CR 400.7)."""
     if "transform" not in effect_text.lower():
         return None
-    match = _TARGET_COUNTER_THEN_TRANSFORM_RE.fullmatch(" ".join(effect_text.strip().split()))
+    match = _TARGET_COUNTER_THEN_TRANSFORM_RE.fullmatch(collapsed(effect_text.strip()))
     if match is None or not _targets_understood(match.group("target")):
         return None
     amount = parse_count(match.group("n"))
@@ -758,7 +760,7 @@ def _parse_gain_life_equal_to_crafted_cards_mana_value(
     (CR 608.2h). A permanent that was not crafted has no such card: 0."""
     if " used to craft " not in effect_text.lower():
         return None
-    if _CRAFT_MANA_VALUE_LIFE_RE.fullmatch(" ".join(effect_text.strip().split())) is None:
+    if _CRAFT_MANA_VALUE_LIFE_RE.fullmatch(collapsed(effect_text.strip())) is None:
         return None
 
     def effect(game: "Game", ability: "AbilityOnStack") -> None:
@@ -794,7 +796,7 @@ def _parse_search_same_name_as_each_tapped_permanent(text: str) -> Effect | None
     shuffled (CR 701.24b)."""
     if "same name as that permanent" not in text.lower():
         return None
-    if _SEARCH_SAME_NAME_PER_TAPPED_RE.fullmatch(" ".join(text.strip().split())) is None:
+    if _SEARCH_SAME_NAME_PER_TAPPED_RE.fullmatch(collapsed(text.strip())) is None:
         return None
 
     def effect(game: "Game", spell: "StackObject") -> None:
@@ -851,7 +853,7 @@ def _parse_energy_then_exile_and_cast_for_energy(effect_text: str) -> AbilityEff
     card not cast stays in exile."""
     if "amount of {e} equal to its mana value" not in effect_text.lower():
         return None
-    match = _ENERGY_THEN_EXILE_CAST_RE.fullmatch(" ".join(effect_text.strip().split()))
+    match = _ENERGY_THEN_EXILE_CAST_RE.fullmatch(collapsed(effect_text.strip()))
     if match is None:
         return None
     gained = match.group("energy").upper().count("{E}")
@@ -910,7 +912,7 @@ def _parse_exile_from_graveyard_then_drain_by_cards_exiled_with(
     "may", or having no such card, ends it."""
     if " exiled with this " not in effect_text.lower():
         return None
-    match = _EXILE_FROM_GRAVEYARD_DRAIN_RE.fullmatch(" ".join(effect_text.strip().split()))
+    match = _EXILE_FROM_GRAVEYARD_DRAIN_RE.fullmatch(collapsed(effect_text.strip()))
     if match is None:
         return None
     wanted = next((t for t in Type if t.value.lower() == match.group("type").lower()), None)
@@ -975,7 +977,7 @@ def _parse_self_phases_out(effect_text: str) -> AbilityEffect | None:
     left the battlefield does nothing."""
     if " phases out" not in effect_text.lower():
         return None
-    if _SELF_PHASES_OUT_RE.fullmatch(" ".join(effect_text.strip().split())) is None:
+    if _SELF_PHASES_OUT_RE.fullmatch(collapsed(effect_text.strip())) is None:
         return None
 
     def effect(game: "Game", ability: "AbilityOnStack") -> None:
@@ -1003,7 +1005,7 @@ _COPY_OF_EXILED_AS_TRANSFORMS_RE = re.compile(
 
 
 def _read_copy_of_exiled(instruction: str) -> "re.Match[str] | None":
-    match = _COPY_OF_EXILED_AS_TRANSFORMS_RE.fullmatch(" ".join(instruction.strip().split()))
+    match = _COPY_OF_EXILED_AS_TRANSFORMS_RE.fullmatch(collapsed(instruction.strip()))
     if match is None or {match.group("first").lower(), match.group("second").lower()} - set(
         _COLOR_WORDS
     ):

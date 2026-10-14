@@ -3,6 +3,8 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from magic_cards_model.text_norm import collapsed
+
 from ...models.card import Type
 from ...models.card_state import (
     CardState,
@@ -241,7 +243,7 @@ _EXCHANGE_CONTROL_RE = re.compile(
 def _parse_exchange_control_clause(text: str) -> TargetedClause | None:
     """`_EXCHANGE_CONTROL_RE`'s shape, on a spell or an ability."""
 
-    match = _EXCHANGE_CONTROL_RE.fullmatch(" ".join(text.strip().split()))
+    match = _EXCHANGE_CONTROL_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     if match.group("may") is not None:
@@ -465,9 +467,7 @@ def _parse_copy_revealed_card_and_cast_for_less(text: str) -> AbilityEffect | No
     has left the hand since is a new object (CR 400.7), so nothing is copied.
     CR 707.10a: a copy that is not cast ceases to exist.
     """
-    match = _COPY_REVEALED_CARD_CAST_LESS_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
-    )
+    match = _COPY_REVEALED_CARD_CAST_LESS_RE.fullmatch(collapsed(_strip_non_effect_preamble(text)))
     if match is None:
         return None
     less = int(match.group("less"))
@@ -531,10 +531,7 @@ def _parse_copy_exiled_card_and_cast(text: str) -> AbilityEffect | None:
     is what makes the imprinted Orim's Chant point at a fresh player every
     activation.
     """
-    if (
-        _COPY_EXILED_CARD_AND_CAST_RE.fullmatch(" ".join(_strip_non_effect_preamble(text).split()))
-        is None
-    ):
+    if _COPY_EXILED_CARD_AND_CAST_RE.fullmatch(collapsed(_strip_non_effect_preamble(text))) is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
@@ -599,7 +596,7 @@ _COPY_COST_EXILED_CARDS_AND_CAST_RE = re.compile(
 @ABILITY_TEXT.rung("s22")
 def _parse_copy_cost_exiled_cards_and_cast(text: str) -> AbilityEffect | None:
     """`_COPY_COST_EXILED_CARDS_AND_CAST_RE`'s shape; see the banner above."""
-    match = _COPY_COST_EXILED_CARDS_AND_CAST_RE.fullmatch(" ".join(text.split()))
+    match = _COPY_COST_EXILED_CARDS_AND_CAST_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     limit = parse_count(match.group("count")) if match.group("count") else None
@@ -698,7 +695,7 @@ def _parse_exchange_life_totals_then_draw(text: str) -> AbilityEffect | None:
     signed from this player's side, so a controller who gained draws nothing.
     """
     match = _EXCHANGE_LIFE_TOTALS_THEN_DRAW_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
+        collapsed(_strip_non_effect_preamble(text))
     )
     if match is None:
         return None
@@ -869,7 +866,7 @@ def _parse_copy_target_spell_clause(text: str, *, for_spell: bool) -> TargetedCl
     already answers "not from a graveyard" on its own, but `is_copy` is the
     field written for exactly this kind of negation-shaped read).
     """
-    stripped = " ".join(_strip_non_effect_preamble(text).strip().split())
+    stripped = collapsed(_strip_non_effect_preamble(text).strip())
     match = _COPY_TARGET_SPELL_RE.fullmatch(stripped)
     if match is None:
         return None
@@ -993,7 +990,7 @@ def _parse_self_copy_token_clause(clause: str, *, for_spell: bool) -> TargetedCl
     """
     if for_spell:
         return None
-    match = _SELF_COPY_TOKEN_RE.fullmatch(" ".join(clause.strip().split()))
+    match = _SELF_COPY_TOKEN_RE.fullmatch(collapsed(clause.strip()))
     if match is None:
         return None
     count = parse_count(match.group("n"))
@@ -1123,7 +1120,7 @@ def _parse_for_each_creature_you_control_copy_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
     """`_FOR_EACH_CREATURE_YOU_CONTROL_COPY_RE`'s shape, or `None`."""
-    match = _FOR_EACH_CREATURE_YOU_CONTROL_COPY_RE.fullmatch(" ".join(clause.strip().split()))
+    match = _FOR_EACH_CREATURE_YOU_CONTROL_COPY_RE.fullmatch(collapsed(clause.strip()))
     if match is None:
         return None
     nontoken = match.group("nontoken") is not None
@@ -1189,7 +1186,7 @@ def _read_copy_exception_list(except_text: str | None) -> _CopyExceptionList | N
         quoted.append(match.group("ability").strip())
         return f"\x00{len(quoted) - 1}\x00"
 
-    stripped = _EXCEPT_QUOTE_RE.sub(stash, " ".join(except_text.strip().split()))
+    stripped = _EXCEPT_QUOTE_RE.sub(stash, collapsed(except_text.strip()))
     stripped = stripped.rstrip(".")
     parts = [part.strip() for part in re.split(r",\s*(?:and\s+)?|\s+and\s+", stripped) if part]
     not_legendary = False
@@ -1411,9 +1408,7 @@ def _parse_copy_next_spell_you_cast_clause(text: str) -> AbilityEffect | None:
     copy a permanent spell. As that copy resolves, it ceases being a copy of a
     spell and becomes a token permanent" - `Game.resolve_top` already does that.
     """
-    match = _COPY_NEXT_SPELL_YOU_CAST_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
-    )
+    match = _COPY_NEXT_SPELL_YOU_CAST_RE.fullmatch(collapsed(_strip_non_effect_preamble(text)))
     if match is None:
         return None
     may_retarget = match.group("new_targets") is not None
@@ -1460,7 +1455,7 @@ _COPY_NEXT_INSTANT_OR_SORCERY_YOU_CAST_RE = re.compile(
 def _parse_copy_next_instant_or_sorcery_you_cast_clause(text: str) -> AbilityEffect | None:
     """`_COPY_NEXT_INSTANT_OR_SORCERY_YOU_CAST_RE`'s shape."""
     match = _COPY_NEXT_INSTANT_OR_SORCERY_YOU_CAST_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
+        collapsed(_strip_non_effect_preamble(text))
     )
     if match is None:
         return None
@@ -1501,7 +1496,7 @@ _NEXT_SPELL_ENTERS_WITH_ADDITIONAL_COUNTER_RE = re.compile(
 def _parse_next_spell_enters_with_additional_counter_clause(text: str) -> AbilityEffect | None:
     """`_NEXT_SPELL_ENTERS_WITH_ADDITIONAL_COUNTER_RE`'s shape."""
     match = _NEXT_SPELL_ENTERS_WITH_ADDITIONAL_COUNTER_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
+        collapsed(_strip_non_effect_preamble(text))
     )
     if match is None:
         return None
@@ -1543,7 +1538,7 @@ def _parse_copy_next_instant_or_sorcery_you_cast_spell_clause(text: str) -> Effe
     and `_ability_effect_or_notice` each expect.
     """
     match = _COPY_NEXT_INSTANT_OR_SORCERY_YOU_CAST_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
+        collapsed(_strip_non_effect_preamble(text))
     )
     if match is None:
         return None
@@ -1710,7 +1705,7 @@ def _parse_copy_of_card_exiled_with_self_clause(text: str) -> AbilityEffect | No
     "It gains haste." has no duration (CR 611.2a) and is a layer 6 grant on
     the token (CR 613.1f); the end-step exile is CR 603.7's delayed trigger
     (`anaphoric_delayed_trigger`)."""
-    match = _COPY_OF_CARD_EXILED_WITH_SELF_RE.fullmatch(" ".join(text.strip().split()))
+    match = _COPY_OF_CARD_EXILED_WITH_SELF_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     not_legendary = False

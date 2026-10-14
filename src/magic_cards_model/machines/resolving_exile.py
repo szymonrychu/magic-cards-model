@@ -28,6 +28,8 @@ carry at least one counter of that kind.
 import re
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState, ExileMarker
 from ..models.zone import Zone
 from .decisions import source_id_of
@@ -94,7 +96,7 @@ def resolving_exile_of(card: CardState) -> tuple[str | None, str | None] | None:
 
 def parse_exile_as_it_resolves_clause(text: str) -> Any:
     """The cast trigger's own effect: mark the spell its event names."""
-    cleaned = " ".join(_REMINDER_RE.sub("", text).split())
+    cleaned = collapsed(_REMINDER_RE.sub("", text))
     match = _EXILE_AS_IT_RESOLVES_RE.fullmatch(cleaned)
     if match is None:
         return None
@@ -167,7 +169,7 @@ def after_resolving_exile(game: "Game", card: CardState, event: Any) -> None:
 
 def parse_cast_from_counter_pile_clause(text: str) -> Any:
     """`_CAST_FROM_COUNTER_PILE_RE`'s effect."""
-    match = _CAST_FROM_COUNTER_PILE_RE.fullmatch(" ".join(text.split()))
+    match = _CAST_FROM_COUNTER_PILE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     quality = (match.group("quality") or "").strip().lower()

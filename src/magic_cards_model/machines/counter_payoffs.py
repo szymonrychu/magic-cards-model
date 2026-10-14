@@ -61,6 +61,8 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from ..numbers import parse_count
@@ -239,9 +241,7 @@ def _put_counter_then_x_clause_where_x_is_counters_on_self(text: str, *, for_spe
     if for_spell:
         return None
 
-    match = _PUT_COUNTER_THEN_X_CLAUSE_WHERE_X_IS_COUNTERS_ON_SELF_RE.fullmatch(
-        " ".join(text.split())
-    )
+    match = _PUT_COUNTER_THEN_X_CLAUSE_WHERE_X_IS_COUNTERS_ON_SELF_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     ref1 = match.group("ref1").lower()
@@ -340,7 +340,7 @@ def _remove_a_counter_from_it_when_you_do(text: str, *, for_spell: bool):  # noq
     if for_spell:
         return None
 
-    match = _REMOVE_A_COUNTER_FROM_IT_WHEN_YOU_DO_RE.fullmatch(" ".join(text.split()))
+    match = _REMOVE_A_COUNTER_FROM_IT_WHEN_YOU_DO_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     rest_text = match.group("rest").strip()
@@ -428,7 +428,7 @@ def _crewed_this_turn_target_then_maybe_double(text: str, *, for_spell: bool):  
     if for_spell:
         return None
 
-    match = _CREWED_THIS_TURN_TARGET_THEN_MAYBE_DOUBLE_RE.fullmatch(" ".join(text.split()))
+    match = _CREWED_THIS_TURN_TARGET_THEN_MAYBE_DOUBLE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     if match.group("kind").lower() != match.group("kind2").lower():
@@ -480,7 +480,7 @@ def _may_pay_life_equal_to_its_power_then_counters(text: str, *, for_spell: bool
     if for_spell:
         return None
 
-    match = _MAY_PAY_LIFE_EQUAL_TO_ITS_POWER_THEN_COUNTERS_RE.fullmatch(" ".join(text.split()))
+    match = _MAY_PAY_LIFE_EQUAL_TO_ITS_POWER_THEN_COUNTERS_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     kind = effects._counter_kind(match.group("kind"))
@@ -531,7 +531,7 @@ def parse_resolution_text(text: str, *, for_spell: bool = False):  # noqa: ANN20
     extension point `machines/effects.py` already calls at every whole-text
     resolution attempt), so nothing new has to be wired into `machines/
     effects.py` itself for this task's own readers to reach a real ability."""
-    whole = " ".join(text.split())
+    whole = collapsed(text)
     for reader in _WHOLE_TEXT_READERS:
         effect = reader(whole, for_spell=for_spell)
         if effect is not None:

@@ -42,6 +42,8 @@ from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Type
 from ..models.card_state import CardState, Counter
 from ..models.zone import Zone
@@ -403,7 +405,7 @@ def _those_creatures_requirement(sentence: str) -> Rider | None:
 
 
 def _rider_sentence(sentence: str, *, for_spell: bool) -> Rider | None:
-    text = " ".join(sentence.strip().split())
+    text = collapsed(sentence.strip())
     for reader in (
         _created_replacement_rider,
         _created_trigger_rider,
@@ -458,7 +460,7 @@ def parse_event_subject_controller_poison_clause(clause: str, *, for_spell: bool
     triggering event's own object."""
     if for_spell:
         return None
-    match = _EVENT_SUBJECT_CONTROLLER_POISON_RE.fullmatch(" ".join(clause.strip().split()))
+    match = _EVENT_SUBJECT_CONTROLLER_POISON_RE.fullmatch(collapsed(clause.strip()))
     if match is None:
         return None
     amount = parse_count(match.group("n"))

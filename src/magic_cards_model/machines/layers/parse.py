@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Literal, NamedTuple
 from uuid import UUID
 
 from magic_cards_model.phrases import with_indefinite_article
+from magic_cards_model.text_norm import collapsed
 
 from ...data.creature_types import creature_types
 from ...data.subtypes import canonical_subtype, subtype_vocabulary
@@ -4595,7 +4596,7 @@ def spend_effect_grant(text: str) -> tuple[Type, str] | None:
     word into the object's abilities and something has to be able to read it
     back.
     """
-    match = _MANA_SPEND_EFFECT_RE.fullmatch(" ".join(text.strip().split()))
+    match = _MANA_SPEND_EFFECT_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     card_type = _card_type_word(match.group("what"))
@@ -11594,6 +11595,7 @@ def _if_gated_builder(base: EffectBuilder, condition: str) -> EffectBuilder:
     return builder
 
 
+@functools.lru_cache(maxsize=16384)
 def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     """`_parse_layer_sentence_ungated`, then - for a sentence that is none of
     those shapes - `_parse_if_gated_layer_sentence`'s trailing "if" rider, then
@@ -13776,6 +13778,7 @@ def is_resolution_layer_effect_text(text: str | None) -> bool:
     return False
 
 
+@functools.lru_cache(maxsize=16384)
 def _classify_resolution_layer_sentence(sentence: str) -> tuple[bool, bool]:
     """`(genuine, loose)` for one sentence alone - the shared classification
     both `is_resolution_layer_effect_text` and `genuine_resolution_layer_
@@ -14003,7 +14006,7 @@ def read_cant_lose_cant_win(text: str) -> GameOutcomeProhibition | None:
     can't lose the game.", is not this effect."""
     if "the game" not in text:
         return None
-    match = _GAME_OUTCOME_PROHIBITION_RE.fullmatch(" ".join(text.split()))
+    match = _GAME_OUTCOME_PROHIBITION_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     halves = [match.group("first").lower()]

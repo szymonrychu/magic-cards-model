@@ -10,6 +10,8 @@ the one R3 count reader (`ep02_r3_for_each_cards`), not here.
 import re
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.zone import Zone
 from .effects._chains import ABILITY_TEXT
 
@@ -32,7 +34,7 @@ def _parse_base_pt_becomes_source_pt(text: str) -> Any:
     instruction is applied (CR 608.2h, last known information if it has left,
     CR 603.10a) and set as the target's base (CR 613.4b, sublayer 7b), lasting
     until the cleanup step (CR 514.2)."""
-    match = _BASE_PT_COPY_RE.fullmatch(" ".join(text.strip().split()))
+    match = _BASE_PT_COPY_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     from .effects._common import _targets_understood
@@ -119,7 +121,7 @@ def _parse_token_base_pt_total_power(text: str) -> Any:
     toughness each equal to the total power of those creatures" (The Skullspore
     Nexus, CR 111.3: the creating effect defines the token's characteristics,
     so the total is its base power and toughness)."""
-    match = _FUNGUS_DINOSAUR_RE.fullmatch(" ".join(text.strip().split()))
+    match = _FUNGUS_DINOSAUR_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     from ..models.card import Color, Type
@@ -160,7 +162,7 @@ def _parse_double_target_power(text: str) -> Any:
     the instruction is applied (CR 608.2h) - fixed then, so a later change to
     the power does not change the size of the pump - lasting until the
     cleanup step (CR 514.2)."""
-    match = _DOUBLE_POWER_RE.fullmatch(" ".join(text.strip().split()))
+    match = _DOUBLE_POWER_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     from .effects._common import _targets_understood

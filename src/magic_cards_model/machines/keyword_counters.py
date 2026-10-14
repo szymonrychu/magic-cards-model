@@ -60,6 +60,8 @@ every destruction and every instance of damage pass through instead
 
 import re
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..numbers import COUNT, parse_count
 from .combat import Keyword
@@ -500,7 +502,7 @@ def _pluralised_variants(text: str):
 
 
 def _one_term(description: str):
-    text = " ".join(description.strip().rstrip(".").split())
+    text = collapsed(description.strip().rstrip("."))
     lowered = text.lower()
     for article in ("the amount of ", "the number of ", "the "):
         if lowered.startswith(article):
@@ -557,7 +559,7 @@ def fixed_enters_count_reader(description: str):
     """The reader for a count this module defines outright ("mana value of the
     returned creature", "creature that convoked it"), tried ahead of the
     general expression readers so a phrase they would half-read is not."""
-    text = " ".join(description.strip().rstrip(".").split()).lower()
+    text = collapsed(description.strip().rstrip(".")).lower()
     for article in ("the amount of ", "the number of ", "the "):
         if text.startswith(article):
             text = text[len(article) :]

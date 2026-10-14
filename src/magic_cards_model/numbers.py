@@ -33,6 +33,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 
+from magic_cards_model.text_norm import collapsed
+
 __all__ = [
     "AMOUNT",
     "COUNT",
@@ -287,7 +289,7 @@ class Quantity:
 def parse_quantity(text: str) -> Quantity | None:
     """ "three", "up to two", "X", "up to X", "any number of", "one or more",
     "that many", "up to that many" as a `Quantity`; anything else None."""
-    words = " ".join(text.strip().lower().split())
+    words = collapsed(text.strip().lower())
     if words in ("any number of", "any number"):
         return Quantity(amount=None, minimum=0, source=QuantitySource.ANY_NUMBER)
     if words == "one or more":

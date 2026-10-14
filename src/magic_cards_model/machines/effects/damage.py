@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, NamedTuple
 from uuid import UUID
 
+from magic_cards_model.text_norm import collapsed
+
 from ...data.creature_types import creature_types
 from ...data.subtypes import canonical_subtype, subtype_vocabulary
 from ...models.card import Color, Type
@@ -294,7 +296,7 @@ def _parse_delirium_damage_instead_clause(text: str) -> Effect | None:
     announcement (CR 601.2c), the same trust `delirium_damage` itself already
     placed in its caller before this parser existed.
     """
-    match = _DELIRIUM_DAMAGE_INSTEAD_RE.fullmatch(" ".join(text.strip().split()))
+    match = _DELIRIUM_DAMAGE_INSTEAD_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     normal = parse_count(match.group("normal"), article=False)
@@ -436,7 +438,7 @@ def _parse_prevent_all_damage_to_self_this_turn_clause(
     flickered out and back is a new object it never shielded."""
     if for_spell:
         return None
-    match = _PREVENT_ALL_DAMAGE_TO_SELF_THIS_TURN_RE.fullmatch(" ".join(clause.split()))
+    match = _PREVENT_ALL_DAMAGE_TO_SELF_THIS_TURN_RE.fullmatch(collapsed(clause))
     if match is None:
         return None
     combat_only = match.group("combat") is not None
@@ -534,7 +536,7 @@ def _prevent_to_and_by_clause(sentence: str, *, for_spell: bool) -> TargetedClau
     "him") is an ability's own source; a target phrase - or "that creature",
     CR 608.2c's anaphor back to the object's own earlier target - names each
     target still legal as it resolves (CR 608.2b)."""
-    match = _PREVENT_TO_AND_BY_RE.fullmatch(" ".join(sentence.strip().split()))
+    match = _PREVENT_TO_AND_BY_RE.fullmatch(collapsed(sentence.strip()))
     if match is None:
         return None
     who = match.group("who").lower()
@@ -584,7 +586,7 @@ def _parse_prevent_to_and_by_sentence_clauses(
     "that creature" is only read after such a sentence named a target."""
     if "dealt to and dealt by" not in text.lower():
         return None
-    sentences = _SENTENCE_BREAK_RE.split(" ".join(text.strip().split()))
+    sentences = _SENTENCE_BREAK_RE.split(collapsed(text.strip()))
     last = sentences[-1]
     head = " ".join(sentences[:-1])
     if "that creature" in last.lower() and "target" not in head.lower():
@@ -620,7 +622,7 @@ def _parse_prevent_damage_to_it_whole_text(text: str, *, for_spell: bool) -> Abi
     a single clause is never read this way."""
     if for_spell or "would be dealt to" not in text.lower():
         return None
-    match = _PREVENT_TO_IT_WHOLE_TEXT_RE.fullmatch(" ".join(text.strip().split()))
+    match = _PREVENT_TO_IT_WHOLE_TEXT_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     combat_only = match.group("combat") is not None
@@ -736,7 +738,7 @@ def _parse_prevent_next_damage_divided_clause(
     is used up or the turn ends (CR 615.3, CR 615.7)."""
     if "divided as you choose" not in clause.lower():
         return None
-    match = _PREVENT_NEXT_DAMAGE_DIVIDED_RE.fullmatch(" ".join(clause.strip().split()))
+    match = _PREVENT_NEXT_DAMAGE_DIVIDED_RE.fullmatch(collapsed(clause.strip()))
     if match is None:
         return None
     total = parse_count(match.group("n"))
@@ -904,7 +906,7 @@ def _fog_source_spec(phrase: str, *, bare: bool = False) -> dict[str, Any] | Non
     sources" stay `replacement.parse.read_turn_damage_spec`'s."""
     from ..combat import Keyword
 
-    lowered = " ".join(phrase.lower().split())
+    lowered = collapsed(phrase.lower())
     if lowered == "creatures" and not bare:
         return {"filter_fields": {"creatures": True}}
     if lowered == "other creatures" and not bare:
@@ -972,7 +974,7 @@ _FOG_SUBTYPE_YOU_CONTROL_RE = re.compile(r"^(?P<plural>[a-z][a-z'-]*s) you contr
 
 def _fog_recipient_spec(phrase: str, *, for_spell: bool) -> dict[str, Any] | None:
     """The `_FogSpec` fields a "to `<who>`" phrase reads as, or None."""
-    lowered = " ".join(phrase.lower().split())
+    lowered = collapsed(phrase.lower())
     if lowered in ("players", "you", "target creature"):
         return {"recipient": lowered}
     if lowered == "you and permanents you control":
@@ -1017,7 +1019,7 @@ def _read_fog_sentence(
     left to its own reader unless `allow_plain`, and "by creatures" / "by
     `<quality>` sources" alone to `replacement.parse.read_turn_damage_spec`'s
     created replacement."""
-    text = " ".join(sentence.strip().split())
+    text = collapsed(sentence.strip())
     if not text.lower().startswith("prevent all "):
         return None
     match = _FILTERED_FOG_RE.fullmatch(text)
@@ -1057,7 +1059,7 @@ _SOURCE_OF_CHOICE_WOULD_DEAL_RE = re.compile(
 
 
 def _read_source_of_choice_sentence(sentence: str) -> _FogSpec | None:
-    text = " ".join(sentence.strip().split())
+    text = collapsed(sentence.strip())
     match = _SOURCE_OF_CHOICE_WOULD_DEAL_RE.fullmatch(text)
     if match is None:
         return None
@@ -1079,7 +1081,7 @@ _TARGET_WOULD_DEAL_THIS_TURN_RE = re.compile(
 
 
 def _read_target_would_deal_sentence(sentence: str) -> _FogSpec | None:
-    text = " ".join(sentence.strip().split())
+    text = collapsed(sentence.strip())
     match = _TARGET_WOULD_DEAL_THIS_TURN_RE.fullmatch(text)
     if match is None:
         return None
@@ -1280,7 +1282,7 @@ def _parse_whole_fog_sentence_with_and_clauses(
     lowered = text.lower()
     if " and" not in lowered or not lowered.lstrip().startswith("prevent all "):
         return None
-    body = " ".join(text.strip().split())
+    body = collapsed(text.strip())
     if len(_SENTENCE_BREAK_RE.split(body)) != 1:
         return None
     spec = _read_fog_sentence(body, for_spell=for_spell)
@@ -1312,7 +1314,7 @@ def _parse_fog_on_spell_anaphor_then_state_rider_clauses(
     and the rider runs on it only if the condition holds."""
     if not for_spell or "prevent all " not in text.lower() or "if it" not in text.lower():
         return None
-    sentences = _SENTENCE_BREAK_RE.split(" ".join(text.strip().split()))
+    sentences = _SENTENCE_BREAK_RE.split(collapsed(text.strip()))
     if len(sentences) != 2:
         return None
     spec = _read_fog_sentence(sentences[0], for_spell=True)
@@ -1375,7 +1377,7 @@ def _parse_prevention_sentences_text(text: str) -> Effect | None:
     target creature would deal this turn. Prevent all combat damage that would
     be dealt to target creature this turn."), or the ability-word "instead"
     pair (Winds of Qal Sisma)."""
-    body = " ".join(text.strip().split())
+    body = collapsed(text.strip())
     if not body.lower().startswith("prevent all "):
         return None
     if match := _PREVENT_INSTEAD_IF_RE.fullmatch(body):
@@ -1431,7 +1433,7 @@ def _parse_fog_then_reflect_rider_text(text: str) -> Effect | None:
     The fog names no target of its own, so the spell's one target is the
     rider's (CR 601.2c), chosen as it is cast; a target no longer legal on
     resolution leaves the spell nothing to do (CR 608.2b)."""
-    body = " ".join(text.strip().split())
+    body = collapsed(text.strip())
     if "prevented this way" not in body.lower() or not body.lower().startswith("prevent all "):
         return None
     sentences = _SENTENCE_BREAK_RE.split(body)
@@ -1497,7 +1499,7 @@ def _parse_prevent_next_damage_to_you_and_permanents_text(text: str) -> Effect |
     resolves (CR 609.7a). The rider's target is chosen as the spell is cast,
     like every target it requires (CR 601.2c), and is dealt the prevented
     amount each time damage is prevented (CR 615.5)."""
-    body = " ".join(text.strip().split())
+    body = collapsed(text.strip())
     if "you and/or permanents you control" not in body.lower():
         return None
     match = _PREVENT_NEXT_TO_YOU_AND_PERMANENTS_RE.fullmatch(body)
@@ -1680,7 +1682,7 @@ class _ShieldPayoff:
 
 
 def _read_shield_sentence(sentence: str) -> _ShieldSentence | None:
-    text = " ".join(sentence.strip().split())
+    text = collapsed(sentence.strip())
     lowered = text.lower()
     if lowered.startswith("the next time "):
         match = _NEXT_TIME_SOURCE_OF_CHOICE_RE.fullmatch(text)
@@ -1756,7 +1758,7 @@ def _read_shield_sentence(sentence: str) -> _ShieldSentence | None:
 
 
 def _read_shield_payoff(sentence: str, shield: _ShieldSentence) -> _ShieldPayoff | None:
-    text = " ".join(sentence.strip().split())
+    text = collapsed(sentence.strip())
     if "prevented this way" not in text.lower():
         return None
     if _PAYOFF_LIFE_RE.fullmatch(text):
@@ -2039,7 +2041,7 @@ def _parse_unpreventable_damage_text(text: str) -> Effect | None:
     recorded as Skullcrack's turn-wide "Damage can't be prevented this turn.";
     the no-life-gain rider is a `GainNoLifeReplacement` on the player hit, or
     on the planeswalker's controller (CR 614.1a, CR 119.10), until cleanup."""
-    body = " ".join(text.strip().split())
+    body = collapsed(text.strip())
     if "the damage can" not in body.lower():
         return None
     match = _UNPREVENTABLE_DAMAGE_RE.fullmatch(body)
@@ -2420,7 +2422,7 @@ def _parse_damage_to_you_and_target_clause(text: str, *, for_spell: bool) -> Abi
     at all (CR 608.2b), so the controller is dealt nothing either. Otherwise
     the same amount goes to both, chosen once (CR 608.2d), from 0 up.
     Ability-only: no spell prints it."""
-    body = " ".join(text.strip().split())
+    body = collapsed(text.strip())
     if for_spell or " to you and target " not in body.lower():
         return None
     match = _DAMAGE_TO_YOU_AND_TARGET_RE.fullmatch(body)
@@ -2633,7 +2635,7 @@ def _parse_discard_then_damage_equal_to_that_cards_mana_value_text(
     if for_spell or "card's mana value" not in text.lower():
         return None
     match = _DISCARD_THEN_DAMAGE_EQUAL_TO_THAT_CARDS_MANA_VALUE_RE.fullmatch(
-        " ".join(text.strip().split())
+        collapsed(text.strip())
     )
     if match is None:
         return None
@@ -3004,7 +3006,7 @@ def _deal_divided_damage_then_retaliate_shares(
 @ABILITY_TEXT.rung("s14")
 def _parse_divided_damage_then_retaliate_clause(text: str) -> AbilityEffect | None:
     """`_DIVIDED_DAMAGE_THEN_RETALIATE_RE`'s shape, or `None`."""
-    match = _DIVIDED_DAMAGE_THEN_RETALIATE_RE.fullmatch(" ".join(text.split()))
+    match = _DIVIDED_DAMAGE_THEN_RETALIATE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     if not _targets_understood(match.group("phrase"), count_agnostic=True):
@@ -3543,7 +3545,7 @@ _PREVENT_DAMAGE_DEALT_BY_TARGET_RE = re.compile(
 @SPELL_TEXT.rung("s8")
 def _parse_prevent_damage_dealt_by_target_clause(text: str) -> TargetedClause | None:
     """`_PREVENT_DAMAGE_DEALT_BY_TARGET_RE`'s shape, on a spell or an ability."""
-    match = _PREVENT_DAMAGE_DEALT_BY_TARGET_RE.fullmatch(" ".join(text.strip().split()))
+    match = _PREVENT_DAMAGE_DEALT_BY_TARGET_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     phrase = match.group("phrase") or match.group("subject")
@@ -4684,7 +4686,7 @@ def _event_group_reader(phrase: str, *, ability: bool) -> _GroupReading | None:
     `None` for anything `_parse_colored_group_phrase` cannot read, so an unread
     qualifier fails the clause instead of widening the damage.
     """
-    text = " ".join(phrase.split())
+    text = collapsed(phrase)
     other = text.lower().startswith("other ")
     if other:
         text = text[len("other ") :]
@@ -4780,7 +4782,7 @@ def _dealer_is_in_group(subject: str, base: str) -> bool:
 def _damage_group_reading(clause: str, *, ability: bool) -> _GroupDamage | None:
     """`_DAMAGE_EACH_EVENT_GROUP_RE`'s shape, with the group read by
     `_event_group_reader`."""
-    text = " ".join(clause.split())
+    text = collapsed(clause)
     if " damage to each " not in text.lower():
         return None
     match = _DAMAGE_EACH_EVENT_GROUP_RE.fullmatch(text)
@@ -4869,7 +4871,7 @@ _DAMAGE_GROUP_THEN_TAP_RE = re.compile(
 
 def _parse_damage_group_then_tap(text: str, *, ability: bool) -> TargetedClause | None:
     damage_clause = None
-    cleaned = " ".join(_strip_non_effect_preamble(text).split())
+    cleaned = collapsed(_strip_non_effect_preamble(text))
     if "tap those creatures" not in cleaned.lower():
         return None
     match = _DAMAGE_GROUP_THEN_TAP_RE.fullmatch(cleaned)
@@ -5011,7 +5013,7 @@ def _parse_damage_to_event_recipient_clause(
     """
     if for_spell:
         return None
-    text = " ".join(clause.split())
+    text = collapsed(clause)
     match = _DAMAGE_TO_EVENT_RECIPIENT_RE.fullmatch(text)
     if match is None:
         return None
@@ -5045,7 +5047,7 @@ def _parse_damage_equal_to_expression_to_event_recipient_clause(
     """
     if for_spell:
         return None
-    text = " ".join(clause.split())
+    text = collapsed(clause)
     match = _DAMAGE_EQUAL_TO_TO_EVENT_RECIPIENT_RE.fullmatch(text)
     if match is None:
         return None
@@ -5107,7 +5109,7 @@ def _recipient_of(phrase: str, *, ability: bool) -> _Recipient | None:
     controller, "each opponent"/"each player", a group
     (`_event_group_reader`), a chosen target, or one the trigger's event names
     (`_event_recipient_reader`, ability-only)."""
-    text = " ".join(phrase.split())
+    text = collapsed(phrase)
     lowered = text.lower()
     if lowered == "you":
 
@@ -5158,7 +5160,7 @@ def _recipient_of(phrase: str, *, ability: bool) -> _Recipient | None:
 
 
 def _parse_damage_two_recipients(text: str, *, ability: bool) -> TargetedClause | None:
-    cleaned = " ".join(_strip_non_effect_preamble(text).split())
+    cleaned = collapsed(_strip_non_effect_preamble(text))
     if " damage to " not in cleaned.lower():
         return None
     match = _DAMAGE_TWO_RECIPIENTS_RE.fullmatch(cleaned)
@@ -5223,7 +5225,7 @@ _DAMAGE_EACH_OF_OPTIONAL_SLOTS_RE = re.compile(
 
 
 def _parse_damage_each_of_optional_slots(text: str) -> TargetedClause | None:
-    cleaned = " ".join(_strip_non_effect_preamble(text).split())
+    cleaned = collapsed(_strip_non_effect_preamble(text))
     if " damage to each of up to one target " not in cleaned.lower():
         return None
     match = _DAMAGE_EACH_OF_OPTIONAL_SLOTS_RE.fullmatch(cleaned)
@@ -5305,7 +5307,7 @@ def _parse_dealt_damage_this_way_die_to_exile(text: str) -> Effect | None:
     514.2's cleanup. A leading text the dispatcher cannot read leaves this
     unread too (fail closed).
     """
-    match = _DEALT_DAMAGE_THIS_WAY_DIE_TO_EXILE_RE.fullmatch(" ".join(text.split()))
+    match = _DEALT_DAMAGE_THIS_WAY_DIE_TO_EXILE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     words = match.group("quality").lower().split(" or ")
@@ -6026,7 +6028,7 @@ def damage_to_layer_target_rider(text: str) -> TargetedClause | None:
     "target": the damage goes to that target if it is still a legal creature
     on the battlefield (CR 608.2b), from the object whose text this is (CR
     120.1). The amount is read once, as the damage is dealt (CR 608.2h)."""
-    body = " ".join(text.strip().split())
+    body = collapsed(text.strip())
     if " deals " not in body.lower():
         return None
     match = _DAMAGE_TO_LAYER_TARGET_RE.fullmatch(body)
@@ -6438,7 +6440,7 @@ def _parse_bite_x_and_itself_text(text: str) -> TargetedClause | None:
     """`_BITE_X_AND_ITSELF_RE`'s shape."""
     if "damage to itself" not in text.lower():
         return None
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     match = _BITE_X_AND_ITSELF_RE.fullmatch(whole)
     if match is None:
         return None
@@ -6906,7 +6908,7 @@ def _parse_airbend_clause(clause: str, *, for_spell: bool) -> TargetedClause | N
     announcement of none, which is legal and simply does nothing - that falls
     out of the empty list rather than needing a case.
     """
-    if _AIRBEND_RE.fullmatch(" ".join(clause.strip().rstrip(".").split())) is None:
+    if _AIRBEND_RE.fullmatch(collapsed(clause.strip().rstrip("."))) is None:
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -7262,7 +7264,7 @@ def _parse_target_fights_other_target_clause(
     text: str,
 ) -> Callable[["Game", "StackObject"], None] | None:
     """`_TARGET_FIGHTS_OTHER_TARGET_RE`'s shape, or `None`."""
-    match = _TARGET_FIGHTS_OTHER_TARGET_RE.fullmatch(" ".join(text.split()))
+    match = _TARGET_FIGHTS_OTHER_TARGET_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     if not _targets_understood(match.group("first").strip(), count_agnostic=True):
@@ -7312,7 +7314,7 @@ _UNTIL_EOT_ASSIGNS_TOUGHNESS_RE = re.compile(
 
 def _parse_until_eot_assigns_toughness(text: str) -> AbilityEffect | None:
     """`_UNTIL_EOT_ASSIGNS_TOUGHNESS_RE`'s shape, or `None`."""
-    match = _UNTIL_EOT_ASSIGNS_TOUGHNESS_RE.fullmatch(" ".join(text.strip().split()))
+    match = _UNTIL_EOT_ASSIGNS_TOUGHNESS_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     group = match.group("group") is not None
@@ -7398,9 +7400,7 @@ def _parse_combat_damage_reanimate_from_that_players_graveyard_attacking_clause(
     graveyard, a legal answer that puts nothing onto the battlefield at all.
     """
     if (
-        _COMBAT_DAMAGE_REANIMATE_FROM_THAT_PLAYERS_GRAVEYARD_ATTACKING_RE.fullmatch(
-            " ".join(text.split())
-        )
+        _COMBAT_DAMAGE_REANIMATE_FROM_THAT_PLAYERS_GRAVEYARD_ATTACKING_RE.fullmatch(collapsed(text))
         is None
     ):
         return None
@@ -7454,7 +7454,7 @@ def _parse_etb_damage_any_target_and_self_clause(
     object (CR 608.2g), read the ordinary way every other spell-side clause
     in this file does.
     """
-    match = _ETB_DAMAGE_ANY_TARGET_AND_SELF_RE.fullmatch(" ".join(text.split()))
+    match = _ETB_DAMAGE_ANY_TARGET_AND_SELF_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     any_amount = parse_count(match.group("any_amount"))
@@ -7539,7 +7539,7 @@ def _parse_damage_each_group_named_player_controls_clause(
     snapshotted before any damage is dealt (CR 608.2f's simultaneity); a
     player target no longer legal names nobody and nothing is dealt (CR
     608.2b)."""
-    text = " ".join(clause.split())
+    text = collapsed(clause)
     if " damage to each " not in text.lower():
         return None
     match = _DAMAGE_EACH_GROUP_NAMED_PLAYER_CONTROLS_RE.fullmatch(text)
@@ -7651,7 +7651,7 @@ def _grant_line_until_end_of_turn(
 
 def _this_way_rider(sentence: str) -> _ThisWayRider | None:
     """One "dealt damage this way" rider sentence, or `None`."""
-    text = " ".join(sentence.split()).rstrip(".")
+    text = collapsed(sentence).rstrip(".")
     if _THIS_WAY_ATTACKS_RE.fullmatch(text):
 
         def attacks(
@@ -7731,9 +7731,9 @@ def _this_way_rider(sentence: str) -> _ThisWayRider | None:
 def _split_this_way_riders(text: str) -> tuple[str, list[_ThisWayRider]] | None:
     """`text` as its leading instructions and the trailing "dealt damage this
     way" rider sentences, or `None` when it ends in none."""
-    if "dealt damage this way" not in " ".join(text.split()).lower():
+    if "dealt damage this way" not in collapsed(text).lower():
         return None
-    sentences = _plain_resolution_sentences(" ".join(_strip_non_effect_preamble(text).split()))
+    sentences = _plain_resolution_sentences(collapsed(_strip_non_effect_preamble(text)))
     riders: list[_ThisWayRider] = []
     while len(sentences) > 1:
         rider = _this_way_rider(sentences[-1])
@@ -7829,7 +7829,7 @@ def _parse_damage_target_then_each_other_of_its_controller_text(
     effect_text: str,
 ) -> Effect | None:
     """`_DAMAGE_TARGET_THEN_EACH_OTHER_OF_ITS_CONTROLLER_RE`'s shape on a spell."""
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text))
     if ". then " not in whole.lower() or "that player controls" not in whole.lower():
         return None
     match = _DAMAGE_TARGET_THEN_EACH_OTHER_OF_ITS_CONTROLLER_RE.fullmatch(whole)
@@ -7906,7 +7906,7 @@ def _mana_value_on_the_stack(game: "Game", spell: CardState) -> int:
 @SPELL_TEXT.rung("s18")
 def _parse_damage_to_target_spells_controller_text(effect_text: str) -> Effect | None:
     """`_DAMAGE_TO_TARGET_SPELLS_CONTROLLER_EQUAL_TO_MV_RE`'s shape."""
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text))
     if "spell's controller" not in whole.lower() and "spell\u2019s controller" not in whole.lower():
         return None
     if _DAMAGE_TO_TARGET_SPELLS_CONTROLLER_EQUAL_TO_MV_RE.fullmatch(whole) is None:
@@ -7978,9 +7978,7 @@ def _damage_any_target_and_you_then(
 
 
 def _split_first_sentence(effect_text: str) -> tuple[str, str] | None:
-    sentences = _plain_resolution_sentences(
-        " ".join(_strip_non_effect_preamble(effect_text).split())
-    )
+    sentences = _plain_resolution_sentences(collapsed(_strip_non_effect_preamble(effect_text)))
     if len(sentences) < 2:
         return None
     return sentences[0], " ".join(sentences[1:])
@@ -8087,7 +8085,7 @@ def _parse_damage_each_group_equal_to_clause(clause: str) -> TargetedClause | No
     """`_DAMAGE_EACH_EQUAL_TO_RE`'s shape - see the banner above."""
     if " equal to " not in clause.lower() or "damage to each " not in clause.lower():
         return None
-    match = _DAMAGE_EACH_EQUAL_TO_RE.fullmatch(" ".join(clause.strip().split()))
+    match = _DAMAGE_EACH_EQUAL_TO_RE.fullmatch(collapsed(clause.strip()))
     if match is None:
         return None
     name = match.group("name").strip()
@@ -8768,7 +8766,7 @@ def _parse_damage_equal_to_event_subject_power_text(text: str) -> AbilityEffect 
     """`_DAMAGE_EQUAL_TO_EVENT_SUBJECT_POWER_RE`'s shape."""
     if "equal to that creature" not in text:
         return None
-    stripped = " ".join(text.strip().split())
+    stripped = collapsed(text.strip())
     if _DAMAGE_EQUAL_TO_EVENT_SUBJECT_POWER_RE.fullmatch(stripped) is None:
         return None
     from . import parse_mixed_effect

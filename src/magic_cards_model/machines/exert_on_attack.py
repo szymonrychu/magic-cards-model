@@ -16,6 +16,8 @@ import re
 from functools import cache
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from .decisions import Decision, DecisionKind, source_id_of
 
@@ -31,7 +33,7 @@ _EXERT_AS_IT_ATTACKS_RE = re.compile(
 
 @cache
 def _exert_as_it_attacks(line: str) -> tuple[bool, str | None, bool]:
-    match = _EXERT_AS_IT_ATTACKS_RE.fullmatch(" ".join(line.split()))
+    match = _EXERT_AS_IT_ATTACKS_RE.fullmatch(collapsed(line))
     if match is None:
         return False, None, False
     return True, match.group("effect"), match.group("once") is not None

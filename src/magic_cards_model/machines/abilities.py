@@ -2976,6 +2976,7 @@ def self_reference_re(name: str) -> SelfReference:
 _EPITHET_BOUNDARY_WORDS = ("the", "of")
 
 
+@functools.lru_cache(maxsize=16384)
 def self_reference_names(card_name: str, *, legendary: bool = True) -> tuple[str, ...]:
     """Every string CR 201.5/201.5c lets `card_name`'s own printed text use to
     mean itself, longest first: the full name, the face before a `//`, the
@@ -3562,6 +3563,7 @@ def _strip_reminder(line: str) -> tuple[str, str | None]:
     return re.sub(r"\s+", " ", stripped).strip(), (" ".join(found) if found else None)
 
 
+@functools.lru_cache(maxsize=16384)
 def _blank_quotes(text: str) -> str:
     """Replace quoted spans with spaces, keeping every other index the same.
 

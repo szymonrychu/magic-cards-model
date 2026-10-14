@@ -13,6 +13,8 @@ import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING, NamedTuple
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState
 from ..models.zone import Zone
@@ -69,7 +71,7 @@ _COPY_NEXT_WITHIN_MANA_VALUE_RE = re.compile(
 def _copy_next_within_mana_value(text: str) -> tuple[bool, int | None, bool] | None:
     """`(may_retarget, at_most, at_most_source_power)` for
     `_COPY_NEXT_WITHIN_MANA_VALUE_RE`, or `None`."""
-    match = _COPY_NEXT_WITHIN_MANA_VALUE_RE.fullmatch(" ".join(text.split()))
+    match = _COPY_NEXT_WITHIN_MANA_VALUE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     at_most: int | None = None
@@ -161,7 +163,7 @@ _COPY_THAT_SPELL_THEN_RE = re.compile(
 
 
 def _parse_copy_that_spell_then_clause(text: str) -> AbilityEffect | None:
-    match = _COPY_THAT_SPELL_THEN_RE.fullmatch(" ".join(text.split()))
+    match = _COPY_THAT_SPELL_THEN_RE.fullmatch(collapsed(text))
     if match is None:
         return None
 
@@ -212,7 +214,7 @@ _COPY_IT_N_TIMES_RE = re.compile(
 
 
 def _parse_copy_it_n_times_clause(text: str) -> AbilityEffect | None:
-    match = _COPY_IT_N_TIMES_RE.fullmatch(" ".join(text.split()))
+    match = _COPY_IT_N_TIMES_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     raw = (match.group("n") or "").lower()
@@ -318,7 +320,7 @@ _COPY_TARGET_ABILITY_RE = re.compile(
 def _parse_copy_target_ability_clause(text: str) -> AbilityEffect | None:
     from .targeting import RetargetScope
 
-    match = _COPY_TARGET_ABILITY_RE.fullmatch(" ".join(text.split()))
+    match = _COPY_TARGET_ABILITY_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     offer_new_targets = match.group("new_targets") is not None
@@ -577,7 +579,7 @@ def _copy_duration(phrase: str | None) -> Duration:
 def _parse_becomes_a_copy_clause(
     text: str,
 ) -> Callable[[Game, StackObject], None] | None:
-    match = _BECOMES_A_COPY_RE.fullmatch(" ".join(text.split()))
+    match = _BECOMES_A_COPY_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     exceptions = None
@@ -662,7 +664,7 @@ def _parse_becomes_a_copy_then_rider_ability(text: str) -> AbilityEffect | None:
     ability rather than half of it (CR 608.2c)."""
     from .effects import _layer_remainder_or_composed
 
-    flat = " ".join(text.split())
+    flat = collapsed(text)
     for boundary in _SENTENCE_BOUNDARY_RE.finditer(flat):
         head, rest = flat[: boundary.start() + 1], flat[boundary.end() :]
         if head.count('"') % 2:
@@ -743,7 +745,7 @@ def _each_group_member(characteristics: Characteristics, group: str) -> bool:
 def _parse_each_becomes_a_copy_clause(
     text: str,
 ) -> Callable[[Game, StackObject], None] | None:
-    match = _EACH_BECOMES_A_COPY_RE.fullmatch(" ".join(text.split()))
+    match = _EACH_BECOMES_A_COPY_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     group = match.group("group")
@@ -866,8 +868,8 @@ def _entered_batch(game: Game, ability: AbilityOnStack) -> list[CardState]:
 
 
 def _parse_copy_of_them_clause(text: str) -> AbilityEffect | None:
-    one = _COPY_OF_ONE_OF_THEM_RE.fullmatch(" ".join(text.split()))
-    each = _FOR_EACH_OF_THEM_COPY_RE.fullmatch(" ".join(text.split()))
+    one = _COPY_OF_ONE_OF_THEM_RE.fullmatch(collapsed(text))
+    each = _FOR_EACH_OF_THEM_COPY_RE.fullmatch(collapsed(text))
     match = one or each
     if match is None:
         return None
@@ -923,7 +925,7 @@ _EXILE_THEN_BECOME_ITS_COPY_RE = re.compile(
 
 
 def _parse_exile_then_become_its_copy_clause(text: str) -> AbilityEffect | None:
-    match = _EXILE_THEN_BECOME_ITS_COPY_RE.fullmatch(" ".join(text.split()))
+    match = _EXILE_THEN_BECOME_ITS_COPY_RE.fullmatch(collapsed(text))
     if match is None:
         return None
 
@@ -998,7 +1000,7 @@ _IF_NOT_A_CREATURE_BECOMES_RE = re.compile(
 def _if_not_a_creature_rider(
     text: str, first_reader: Callable[[str], object]
 ) -> Callable[[Game, StackObject], None] | None:
-    match = _IF_NOT_A_CREATURE_BECOMES_RE.fullmatch(" ".join(text.split()))
+    match = _IF_NOT_A_CREATURE_BECOMES_RE.fullmatch(collapsed(text))
     if match is None:
         return None
 

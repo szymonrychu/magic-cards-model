@@ -1234,7 +1234,7 @@ class ContinuousEffects(EngineModel):
             self._note_control_change([effect], game)
         return effect
 
-    def bind_to_game(self, game: Game) -> None:
+    def bind_to_game(self, game: Game | None) -> None:
         """Remember the `Game` holding this store, so a stored control effect
         can reach it even from a caller that did not pass `game`.
 

@@ -10,6 +10,8 @@
 import re
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.zone import Zone
 from .effects._chains import ABILITY_TEXT
 
@@ -28,7 +30,7 @@ def _parse_each_player_regains_what_they_own(text: str) -> Any:
     """ "Each player gains control of each `<permanent>` they own that you
     control" (control change is CR 613.1b, ownership CR 108.3): every such
     permanent goes back to its owner."""
-    match = _RETURN_LANDS_RE.fullmatch(" ".join(text.strip().split()))
+    match = _RETURN_LANDS_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     from ..models.card import Type
@@ -90,7 +92,7 @@ def _parse_exile_any_number_until_leaves(text: str) -> Any:
     chooses zero up to all of them as it resolves (CR 107.1c, CR 608.2d); each is
     exiled linked to the source (CR 607.2a) and returns when it leaves
     (CR 610.3). CR 610.3b: a source that already left exiles nothing."""
-    match = _EXILE_ANY_NUMBER_UNTIL_RE.fullmatch(" ".join(text.strip().split()))
+    match = _EXILE_ANY_NUMBER_UNTIL_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     from .ep02_r2_chosen_amounts import _permanent_matcher
@@ -135,7 +137,7 @@ def _parse_additional_combat_then_untap(text: str) -> Any:
     CR 500.8 adds the phase directly after the one in progress, and the
     delayed trigger (CR 603.7) fires at the beginning of the next combat
     phase, which is the added one."""
-    match = _ADDITIONAL_COMBAT_AFTER_THIS_PHASE_RE.fullmatch(" ".join(text.strip().split()))
+    match = _ADDITIONAL_COMBAT_AFTER_THIS_PHASE_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     untaps = match["rider"] is not None

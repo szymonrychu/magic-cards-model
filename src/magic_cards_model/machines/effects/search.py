@@ -3,6 +3,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from magic_cards_model.phrases import with_indefinite_article
+from magic_cards_model.text_norm import collapsed
 
 from ...data.subtypes import subtype_vocabulary
 from ...models.card import Supertype, Type
@@ -480,9 +481,7 @@ def _parse_search_two_qualities_to_hand_text(text: str) -> AbilityEffect | None:
     of the clause splitter, which would cut the "and" between the qualities."""
     if "card and a" not in text:
         return None
-    match = _SEARCH_TWO_QUALITIES_TO_HAND_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
-    )
+    match = _SEARCH_TWO_QUALITIES_TO_HAND_RE.fullmatch(collapsed(_strip_non_effect_preamble(text)))
     if match is None:
         return None
     qualities = [match.group("first").strip(), match.group("second").strip()]
@@ -925,7 +924,7 @@ def _parse_search_and_exile_then_shuffle_clause(
 def parse_search_exile_then_play_whole_text(text: str) -> TargetedClause | None:
     """Hoarding Broodlord's two sentences read whole: the search-and-exile and
     the permission that is bound to what it exiled ("that card")."""
-    flat = " ".join(text.split())
+    flat = collapsed(text)
     if "remains exiled, you may play it" not in flat.lower():
         return None
     return _parse_search_and_exile_then_shuffle_clause(flat, for_spell=False)
@@ -1891,7 +1890,7 @@ def _put_from_outside_the_game_into_hand(
 @SPELL_TEXT.rung("s21")
 def _parse_put_from_outside_the_game_into_hand_spell(effect_text: str) -> Effect | None:
     """The spell (or spell mode) form of `_PUT_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE`."""
-    match = _PUT_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE.fullmatch(" ".join(effect_text.split()))
+    match = _PUT_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE.fullmatch(collapsed(effect_text))
     if match is None:
         return None
     optional = match.group("may") is not None
@@ -1931,7 +1930,7 @@ def _parse_outside_the_game_fetch(effect_text: str) -> AbilityEffect | None:
       resolves, by its controller, and an option that is illegal or impossible
       cannot be chosen.
     """
-    put = _PUT_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE.fullmatch(" ".join(effect_text.split()))
+    put = _PUT_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE.fullmatch(collapsed(effect_text))
     if put is not None:
         optional = put.group("may") is not None
 
@@ -1962,7 +1961,7 @@ def _parse_outside_the_game_fetch(effect_text: str) -> AbilityEffect | None:
             )
 
         return reveal_into_hand
-    match = _OUTSIDE_THE_GAME_FETCH_RE.match(" ".join(effect_text.split()))
+    match = _OUTSIDE_THE_GAME_FETCH_RE.match(collapsed(effect_text))
     if match is None:
         if _LOOKS_LIKE_OUTSIDE_THE_GAME_RE.search(effect_text):
 
@@ -2229,7 +2228,7 @@ def _parse_search_library_and_outside_distinct_names_opponent_chooses_clause(
     """
     if not for_spell:
         return None
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     match = _SEARCH_LIBRARY_AND_OUTSIDE_DISTINCT_NAMES_OPPONENT_CHOOSES_RE.fullmatch(whole)
     if match is None:
         return None
@@ -2370,7 +2369,7 @@ _SEARCH_EXACT_MANA_VALUE_RE = re.compile(
 @ABILITY_TEXT.rung("s16")
 def _parse_search_exact_mana_value_ability(text: str) -> AbilityEffect | None:
     """`_SEARCH_EXACT_MANA_VALUE_RE`'s shape, or `None`."""
-    match = _SEARCH_EXACT_MANA_VALUE_RE.fullmatch(" ".join(text.strip().split()))
+    match = _SEARCH_EXACT_MANA_VALUE_RE.fullmatch(collapsed(text.strip()))
     if match is None or not _search_quality_is_readable(match.group("quality")):
         return None
     quality = _quality_matcher(match.group("quality"))

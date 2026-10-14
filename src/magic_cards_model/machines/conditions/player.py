@@ -49,6 +49,8 @@ import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ...numbers import COUNT, parse_count
 from . import ConditionReader
 
@@ -718,7 +720,7 @@ def zones_the_source_names(clause: str, source: "CardState") -> "frozenset[Zone]
     from ...models.game import _names_the_source
     from ...models.zone import Zone
 
-    text = " ".join(clause.strip().rstrip(".").strip().split()).lower()
+    text = collapsed(clause.strip().rstrip(".").strip()).lower()
     if (match := _SELF_IN_PLACES_WITH_COUNTER.fullmatch(text)) and _names_the_source(
         match.group("self"), source
     ):
@@ -753,7 +755,7 @@ def zones_the_source_names_any(clause: str, source: "CardState") -> "frozenset[Z
     whole = zones_the_source_names(clause, source)
     if whole is not None:
         return whole
-    text = " ".join(clause.strip().rstrip(".").strip().split()).lower()
+    text = collapsed(clause.strip().rstrip(".").strip()).lower()
     zones = set()
     for alternative in _ALTERNATIVE_JOINER.split(text):
         match = _SELF_IN_PLACE_THEN.fullmatch(alternative.strip())

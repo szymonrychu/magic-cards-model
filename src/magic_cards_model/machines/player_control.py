@@ -12,6 +12,8 @@ the sentence off any card that prints it, so no card is keyed by name.
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.player import Player
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle: Game builds on the machines
@@ -36,7 +38,7 @@ def parse_control_target_player_next_turn(
     ability: each targeted player still in the game (CR 608.2b) is controlled
     by the resolving object's controller during their next turn (CR 723.1).
     Control of yourself is legal and changes nothing (CR 723.9)."""
-    if _CONTROL_TARGET_PLAYER_NEXT_TURN_RE.fullmatch(" ".join(clause.strip().split())) is None:
+    if _CONTROL_TARGET_PLAYER_NEXT_TURN_RE.fullmatch(collapsed(clause.strip())) is None:
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:

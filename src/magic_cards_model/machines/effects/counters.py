@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
 from magic_cards_model.phrases import with_indefinite_article
+from magic_cards_model.text_norm import collapsed
 
 from ...models.card import Color, Layout, Supertype, Type
 from ...models.card_state import (
@@ -127,7 +128,7 @@ def _parse_put_counters_on_self_at_step_clause(text: str) -> AbilityEffect | Non
     """`_PUT_COUNTERS_ON_SELF_AT_STEP_RE`'s shape (CR 122.1, 603.7)."""
     if " at " not in text:
         return None
-    match = _PUT_COUNTERS_ON_SELF_AT_STEP_RE.fullmatch(" ".join(text.split()))
+    match = _PUT_COUNTERS_ON_SELF_AT_STEP_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     amount = parse_count(match.group("n"))
@@ -359,7 +360,7 @@ def _parse_each_player_gets_counters_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
     """`_EACH_PLAYER_GETS_COUNTERS_RE`'s shape, or `None`."""
-    match = _EACH_PLAYER_GETS_COUNTERS_RE.fullmatch(" ".join(clause.strip().split()))
+    match = _EACH_PLAYER_GETS_COUNTERS_RE.fullmatch(collapsed(clause.strip()))
     if match is None:
         return None
     amount = parse_count(match.group("n"))
@@ -506,7 +507,7 @@ def _parse_backup_clause(text: str) -> AbilityEffect | None:
     """`_BACKUP_RE`'s shape. The granted abilities are the lines printed below
     the backup line on the source's printing, fixed as the ability resolves
     (CR 702.165d); only the object's own printed abilities count (CR 702.165c)."""
-    match = _BACKUP_RE.fullmatch(" ".join(text.strip().split()))
+    match = _BACKUP_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     raw_amount = match.group("n").lower()
@@ -1623,7 +1624,7 @@ def _parse_put_counter_on_self_then_if_count_clause(text: str) -> AbilityEffect 
     is false: CR 122.1 marks a permanent, and a card that changed zones is a
     new object with no counters (`CardState.move_to` clears them).
     """
-    match = _PUT_COUNTER_ON_SELF_THEN_IF_COUNT_RE.fullmatch(" ".join(text.split()))
+    match = _PUT_COUNTER_ON_SELF_THEN_IF_COUNT_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     if match.group("kind").lower() != match.group("other_kind").lower():
@@ -2050,7 +2051,7 @@ def _source_still_here(game: "Game", stack_object: "StackObject") -> CardState |
 
 def _parse_remove_all_counters_then_cant_have_clause(text: str) -> TargetedClause | None:
     """`_REMOVE_ALL_COUNTERS_THEN_CANT_HAVE_RE`'s shape; see the banner above."""
-    match = _REMOVE_ALL_COUNTERS_THEN_CANT_HAVE_RE.fullmatch(" ".join(text.strip().split()))
+    match = _REMOVE_ALL_COUNTERS_THEN_CANT_HAVE_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     if not _targets_understood(match.group("phrase"), count_agnostic=True):
@@ -2187,7 +2188,7 @@ def _parse_remove_n_kind_counters_from_target_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
     """`_REMOVE_N_KIND_COUNTERS_FROM_TARGET_RE`'s shape; see the banner above."""
-    stripped = " ".join(clause.split())
+    stripped = collapsed(clause)
     if not stripped.lower().startswith("remove "):
         return None
     match = _REMOVE_N_KIND_COUNTERS_FROM_TARGET_RE.fullmatch(stripped)
@@ -2232,7 +2233,7 @@ _REMOVE_FROM_TARGET_AND_PUT_ON_TARGET_RE = re.compile(
 @ABILITY_TEXT.rung("s4")
 def _parse_remove_from_target_and_put_on_target_clause(text: str) -> AbilityEffect | None:
     """`_REMOVE_FROM_TARGET_AND_PUT_ON_TARGET_RE`'s shape; see the banner above."""
-    stripped = " ".join(text.split())
+    stripped = collapsed(text)
     if not stripped.lower().startswith("remove ") or " and put " not in stripped.lower():
         return None
     match = _REMOVE_FROM_TARGET_AND_PUT_ON_TARGET_RE.fullmatch(stripped)
@@ -2909,7 +2910,7 @@ def _parse_counter_threshold_whole_text(text: str, *, for_spell: bool) -> Target
     kind, not only the threshold's worth (four found, four removed). A
     leading "you may" is one CR 608.2d choice over the whole list.
     """
-    whole = " ".join(_strip_non_effect_preamble(text).strip().split())
+    whole = collapsed(_strip_non_effect_preamble(text).strip())
     match = _COUNTER_THRESHOLD_RE.fullmatch(whole)
     if match is None:
         return None
@@ -3149,7 +3150,7 @@ def _parse_for_each_symbols_spent_clause(text: str) -> AbilityEffect | None:
     be on its own and run once per group spent."""
     if " spent to cast " not in text:
         return None
-    match = _FOR_EACH_SYMBOLS_SPENT_RE.fullmatch(" ".join(text.split()))
+    match = _FOR_EACH_SYMBOLS_SPENT_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     from .dispatch import _ability_effect_or_notice
@@ -3174,7 +3175,7 @@ def _parse_choose_then_counters_per_symbols_spent_clause(text: str) -> AbilityEf
     """`_CHOOSE_THEN_COUNTERS_PER_SYMBOLS_SPENT_RE`'s shape."""
     if " spent to cast " not in text or not text.lower().startswith("choose "):
         return None
-    match = _CHOOSE_THEN_COUNTERS_PER_SYMBOLS_SPENT_RE.fullmatch(" ".join(text.split()))
+    match = _CHOOSE_THEN_COUNTERS_PER_SYMBOLS_SPENT_RE.fullmatch(collapsed(text))
     each = parse_count(match.group("n")) if match else None
     if match is None or each is None:
         return None
@@ -4057,7 +4058,7 @@ _EVENT_SUBJECT_COUNTERS_AND_KEYWORDS_RE = re.compile(
 @ABILITY_TEXT.rung("s20")
 def _parse_event_subject_counters_and_keywords_clause(text: str) -> AbilityEffect | None:
     """`_EVENT_SUBJECT_COUNTERS_AND_KEYWORDS_RE`'s shape."""
-    match = _EVENT_SUBJECT_COUNTERS_AND_KEYWORDS_RE.fullmatch(" ".join(text.strip().split()))
+    match = _EVENT_SUBJECT_COUNTERS_AND_KEYWORDS_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     amount = parse_count(match.group("n"))
@@ -4209,7 +4210,7 @@ def _parse_exile_from_graveyard_then_counters_equal_to_mana_value_clause(
     - see its own docstring. More than one card of the quality is the
     controller's choice (CR 608.2d), asked as one exact-one `CHOOSE_CARDS`."""
     match = _EXILE_FROM_GRAVEYARD_THEN_COUNTERS_EQUAL_TO_ITS_MANA_VALUE_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
+        collapsed(_strip_non_effect_preamble(text))
     )
     if match is None:
         return None
@@ -4512,7 +4513,7 @@ def _parse_remove_all_counters_then_that_many_clause(text: str) -> AbilityEffect
     unreadable remainder fails the whole ability closed now rather than at
     resolution. Zero removed does nothing more (CR 101.3).
     """
-    match = _REMOVE_ALL_COUNTERS_THEN_THAT_MANY_RE.fullmatch(" ".join(text.split()).rstrip("."))
+    match = _REMOVE_ALL_COUNTERS_THEN_THAT_MANY_RE.fullmatch(collapsed(text).rstrip("."))
     if match is None:
         return None
     rest = match.group("rest")
@@ -4591,7 +4592,7 @@ def _parse_counter_exile_may_cast_free_clause(effect_text: str) -> TargetedClaus
     400.7 anaphora back to the countered spell. A spell that could not be
     countered (CR 101.2's "can't be countered") stays on the stack and is
     neither exiled nor handed out; a target already gone is skipped."""
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text))
     match = _COUNTER_EXILE_MAY_CAST_FREE_RE.fullmatch(whole)
     if match is None:
         return None
@@ -4649,7 +4650,7 @@ _LEGEND_PRONOUN_RE = re.compile(r"\b(?:he|she|him|her)\b", re.IGNORECASE)
 
 def _parse_self_counter_then_rider(text: str) -> AbilityEffect | None:
     """`_SELF_COUNTER_THEN_RIDER_RE`'s shape, or `None`."""
-    match = _SELF_COUNTER_THEN_RIDER_RE.fullmatch(" ".join(text.strip().split()))
+    match = _SELF_COUNTER_THEN_RIDER_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     put_counter = parse_mixed_effect("Put a +1/+1 counter on this creature.")
@@ -4790,7 +4791,7 @@ def _parse_remove_up_to_then_pump_per_removed(text: str) -> AbilityEffect | None
     """`_REMOVE_UP_TO_THEN_PUMP_PER_REMOVED_RE`'s shape; see the banner above."""
     from .dispatch import _parse_mixed_clauses
 
-    match = _REMOVE_UP_TO_THEN_PUMP_PER_REMOVED_RE.fullmatch(" ".join(text.split()))
+    match = _REMOVE_UP_TO_THEN_PUMP_PER_REMOVED_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     removal = _parse_remove_up_to_n_counters_from_target_clause(match.group("remove") + ".")
@@ -4848,7 +4849,7 @@ _MAY_REMOVE_FROM_EACH_THEN_PUT_PER_REMOVED_RE = re.compile(
 @ABILITY_TEXT.rung("s28")
 def _parse_may_remove_from_each_then_put_per_removed(text: str) -> AbilityEffect | None:
     """`_MAY_REMOVE_FROM_EACH_THEN_PUT_PER_REMOVED_RE`'s shape; see the banner above."""
-    match = _MAY_REMOVE_FROM_EACH_THEN_PUT_PER_REMOVED_RE.fullmatch(" ".join(text.split()))
+    match = _MAY_REMOVE_FROM_EACH_THEN_PUT_PER_REMOVED_RE.fullmatch(collapsed(text))
     if match is None or not _search_quality_is_readable(match.group("noun")):
         return None
     kind = match.group("kind").lower()

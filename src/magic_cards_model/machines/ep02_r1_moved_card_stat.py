@@ -35,6 +35,8 @@ from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from .amount_sentences import (
@@ -817,7 +819,7 @@ def _guarded(step: ResolutionStep, test: Callable[[State], bool]) -> ResolutionS
 
 
 def _clean(sentence: str) -> str:
-    return " ".join(sentence.replace("’", "'").split()).rstrip(".").strip()
+    return collapsed(sentence.replace("’", "'")).rstrip(".").strip()
 
 
 def _amount_step(sentence: str, *, for_spell: bool, opener: bool) -> ResolutionStep | None:
@@ -975,9 +977,7 @@ def moved_card_stat_effect(text: str, *, for_spell: bool) -> Callable[["Game", A
 
     sentences = [
         _clean(sentence)
-        for sentence in _plain_resolution_sentences(
-            _strip_non_effect_preamble(" ".join(text.split()))
-        )
+        for sentence in _plain_resolution_sentences(_strip_non_effect_preamble(collapsed(text)))
     ]
     sentences = [s for s in sentences if s and not s.lower().startswith("fuse")]
     if not sentences:

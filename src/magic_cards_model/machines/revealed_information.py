@@ -17,6 +17,8 @@ computed ability lines of the battlefield (CR 613.5):
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..numbers import parse_count
 
@@ -38,15 +40,15 @@ _ADDITIONAL_RE = re.compile(
 
 
 def _normal(line: str) -> str:
-    return " ".join(line.split()).rstrip(".").lower()
+    return collapsed(line).rstrip(".").lower()
 
 
 def reads_revealed_information_line(text: str) -> bool:
     line = _normal(text)
     return (
         line in (_ALL_HANDS, _OPPONENT_HANDS, _ALL_TOPS)
-        or _FACE_DOWN_RE.match(" ".join(text.split())) is not None
-        or _ADDITIONAL_RE.match(" ".join(text.split())) is not None
+        or _FACE_DOWN_RE.match(collapsed(text)) is not None
+        or _ADDITIONAL_RE.match(collapsed(text)) is not None
     )
 
 

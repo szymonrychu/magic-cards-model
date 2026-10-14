@@ -3,6 +3,7 @@ from random import Random
 from typing import TYPE_CHECKING, Any
 
 from magic_cards_model.phrases import with_indefinite_article
+from magic_cards_model.text_norm import collapsed
 
 from ...data.subtypes import canonical_subtype
 from ...models.card import Type
@@ -99,7 +100,7 @@ _RETURN_THEN_ITS_A_CREATURE_RE = re.compile(
 
 
 def _read_creature_rider(text: str) -> _CreatureRider | None:
-    match = _RETURN_CREATURE_RIDER_RE.fullmatch(" ".join(text.strip().split()))
+    match = _RETURN_CREATURE_RIDER_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     types: list[Type] = []
@@ -210,7 +211,7 @@ def _parse_return_as_creature_clause(text: str) -> TargetedClause | None:
     or Abuelo's Awakening (`_RETURN_THEN_ITS_A_CREATURE_RE`), on a spell or
     an ability, or `None`. CR 608.2b: a target that has left the graveyard
     is illegal, and nothing is returned."""
-    flat = " ".join(text.strip().split())
+    flat = collapsed(text.strip())
     otherwise = _CHOOSE_RETURN_OTHERWISE_CREATURE_RE.fullmatch(flat)
     then = None if otherwise else _RETURN_THEN_ITS_A_CREATURE_RE.fullmatch(flat)
     match = otherwise or then
@@ -276,7 +277,7 @@ def _parse_return_self_then_create_tokens_clause(text: str) -> AbilityEffect | N
     (the new Thopters plus this one both count). Left as a documented gap,
     not attempted here - unchanged by this parser replacing the row.
     """
-    match = _RETURN_SELF_THEN_CREATE_TOKENS_RE.fullmatch(" ".join(text.strip().split()))
+    match = _RETURN_SELF_THEN_CREATE_TOKENS_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     token_effect = _parse_token_clause(match.group("token_clause"), for_spell=False)
@@ -1007,7 +1008,7 @@ def _parse_put_creature_from_hand_attacking_then_return(text: str) -> AbilityEff
     that is impossible to perform.
     """
     match = _PUT_CREATURE_FROM_HAND_ATTACKING_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
+        collapsed(_strip_non_effect_preamble(text))
     )
     if match is None:
         return None
@@ -1491,7 +1492,7 @@ def _parse_return_target_card_then_instead_battlefield_if_cost_paid_clause(
     resolving ability - never a spell - carries the same way the whole
     `_keyword_cost_paid`/"paid this turn" family already requires.
     """
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     match = _RETURN_TARGET_CARD_THEN_INSTEAD_BATTLEFIELD_IF_COST_PAID_RE.fullmatch(whole)
     if match is None:
         return None
@@ -1663,7 +1664,7 @@ def _parse_return_dead_self_with_counters_at_step_clause(text: str) -> AbilityEf
     """`_RETURN_DEAD_SELF_WITH_COUNTERS_AT_STEP_RE`'s shape (CR 603.7, 122.6)."""
     if " with " not in text:
         return None
-    match = _RETURN_DEAD_SELF_WITH_COUNTERS_AT_STEP_RE.fullmatch(" ".join(text.split()))
+    match = _RETURN_DEAD_SELF_WITH_COUNTERS_AT_STEP_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     fewer = parse_count(match.group("fewer")) if match.group("fewer") else None
@@ -1808,9 +1809,7 @@ def _parse_mass_return_entered_this_turn_clause(
     """
     if for_spell:
         return None
-    match = _RETURN_EACH_OTHER_ENTERED_THIS_TURN_TO_HAND_RE.fullmatch(
-        " ".join(text.strip().split())
-    )
+    match = _RETURN_EACH_OTHER_ENTERED_THIS_TURN_TO_HAND_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     type_matches = _parse_mass_type_qualifier(match.group("qualifier"))
@@ -1885,7 +1884,7 @@ def _parse_return_target_and_same_name_from_graveyard_clause(
     the whole group; to hand, `returning_together` is the identical batching
     for CR 603.2c's own "return" wording.
     """
-    match = _RETURN_TARGET_AND_SAME_NAME_FROM_GRAVEYARD_RE.fullmatch(" ".join(text.strip().split()))
+    match = _RETURN_TARGET_AND_SAME_NAME_FROM_GRAVEYARD_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     if not _targets_understood(
@@ -1893,7 +1892,7 @@ def _parse_return_target_and_same_name_from_graveyard_clause(
     ):
         return None
     tapped = match.group("tapped") is not None
-    to_battlefield = "to your hand" not in " ".join(text.strip().split()).lower()
+    to_battlefield = "to your hand" not in collapsed(text.strip()).lower()
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
@@ -2918,7 +2917,7 @@ def _parse_return_with_rider_clause(effect_text: str) -> AbilityEffect | None:
     is still in the graveyard it went to (CR 608.2's ordinary "the object is
     gone"); the rider's effects are indefinite (CR 611.2a: no duration
     stated) and follow only the object the return made (CR 400.7)."""
-    match = _RETURN_WITH_RIDER_RE.fullmatch(" ".join(effect_text.split()))
+    match = _RETURN_WITH_RIDER_RE.fullmatch(collapsed(effect_text))
     if match is None:
         return None
     parts = _return_rider_modifications(match.group("rider"))
@@ -2977,7 +2976,7 @@ _RETURN_SELF_THEN_MAY_ATTACH_EQUIPMENT_RE = re.compile(
 
 def _parse_return_self_then_may_attach_equipment(text: str) -> AbilityEffect | None:
     """`_RETURN_SELF_THEN_MAY_ATTACH_EQUIPMENT_RE`'s shape, or `None`."""
-    match = _RETURN_SELF_THEN_MAY_ATTACH_EQUIPMENT_RE.fullmatch(" ".join(text.strip().split()))
+    match = _RETURN_SELF_THEN_MAY_ATTACH_EQUIPMENT_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     returning_text = re.sub(
@@ -3026,7 +3025,7 @@ _CHOSEN_GRAVEYARD_CARDS_ONTO_BATTLEFIELD_RE = re.compile(
 @SPELL_TEXT.rung("s21")
 def _parse_return_chosen_graveyard_cards_spell_text(text: str) -> Effect | None:
     """`_CHOSEN_GRAVEYARD_CARDS_ONTO_BATTLEFIELD_RE`'s shape; see the banner."""
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     match = _CHOSEN_GRAVEYARD_CARDS_ONTO_BATTLEFIELD_RE.fullmatch(whole)
     if match is None:
         return None

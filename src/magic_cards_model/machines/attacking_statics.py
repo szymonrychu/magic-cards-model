@@ -30,6 +30,8 @@ its own module scope without a loop.
 import re
 from collections.abc import Sequence
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from .combat import _parse_creature_description
 from .layers import (
@@ -665,7 +667,7 @@ def _gated_grants(rest: str) -> list[str] | None:
 def parse_gated_self_static(sentence: str) -> EffectBuilder | None:
     """The self statics above, or None. Tried by
     `machines/layers._parse_layer_sentence` after its other shapes."""
-    text = " ".join(sentence.split())
+    text = collapsed(sentence)
     lowered = text.lower()
     if "as long as" not in lowered and " unless " not in lowered:
         return None

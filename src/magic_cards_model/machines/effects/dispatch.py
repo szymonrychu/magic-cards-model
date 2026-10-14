@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from magic_cards_model.phrases import with_indefinite_article
+from magic_cards_model.text_norm import collapsed
 
 from ...models.card import Type
 from ...models.card_state import (
@@ -2770,7 +2771,7 @@ _PUT_CARDS_THAT_DIED_THIS_TURN_RE = re.compile(
 @SPELL_TEXT.rung("s8")
 def _parse_put_cards_that_died_this_turn_clause(text: str) -> Effect | None:
     """`_PUT_CARDS_THAT_DIED_THIS_TURN_RE`'s shape - see the banner above."""
-    match = _PUT_CARDS_THAT_DIED_THIS_TURN_RE.fullmatch(" ".join(text.strip().split()))
+    match = _PUT_CARDS_THAT_DIED_THIS_TURN_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     quality = match.group("quality").lower()
@@ -4996,7 +4997,7 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         # player.
         return [target_player_draws_and_loses_life]
     each_player_may_discard_hand_and_draw = _parse_each_player_may_discard_hand_and_draw_clause(
-        " ".join(text.strip().split()), for_spell=for_spell
+        collapsed(text.strip()), for_spell=for_spell
     )
     if each_player_may_discard_hand_and_draw is not None:
         # Read whole for the identical bare-"and" reason: "discard their
@@ -5004,7 +5005,7 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         # neither of which `_parse_mixed_clause` can read alone.
         return [each_player_may_discard_hand_and_draw]
     if for_spell and _CONTINUOUS_PUMP_OR_KEYWORD_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).strip().split())
+        collapsed(_strip_non_effect_preamble(text).strip())
     ):
         # Read whole for the same reason the two above are: Echoing Courage's
         # subject, "Target creature and all other creatures with the same name
@@ -5022,7 +5023,7 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         # `whole`) was never stripped before reaching here.
         return [create_continuous_effect]  # type: ignore[list-item]
     mass_pump_group_whole = _parse_mass_pump_group_clause(
-        " ".join(text.strip().split()), for_spell=for_spell
+        collapsed(text.strip()), for_spell=for_spell
     )
     if mass_pump_group_whole is not None:
         # Read whole for the identical bare-"and" reason as the two blocks
@@ -6025,7 +6026,7 @@ def _parse_next_spell_cannot_be_countered_clause(text: str) -> AbilityEffect | N
     countered." onto `CardState.granted_ability_texts` instead of copying it.
     """
     match = _NEXT_SPELL_CANNOT_BE_COUNTERED_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
+        collapsed(_strip_non_effect_preamble(text))
     )
     if match is None:
         return None
@@ -6131,7 +6132,7 @@ def _parse_cast_from_graveyard_now_clause(effect_text: str) -> AbilityEffect | N
     own quality ("an instant or sorcery spell cast this way"), or always for
     "that spell".
     """
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text))
     match = _CAST_FROM_GRAVEYARD_NOW_RE.fullmatch(whole)
     if match is None:
         return None

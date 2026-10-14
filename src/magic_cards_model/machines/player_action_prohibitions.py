@@ -28,6 +28,8 @@ import re
 from functools import cache
 from typing import TYPE_CHECKING, NamedTuple
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Type
 from ..models.card_state import CardState
 from ..models.mana import ManaCost
@@ -92,7 +94,7 @@ def _payment_ban(line: str) -> PaymentBan | None:
 
 def reads_player_action_prohibition_line(text: str) -> bool:
     """Whether `text` is a prohibition this module enforces."""
-    line = " ".join(text.split())
+    line = collapsed(text)
     lowered = line.lower()
     if "can't" not in lowered:
         return False
@@ -108,7 +110,7 @@ def _lines(game: "Game") -> list[tuple[CardState, str]]:
     from .triggers.collect import _computed_ability_lines
 
     return [
-        (permanent, " ".join(line.split()))
+        (permanent, collapsed(line))
         for permanent in game.battlefield
         for line in _computed_ability_lines(game, permanent)
         if "can't" in line.lower()

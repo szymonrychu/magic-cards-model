@@ -20,6 +20,8 @@ import re
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
@@ -89,7 +91,7 @@ def dies_consequence_effect(text: str, *, source_stamp: UUID | None = None) -> A
     the consequence no longer reaches."""
     from .casting import PlayAction
 
-    cleaned = " ".join(text.split())
+    cleaned = collapsed(text)
     if _FLIP_THIS_RE.fullmatch(cleaned):
 
         def flip_source(game: "Game", ability: Any) -> None:
@@ -185,7 +187,7 @@ def dies_consequence_effect(text: str, *, source_stamp: UUID | None = None) -> A
 
 def parse_then_when_that_creature_dies_this_turn(text: str, *, for_spell: bool) -> Any:
     """The whole two-sentence chain, or None."""
-    match = _THEN_WHEN_THAT_CREATURE_DIES_RE.fullmatch(" ".join(text.split()))
+    match = _THEN_WHEN_THAT_CREATURE_DIES_RE.fullmatch(collapsed(text))
     if match is None:
         return None
 

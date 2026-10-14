@@ -3,6 +3,8 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from magic_cards_model.text_norm import collapsed
+
 from ...ids import new_id
 from ...models.card import Card, Layout, Supertype
 from ...models.card_state import CardState
@@ -1599,7 +1601,7 @@ def batched_combat_damage_sources(
         return []
     description = match.group("description")
     yours = _ONE_OR_MORE_ATTACK_YOURS.search(description) is not None
-    remainder = " ".join(_ONE_OR_MORE_ATTACK_YOURS.sub("", description).split())
+    remainder = collapsed(_ONE_OR_MORE_ATTACK_YOURS.sub("", description))
     if not yours and re.search(r"\bcontrols?\b", remainder, re.IGNORECASE):
         return None
     subtypes = _bare_subtype_list(remainder)

@@ -3,6 +3,8 @@ from collections.abc import Callable, Sequence
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from magic_cards_model.text_norm import collapsed
+
 from ...models.card import Color, Layout, Supertype, Type
 from ...models.card_state import (
     DEVOTION_BONUS_TEXT,
@@ -2860,7 +2862,7 @@ def _parse_pump_for_each_then_bite_text(
         or "deals damage equal to" not in text.lower()
     ):
         return None
-    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(" ".join(text.split())))
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(collapsed(text)))
     if len(sentences) != 2:
         return None
     pump = _TARGET_PUMP_FOR_EACH_RE.fullmatch(sentences[0].strip())
@@ -3584,7 +3586,7 @@ def _for_each_described_count(phrase: str) -> Callable[["Game", str, str | None]
     """
     # "the number of creatures you control with defender" (Axebane Guardian's
     # "where X is") is the identical count spelled as a number.
-    text = re.sub(r"^(?:the )?number of ", "", " ".join(phrase.split()), flags=re.IGNORECASE)
+    text = re.sub(r"^(?:the )?number of ", "", collapsed(phrase), flags=re.IGNORECASE)
     graveyard = _DESCRIBED_CARDS_IN_YOUR_GRAVEYARD_RE.fullmatch(text)
     if graveyard is not None:
         quality = graveyard.group("quality")
@@ -4764,7 +4766,7 @@ _IT_GETS_DYNAMIC_X_PUMP_RE = re.compile(
 @ABILITY_TEXT.rung("s9")
 def _parse_it_dynamic_x_pump_clause(text: str) -> AbilityEffect | None:
     """`_IT_GETS_DYNAMIC_X_PUMP_RE`'s shape; see the banner above."""
-    match = _IT_GETS_DYNAMIC_X_PUMP_RE.fullmatch(" ".join(text.strip().split()))
+    match = _IT_GETS_DYNAMIC_X_PUMP_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     power_is_x = match.group("power").lower() == "x"
@@ -4822,7 +4824,7 @@ def _parse_it_dynamic_x_pump_then_if_clause(text: str) -> AbilityEffect | None:
     condition looks at the creature as the pump left it."""
     if "where X is" not in text or ". Then if " not in text:
         return None
-    pump, _, rest = " ".join(text.strip().split()).partition(". Then if ")
+    pump, _, rest = collapsed(text.strip()).partition(". Then if ")
     pumped = _parse_it_dynamic_x_pump_clause(pump + ".")
     if pumped is None:
         return None
@@ -4869,7 +4871,7 @@ def _parse_half_x_life_and_draw_half_x_cards_clause(effect_text: str) -> Ability
     embedded X of *its own*, since a triggered ability announces none) -
     unreadable there fails the whole clause closed rather than guessing.
     """
-    match = _HALF_X_LIFE_AND_DRAW_HALF_X_CARDS_RE.fullmatch(" ".join(effect_text.split()))
+    match = _HALF_X_LIFE_AND_DRAW_HALF_X_CARDS_RE.fullmatch(collapsed(effect_text))
     if match is None:
         return None
     of = match.group("of").strip()
@@ -5478,7 +5480,7 @@ def _parse_put_creature_mv_x_from_hand_attacking(text: str) -> AbilityEffect | N
     """`_PUT_CREATURE_MV_X_FROM_HAND_ATTACKING_RE`'s shape; see the banner
     above."""
     match = _PUT_CREATURE_MV_X_FROM_HAND_ATTACKING_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
+        collapsed(_strip_non_effect_preamble(text))
     )
     if match is None:
         return None
@@ -5762,7 +5764,7 @@ _DISCARDS_A_CARD_RE = re.compile(r"\bdiscards? a card\b", re.IGNORECASE)
 def _split_at_discarded_card_value(text: str) -> tuple[str, str] | None:
     """(the instructions that discard, the rest with "that number" for the
     discarded card's mana value), or `None` when `text` is not that shape."""
-    whole = " ".join(text.strip().split())
+    whole = collapsed(text.strip())
     found = _DISCARDED_CARD_MANA_VALUE_RE.search(whole)
     if found is None:
         return None

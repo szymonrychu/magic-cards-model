@@ -18,6 +18,8 @@ import functools
 import re
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from .effects._chains import ABILITY_TEXT
@@ -39,7 +41,7 @@ def _grant_flashback(text: str) -> Any:
     lowered = text.lower()
     if "gains flashback" not in lowered:
         return None
-    flat = " ".join(text.split())
+    flat = collapsed(text)
     free_when_saddled = _SADDLED_RE.search(flat) is not None
     base = _SADDLED_RE.sub("", flat).strip()
     base = _THAT_CARDS_RE.sub("the flashback cost is equal to its mana cost", base)
@@ -94,7 +96,7 @@ _GRANT_HARMONIZE_RE = re.compile(
 def _grant_harmonize(text: str) -> Any:
     if "gains harmonize" not in text.lower():
         return None
-    match = _GRANT_HARMONIZE_RE.fullmatch(" ".join(text.split()))
+    match = _GRANT_HARMONIZE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     from .effects._common import _targets_understood

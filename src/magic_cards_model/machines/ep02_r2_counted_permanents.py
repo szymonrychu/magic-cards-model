@@ -13,6 +13,8 @@ reader they own.
 import functools
 import re
 
+from magic_cards_model.text_norm import collapsed
+
 _HAVE_PLAYER_RE = re.compile(
     r"^have (?P<subject>(?:up to one )?target (?:player|opponent)|that player|each opponent|"
     r"each player|defending player) (?P<verb>lose|draw|discard|mill|gain|reveal|sacrifice)\b",
@@ -99,7 +101,7 @@ def split_group_extras(phrase: str):
         ) + token.group("tail")
     if not fields:
         return phrase, None
-    return " ".join(text.split()), GroupExtras(**fields)
+    return collapsed(text), GroupExtras(**fields)
 
 
 _LAYER_GROUP_RE = re.compile(
@@ -300,7 +302,7 @@ def parse_pump_then_delayed_text(text: str, *, for_spell: bool):
     longer a legal one (CR 608.2b) leaves nothing to sacrifice, and "if you do"
     says the same. `None` when the pump or the delayed clause is not one the
     engine reads."""
-    match = _PUMP_THEN_DELAYED_RE.match(" ".join(text.split()))
+    match = _PUMP_THEN_DELAYED_RE.match(collapsed(text))
     if match is None:
         return None
     from ..models.card_state import CardState
@@ -383,7 +385,7 @@ def parse_base_stat_becomes_text(text: str, *, for_spell: bool):
     ability resolves, so it is written into the effect as a plain number.
     The duration has to be stated (CR 611.2a), as a lead or a tail; the toughness
     alone is not set by any text this reads."""
-    match = _BASE_STAT_RE.match(" ".join(text.split()))
+    match = _BASE_STAT_RE.match(collapsed(text))
     if match is None or (match.group("lead") is None) == (match.group("tail") is None):
         return None
     from ..models.card_state import CardState

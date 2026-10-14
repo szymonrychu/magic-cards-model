@@ -37,6 +37,8 @@ import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Color
 from .decisions import Decision, DecisionKind
 
@@ -93,7 +95,7 @@ def read_until_end_of_turn_dont_lose_unspent_mana(text: str) -> str | None:
     """The `CastingRuleEffect.kind` that records the turn-scoped sentence
     `_UNTIL_END_OF_TURN_DONT_LOSE_RE` reads (`KEEP_UNSPENT_MANA_RULE:<colour or
     all>`), or `None` when `text` is not that sentence."""
-    match = _UNTIL_END_OF_TURN_DONT_LOSE_RE.fullmatch(" ".join(text.strip().split()))
+    match = _UNTIL_END_OF_TURN_DONT_LOSE_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     color = match.group("color")
@@ -119,7 +121,7 @@ class ManaLossReplacement:
 def reads_unspent_mana_line(text: str) -> bool:
     """Whether `text` is one of the static lines this module performs -
     `support.py`'s credit."""
-    line = " ".join(text.strip().split())
+    line = collapsed(text.strip())
     return bool(_BECOMES_RE.match(line) or _DONT_LOSE_RE.match(line))
 
 
@@ -137,7 +139,7 @@ def mana_loss_replacements(game: Game, username: str) -> list[ManaLossReplacemen
     for permanent in game.battlefield:
         controller = game.controller_of(permanent).username
         for line in _computed_lines(game, permanent):
-            text = " ".join(line.strip().split())
+            text = collapsed(line.strip())
             becomes = _BECOMES_RE.match(text)
             if becomes is not None:
                 if controller == username:

@@ -18,6 +18,8 @@ import re
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.zone import Zone
 
@@ -37,9 +39,7 @@ def reads_look_at_exiled_with_line(card_name: str, text: str, legendary: bool) -
         return False
     from .abilities import self_normalized_effect_text
 
-    line = " ".join(
-        self_normalized_effect_text(card_name, text.strip(), legendary=legendary).split()
-    )
+    line = collapsed(self_normalized_effect_text(card_name, text.strip(), legendary=legendary))
     return _LOOK_AT_EXILED_WITH_RE.fullmatch(line) is not None
 
 
@@ -107,7 +107,7 @@ def parse_exile_from_hand_face_down(text: str):
     {4}{U}{U}. If you do, transform ...")."""
     if "from your hand face down" not in text.lower():
         return None
-    match = _EXILE_FROM_HAND_FACE_DOWN_RE.fullmatch(" ".join(text.split()))
+    match = _EXILE_FROM_HAND_FACE_DOWN_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     rest = None
@@ -157,8 +157,8 @@ def parse_return_exiled_with_to_hand(text: str):
     `<this>` into their owners' hands." (the whole pile, one event, CR 603.2c)."""
     if "exiled with" not in text.lower():
         return None
-    one = _RETURN_A_CARD_RE.fullmatch(" ".join(text.split())) is not None
-    if not one and _PUT_ALL_INTO_HANDS_RE.fullmatch(" ".join(text.split())) is None:
+    one = _RETURN_A_CARD_RE.fullmatch(collapsed(text)) is not None
+    if not one and _PUT_ALL_INTO_HANDS_RE.fullmatch(collapsed(text)) is None:
         return None
 
     def effect(game: Game, ability) -> None:
@@ -193,7 +193,7 @@ def parse_turn_exiled_with_face_up(text: str):
     countered (CR 701.6a)."""
     if "face up" not in text.lower():
         return None
-    match = _TURN_FACE_UP_RE.fullmatch(" ".join(text.split()))
+    match = _TURN_FACE_UP_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     counters = match.group("counter") is not None
@@ -276,7 +276,7 @@ def parse_exile_a_card_from_a_graveyard(text: str):
     """ "Exile a card from a graveyard." - the controller picks one card out of
     every graveyard (CR 608.2d; none when all are empty) and it is exiled with
     the ability's source (CR 607.2a)."""
-    if _EXILE_A_CARD_FROM_A_GRAVEYARD_RE.fullmatch(" ".join(text.split())) is None:
+    if _EXILE_A_CARD_FROM_A_GRAVEYARD_RE.fullmatch(collapsed(text)) is None:
         return None
 
     def effect(game: Game, ability) -> None:
@@ -297,7 +297,7 @@ def parse_opponent_exiles_permanent_then_graveyard_card(text: str):
     """ "Target opponent exiles a `<permanent>` they control, then they exile a
     `<card>` from their graveyard." - the targeted opponent chooses both
     (CR 608.2d), each exile linked to the ability's source (CR 607.2a)."""
-    match = _OPPONENT_EXILES_RE.fullmatch(" ".join(text.split()))
+    match = _OPPONENT_EXILES_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     permanent_ok = _quality(match.group("permanent"))
@@ -336,7 +336,7 @@ def parse_exile_discarded_card_with_counter(text: str):
     card of the event's discard (`GameEvent.discarded_ids`; the trigger is put
     on the stack once per discarded card, CR 603.2c) still in that graveyard
     (CR 400.7: a card that moved is a new object, so one that left is skipped)."""
-    match = _EXILE_IT_FROM_GRAVEYARD_WITH_COUNTER_RE.fullmatch(" ".join(text.split()))
+    match = _EXILE_IT_FROM_GRAVEYARD_WITH_COUNTER_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     counter = match.group("counter").lower()
@@ -375,7 +375,7 @@ def parse_exile_the_triggering_card(text: str):
     linked to the ability's source (CR 607.2a). A card that has since left the
     graveyard is a new object (CR 400.7) and is not found. `<more>` is an
     ordinary effect run afterwards (the Zombie token)."""
-    match = _EXILE_THAT_CARD_RE.fullmatch(" ".join(text.split()))
+    match = _EXILE_THAT_CARD_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     rest = None
@@ -427,7 +427,7 @@ def parse_reveal_hands_exile_creature_until_leaves(text: str):
     the quality from each (CR 608.2d), and it is exiled linked to the source
     (CR 607.2a) and returned to its owner's hand when the source leaves (CR
     610.3). A source that already left exiles nothing (CR 610.3a)."""
-    match = _REVEAL_HANDS_EXILE_CREATURE_UNTIL_LEAVES_RE.fullmatch(" ".join(text.split()))
+    match = _REVEAL_HANDS_EXILE_CREATURE_UNTIL_LEAVES_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     permits = _quality(match.group("quality"))
@@ -471,7 +471,7 @@ def parse_become_a_copy_of_an_exiled_card(text: str):
     cards of that quality and mana value X (CR 608.2d; the announced X, CR
     107.3k), and the source becomes a copy of the card's copiable values (CR
     707.2: a card in exile has its printed ones) with no end (CR 707.4)."""
-    match = _COPY_AN_EXILED_CARD_RE.fullmatch(" ".join(text.split()))
+    match = _COPY_AN_EXILED_CARD_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     permits = _quality(match.group("quality"))

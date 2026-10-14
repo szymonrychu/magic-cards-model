@@ -42,6 +42,8 @@ import re
 from collections.abc import Callable, Sequence
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState, Counter
 from ..models.zone import Zone
 from ..numbers import parse_count
@@ -136,7 +138,7 @@ def choose_and_animate_mode(text: str) -> Callable[[Game, CardState], None] | No
     (CR 122.1a), then registers the animation for it (CR 611.2). The animation
     sentence must itself be a layer sentence `machines/layers.py` reads.
     """
-    match = _CHOOSE_AND_ANIMATE_RE.fullmatch(" ".join(text.split()))
+    match = _CHOOSE_AND_ANIMATE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     count = parse_count(match.group("count"))

@@ -29,6 +29,8 @@ import re
 from functools import cache
 from typing import TYPE_CHECKING, NamedTuple
 
+from magic_cards_model.text_norm import collapsed
+
 from ..data.subtypes import subtype_vocabulary
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState
@@ -128,7 +130,7 @@ def _word_ok(word: str) -> bool:
 
 @cache
 def _cause(line: str) -> tuple[tuple[tuple[str, ...], ...], frozenset[TriggerEvent]] | None:
-    match = _CAUSE_RE.match(" ".join(line.split()))
+    match = _CAUSE_RE.match(collapsed(line))
     if match is None:
         return None
     alternatives = []
@@ -142,7 +144,7 @@ def _cause(line: str) -> tuple[tuple[tuple[str, ...], ...], frozenset[TriggerEve
 
 @cache
 def _whose(line: str) -> tuple[tuple[Qualifier, ...], str | None, int] | None:
-    match = _WHOSE_RE.match(" ".join(line.split()))
+    match = _WHOSE_RE.match(collapsed(line))
     if match is None:
         return None
     qualifiers = []
@@ -176,11 +178,11 @@ def reads_trigger_doubling_line(text: str) -> bool:
     """Whether `text` is a line this module performs."""
     lowered = text.lower()
     if "additional time" in lowered:
-        line = " ".join(text.split())
+        line = collapsed(text)
         return (
             _cause(line) is not None or _whose(line) is not None or _ROOM_RE.match(line) is not None
         )
-    return "cause abilities to trigger" in lowered and _suppress(" ".join(text.split())) is not None
+    return "cause abilities to trigger" in lowered and _suppress(collapsed(text)) is not None
 
 
 @cache
@@ -272,7 +274,7 @@ def extra_trigger_times(
         for printed in _lines(game, permanent):
             if "additional time" not in printed.lower() or is_additional_trigger_line(printed):
                 continue
-            line = " ".join(printed.split())
+            line = collapsed(printed)
             if (cause := _cause(line)) is not None:
                 alternatives, events = cause
                 if event.event not in events:
@@ -315,7 +317,7 @@ def room_ability_times(game: "Game", player: str) -> int:
         1
         for permanent in game.permanents_controlled_by(player)
         for line in _lines(game, permanent)
-        if "room abilities" in line.lower() and _ROOM_RE.match(" ".join(line.split()))
+        if "room abilities" in line.lower() and _ROOM_RE.match(collapsed(line))
     )
 
 
@@ -331,7 +333,7 @@ def without_suppressed(
         for printed in _lines(game, permanent):
             if "cause abilities" not in printed.lower():
                 continue
-            read = _suppress(" ".join(printed.split()))
+            read = _suppress(collapsed(printed))
             if read is None or event.event not in read[1]:
                 continue
             traits = traits or _event_traits(game, event)

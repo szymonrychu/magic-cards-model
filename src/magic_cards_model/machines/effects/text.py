@@ -3,6 +3,8 @@ import re
 from collections.abc import Callable, Sequence
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ...data.subtypes import subtype_vocabulary
 from ...models.card import Layout, Supertype, Type
 from ...models.card_state import (
@@ -311,6 +313,7 @@ def _strip_trailing_standalone_triggered_ability(text: str) -> str:
     return "\n".join(lines)
 
 
+@functools.lru_cache(maxsize=16384)
 def _strip_leading_standalone_cast_trigger(text: str) -> str:
     """A printed paragraph *before* the spell's own resolution text whose own
     ability is a `TriggerEvent.CAST_SPELL` trigger - Dash Hopes' and Temporal
@@ -763,7 +766,7 @@ def _parse_unsplittable_whole_text(text: str, *, for_spell: bool) -> TargetedCla
     away from the search it completes, and Avacyn, the Purifier's "it deals
     3 damage to each other creature and each opponent", whose bare "and" the
     split would cut in two."""
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     return (
         _parse_search_mv_equal_to_sacrificed_clause(whole, for_spell=for_spell)
         or _parse_count_colors_search_exile_cast_clause(whole, for_spell=for_spell)
@@ -1571,7 +1574,7 @@ def _parse_plural_target_gain_quoted_ability_whole_text(
 ) -> TargetedClause | None:
     """`_PLURAL_TARGET_GAIN_QUOTED_ABILITY_RE`'s shape."""
     whole = _strip_non_effect_preamble(text).strip()
-    match = _PLURAL_TARGET_GAIN_QUOTED_ABILITY_RE.fullmatch(" ".join(whole.split()))
+    match = _PLURAL_TARGET_GAIN_QUOTED_ABILITY_RE.fullmatch(collapsed(whole))
     if match is None:
         return None
     phrase = match.group("phrase").strip()
@@ -3225,7 +3228,7 @@ def _is_referent_color_count_expression(expr: str) -> bool:
     """Whether `expr` - the tail of a "where X is `<expr>`" clause - is
     exactly a departed object's colour count, `_REFERENT_COLOR_COUNT_
     EXPRESSION_RE`'s shape."""
-    lowered = " ".join(expr.strip().rstrip(".").strip().split()).lower()
+    lowered = collapsed(expr.strip().rstrip(".").strip()).lower()
     return bool(_REFERENT_COLOR_COUNT_EXPRESSION_RE.fullmatch(lowered))
 
 
@@ -4247,7 +4250,7 @@ def _parse_that_object_turn_trigger_spell_text(text: str) -> Effect | None:
     line = chosen_object_turn_trigger_line(text)
     if line is None:
         return None
-    printed = " ".join(text.strip().split())
+    printed = collapsed(text.strip())
 
     def effect(game: "Game", spell: CardState) -> None:
         chosen = _the_one_chosen_permanent(game, spell)
@@ -4275,7 +4278,7 @@ def _parse_that_object_turn_trigger_clause(clause: str) -> TargetedClause | None
     line = chosen_object_turn_trigger_line(clause)
     if line is None:
         return None
-    printed = " ".join(clause.strip().split())
+    printed = collapsed(clause.strip())
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         chosen = _the_one_chosen_permanent(game, stack_object)
@@ -4307,7 +4310,7 @@ def _parse_that_object_turn_trigger_ability_text(text: str) -> AbilityEffect | N
     line = chosen_object_turn_trigger_line(_strip_non_effect_preamble(text))
     if line is None:
         return None
-    printed = " ".join(text.strip().split())
+    printed = collapsed(text.strip())
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         chosen = _the_one_chosen_permanent(game, ability)

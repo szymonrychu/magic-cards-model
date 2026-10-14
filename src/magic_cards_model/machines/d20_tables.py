@@ -42,6 +42,8 @@ from collections.abc import Callable
 from functools import cache
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Type
 from ..models.card_state import CardState
 from ..models.zone import Zone
@@ -146,7 +148,7 @@ def _target_phrase_for_row(phrase: str) -> str:
 
 def _row_variants(body: str, target_phrase: str | None, earlier: list[str]) -> list[str]:
     """The texts a row is read as, most specific first (see the module docstring)."""
-    body = _strip_flavor_word(" ".join(body.split()))
+    body = _strip_flavor_word(collapsed(body))
     those = _THOSE_TOKENS_RE.fullmatch(body)
     if those is not None:
         for previous in reversed(earlier):
@@ -189,7 +191,7 @@ def _copy_cast_row(body: str) -> RowEffect | None:
     made in exile, cast through `Game.may_cast_during_resolution` (one
     question per copy, CR 707.12a), removed again if it was not cast (CR
     707.10a)."""
-    match = _COPY_CAST_ROW_RE.fullmatch(" ".join(body.split()))
+    match = _COPY_CAST_ROW_RE.fullmatch(collapsed(body))
     if match is None:
         return None
     from ..models.mana import ManaCost
@@ -245,7 +247,7 @@ def _copy_cast_row(body: str) -> RowEffect | None:
 def _search_type_split_row(body: str) -> RowEffect | None:
     """`_SEARCH_TYPE_SPLIT_RE`: the found card of the named type may go onto
     the battlefield; any other find, or a declined one, goes to the hand."""
-    match = _SEARCH_TYPE_SPLIT_RE.fullmatch(" ".join(body.replace("\u2019", "'").split()))
+    match = _SEARCH_TYPE_SPLIT_RE.fullmatch(collapsed(body.replace("\u2019", "'")))
     if match is None:
         return None
     try:
@@ -290,7 +292,7 @@ def _any_graveyard_reanimate_row(body: str) -> RowEffect | None:
     from any graveyard as the row resolves and puts it onto the battlefield
     under their control; "When that creature dies, its owner loses the game"
     is a delayed trigger on that object (CR 603.7, CR 104.3e)."""
-    match = _ANY_GRAVEYARD_REANIMATE_RE.fullmatch(" ".join(body.split()))
+    match = _ANY_GRAVEYARD_REANIMATE_RE.fullmatch(collapsed(body))
     if match is None:
         return None
     try:
@@ -365,7 +367,7 @@ def read_row(body: str, target_phrase: str | None, earlier: list[str]) -> RowEff
 def _modifier_reader(phrase: str) -> Callable[[Game, str], int] | None:
     """CR 706.2's printed modifier amount: "the number of cards in your hand"
     or anything `count_expression` reads."""
-    lowered = " ".join(phrase.lower().split())
+    lowered = collapsed(phrase.lower())
     if lowered in ("the number of cards in your hand", "the number of cards in their hand"):
         return lambda game, controller: len(game.player(controller).hand)
     if lowered.isdigit():

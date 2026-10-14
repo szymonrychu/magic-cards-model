@@ -57,6 +57,7 @@ confident wrong answer:
 This module is parsing and validation only. It never touches game state.
 """
 
+import functools
 import re
 from collections.abc import Iterable, Sequence
 
@@ -409,6 +410,7 @@ SPEND_ONLY_ON_X_RE = re.compile(
 )
 
 
+@functools.lru_cache(maxsize=16384)
 def strip_x_restrictions(text: str) -> str:
     """`text` without its "X can't be 0." and "Spend only <colour> mana on X."
     sentences - read at the announcement of X (`x_restriction_refusal`) and at

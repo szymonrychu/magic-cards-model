@@ -14,6 +14,8 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..numbers import parse_count
 from .casting import PlayAction
 from .decisions import Decision, DecisionKind, source_id_of
@@ -34,7 +36,7 @@ def parse_exile_top_choose_one_play(text: str) -> Any:
     lowered = text.lower()
     if "then choose one of them" not in lowered:
         return None
-    match = _RE.fullmatch(" ".join(text.split()))
+    match = _RE.fullmatch(collapsed(text))
     if match is None:
         return None
     count = parse_count(match.group("n"))
@@ -113,7 +115,7 @@ def parse_reveal_top_take_one_rest_bottom(text: str) -> Any:
     """
     if "from among them into your hand" not in text.lower():
         return None
-    match = _REVEAL_TAKE_ONE_RE.fullmatch(" ".join(text.split()))
+    match = _REVEAL_TAKE_ONE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     count = parse_count(match.group("n"))
@@ -196,7 +198,7 @@ def parse_search_exile_then_cast_free(text: str) -> Any:
     """
     if "without paying its mana cost" not in text.lower():
         return None
-    match = _SEARCH_EXILE_CAST_RE.fullmatch(" ".join(text.split()))
+    match = _SEARCH_EXILE_CAST_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     from .effects import _quality_matcher, _search_quality_is_readable

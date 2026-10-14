@@ -20,6 +20,8 @@ live off computed ability lines (CR 613.5):
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..numbers import parse_count
 
@@ -71,14 +73,14 @@ _TIMES = {"twice": 2, "thrice": 3}
 def reads_equip_block_line(text: str) -> bool:
     from .keywords import is_instant_speed_equip_line
 
-    line = " ".join(text.split())
+    line = collapsed(text)
     return any(pattern.match(line) for pattern in _PATTERNS) or is_instant_speed_equip_line(line)
 
 
 def _lines(game: "Game", permanent: CardState) -> list[str]:
     from .triggers.collect import _computed_ability_lines
 
-    return [" ".join(line.split()) for line in _computed_ability_lines(game, permanent)]
+    return [collapsed(line) for line in _computed_ability_lines(game, permanent)]
 
 
 def _stat(game: "Game", host: CardState, stat: str) -> int:
@@ -114,7 +116,7 @@ def attach_refusal(game: "Game", equipment: CardState, host: CardState | None) -
 def equip_once_each_turn(equipment: CardState) -> bool:
     """Whether the Equipment prints "Equip ... Activate only once each turn."."""
     return any(
-        _EQUIP_ONCE_RE.match(" ".join(line.split()))
+        _EQUIP_ONCE_RE.match(collapsed(line))
         for line in (equipment.card.oracle_text or "").splitlines()
     )
 
@@ -127,7 +129,7 @@ def crew_once_each_turn(vehicle: CardState) -> bool:
     """Whether the Vehicle prints "Crew N. Activate only once each turn."
     (CR 602.5b)."""
     return any(
-        _CREW_ONCE_RE.match(" ".join(line.split()))
+        _CREW_ONCE_RE.match(collapsed(line))
         for line in (vehicle.card.oracle_text or "").splitlines()
     )
 

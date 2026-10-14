@@ -42,6 +42,8 @@ import re
 from functools import cache
 from typing import TYPE_CHECKING, Any, NamedTuple
 
+from magic_cards_model.text_norm import collapsed
+
 if TYPE_CHECKING:
     from ..models.card_state import CardState
     from ..models.game import Game
@@ -54,7 +56,7 @@ def _norm(line: str) -> str:
     """One line with its reminder text (CR 207.2a) dropped and its quotes and
     whitespace made plain."""
     line = _REMINDER_RE.sub("", line)
-    return " ".join(line.replace("’", "'").replace("“", '"').replace("”", '"').split())
+    return collapsed(line.replace("’", "'").replace("“", '"').replace("”", '"'))
 
 
 # -- the legend rule (CR 704.5j) ---------------------------------------------

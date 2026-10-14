@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from magic_cards_model.phrases import with_indefinite_article
+from magic_cards_model.text_norm import collapsed
 
 from ...data.subtypes import canonical_subtype, creature_type_vocabulary
 from ...models.card import Color, Supertype, Type
@@ -797,7 +798,7 @@ _CREATOR_RELATIVE_WORD_RE = re.compile(
 @ABILITY_TEXT.rung("s20")
 def _parse_that_player_creates_clause(text: str) -> AbilityEffect | None:
     """`_THAT_PLAYER_CREATES_RE`'s shape, or `None`."""
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     if not whole.lower().startswith("that player creates "):
         return None
     match = _THAT_PLAYER_CREATES_RE.fullmatch(whole)
@@ -1049,7 +1050,7 @@ def _parse_create_named_permanent_token_clause(text: str) -> TargetedClause | No
     captured verbatim in `rules_text`, parsed the ordinary way any printed
     permanent's abilities are) turns it into a creature.
     """
-    match = _CREATE_NAMED_PERMANENT_TOKEN_RE.fullmatch(" ".join(text.strip().split()))
+    match = _CREATE_NAMED_PERMANENT_TOKEN_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     name = match.group("name").strip()
@@ -2620,7 +2621,7 @@ _CREATED_TRIGGER_UNTIL_END_OF_TURN_RE = re.compile(
 def created_trigger_line(paragraph: str) -> str | None:
     """The printed-trigger reading of a created "this turn" ability, or `None`
     when `paragraph` is not one of the two shapes above."""
-    text = " ".join(paragraph.strip().split())
+    text = collapsed(paragraph.strip())
     this_turn = _CREATED_TRIGGER_THIS_TURN_RE.fullmatch(text)
     if this_turn is not None:
         return f"Whenever {this_turn.group('condition')}, {this_turn.group('effect')}"
@@ -2884,7 +2885,7 @@ def _created_replacement_record(
         spec = spec.model_copy(update={"affected_player": target_player})
     return CreatedReplacement(
         spec=spec,
-        label=" ".join(text.split()),
+        label=collapsed(text),
         controller=controller,
         source_id=source_id,
         source_name=source_name,
@@ -3029,7 +3030,7 @@ def _parse_create_tapped_attacking_tokens_then_sacrifice(text: str) -> AbilityEf
     than creating a token missing an ability it was printed with (CR 608.2c).
     """
     match = _ATTACK_TAPPED_ATTACKING_TOKENS_THEN_SACRIFICE_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
+        collapsed(_strip_non_effect_preamble(text))
     )
     if match is None:
         return None
@@ -3198,9 +3199,7 @@ def _parse_may_cost_then_attacking_token_clause(text: str) -> AbilityEffect | No
     tapped token that is not attacking anything, which is the honest outcome
     rather than an invented defender.
     """
-    match = _MAY_COST_THEN_ATTACKING_TOKEN_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
-    )
+    match = _MAY_COST_THEN_ATTACKING_TOKEN_RE.fullmatch(collapsed(_strip_non_effect_preamble(text)))
     if match is None:
         return None
 
@@ -3782,7 +3781,7 @@ def _parse_create_copies_of_self_attacking_clause(
     """`_CREATE_COPIES_OF_SELF_ATTACKING_RE`'s shape, or `None`."""
     if for_spell or "tapped and attacking" not in sentence.lower():
         return None
-    match = _CREATE_COPIES_OF_SELF_ATTACKING_RE.fullmatch(" ".join(sentence.split()))
+    match = _CREATE_COPIES_OF_SELF_ATTACKING_RE.fullmatch(collapsed(sentence))
     if match is None:
         return None
     from ...models.game import _permanent_quality
@@ -3858,7 +3857,7 @@ def _parse_create_token_copy_of_attached_clause(clause: str) -> AbilityEffect | 
     """`_CREATE_TOKEN_COPY_OF_ATTACHED_RE`'s shape, or `None`."""
     if "copy of" not in clause:
         return None
-    match = _CREATE_TOKEN_COPY_OF_ATTACHED_RE.fullmatch(" ".join(clause.strip().split()))
+    match = _CREATE_TOKEN_COPY_OF_ATTACHED_RE.fullmatch(collapsed(clause.strip()))
     if match is None:
         return None
     listed = _read_copy_exception_list(match.group("except")) if match.group("except") else None
@@ -3901,7 +3900,7 @@ def _parse_create_token_copy_of_target_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
     """`_CREATE_TOKEN_COPY_OF_TARGET_RE`'s shape, or `None` if this is not it."""
-    match = _CREATE_TOKEN_COPY_OF_TARGET_RE.fullmatch(" ".join(clause.strip().split()))
+    match = _CREATE_TOKEN_COPY_OF_TARGET_RE.fullmatch(collapsed(clause.strip()))
     if match is None:
         return None
     if not _targets_understood(match.group("phrase")):
@@ -4168,7 +4167,7 @@ def _read_token_copy_replacing_except(
     word that is not a creature type."""
     if except_text is None:
         return None
-    stripped = " ".join(except_text.strip().split()).rstrip(".")
+    stripped = collapsed(except_text.strip()).rstrip(".")
     match = _TOKEN_COPY_EXCEPT_PT_COLOR_TYPE_RE.fullmatch(stripped)
     if match is None:
         return None
@@ -4199,7 +4198,7 @@ def _read_token_copy_except(
     # with everything else rather than leaving it there to be matched
     # separately - stripped here once, rather than taught to both readers
     # below, so an added keyword line never carries a stray "Flying." period.
-    stripped = " ".join(except_text.strip().split()).rstrip(".")
+    stripped = collapsed(except_text.strip()).rstrip(".")
     if quoted := _TOKEN_COPY_EXCEPT_QUOTED_RE.fullmatch(stripped):
         return (quoted.group("ability").strip(),), None, None, None
     if keywords_only := _TOKEN_COPY_EXCEPT_KEYWORDS_RE.fullmatch(stripped):
@@ -4438,7 +4437,7 @@ def _parse_create_tokens_equal_to_event_subject_stat_clause(
     """
     if for_spell:
         return None
-    match = _TOKENS_EQUAL_TO_ITS_STAT_RE.fullmatch(" ".join(text.strip().split()))
+    match = _TOKENS_EQUAL_TO_ITS_STAT_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     template = _parse_token_clause(f"create a {match.group('desc')} token", for_spell=False)
@@ -4476,7 +4475,7 @@ def _parse_create_tokens_equal_to_amount_clause(
     creates nothing."""
     if "tokens equal to the number of" not in text:
         return None
-    match = _TOKENS_EQUAL_TO_AMOUNT_RE.fullmatch(" ".join(text.strip().split()))
+    match = _TOKENS_EQUAL_TO_AMOUNT_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     reader = amount_expression(match.group("expr"))
@@ -4743,7 +4742,7 @@ def _parse_create_tokens_then_instead_tapped_attacking_if_cost_paid_clause(
     own cast, which only a resolving spell - never an ability - carries a
     record of at all.
     """
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     match = _CREATE_TOKENS_THEN_INSTEAD_TAPPED_ATTACKING_IF_COST_PAID_RE.fullmatch(whole)
     if match is None:
         return None
@@ -4881,7 +4880,7 @@ _TARGET_PLAYER_CREATES_RE = re.compile(
 
 def _parse_target_player_creates_token(text: str) -> AbilityEffect | None:
     """`_TARGET_PLAYER_CREATES_RE`'s shape, or `None`."""
-    match = _TARGET_PLAYER_CREATES_RE.fullmatch(" ".join(text.strip().split()))
+    match = _TARGET_PLAYER_CREATES_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     phrase = match.group("phrase").strip()
@@ -4958,7 +4957,7 @@ def _parse_die_table_tapped_attacking_token_copies(text: str) -> AbilityEffect |
     a table that leaves a result without an outcome is not read."""
     if "|" not in text:
         return None
-    match = _DIE_TABLE_TOKEN_COPY_RE.fullmatch(" ".join(text.strip().split()))
+    match = _DIE_TABLE_TOKEN_COPY_RE.fullmatch(collapsed(text.strip()))
     if match is None or not _targets_understood(match.group("phrase")):
         return None
     sides = int(match.group("sides"))

@@ -194,6 +194,7 @@ from magic_cards_model.machines.objects_as_costs import (
 from magic_cards_model.machines.opening_hand import OpeningHandAction, read_opening_hand_line
 from magic_cards_model.machines.replacement import (
     ENTERS_KINDS,
+    ReplacementEffect,
     ReplacementKind,
     _self_enters_modifiers,
     enters_as_copy_outcome,
@@ -275,6 +276,7 @@ from magic_cards_model.models.player import reads_maximum_hand_size_line
 from magic_cards_model.numbers import parse_count
 from magic_cards_model.snapshot import EngineModel
 from magic_cards_model.static_audit.enters_choices import mode_bullet_body
+from magic_cards_model.text_norm import collapsed
 
 #: The package's own real Scryfall printings (`data/printings`), used only as
 #: probe material: a trigger condition naming "a Mountain" or "an artifact" is
@@ -1887,7 +1889,7 @@ def _self_enters_line_category(printing: Card, text: str) -> str | None:
     leaving a fully-handled clause (`tests/scenarios/test_morbid.py`)
     unaudited for a synthetic board that happens to have no history yet.
     """
-    effects = parse_replacement_effects(printing)
+    effects = _printing_replacements(printing)
     self_kinds = [
         effect
         for effect in effects
@@ -1975,7 +1977,7 @@ def _enters_as_copy_line_category(printing: Card, text: str) -> str | None:
     """
     copies = [
         effect
-        for effect in parse_replacement_effects(printing)
+        for effect in _printing_replacements(printing)
         if effect.kind is ReplacementKind.ENTERS_AS_COPY
         and effect.self_replacement
         and effect.condition is None
@@ -2928,20 +2930,52 @@ class _ProbePermanentMemo:
 _probe_permanent = _ProbePermanentMemo()
 
 
+class _PrintingReplacementsMemo:
+    """`parse_replacement_effects` memoised on the printing object: the static
+    line readers below ask it once per line of the same printing, and only
+    read what it returns. `cache_clear`/`cache_info` as on `_ProbePermanentMemo`."""
+
+    def __init__(self) -> None:
+        self._effects: dict[int, tuple[Card, tuple[ReplacementEffect, ...]]] = {}
+        self.cache_clear: Callable[[], None] = self._effects.clear
+        self.cache_info: Callable[[], int] = self._effects.__len__
+
+    def __call__(self, printing: Card) -> tuple[ReplacementEffect, ...]:
+        held = self._effects.get(id(printing))
+        if held is None or held[0] is not printing:
+            held = (printing, tuple(parse_replacement_effects(printing)))
+            self._effects[id(printing)] = held
+        return held[1]
+
+
+_printing_replacements = _PrintingReplacementsMemo()
+
+
 def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | None:
-    """`_probe_condition`, with the memoised probe permanents unbound from its
-    throwaway game afterwards, so the memo does not keep every game alive."""
-    held: list[CardState] = []
+    """`_probe_condition`, with its throwaway board released afterwards
+    (`_release_board`): the memoised probe permanents must not keep every game
+    alive, and a board left in its own reference cycles waits for the cyclic
+    collector instead of being freed on return."""
+    boards: list[Game] = []
     try:
-        return _probe_condition(printing, ability, held)
+        return _probe_condition(printing, ability, boards)
     finally:
-        for state in held:
-            state.bind_to_game(None)
+        for game in boards:
+            _release_board(game)
 
 
-def _probe_condition(
-    printing: Card, ability: TriggeredAbility, held: list[CardState]
-) -> bool | None:
+def _release_board(game: Game) -> None:
+    """Break a throwaway board's back-references to its game - each
+    permanent's binding, each player's `game`, the effect store's - so nothing
+    on it refers back to the game once the probe is done with it."""
+    for state in game.battlefield:
+        state.bind_to_game(None)
+    for player in game.players:
+        player.game = None
+    game.continuous_effects.bind_to_game(None)
+
+
+def _probe_condition(printing: Card, ability: TriggeredAbility, boards: list[Game]) -> bool | None:
     """Whether some real, reachable permanent could satisfy `ability`'s own
     parsed condition through the production `condition_matches` (CR 603.2) -
     or `None` when this closure has no synthetic occurrence to try, in which
@@ -3032,6 +3066,7 @@ def _probe_condition(
         players=[Player(username="sweep_you"), Player(username="sweep_opp")],
         schema_version=Game.CURRENT_SCHEMA_VERSION,
     )
+    boards.append(game)
     states: list[CardState] = []
     for probe in probes:
         for controller_name in ("sweep_you", "sweep_opp"):
@@ -3047,8 +3082,6 @@ def _probe_condition(
                         tapped=tapped,
                         counter_kind=counter_kind,
                     )
-                    if probe is not printing:
-                        held.append(state)
                     state.bind_to_game(game)
                     game.battlefield.append(state)
                     states.append(state)
@@ -3478,7 +3511,7 @@ def _cast_trigger_prefix_end(text: str) -> int:
 def _normalized(text: str) -> str:
     """`text` without reminder text, whitespace collapsed - what a sentence
     and the resolution text it is looked up in are compared as."""
-    return " ".join(_INLINE_REMINDER_RE.sub("", text).split())
+    return collapsed(_INLINE_REMINDER_RE.sub("", text))
 
 
 def probe_sentences(text: str, reads: str | None = None) -> list[tuple[int, int]]:

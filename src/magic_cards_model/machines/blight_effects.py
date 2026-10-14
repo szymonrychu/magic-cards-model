@@ -52,6 +52,8 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Color, Type
 from ..models.card_state import CardState, Counter
 from ..models.mana import ManaCost
@@ -493,7 +495,7 @@ def parse_may_blight_then_copy_blighted_creature_clause(text: str) -> AbilityEff
     reused whole from `models.token._put_onto_the_battlefield_attacking` and
     `effects._defender_of_controllers_attack`.
     """
-    match = _MAY_BLIGHT_THEN_COPY_BLIGHTED_CREATURE_RE.fullmatch(" ".join(text.strip().split()))
+    match = _MAY_BLIGHT_THEN_COPY_BLIGHTED_CREATURE_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
 

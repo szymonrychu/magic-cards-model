@@ -3,6 +3,8 @@ import re
 from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, Literal
 
+from magic_cards_model.text_norm import collapsed
+
 from ...models.card import Card, Color, Supertype, Type
 from ...models.card_state import CardState, ChoiceKind
 from ...models.token import TokenDefinition, is_token
@@ -1952,7 +1954,7 @@ def damage_recipient(phrase: str) -> _DamageRecipient | None:
     article ("a player or battle", "a permanent or player", "a creature,
     planeswalker, or battle"), any one of which matches. None for any other
     wording, so an unlisted recipient compiles to nothing."""
-    lowered = " ".join(phrase.strip().lower().split())
+    lowered = collapsed(phrase.strip().lower())
     listed = _DAMAGE_RECIPIENTS.get(lowered)
     if listed is not None:
         return listed
@@ -2035,7 +2037,7 @@ def read_damage_modifier(event_text: str, replacement: str) -> DamageModifierRep
         return None
     recipient = event_match.group("recipient")
     if recipient is not None:
-        recipient = " ".join(recipient.strip().lower().split())
+        recipient = collapsed(recipient.strip().lower())
         if damage_recipient(recipient) is None:
             return None
     match = _SOURCE_DAMAGE_MODIFIER_RE.fullmatch(replacement.strip().rstrip("."))
@@ -4018,7 +4020,7 @@ _MANA_PRODUCTION_RE = re.compile(
 
 def read_mana_production(sentence: str) -> ManaProductionReplacement | None:
     """The mana-production replacement a sentence prints, or `None`."""
-    match = _MANA_PRODUCTION_RE.fullmatch(" ".join(sentence.strip().split()))
+    match = _MANA_PRODUCTION_RE.fullmatch(collapsed(sentence.strip()))
     if match is None:
         return None
     words = (match.group("you_subject") or match.group("subject")).lower().split()[1:]
@@ -4363,7 +4365,7 @@ def read_turn_damage_spec(text: str) -> CreatedReplacementSpec | None:
     creates (`damage_modification`'s banner), or None. Several sentences, each
     one such effect, are one `TurnDamageGroup` (CR 608.2c's printed order); a
     sentence this does not read leaves the whole text unread."""
-    body = " ".join(text.strip().split())
+    body = collapsed(text.strip())
     single = _read_turn_damage_sentence(body, 0, grouped=False)
     if single is not None:
         return single  # type: ignore[return-value]
@@ -4412,7 +4414,7 @@ def created_replacement_spec(sentence: str) -> CreatedReplacementSpec | None:
     last the whole game, a shape no printing in the pool has. The duration is
     taken off and the rest is read by the same shape readers the static forms
     use."""
-    text = " ".join(sentence.strip().split())
+    text = collapsed(sentence.strip())
     turn_damage = read_turn_damage_spec(text)
     if turn_damage is not None:
         return turn_damage

@@ -23,6 +23,8 @@ with CR 609.4b's "mana of any type can be spent" (`any_type_mana`).
 import re
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.player import Player
 from ..numbers import parse_count
@@ -45,7 +47,7 @@ _REVEAL_SOME_CHOOSE_ONE_RE = re.compile(
 
 def parse_reveal_some_then_choose_one(text: str) -> Any:
     """`_REVEAL_SOME_CHOOSE_ONE_RE`'s whole ability, or None."""
-    match = _REVEAL_SOME_CHOOSE_ONE_RE.fullmatch(" ".join(text.split()))
+    match = _REVEAL_SOME_CHOOSE_ONE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
 
@@ -165,7 +167,7 @@ def parse_hand_exile_until_leaves_clause(text: str) -> Any:
     for "you may" - and it is exiled until the source leaves the battlefield,
     then returned to its owner's hand (CR 610.3's "previous zone"). CR 610.3b:
     if the source already left before this resolved, nothing is exiled."""
-    match = _HAND_EXILE_UNTIL_LEAVES_RE.fullmatch(" ".join(text.split()))
+    match = _HAND_EXILE_UNTIL_LEAVES_RE.fullmatch(collapsed(text))
     if match is None:
         return None
 

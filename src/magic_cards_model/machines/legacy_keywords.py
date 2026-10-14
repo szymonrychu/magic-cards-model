@@ -29,6 +29,8 @@ from collections.abc import Callable
 from functools import cache
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Type
 from ..models.card_state import CardState
 from ..models.zone import Zone
@@ -206,7 +208,7 @@ def _is_champion_object(game: "Game", card: CardState, object_text: str) -> bool
 
 def parse_champion_clause(text: str) -> "AbilityEffect | None":
     """Both halves of champion (CR 702.72a), or `None` for other text."""
-    flat = " ".join(text.strip().split())
+    flat = collapsed(text.strip())
     enters = _CHAMPION_ENTERS_RE.fullmatch(flat)
     if enters is not None:
         object_text = enters.group("object")
@@ -393,7 +395,7 @@ _CLASH_RE = re.compile(
 def parse_clash_clause(text: str) -> "AbilityEffect | None":
     """ "Clash with an opponent. If you win, [effect]." with an optional
     "Otherwise, [effect]." (CR 701.30)."""
-    flat = " ".join(text.strip().split())
+    flat = collapsed(text.strip())
     match = _CLASH_RE.fullmatch(flat)
     if match is None:
         return None
