@@ -1,11 +1,11 @@
 {
-  "ability": "−2: Exile target creature you control, then reveal cards from the top of your library until you reveal a creature card with greater mana value. Put that card onto the battlefield and the rest on the bottom of your library in a random order.",
+  "ability": "+1: Exile the top three cards of your library. Creature cards exiled this way gain \"You may cast this card from exile as long as you control a Lukka planeswalker.\"",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
     "source": "Lukka, Coppercoat Outcast@alice#1",
-    "targets": ["Memnite@alice#1"],
+    "targets": [],
     "x": 0
   },
   "board": {
@@ -36,14 +36,17 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["continuous_effects", "exile_residents_seen", "permanents_left_battlefield_this_turn", "reveals", "shuffles_performed", "turn_counts", "turn_facts", "turn_history"],
+    "fields_changed": [],
     "notices": {},
     "objects": {
-      "Grizzly Bears@alice#3": {
-        "zone": ["library", "battlefield"]
+      "Forest@alice#6": {
+        "zone": ["library", "exile"]
       },
-      "Memnite@alice#1": {
-        "zone": ["battlefield", "exile"]
+      "Grizzly Bears@alice#3": {
+        "zone": ["library", "exile"]
+      },
+      "Island@alice#5": {
+        "zone": ["library", "exile"]
       }
     },
     "players": {},

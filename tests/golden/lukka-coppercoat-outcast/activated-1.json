@@ -1,11 +1,11 @@
 {
-  "ability": "−7: Each creature you control deals damage equal to its power to each opponent.",
+  "ability": "−2: Exile target creature you control, then reveal cards from the top of your library until you reveal a creature card with greater mana value. Put that card onto the battlefield and the rest on the bottom of your library in a random order.",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
     "source": "Lukka, Coppercoat Outcast@alice#1",
-    "targets": [],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
@@ -36,14 +36,17 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["damage_dealt_this_turn", "noncombat_damage_to_players_this_turn", "turn_counts", "turn_facts"],
+    "fields_changed": ["continuous_effects", "exile_residents_seen", "permanents_left_battlefield_this_turn", "reveals", "shuffles_performed", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
-    "objects": {},
-    "players": {
-      "bob": {
-        "life": [20, 17]
+    "objects": {
+      "Grizzly Bears@alice#3": {
+        "zone": ["library", "battlefield"]
+      },
+      "Memnite@alice#1": {
+        "zone": ["battlefield", "exile"]
       }
     },
+    "players": {},
     "stack": []
   },
   "family": "activated",
