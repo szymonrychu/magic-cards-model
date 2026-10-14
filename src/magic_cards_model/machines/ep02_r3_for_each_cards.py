@@ -945,7 +945,7 @@ def _parse_for_each_opponent_put_into_library_nth_from_top(clause: str, *, for_s
     """Riptide Gearhulk. One optional target per opponent (the profile is
     `targeting._for_each_opponent_profile`'s); each permanent still on the
     battlefield goes into its *owner's* library at the printed depth (CR 401.1;
-    CR 401.4: a library with fewer cards takes it as deep as it goes)."""
+    CR 609.3: a library shorter than that takes it as deep as it goes)."""
     match = _FOR_EACH_OPPONENT_TO_LIBRARY_RE.fullmatch(" ".join(clause.split()).rstrip("."))
     if match is None:
         return None

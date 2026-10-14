@@ -11,7 +11,19 @@ file:
 - **CR 608.2c** - instructions are followed in the order written.
 - **CR 107.3a** - X on a spell or ability.
 - **CR 122.1** - counters.
-- **CR 202.3** - mana value.
+- **CR 202.3** - mana value (CR 202.3a: none is 0).
+- **CR 702.33d** - kicked; **CR 303.4m** - "enchanted [object or player]";
+  **CR 701.9a** - discard; **CR 603.10a** - leaves-the-battlefield look-back;
+  **CR 400.7d** - an ability reads the spell that became its permanent;
+  **CR 107.1c** - "any number" may be zero; **CR 115.1/115.3/115.6** - targets;
+  **CR 608.2b** - targets rechecked; **CR 608.2d** - choices on resolution;
+  **CR 608.2f** - simultaneous actions on a group.
+- **CR 401.1** - libraries; **CR 609.3** - do as much as possible;
+  **CR 110.2a / 111.2** - who controls a put or created object.
+- **CR 606.3** - once per planeswalker per turn; **CR 602.1b / 602.2b / 601.2h** -
+  activation instructions and paying the cost; **CR 107.4e** - hybrid symbols.
+- **CR 613.4c** - layer 7c adds; **CR 702.73a** - changeling; **CR 508.3d** -
+  batched attack triggers; **CR 120.1** - damage; **CR 701.8a** - destroy.
 """
 
 import pytest
@@ -57,6 +69,9 @@ LISTED = [
 ]
 
 PROOF = [
+    "Dripping-Tongue Zubera",
+    "Canopy Stalker",
+    "Gadrak, the Crown-Scourge",
     "Subtlety",
     "Aether Gust",
     "Tamiyo, the Moon Sage",
