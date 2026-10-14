@@ -728,3 +728,35 @@ def test_angrath_does_not_sacrifice_a_stolen_creature_with_greater_mana_value():
     assert stolen.zone is Zone.BATTLEFIELD
     _advance_to(scenario, Step.CLEANUP)
     assert scenario.game.controller_of(stolen).username == "bob"  # control ended with the turn
+
+
+# --------------------------------------------------------------------------
+# "each opponent sacrifices a creature or Vehicle of their choice. Each opponent who can't
+# discards a card." (Momentum Breaker enters) - CR 701.21a, 701.9a, 608.2c
+# --------------------------------------------------------------------------
+
+
+def _momentum_breaker_enters(bob_board, bob_hand):
+    scenario = _main(_build(["Swamp"] * 2, bob_board, hand=["Momentum Breaker"], bob_hand=bob_hand))
+    scenario.cast_and_resolve("Momentum Breaker", auto=True, username="alice")
+    _settle(scenario)
+    return scenario
+
+
+def test_momentum_breaker_enters_and_each_opponent_sacrifices_a_creature():
+    scenario = _momentum_breaker_enters(["Grizzly Bears"], ["Island"])
+    assert not [c for c in scenario.game.battlefield if c.name == "Grizzly Bears"]
+    assert [c.name for c in scenario.player("bob").hand] == ["Island"]  # able to sacrifice
+
+
+def test_momentum_breaker_enters_and_an_opponent_sacrifices_a_vehicle():
+    scenario = _momentum_breaker_enters(["Smuggler's Copter"], ["Island"])
+    assert not [c for c in scenario.game.battlefield if c.name == "Smuggler's Copter"]
+    assert [c.name for c in scenario.player("bob").hand] == ["Island"]
+
+
+def test_momentum_breaker_enters_and_an_opponent_who_cannot_sacrifice_discards_a_card():
+    scenario = _momentum_breaker_enters(["Sol Ring"], ["Island"])
+    assert [c.name for c in scenario.game.battlefield if c.name == "Sol Ring"] == ["Sol Ring"]
+    assert scenario.player("bob").hand == []
+    assert [c.name for c in scenario.player("bob").graveyard] == ["Island"]

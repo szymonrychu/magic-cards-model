@@ -24,9 +24,9 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from ..models.zone import Zone
-from ..numbers import parse_multiplier
+from ..numbers import COUNT, parse_count, parse_multiplier
 from .amount_sentences import apply_life, life_clause_amount, parse_life_clause
-from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
+from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES, SPELL_TEXT
 
 if TYPE_CHECKING:
     from ..models.card_state import CardState
@@ -613,6 +613,100 @@ def _parse_two_players_reveal_and_cross_lose_life(
                 player.move(card, Zone.HAND)
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# An edict whose failures are punished: "Each opponent sacrifices a creature or Vehicle of their
+# choice. Each opponent who can't discards a card." (Momentum Breaker)
+# --------------------------------------------------------------------------
+
+_EDICT_RE = re.compile(
+    r"^(?P<who>each opponent|each player) sacrifices (?:a|an|one) (?P<description>.+?) "
+    r"of their choice$",
+    re.IGNORECASE,
+)
+_WHO_CANT_DISCARD_RE = re.compile(
+    rf"^(?P<who>each opponent|each player) who can'?t discards? (?P<n>{COUNT}) cards?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_edict_then_who_cant_discards(
+    text: str, *, for_spell: bool
+) -> "list[Callable[..., None]] | None":
+    """The edict (CR 701.21a: each player of the group chooses among the permanents they
+    control, CR 101.4 in APNAP order, CR 608.2d; a player with none sacrifices nothing) and
+    the sentence after it, which reads who sacrificed: "Each opponent who can't discards a
+    card" is every member who had nothing to sacrifice (CR 608.2c, in order)."""
+    if "who can't" not in text.lower() and "who can’t" not in text.lower():
+        return None
+    from .effects import _strip_non_effect_preamble
+    from .effects.text import _plain_resolution_sentences
+
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
+    if len(sentences) != 2:
+        return None
+    edict = _EDICT_RE.fullmatch(sentences[0].strip().rstrip("."))
+    punishment = _WHO_CANT_DISCARD_RE.fullmatch(sentences[1].strip().rstrip(".").replace("’", "'"))
+    if (
+        edict is None
+        or punishment is None
+        or edict.group("who").lower() != (punishment.group("who").lower())
+    ):
+        return None
+    from .targeting import permanent_description
+
+    requirement = permanent_description(edict.group("description").strip())
+    discards = parse_count(punishment.group("n"))
+    if requirement is None or discards is None:
+        return None
+    opponents_only = edict.group("who").lower() == "each opponent"
+    description = edict.group("description").strip()
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        from .decisions import Decision, DecisionKind, source_id_of
+        from .effects._common import _players_in_apnap_order
+        from .effects.draw_discard import _discard_cards
+
+        controller = game.controller_of(stack_object).username
+        source_name = getattr(stack_object, "source_name", None) or stack_object.name  # type: ignore[union-attr]
+        source_id = source_id_of(stack_object)
+        chosen: list[CardState] = []
+        failed = []
+        for player in _players_in_apnap_order(game):
+            if opponents_only and player.username == controller:
+                continue
+            candidates = [
+                permanent
+                for permanent in game.permanents_controlled_by(player.username)
+                if requirement.rejects(permanent, player.username, game) is None
+            ]
+            if not candidates:
+                failed.append(player)
+            elif len(candidates) == 1:
+                chosen.extend(candidates)
+            else:
+                picked = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=player.username,
+                        prompt=f"sacrifice a {description}",
+                        source=source_name,
+                        amount=1,
+                        cards=tuple(permanent.id for permanent in candidates),
+                        source_id=source_id,
+                    )
+                )
+                by_id = {permanent.id: permanent for permanent in candidates}
+                chosen.extend(by_id[card_id] for card_id in picked if card_id in by_id)
+        for permanent in chosen:
+            if permanent.zone is Zone.BATTLEFIELD:
+                game.sacrifice(permanent)
+        for player in failed:
+            _discard_cards(game, player, discards, source_name, source_id=source_id)
+
+    return [effect]
 
 
 # --------------------------------------------------------------------------

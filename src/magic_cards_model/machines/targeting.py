@@ -5857,7 +5857,9 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             card_types.add(Type.LAND)
             subtype_elided_types.add(Type.LAND)
             allows_cards = True
-        elif nouns_read == 0 and _is_bare_subtype_word(raw_words[index], word):
+        elif (
+            nouns_read == 0 or (after_conjunction and word in _CLOSED_LIST_TYPE_OF)
+        ) and _is_bare_subtype_word(raw_words[index], word):
             # Aeronaut Cavalry's "another target Soldier you control" - CR
             # 205.3m's creature-type word standing alone as the target noun,
             # the elided-"creature" shape `_read_subtype_list` reads for two
