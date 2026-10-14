@@ -1993,7 +1993,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 171
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 172
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2358,6 +2358,14 @@ class Game(
     #: (the simultaneous-death batch of "whenever one or more creatures die",
     #: CR 603.2c / CR 704.3), reachable from `Game` through a pending
     #: `AbilityOnStack.event`.
+    #: 172 (EP02-R3-T3, reserved: 169 + task 3): `PlayPermission` gained
+    #: `any_color_mana` (Daxos of Meletis's "you may spend mana as though it were
+    #: mana of any color to cast that spell" on a CR 601.3 grant); a decoded older
+    #: permission would price the cast against the printed colors, and a pending
+    #: Daxos grant would refuse a payment it should accept. Also the persisted
+    #: selector variant `CreaturesControlledButNotOwnedBy` (Laughing Jasper
+    #: Flint's "creatures you control but don't own are Mercenaries"), reachable
+    #: from `Game.continuous_effects`.
     #: 169 (EP02-R2-T2): `Player` gained `cannot_cast_spells_for_rest_of_game`
     #: and `CardState` gained `epic_suppressed` (epic, CR 702.50a/b), and
     #: `DelayedEffectSpec` gained the variant `epic_copy_spell`; a pending

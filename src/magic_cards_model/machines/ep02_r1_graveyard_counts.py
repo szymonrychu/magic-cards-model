@@ -232,11 +232,17 @@ _RECIPIENT_GRAVEYARD_RE = re.compile(
 )
 
 
+_RECIPIENT_HAND_RE = re.compile(r"\b(?:their|that (?:player|opponent)'s) hand\b", re.IGNORECASE)
+
+
 def recipient_view(phrase: str) -> tuple[str, bool]:
-    """`phrase` with the recipient's own graveyard written as "your graveyard",
-    and whether any was rewritten (so the count is taken for the recipient)."""
+    """`phrase` with the recipient's own graveyard or hand written as "your
+    graveyard"/"your hand", and whether any was rewritten (so the count is
+    taken for the recipient: "each opponent mills cards equal to the number of
+    cards in their hand" counts each opponent's own hand)."""
     rewritten, count = _RECIPIENT_GRAVEYARD_RE.subn("your graveyard", phrase)
-    return rewritten, count > 0
+    rewritten, hands = _RECIPIENT_HAND_RE.subn("your hand", rewritten)
+    return rewritten, count + hands > 0
 
 
 def _for_each_reader(phrase: str):

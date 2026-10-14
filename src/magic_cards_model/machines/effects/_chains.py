@@ -235,6 +235,7 @@ FAMILIES = (
     "ep02_r3_static_pumps_triggers",
     "ep02_r3_static_pumps_events",
     "ep02_r3_counter_amounts",
+    "ep02_r3_mill_exile_amounts",
 )
 
 ABILITY_TEXT = Chain(

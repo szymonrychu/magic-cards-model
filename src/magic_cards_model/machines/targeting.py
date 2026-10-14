@@ -189,6 +189,10 @@ class ComparisonAttribute(StrEnum):
     POWER = "power"
     TOUGHNESS = "toughness"
     POWER_OR_TOUGHNESS = "power_or_toughness"
+    TOTAL_POWER_AND_TOUGHNESS = "total_power_and_toughness"
+    """Cut Down's "creature with total power and toughness 5 or less": the
+    sum of the two characteristics as the layers leave them (CR 208.1,
+    CR 613.4c). A creature without both has no total and is refused."""
 
 
 class ComparisonOperator(StrEnum):
@@ -1861,6 +1865,8 @@ class TargetRequirement(EngineModel):
             values = [] if power is None else [power]
         elif self.comparison_attribute is ComparisonAttribute.TOUGHNESS:
             values = [] if toughness is None else [toughness]
+        elif self.comparison_attribute is ComparisonAttribute.TOTAL_POWER_AND_TOUGHNESS:
+            values = [] if power is None or toughness is None else [power + toughness]
         else:
             values = [value for value in (power, toughness) if value is not None]
         if not values:
@@ -5971,6 +5977,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     # exactly like a mana-value bound and is not one (see
     # `_COLORS_OF_MANA_SPENT_CONDITION`).
     rest = _COLORS_OF_MANA_SPENT_CONDITION.sub("", rest).strip()
+    rest = _UNSPENT_MANA_CONDITION.sub("", rest).strip()
 
     # Same reason, for CR 613.4b's own effect verb rather than a restriction -
     # see `_SETS_BASE_POWER_TOUGHNESS_EFFECT`.
@@ -6659,6 +6666,7 @@ _COMPARISON_ATTR = {
     "mana value": ComparisonAttribute.MANA_VALUE,
     "converted mana cost": ComparisonAttribute.MANA_VALUE,
     "power or toughness": ComparisonAttribute.POWER_OR_TOUGHNESS,
+    "total power and toughness": ComparisonAttribute.TOTAL_POWER_AND_TOUGHNESS,
     "power": ComparisonAttribute.POWER,
     "toughness": ComparisonAttribute.TOUGHNESS,
 }
@@ -6674,7 +6682,7 @@ _COMPARISON_ATTR = {
 #: comparison here" apart from "a comparison this parser cannot finish
 #: reading" (Prismatic Ending).
 _COMPARISON_ATTEMPT = re.compile(
-    r"\b(?:mana value|converted mana cost|power|toughness)\b"
+    r"\b(?:mana value|converted mana cost|total power and toughness|power|toughness)\b"
     r"\s+(?:is\s+)?(?:or\s+)?(?:x\b|\d+\b|equal\b|less\b|greater\b)",
     re.IGNORECASE,
 )
@@ -6716,7 +6724,8 @@ _EXTREMUM_CLAUSE = re.compile(
 #: (see `ComparisonCount.SOURCE_LOYALTY`'s own docstring for why the name
 #: itself is never checked against anything).
 _COMPARISON_CLAUSE = re.compile(
-    r"\b(?P<attr>mana value|converted mana cost|power or toughness|power|toughness)\b"
+    r"\b(?P<attr>mana value|converted mana cost|power or toughness"
+    r"|total power and toughness|power|toughness)\b"
     r"\s+(?:is\s+)?"
     r"(?:"
     r"(?P<num_or>x|\d+)\s+or\s+(?P<dir>less|greater)"
@@ -6909,6 +6918,16 @@ _COLORS_OF_MANA_SPENT_CONDITION = re.compile(
     r"\bif its mana value is less than or equal to the number of colors of mana "
     r"spent to cast this spell\b",
     re.IGNORECASE,
+)
+
+
+#: Glissa Sunseeker's "Destroy target artifact **if its mana value is equal to
+#: the amount of unspent mana you have**": an "if" in the effect, judged as the
+#: ability resolves (CR 608.2c) - not a restriction on what may be targeted
+#: (CR 115.1), so it is read out of the way like the converge clause above and
+#: `machines/ep02_r3_mill_exile_amounts.py` performs it at resolution.
+_UNSPENT_MANA_CONDITION = re.compile(
+    r"\bif its mana value is equal to the amount of unspent mana you have\b", re.IGNORECASE
 )
 
 

@@ -4528,6 +4528,7 @@ class Casting(EngineModel):
                     # CR 609.4b: Chromatic Orrery, Oath of Nissa, Case File
                     # Auditor - "spend mana as though it were mana of any color".
                     "any_color": self.keyword_any_color
+                    or (self.permission_used is not None and self.permission_used.any_color_mana)
                     or (
                         self.game is not None
                         and self.game.spends_mana_as_any_color_for_spell(self.spell, self.caster)

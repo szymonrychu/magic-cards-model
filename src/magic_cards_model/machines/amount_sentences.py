@@ -28,7 +28,7 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from ..models.card_state import CardState
+from ..models.card_state import CardState, TargetKind
 from ..models.player import Player
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count, parse_multiplier
@@ -165,6 +165,13 @@ def resolve_recipients(
         return list(_players_in_apnap_order(game))
     if who in ("each opponent", "each other player"):
         return [player for player in _players_in_apnap_order(game) if player.username != controller]
+    if who == "enchanted player":
+        # CR 303.4m: whoever the source Aura is attached to.
+        source = source_card(game, stack_object)
+        attachment = None if source is None else source.attachment
+        if attachment is None or attachment.kind is not TargetKind.PLAYER:
+            return []
+        return [game.player(attachment.username)]
     pool = game.resolve_targets(stack_object) if targets is None else targets
     chosen = [target for target in pool if isinstance(target, Player)]
     if who.startswith("target"):
@@ -783,6 +790,13 @@ def _context(game: "Game", stack_object: Any) -> tuple[str, CardState | None, in
     return stack_object.controller, stack_object.source(game), stack_object.x_value
 
 
+_PUT_INTO_THEIR_GRAVEYARD_THIS_TURN_RE = re.compile(
+    r"^(?:the )?number of cards put into (?:their|that player's) graveyard from anywhere "
+    r"this turn$",
+    re.IGNORECASE,
+)
+
+
 @functools.cache
 def recipient_amount(expr: str) -> Amount | None:
     """`expr` as an amount read for each recipient: "the life they lost this
@@ -795,6 +809,9 @@ def recipient_amount(expr: str) -> Amount | None:
 
     if _THEY_LOST_THIS_TURN_RE.fullmatch(clean(expr)):
         return lambda _game, _obj, who: who.life_lost_this_turn
+    if _PUT_INTO_THEIR_GRAVEYARD_THIS_TURN_RE.fullmatch(clean(expr)):
+        # CR 400.6: every arrival at the recipient's graveyard from anywhere.
+        return lambda game, _obj, who: game.cards_put_into_graveyard_this_turn(who.username)
     phrase, relative = recipient_view(expr)
     reader = amount_expression(phrase)
     if reader is None:
