@@ -483,3 +483,71 @@ def test_archmages_newt_grants_flashback_zero_when_saddled() -> None:
     scenario.combat_damage()
     _resolve_all(scenario)
     assert _graveyard_cast_cost(scenario, "Think Twice") == 0
+
+
+# ---------------------------------------------------------------------------
+# Damage: "deals damage equal to its power" between creatures and players
+# ---------------------------------------------------------------------------
+
+
+def test_nibelheim_aflame_hits_every_other_creature_with_the_chosen_ones_power() -> None:
+    scenario = _scenario(
+        ["Serra Angel", "Grizzly Bears"], ["Hill Giant", "Wall of Omens"], hand=["Nibelheim Aflame"]
+    )
+    angel = scenario.creature("Serra Angel", "alice")
+    _cast_all(scenario, "Nibelheim Aflame", targets=[angel])
+    assert angel.zone is Zone.BATTLEFIELD  # "each other creature"
+    for name, user in (("Grizzly Bears", "alice"), ("Hill Giant", "bob"), ("Wall of Omens", "bob")):
+        assert scenario.find(name, Zone.GRAVEYARD, user).zone is Zone.GRAVEYARD  # 4 damage each
+
+
+def test_nibelheim_aflame_reads_the_power_as_it_resolves() -> None:
+    scenario = _scenario(["Grizzly Bears"], ["Hill Giant", "Wall of Omens"], hand=["Nibelheim Aflame"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    _cast_all(scenario, "Nibelheim Aflame", targets=[bears])
+    assert scenario.creature("Hill Giant", "bob").zone is Zone.BATTLEFIELD  # 2 damage on a 3/3
+    assert scenario.creature("Wall of Omens", "bob").zone is Zone.BATTLEFIELD
+
+
+def test_nibelheim_aflame_keeps_the_hand_when_cast_from_hand() -> None:
+    scenario = _scenario(["Serra Angel"], hand=["Nibelheim Aflame", "Island", "Island"])
+    angel = scenario.creature("Serra Angel", "alice")
+    _cast_all(scenario, "Nibelheim Aflame", targets=[angel])
+    assert len(scenario.player("alice").hand) == 2
+
+
+def test_cyclops_gladiator_trades_damage_with_a_defending_creature() -> None:
+    scenario = _scenario(["Cyclops Gladiator"], ["Hill Giant"])
+    scenario.will_take_the_may(True, source="Cyclops Gladiator")
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.choose_trigger_targets("Cyclops Gladiator", [giant])
+    (cyclops,) = _attack(scenario, "Cyclops Gladiator")
+    _resolve_all(scenario)
+    assert giant.zone is Zone.GRAVEYARD  # Cyclops Gladiator is a 4/4
+    assert cyclops.zone is Zone.BATTLEFIELD  # it took 3 damage back (CR 608.2c)
+
+
+def test_cyclops_gladiator_may_decline() -> None:
+    scenario = _scenario(["Cyclops Gladiator"], ["Hill Giant"])
+    scenario.will_take_the_may(False, source="Cyclops Gladiator")
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.choose_trigger_targets("Cyclops Gladiator", [giant])
+    _attack(scenario, "Cyclops Gladiator")
+    _resolve_all(scenario)
+    assert giant.zone is Zone.BATTLEFIELD
+
+
+def test_friendly_fire_deals_the_revealed_mana_value_to_creature_and_controller() -> None:
+    scenario = _scenario([], ["Serra Angel"], hand=["Friendly Fire"], bob_hand=["Hill Giant"])
+    angel = scenario.creature("Serra Angel", "bob")
+    _cast_all(scenario, "Friendly Fire", targets=[angel])
+    assert angel.zone is Zone.GRAVEYARD  # 4 damage on a 4/4
+    assert scenario.player("bob").life == 20 - 4
+
+
+def test_friendly_fire_with_an_empty_hand_does_nothing() -> None:
+    scenario = _scenario([], ["Serra Angel"], hand=["Friendly Fire"], bob_hand=[])
+    angel = scenario.creature("Serra Angel", "bob")
+    _cast_all(scenario, "Friendly Fire", targets=[angel])
+    assert angel.zone is Zone.BATTLEFIELD
+    assert scenario.player("bob").life == 20
