@@ -332,3 +332,134 @@ def test_wolfbear_cannot_target_a_non_human_or_an_opponents_human(bad):
     scenario.attack_with(wolf, defending="bob")
     scenario.pass_until_resolved()
     assert _pt(scenario, target) == before
+
+
+# -- Herald of Leshrac: cumulative upkeep-gain control of a land you don't control, and
+# "when this creature leaves the battlefield, each player gains control of each land
+# they own that you control"
+
+
+def _herald_board(bob=("Mountain", "Swamp"), alice=("Forest",)):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Herald of Leshrac", *alice], library=["Island"] * 10)
+        .player("bob", battlefield=list(bob), library=["Forest"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.UNTAP)
+    return scenario
+
+
+def _controller(scenario, card):
+    return scenario.game.controller_of(card).username
+
+
+def _alices_upkeep(scenario):
+    scenario.advance()
+    assert scenario.step is Step.UPKEEP
+
+
+def _age(scenario, herald):
+    return herald.counter_count("age")
+
+
+def test_herald_upkeep_cost_takes_a_land_from_an_opponent():
+    scenario = _herald_board()
+    herald = scenario.creature("Herald of Leshrac", "alice")
+    mountain = scenario.find("Mountain", Zone.BATTLEFIELD, "bob")
+    scenario.will_take_the_may(True, username="alice")
+    scenario.will_choose_cards(mountain, username="alice")
+    _alices_upkeep(scenario)
+    _resolve_stack(scenario)
+    assert _age(scenario, herald) == 1
+    assert herald.zone is Zone.BATTLEFIELD
+    assert _controller(scenario, mountain) == "alice"
+    assert scenario.find("Mountain", Zone.BATTLEFIELD, "alice") is mountain
+    # CR 108.3: the owner does not change; the +1/+1 for a land you control but don't own.
+    assert mountain.owner == "bob"
+    assert _pt(scenario, herald) == (3, 5)
+
+
+def test_herald_is_sacrificed_when_the_upkeep_is_not_paid():
+    scenario = _herald_board()
+    herald = scenario.creature("Herald of Leshrac", "alice")
+    scenario.will_take_the_may(False, username="alice")
+    _alices_upkeep(scenario)
+    _resolve_stack(scenario)
+    assert herald.zone is Zone.GRAVEYARD
+
+
+def test_herald_is_sacrificed_when_no_opponent_land_can_be_taken():
+    scenario = _herald_board(bob=())
+    herald = scenario.creature("Herald of Leshrac", "alice")
+    _alices_upkeep(scenario)
+    _resolve_stack(scenario)
+    assert herald.zone is Zone.GRAVEYARD
+
+
+def test_herald_leaving_returns_the_land_to_its_owner():
+    scenario = _herald_board()
+    herald = scenario.creature("Herald of Leshrac", "alice")
+    mountain = scenario.find("Mountain", Zone.BATTLEFIELD, "bob")
+    scenario.will_take_the_may(True, username="alice")
+    scenario.will_choose_cards(mountain, username="alice")
+    _alices_upkeep(scenario)
+    _resolve_stack(scenario)
+    assert _controller(scenario, mountain) == "alice"
+    scenario.game.destroy(herald)
+    scenario.game.put_triggers_on_stack()
+    _resolve_stack(scenario)
+    assert _controller(scenario, mountain) == "bob"
+
+
+def test_herald_leaving_returns_only_lands_its_controller_controls():
+    scenario = _herald_board(bob=("Mountain", "Swamp"), alice=("Forest", "Island"))
+    herald = scenario.creature("Herald of Leshrac", "alice")
+    mountain = scenario.find("Mountain", Zone.BATTLEFIELD, "bob")
+    swamp = scenario.find("Swamp", Zone.BATTLEFIELD, "bob")
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "alice")
+    scenario.will_take_the_may(True, username="alice")
+    scenario.will_choose_cards(mountain, username="alice")
+    _alices_upkeep(scenario)
+    _resolve_stack(scenario)
+    scenario.game.destroy(herald)
+    scenario.game.put_triggers_on_stack()
+    _resolve_stack(scenario)
+    assert _controller(scenario, mountain) == "bob"
+    # Lands that never changed hands stay with their owner.
+    assert (_controller(scenario, swamp), _controller(scenario, forest)) == ("bob", "alice")
+
+
+def test_herald_second_upkeep_costs_one_land_per_age_counter():
+    scenario = _herald_board(bob=("Mountain", "Swamp", "Plains"))
+    herald = scenario.creature("Herald of Leshrac", "alice")
+    mountain, swamp, plains = (
+        scenario.find(name, Zone.BATTLEFIELD, "bob") for name in ("Mountain", "Swamp", "Plains")
+    )
+    scenario.will_take_the_may(True, username="alice")
+    scenario.will_choose_cards(mountain, username="alice")
+    _alices_upkeep(scenario)
+    _resolve_stack(scenario)
+    _advance_until(scenario, lambda s: s.turn.active_player == "bob")
+    scenario.will_take_the_may(True, username="alice")
+    scenario.will_choose_cards(swamp, plains, username="alice")
+    _advance_until(scenario, lambda s: s.turn.active_player == "alice" and s.step is Step.UPKEEP)
+    _resolve_stack(scenario)
+    assert _age(scenario, herald) == 2
+    assert herald.zone is Zone.BATTLEFIELD
+    assert [_controller(scenario, land) for land in (mountain, swamp, plains)] == ["alice"] * 3
+
+
+def test_herald_second_upkeep_is_sacrificed_when_too_few_lands_are_left():
+    scenario = _herald_board(bob=("Mountain", "Swamp"))
+    herald = scenario.creature("Herald of Leshrac", "alice")
+    mountain = scenario.find("Mountain", Zone.BATTLEFIELD, "bob")
+    scenario.will_take_the_may(True, username="alice")
+    scenario.will_choose_cards(mountain, username="alice")
+    _alices_upkeep(scenario)
+    _resolve_stack(scenario)
+    _advance_until(scenario, lambda s: s.turn.active_player == "bob")
+    _advance_until(scenario, lambda s: s.turn.active_player == "alice" and s.step is Step.UPKEEP)
+    _resolve_stack(scenario)
+    # Two age counters need two lands; Bob controls only the Swamp (CR 118.3).
+    assert herald.zone is Zone.GRAVEYARD

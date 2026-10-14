@@ -318,6 +318,8 @@ def _unfiltered_candidate_pool(
         ]
     if kind is ComponentKind.PUT_EXILED_INTO_GRAVEYARD:
         return list(game.cards_exiled_with(component.link_to_permanent_id, None))
+    if kind is ComponentKind.GAIN_CONTROL:
+        return [card for card in game.battlefield if game.controller_of(card).username != payer]
     if kind is ComponentKind.RETURN_TO_HAND and component.requirement is not None:
         # A printed "Return a land you control to its owner's hand" cost -
         # not ninjutsu's unblocked attacker, which carries no requirement.

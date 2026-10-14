@@ -1099,6 +1099,13 @@ _PHRASE_PUT_EXILED_INTO_GRAVEYARD = re.compile(
     r" into its owner's graveyard$",
     re.IGNORECASE,
 )
+#: `Gain control of a land you don't control` (Herald of Leshrac's cumulative
+#: upkeep) - CR 118.3's object cost: the payer picks permanents of the quality
+#: that another player controls, and paying gives the payer control of them.
+_PHRASE_GAIN_CONTROL = re.compile(
+    rf"^gain control of (?:{_COST_COUNT}) (?P<quality>[\w ,-]+?) you don't control$",
+    re.IGNORECASE,
+)
 #: `Return a land you control to its owner's hand` (Tameshi, Reality
 #: Architect's activation cost) - CR 118.3's object cost with a quality and a
 #: count, the same shape as `_PHRASE_SACRIFICE`, paid by `Game.return_to_hand`.
@@ -1677,6 +1684,16 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         component.variable_count = read[1]
         return component
 
+    taking = _PHRASE_GAIN_CONTROL.match(text)
+    if taking is not None:
+        read = _cost_count(taking.group("count"))
+        requirement = _requirement(taking.group("quality"))
+        if read is None or requirement is None or read[1]:
+            return None
+        component = gain_control_cost(payer=payer, required=read[0], description=text)
+        component.requirement = requirement
+        return component
+
     returning = _PHRASE_RETURN_TO_HAND.match(text)
     if returning is not None:
         another = returning.group("another") is not None
@@ -1804,7 +1821,12 @@ _ONE_SYMBOL_OR_ANOTHER = re.compile(
 #: The non-mana kinds `Game.may_pay_unless_cost` can pay mid-resolution, and
 #: so the only ones a cumulative upkeep cost may carry here.
 _UPKEEP_PAYABLE_KINDS = frozenset(
-    {ComponentKind.DISCARD, ComponentKind.SACRIFICE, ComponentKind.PAY_LIFE}
+    {
+        ComponentKind.DISCARD,
+        ComponentKind.SACRIFICE,
+        ComponentKind.PAY_LIFE,
+        ComponentKind.GAIN_CONTROL,
+    }
 )
 
 
@@ -1901,6 +1923,7 @@ from .components import (  # noqa: E402
     exert_cost,
     exile_and_pay_mana_cost_cost,
     exile_cost,
+    gain_control_cost,
     mill_cost,
     pay_energy_cost,
     pay_life_cost,

@@ -1757,6 +1757,13 @@ class TriggersDecisionsMixin:
                 pool = list(payer.hand)
             elif component.kind is ComponentKind.SACRIFICE:
                 pool = list(self.permanents_controlled_by(username))
+            elif component.kind is ComponentKind.GAIN_CONTROL:
+                # CR 118.3: a permanent another player controls.
+                pool = [
+                    card
+                    for card in self.battlefield
+                    if self.controller_of(card).username != username
+                ]
             elif component.kind is ComponentKind.PAY_LIFE:
                 pool = []
                 payable = payable and payer.life >= component.amount  # CR 119.4
@@ -1770,7 +1777,7 @@ class TriggersDecisionsMixin:
                     if component.requirement.why_not(card, self, username) is None
                 ]
             candidates.append(pool)
-            if component.kind in (ComponentKind.DISCARD, ComponentKind.SACRIFICE):
+            if component.kind in _CHOSEN_OBJECT_KINDS:
                 payable = payable and len(pool) >= component.required
         answer = self.ask(
             Decision(
@@ -1785,9 +1792,9 @@ class TriggersDecisionsMixin:
         if not answer:
             return False
         for component, pool in zip(components, candidates, strict=True):
-            if component.kind not in (ComponentKind.DISCARD, ComponentKind.SACRIFICE):
+            if component.kind not in _CHOSEN_OBJECT_KINDS:
                 continue
-            verb = "discard" if component.kind is ComponentKind.DISCARD else "sacrifice"
+            verb = _CHOSEN_OBJECT_KINDS[component.kind]
             chosen_ids = self.ask(
                 Decision(
                     kind=DecisionKind.CHOOSE_CARDS,
@@ -2660,3 +2667,11 @@ from ._common import ENERGY_PAID_OR_LOST, Targetable  # noqa: E402
 from ._costs_mana import _cost_refers_to_self, _named_mana_abilities  # noqa: E402
 from ._stack_priority import _illegal_option_refusal, _that_player_of  # noqa: E402
 from .records import CountersPutRecord  # noqa: E402
+
+#: The cost components `Game.may_pay_unless_cost` has the payer choose objects for,
+#: with the verb the question uses.
+_CHOSEN_OBJECT_KINDS = {
+    ComponentKind.DISCARD: "discard",
+    ComponentKind.SACRIFICE: "sacrifice",
+    ComponentKind.GAIN_CONTROL: "gain control of",
+}
