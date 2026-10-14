@@ -1661,3 +1661,4 @@ Flagged by `mise run regression:guard -- --base 57bcac56 --ratchet` on this bran
 - 2026-10-14 EP-02-R3 T8: Arcane Proxy's trigger target (mana value up to this creature's power) cannot be scripted with `choose_trigger_targets` before the Proxy is on the battlefield (the bound is the source's power, unknown for a card in hand); scenarios answer the live `CHOOSE_TARGETS` question with `will_choose_targets`
 
 - 2026-10-14 EP-02-R3 casualty targets: the "2" of a stripped "Casualty 2" keyword line leaked into the next line as a "2 target players" count (reminder text was already stripped); `_parse` now hands `_read_phrase` only the current line as prefix. Cut Your Losses printing added.
+- 2026-10-14: EP-02-R3 T8 where-X pumps floor X at 0 (CR 107.1b), not flip sign; Porcuparrot mutate-count scenario added (engine was already right).
