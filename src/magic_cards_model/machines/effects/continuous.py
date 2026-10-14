@@ -6327,7 +6327,7 @@ def _parse_target_get_energy_pay_damage(text: str) -> Effect | None:
 #: Champion's and Combat Celebrant's exert consequence) - "other" leaves the
 #: ability's own source tapped.
 _UNTAP_ALL_YOU_CONTROL_RE = re.compile(
-    r"^untap all (?P<other>other )?(?P<qualifier>.+?) you control\.?$", re.IGNORECASE
+    r"^untap (?:all|each) (?P<other>other )?(?P<qualifier>.+?) you control\.?$", re.IGNORECASE
 )
 
 

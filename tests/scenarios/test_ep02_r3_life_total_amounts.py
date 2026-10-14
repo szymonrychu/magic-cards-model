@@ -436,3 +436,34 @@ def test_blazing_hope_cannot_target_a_creature_with_less_power_than_your_life_to
     bears = scenario.creature("Grizzly Bears", "bob")
     with pytest.raises(Exception, match="power"):
         scenario.cast("Blazing Hope", targets=[bears])
+
+
+# --------------------------------------------------------------------------
+# Chained "Then if creatures you control have total toughness N or greater" (Betor, Kin to All)
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("angels", "drawn", "untapped", "opponent_life"),
+    [
+        (0, 0, False, 21),  # toughness 7: the trigger's own condition fails
+        (1, 1, False, 21),  # 11
+        (4, 1, True, 21),  # 23
+        (9, 1, True, 10),  # 43: half of 21 rounded up is 11
+    ],
+)
+def test_betor_end_step_chain_applies_every_threshold_reached(
+    angels, drawn, untapped, opponent_life
+):
+    scenario = _main(_build(["Betor, Kin to All"] + ["Serra Angel"] * angels))
+    scenario.player("bob").life = 21
+    for angel in scenario.creatures(*["Serra Angel"] * angels, username="alice"):
+        angel.tapped = True
+    hand = len(scenario.player("alice").hand)
+    _advance_to(scenario, Step.END_STEP)
+    assert len(scenario.player("alice").hand) == hand + drawn
+    assert all(
+        (not angel.tapped) is untapped
+        for angel in scenario.creatures(*["Serra Angel"] * angels, username="alice")
+    )
+    assert _life(scenario, "bob") == opponent_life

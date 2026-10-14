@@ -348,4 +348,43 @@ def _parse_exchange_life_total_clause(
     return effect
 
 
+# --------------------------------------------------------------------------
+# "Then if <condition>, <instruction>" - a conditional step in a sequence (Betor)
+# --------------------------------------------------------------------------
+
+_THEN_IF_RE = re.compile(r"^then if (?P<condition>.+?), (?P<tail>.+)$", re.IGNORECASE)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_then_if_clause(clause: str, *, for_spell: bool) -> "Callable[..., None] | None":
+    """ "Then if <condition>, <instruction>" as one step of a sequence (CR 608.2c): the
+    condition is read against the game as that step is reached - after the earlier steps have
+    done what they did (CR 608.2c, "in the order written") - and the instruction is whatever
+    the ordinary clause reader makes of the tail, so the mechanic is the conditional step,
+    not the card. Betor, Kin to All chains three of them on total toughness (CR 208.1)."""
+    match = _THEN_IF_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    from ..models.game._conditions import condition_is_readable
+    from .effects import parse_mixed_effect, parse_mixed_effect_for_spell
+
+    condition = match.group("condition").strip()
+    if not condition_is_readable(condition):
+        return None
+    tail_text = match.group("tail").strip()
+    reader = parse_mixed_effect_for_spell if for_spell else parse_mixed_effect
+    tail = reader(tail_text[:1].upper() + tail_text[1:] + ".")
+    if tail is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        from .amount_sentences import controller_of, source_card
+
+        controller = controller_of(game, stack_object).username
+        if game.condition_holds(controller, condition, source_card(game, stack_object)):
+            tail(game, stack_object)
+
+    return effect
+
+
 __all__ = ["amount_term", "count_term", "for_each_count"]
