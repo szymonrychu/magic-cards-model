@@ -219,10 +219,21 @@ class SacrificeSubject(DelayedEffectSpecBase):
 
     kind: Literal["sacrifice"] = "sacrifice"
 
+    max_mana_value: int | None = None
+    """"... if it has mana value 3 or less" (Angrath, the Flame-Chained): the intervening *if*
+    (CR 603.4) read off the permanent as it is when the ability resolves (CR 613.5). None: no
+    condition."""
+
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
         permanent = trigger.still_affects(game)
-        if permanent is not None:
-            game.put_into_graveyard(permanent)
+        if permanent is None:
+            return
+        if (
+            self.max_mana_value is not None
+            and game.characteristics_of(permanent).mana_value > self.max_mana_value
+        ):
+            return
+        game.put_into_graveyard(permanent)
 
 
 class SacrificedByItsController(DelayedEffectSpecBase):
@@ -3154,6 +3165,11 @@ _TIMING_PATTERN = "|".join(re.escape(phrase) for phrase in ANAPHORIC_TIMING_STEP
 _TIMING_LEADING_RE = re.compile(
     rf"^at (?P<timing>{_TIMING_PATTERN}),\s*(?P<instruction>.+)$", re.IGNORECASE
 )
+#: "... if it has mana value N or less" after the timing (Angrath, the Flame-Chained's
+#: "Sacrifice it at the beginning of the next end step if it has mana value 3 or less").
+_IF_MANA_VALUE_OR_LESS_RE = re.compile(
+    r"\s+if (?:it|that creature) has mana value (?P<n>\d+) or less$", re.IGNORECASE
+)
 #: "<Instruction> at <timing>." - Goryo's Vengeance's, Postmortem Lunge's and
 #: Fire Navy Trebuchet's word order.
 _TIMING_TRAILING_RE = re.compile(
@@ -3310,6 +3326,9 @@ class AnaphoricDelayedClause(EngineModel):
     verb: str
     """A key of `_ANAPHORIC_VERBS`: what this does when it resolves."""
 
+    max_mana_value: int | None = None
+    """The "if it has mana value N or less" the clause ends with, for a sacrifice."""
+
     def agrees_with(self, subject: CardState, game: "Game | None" = None) -> bool:
         """Whether `subject` is the kind of object this clause's pronoun names.
 
@@ -3395,6 +3414,8 @@ class AnaphoricDelayedClause(EngineModel):
     @property
     def effect(self) -> DelayedEffectSpecBase:
         """What this does when it resolves."""
+        if self.max_mana_value is not None:
+            return SacrificeSubject(max_mana_value=self.max_mana_value)
         return _ANAPHORIC_VERBS[self.verb][0]
 
     def trigger_for(
@@ -3452,6 +3473,10 @@ def parse_anaphoric_delayed_clause(clause: str) -> AnaphoricDelayedClause | None
       names its own object and so is not this shape's problem to solve.
     """
     clause = clause.strip().rstrip(".")
+    text = clause
+    limited = _IF_MANA_VALUE_OR_LESS_RE.search(clause)
+    if limited is not None:
+        clause = clause[: limited.start()]
     match = _TIMING_LEADING_RE.fullmatch(clause) or _TIMING_TRAILING_RE.fullmatch(clause)
     if match is None:
         return None
@@ -3489,7 +3514,16 @@ def parse_anaphoric_delayed_clause(clause: str) -> AnaphoricDelayedClause | None
 
     if anaphor in _PLURAL_ANAPHORS and verb not in _PLURAL_ACTIONS:
         return None
-    return AnaphoricDelayedClause(text=clause, step=step, anaphor=anaphor, verb=verb)
+    max_mana_value = None
+    if limited is not None:
+        # Only a singular sacrifice carries the condition (CR 603.4): any other verb or a
+        # plural pronoun would silently drop it, so the clause is refused instead.
+        if verb != "sacrifice" or anaphor in _PLURAL_ANAPHORS:
+            return None
+        max_mana_value = int(limited.group("n"))
+    return AnaphoricDelayedClause(
+        text=text, step=step, anaphor=anaphor, verb=verb, max_mana_value=max_mana_value
+    )
 
 
 def anaphoric_delayed_trigger(

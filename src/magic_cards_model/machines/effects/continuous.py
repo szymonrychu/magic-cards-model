@@ -10806,6 +10806,10 @@ def _parse_leading_duration_anaphor_whole_text(
     return effect  # type: ignore[return-value]
 
 
+#: A head that takes control of a target: the object the pronouns of the sentences after it
+#: name is that target, though nothing entered the battlefield (Angrath, the Flame-Chained -3).
+_GAIN_CONTROL_OF_TARGET_HEAD_RE = re.compile(r"^gain control of target ", re.IGNORECASE)
+
 #: "If it would leave the battlefield, exile it instead of putting it
 #: anywhere else." as a sentence of its own after the clause that put the
 #: object onto the battlefield - Whip of Erebos, Kheru Lich Lord, and CR
@@ -10912,6 +10916,7 @@ def _parse_put_then_grant_then_delayed_whole_text(
     if not _is_readable_head(head):
         return None
     assert head is not None
+    takes_control_of_target = _GAIN_CONTROL_OF_TARGET_HEAD_RE.match(head_text) is not None
     if delayed is not None and grant_keywords is not None and grant_plural != delayed.plural:
         return None
 
@@ -10927,6 +10932,14 @@ def _parse_put_then_grant_then_delayed_whole_text(
         before = {(state.id, state.zone_change_stamp) for state in game.battlefield}
         head(game, stack_object)
         entered = _entered_since(game, before)
+        if not entered and takes_control_of_target:
+            # "Gain control of target creature until end of turn. Untap it. It gains haste.
+            # Sacrifice it ...": nothing entered, the pronoun names the target (CR 608.2c).
+            entered = [
+                target
+                for target in game.resolve_targets(stack_object)
+                if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+            ][:1]
         if not entered:
             return  # CR 101.3: nothing was produced for the pronoun to name.
         if grant_keywords is not None and (grant_plural or len(entered) == 1):

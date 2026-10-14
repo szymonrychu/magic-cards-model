@@ -10,6 +10,7 @@ Every CR number here was looked up with `mise run rules:find`.
 import pytest
 
 from magic_cards_model.machines import Step, payability
+from magic_cards_model.machines.combat import has_keyword
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color
 from tests.scenarios.harness import Scenario
@@ -689,3 +690,41 @@ def test_parker_luck_a_revealed_land_costs_the_other_player_nothing():
     _advance_to(scenario, Step.END_STEP)
     assert _life(scenario) == 20 - 5
     assert _life(scenario, "bob") == 20  # a Forest has mana value 0
+
+
+# --------------------------------------------------------------------------
+# "Sacrifice it at the beginning of the next end step if it has mana value 3 or less."
+# (Angrath, the Flame-Chained -3) - CR 603.7, 603.4, 701.21a
+# --------------------------------------------------------------------------
+
+
+def _angrath_steals(victim):
+    scenario = _main(_build(["Angrath, the Flame-Chained"], ["Grizzly Bears", "Serra Angel"]))
+    angrath = next(c for c in scenario.game.battlefield if c.name == "Angrath, the Flame-Chained")
+    target = scenario.creature(victim, "bob")
+    target.tapped = True
+    scenario.activate(angrath, index=1, targets=[target])
+    scenario.pass_until_resolved()
+    return scenario, target
+
+
+def test_angrath_steals_untaps_and_hastes_the_creature_for_the_turn():
+    scenario, stolen = _angrath_steals("Serra Angel")
+    assert scenario.game.controller_of(stolen).username == "alice"
+    assert not stolen.tapped
+    assert has_keyword(stolen, "haste", scenario.game)
+
+
+def test_angrath_sacrifices_a_stolen_creature_with_mana_value_three_or_less_at_end_step():
+    scenario, stolen = _angrath_steals("Grizzly Bears")
+    assert stolen.zone is Zone.BATTLEFIELD
+    _advance_to(scenario, Step.END_STEP)
+    assert stolen.zone is Zone.GRAVEYARD
+
+
+def test_angrath_does_not_sacrifice_a_stolen_creature_with_greater_mana_value():
+    scenario, stolen = _angrath_steals("Serra Angel")
+    _advance_to(scenario, Step.END_STEP)
+    assert stolen.zone is Zone.BATTLEFIELD
+    _advance_to(scenario, Step.CLEANUP)
+    assert scenario.game.controller_of(stolen).username == "bob"  # control ended with the turn
