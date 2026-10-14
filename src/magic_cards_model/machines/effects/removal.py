@@ -3190,7 +3190,7 @@ def _parse_mass_destroy_predicate(
         entered_this_turn = True
         text = entered_match.group("qualifier").strip()
     stat_comparison: Callable[[Characteristics], bool] | None = None
-    stat_at_most_count: tuple[str, Callable[["Game", str], int]] | None = None
+    stat_at_most_count: tuple[str, Callable[[Game, str], int]] | None = None
     stat_match = _MASS_POWER_TOUGHNESS_RE.fullmatch(text)
     if stat_match is not None:
         if stat_match.group("le_expr") is not None:

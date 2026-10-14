@@ -612,7 +612,8 @@ def cards_for_each_pattern(
 # --------------------------------------------------------------------------
 
 _ADD_MANA_FOR_EACH_RE = re.compile(
-    r"^(?:then )?(?:(?P<who>that player) adds?|add) (?P<symbols>(?:\{[wubrgc]\})+|\{[wubrgc]\}(?: or \{[wubrgc]\})+)"
+    r"^(?:then )?(?:(?P<who>that player) adds?|add) "
+    r"(?P<symbols>(?:\{[wubrgc]\})+|\{[wubrgc]\}(?: or \{[wubrgc]\})+)"
     r" for each (?P<each>.+)$",
     re.IGNORECASE,
 )

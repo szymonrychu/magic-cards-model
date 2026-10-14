@@ -636,7 +636,9 @@ def _parse_attacker_pump_per_other_attacker_sharing_a_type(clause: str, *, for_s
         from .targeting import _creature_types_overlap, _shareable_creature_types
 
         event = getattr(stack_object, "event", None)
-        subject = None if event is None or event.subject_id is None else game.find_by_id(event.subject_id)
+        subject = (
+            None if event is None or event.subject_id is None else game.find_by_id(event.subject_id)
+        )
         if not isinstance(subject, CardState) or subject.zone is not Zone.BATTLEFIELD:
             return
         own = _shareable_creature_types(subject, game)
@@ -746,7 +748,9 @@ def _parse_target_pump_then_additional_pump_for_each(text: str, *, for_spell: bo
         count = multiplier(game, game.controller_of(stack_object).username, None)
         for target in game.resolve_targets(stack_object):
             if isinstance(target, CardState):
-                _pump_until_end_of_turn(game, stack_object, target, power * count, toughness * count)
+                _pump_until_end_of_turn(
+                    game, stack_object, target, power * count, toughness * count
+                )
 
     return [effect]
 
@@ -795,8 +799,8 @@ def _parse_player_creates_tokens_then_pump_per_their_kind(text: str, *, for_spel
     toughness = int(match.group("toughness"))
 
     def effect(game: "Game", stack_object: Any) -> None:
-        from .effects.damage import _announced_x
         from ..models.token import create_tokens
+        from .effects.damage import _announced_x
 
         players = [t for t in game.resolve_targets(stack_object) if isinstance(t, Player)]
         if not players:
@@ -808,7 +812,9 @@ def _parse_player_creates_tokens_then_pump_per_their_kind(text: str, *, for_spel
         count = counted(game, player.username)
         for target in game.resolve_targets(stack_object):
             if isinstance(target, CardState):
-                _pump_until_end_of_turn(game, stack_object, target, power * count, toughness * count)
+                _pump_until_end_of_turn(
+                    game, stack_object, target, power * count, toughness * count
+                )
 
     return [effect]
 
@@ -820,7 +826,8 @@ def _parse_player_creates_tokens_then_pump_per_their_kind(text: str, *, for_spel
 
 _DRAW_FOR_EACH_TARGET_PLAYERS_RE = re.compile(
     r"^draw a card for each (?P<first>[a-z][a-z ]*?) (?P<one>target player) controls, "
-    r"then draw a card for each (?P<second>[a-z][a-z ]*?) (?P<other>another target player) controls$",
+    r"then draw a card for each (?P<second>[a-z][a-z ]*?) "
+    r"(?P<other>another target player) controls$",
     re.IGNORECASE,
 )
 
@@ -908,7 +915,9 @@ def _parse_for_each_permanent_its_owner_puts_it_top_or_bottom(
                 Decision(
                     kind=DecisionKind.PUT_ON_TOP_OR_BOTTOM,
                     player=permanent.owner,
-                    prompt=f"put {permanent.name} on the top or bottom of {permanent.owner}'s library",
+                    prompt=(
+                        f"put {permanent.name} on the top or bottom of {permanent.owner}'s library"
+                    ),
                     source=source,
                     source_id=source_id_of(stack_object),
                 )
@@ -1093,7 +1102,10 @@ def _parse_each_planeswalker_may_activate_a_loyalty_ability_again(
     controls as the ability resolves (CR 608.2h). Nothing is written for a
     planeswalker whose limit is not used up, and the "may" is the controller's
     to leave unused - the permission costs nothing to hold."""
-    if for_spell or _EXTRA_LOYALTY_ACTIVATION_RE.fullmatch(" ".join(clause.split()).rstrip(".")) is None:
+    if (
+        for_spell
+        or _EXTRA_LOYALTY_ACTIVATION_RE.fullmatch(" ".join(clause.split()).rstrip(".")) is None
+    ):
         return None
 
     def effect(game: "Game", stack_object: Any) -> None:

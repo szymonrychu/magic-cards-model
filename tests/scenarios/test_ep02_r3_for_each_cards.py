@@ -519,7 +519,9 @@ def test_rending_vines_destroys_a_permanent_within_the_hand_count_and_draws() ->
 
 def test_rending_vines_spares_a_permanent_above_the_hand_count_but_still_draws() -> None:
     scenario = _scenario([], ["Wurmcoil Engine"], hand=["Rending Vines"], library=["Forest"] * 5)
-    _cast_all(scenario, "Rending Vines", targets=[scenario.find("Wurmcoil Engine", Zone.BATTLEFIELD)])
+    _cast_all(
+        scenario, "Rending Vines", targets=[scenario.find("Wurmcoil Engine", Zone.BATTLEFIELD)]
+    )
     assert _names(scenario, Zone.BATTLEFIELD, "bob").count("Wurmcoil Engine") == 1
     assert _hand(scenario, "alice") == 1
 
@@ -558,9 +560,7 @@ def test_squirming_emergence_returns_a_permanent_card_within_the_graveyard_count
 
 
 def test_squirming_emergence_cannot_target_a_card_above_the_graveyard_count() -> None:
-    scenario = _scenario(
-        [], hand=["Squirming Emergence"], graveyard=["Serra Angel", "Island"]
-    )
+    scenario = _scenario([], hand=["Squirming Emergence"], graveyard=["Serra Angel", "Island"])
     with pytest.raises(Exception, match="(?i)mana value"):
         scenario.cast(
             "Squirming Emergence", "alice", targets=[scenario.find("Serra Angel", Zone.GRAVEYARD)]
@@ -569,7 +569,9 @@ def test_squirming_emergence_cannot_target_a_card_above_the_graveyard_count() ->
 
 def test_engulf_the_shore_bounces_creatures_with_toughness_up_to_the_island_count() -> None:
     scenario = _scenario(
-        ["Grizzly Bears", "Serra Angel"], ["Colossal Dreadmaw", "Memnite"], hand=["Engulf the Shore"]
+        ["Grizzly Bears", "Serra Angel"],
+        ["Colossal Dreadmaw", "Memnite"],
+        hand=["Engulf the Shore"],
     )
     _cast_all(scenario, "Engulf the Shore")
     assert _names(scenario, Zone.HAND, "alice") == ["Grizzly Bears", "Serra Angel"]
@@ -577,7 +579,7 @@ def test_engulf_the_shore_bounces_creatures_with_toughness_up_to_the_island_coun
     assert _names(scenario, Zone.BATTLEFIELD, "bob").count("Colossal Dreadmaw") == 1
 
 
-def test_anticausal_vestige_draws_then_puts_a_permanent_within_the_land_count_onto_the_battlefield() -> None:
+def test_anticausal_vestige_draws_then_puts_a_permanent_within_the_land_count() -> None:
     scenario = _scenario(
         ["Anticausal Vestige"],
         hand=["Serra Angel", "Wurmcoil Engine", "Go for the Throat"],
@@ -608,13 +610,17 @@ def _stats(scenario, name: str, user: str) -> tuple[int, int]:
 @pytest.mark.parametrize(("deserts", "expected"), [(0, (4, 4)), (1, (3, 3)), (2, (2, 2))])
 def test_deserts_due_shrinks_the_target_by_each_desert(deserts: int, expected) -> None:
     scenario = _scenario(["Desert"] * deserts, ["Colossal Dreadmaw"], hand=["Desert's Due"])
-    _cast_all(scenario, "Desert's Due", targets=[scenario.find("Colossal Dreadmaw", Zone.BATTLEFIELD)])
+    _cast_all(
+        scenario, "Desert's Due", targets=[scenario.find("Colossal Dreadmaw", Zone.BATTLEFIELD)]
+    )
     assert _stats(scenario, "Colossal Dreadmaw", "bob") == expected
 
 
 def test_deserts_due_does_not_count_the_opponents_deserts() -> None:
     scenario = _scenario([], ["Colossal Dreadmaw", "Desert"], hand=["Desert's Due"])
-    _cast_all(scenario, "Desert's Due", targets=[scenario.find("Colossal Dreadmaw", Zone.BATTLEFIELD)])
+    _cast_all(
+        scenario, "Desert's Due", targets=[scenario.find("Colossal Dreadmaw", Zone.BATTLEFIELD)]
+    )
     assert _stats(scenario, "Colossal Dreadmaw", "bob") == (4, 4)
 
 
@@ -653,15 +659,26 @@ def test_shared_animosity_pumps_an_attacker_per_other_attacker_sharing_a_type() 
     scenario = _scenario(
         ["Shared Animosity", "Goblin Guide", "Raging Goblin", "Grizzly Bears"], step=Step.UPKEEP
     )
-    _attack(scenario, *scenario.creatures("Goblin Guide", "Raging Goblin", "Grizzly Bears", username="alice"))
+    _attack(
+        scenario,
+        *scenario.creatures("Goblin Guide", "Raging Goblin", "Grizzly Bears", username="alice"),
+    )
     assert _stats(scenario, "Goblin Guide", "alice")[0] == 2 + 1
     assert _stats(scenario, "Raging Goblin", "alice")[0] == 1 + 1
     assert _stats(scenario, "Grizzly Bears", "alice")[0] == 2
 
 
 def test_shared_animosity_counts_a_changeling_as_sharing_every_type() -> None:
-    scenario = _scenario(["Shared Animosity", "Goblin Guide", "Changeling Outcast", "Grizzly Bears"], step=Step.UPKEEP)
-    _attack(scenario, *scenario.creatures("Goblin Guide", "Changeling Outcast", "Grizzly Bears", username="alice"))
+    scenario = _scenario(
+        ["Shared Animosity", "Goblin Guide", "Changeling Outcast", "Grizzly Bears"],
+        step=Step.UPKEEP,
+    )
+    _attack(
+        scenario,
+        *scenario.creatures(
+            "Goblin Guide", "Changeling Outcast", "Grizzly Bears", username="alice"
+        ),
+    )
     assert _stats(scenario, "Goblin Guide", "alice")[0] == 2 + 1
     assert _stats(scenario, "Grizzly Bears", "alice")[0] == 2 + 1
     assert _stats(scenario, "Changeling Outcast", "alice")[0] == 1 + 2
@@ -677,7 +694,10 @@ def test_lightmine_field_hurts_every_attacker_by_the_number_of_attackers() -> No
     scenario = _scenario(
         ["Lightmine Field", "Grizzly Bears", "Memnite", "Colossal Dreadmaw"], step=Step.UPKEEP
     )
-    _attack(scenario, *scenario.creatures("Grizzly Bears", "Memnite", "Colossal Dreadmaw", username="alice"))
+    _attack(
+        scenario,
+        *scenario.creatures("Grizzly Bears", "Memnite", "Colossal Dreadmaw", username="alice"),
+    )
     assert _names(scenario, Zone.GRAVEYARD, "alice") == ["Grizzly Bears", "Memnite"]
     assert scenario.creature("Colossal Dreadmaw", "alice").damage == 3
 
@@ -738,7 +758,9 @@ def test_biomantic_mastery_draws_for_each_creature_both_players_control() -> Non
         hand=["Biomantic Mastery"],
         library=["Forest"] * 12,
     )
-    _cast_all(scenario, "Biomantic Mastery", targets=[scenario.player("alice"), scenario.player("bob")])
+    _cast_all(
+        scenario, "Biomantic Mastery", targets=[scenario.player("alice"), scenario.player("bob")]
+    )
     assert _hand(scenario, "alice") == 5
 
 
@@ -749,7 +771,9 @@ def test_biomantic_mastery_counts_the_chosen_players_not_the_casters() -> None:
         hand=["Biomantic Mastery"],
         library=["Forest"] * 12,
     )
-    _cast_all(scenario, "Biomantic Mastery", targets=[scenario.player("bob"), scenario.player("alice")])
+    _cast_all(
+        scenario, "Biomantic Mastery", targets=[scenario.player("bob"), scenario.player("alice")]
+    )
     assert _hand(scenario, "alice") == 3
     assert _hand(scenario, "bob") == 0
 
@@ -758,7 +782,9 @@ def test_biomantic_mastery_cannot_name_the_same_player_twice() -> None:
     scenario = _scenario(["Grizzly Bears"], hand=["Biomantic Mastery"])
     with pytest.raises(ValueError, match="CR 115.3"):
         scenario.cast(
-            "Biomantic Mastery", "alice", targets=[scenario.player("alice"), scenario.player("alice")]
+            "Biomantic Mastery",
+            "alice",
+            targets=[scenario.player("alice"), scenario.player("alice")],
         )
 
 
@@ -777,7 +803,9 @@ def _first_main_of(scenario, who: str) -> None:
 
 
 def test_blinkmoth_urn_adds_mana_for_the_active_players_artifacts() -> None:
-    scenario = _scenario(["Blinkmoth Urn", "Sol Ring"], ["Ornithopter", "Memnite"], step=Step.UPKEEP)
+    scenario = _scenario(
+        ["Blinkmoth Urn", "Sol Ring"], ["Ornithopter", "Memnite"], step=Step.UPKEEP
+    )
     _first_main_of(scenario, "alice")
     assert scenario.player("alice").mana_pool.total == 2  # the urn and Sol Ring
 
@@ -807,7 +835,10 @@ def test_blinkmoth_urn_adds_nothing_while_tapped() -> None:
 
 def _aetherspouts(answers: list[bool]):
     scenario = _scenario(
-        ["Grizzly Bears", "Memnite"], hand=["Aetherspouts"], library=["Forest"] * 6, step=Step.UPKEEP
+        ["Grizzly Bears", "Memnite"],
+        hand=["Aetherspouts"],
+        library=["Forest"] * 6,
+        step=Step.UPKEEP,
     )
     bears, memnite = scenario.creatures("Grizzly Bears", "Memnite", username="alice")
     scenario.start_at(Step.DECLARE_ATTACKERS)
@@ -837,7 +868,9 @@ def test_aetherspouts_asks_the_owner_once_per_attacker() -> None:
 
 
 def test_aetherspouts_leaves_non_attackers_alone() -> None:
-    scenario = _scenario(["Grizzly Bears"], ["Serra Angel"], hand=["Aetherspouts"], step=Step.UPKEEP)
+    scenario = _scenario(
+        ["Grizzly Bears"], ["Serra Angel"], hand=["Aetherspouts"], step=Step.UPKEEP
+    )
     scenario.start_at(Step.DECLARE_ATTACKERS)
     scenario.attack_with(scenario.creature("Grizzly Bears", "alice"))
     _cast_all(scenario, "Aetherspouts")
@@ -890,11 +923,21 @@ def test_hateful_eidolon_draws_nothing_when_an_unenchanted_creature_dies() -> No
 
 def test_riptide_gearhulk_puts_the_opponents_permanent_third_from_the_top() -> None:
     scenario = _scenario(
-        [], ["Serra Angel"], hand=["Riptide Gearhulk"], bob_library=["Forest", "Island", "Swamp", "Plains"]
+        [],
+        ["Serra Angel"],
+        hand=["Riptide Gearhulk"],
+        bob_library=["Forest", "Island", "Swamp", "Plains"],
     )
-    scenario.choose_trigger_targets("Riptide Gearhulk", [scenario.find("Serra Angel", Zone.BATTLEFIELD)])
+    scenario.choose_trigger_targets(
+        "Riptide Gearhulk", [scenario.find("Serra Angel", Zone.BATTLEFIELD)]
+    )
     _cast_all(scenario, "Riptide Gearhulk")
-    assert [s.name for s in scenario.player("bob").library][:4] == ["Forest", "Island", "Serra Angel", "Swamp"]
+    assert [s.name for s in scenario.player("bob").library][:4] == [
+        "Forest",
+        "Island",
+        "Serra Angel",
+        "Swamp",
+    ]
     assert "Serra Angel" not in _names(scenario, Zone.BATTLEFIELD, "bob")
 
 
@@ -913,7 +956,9 @@ def test_riptide_gearhulk_cannot_target_a_land() -> None:
 
 
 def test_sepulchral_primordial_reanimates_the_opponents_creature_card() -> None:
-    scenario = _scenario([], hand=["Sepulchral Primordial"], bob_graveyard=["Serra Angel", "Island"])
+    scenario = _scenario(
+        [], hand=["Sepulchral Primordial"], bob_graveyard=["Serra Angel", "Island"]
+    )
     scenario.choose_trigger_targets(
         "Sepulchral Primordial", [scenario.find("Serra Angel", Zone.GRAVEYARD, "bob")]
     )
@@ -948,7 +993,9 @@ def test_sepulchral_primordial_cannot_target_a_noncreature_card() -> None:
 
 
 def test_soul_of_emancipation_gives_each_permanents_controller_an_angel() -> None:
-    scenario = _scenario(["Grizzly Bears"], ["Serra Angel", "Hill Giant"], hand=["Soul of Emancipation"])
+    scenario = _scenario(
+        ["Grizzly Bears"], ["Serra Angel", "Hill Giant"], hand=["Soul of Emancipation"]
+    )
     scenario.choose_trigger_targets(
         "Soul of Emancipation",
         [
@@ -1003,7 +1050,9 @@ def test_heirloom_epic_taps_creatures_instead_of_paying_mana() -> None:
 
 def test_heirloom_epic_can_be_paid_by_creatures_alone() -> None:
     scenario, epic = _epic(["Grizzly Bears", "Memnite", "Serra Angel", "Hill Giant"])
-    creatures = scenario.creatures("Grizzly Bears", "Memnite", "Serra Angel", "Hill Giant", username="alice")
+    creatures = scenario.creatures(
+        "Grizzly Bears", "Memnite", "Serra Angel", "Hill Giant", username="alice"
+    )
     scenario.activate(epic, tapping=creatures, auto=True)
     _resolve_all(scenario)
     assert _lands_tapped(scenario) == 0
@@ -1013,7 +1062,9 @@ def test_heirloom_epic_can_be_paid_by_creatures_alone() -> None:
 def test_heirloom_epic_refuses_more_creatures_than_mana_in_the_cost() -> None:
     scenario, epic = _epic(["Grizzly Bears"] * 5)
     creatures = [
-        s for s in scenario.game.battlefield if s.controller == "alice" and s.name == "Grizzly Bears"
+        s
+        for s in scenario.game.battlefield
+        if s.controller == "alice" and s.name == "Grizzly Bears"
     ]
     with pytest.raises(ValueError, match="has no \\{1\\} left to pay"):
         scenario.activate(epic, tapping=creatures, auto=True)
@@ -1088,15 +1139,20 @@ def test_chain_veil_lets_a_planeswalker_activate_a_second_loyalty_ability() -> N
     scenario, veil = _veil_board("Chandra, Torch of Defiance")
     _mana_plus(scenario, "Chandra, Torch of Defiance")
     _resolve_all(scenario)
-    assert "already been activated" in (_walker_refusal(scenario, "Chandra, Torch of Defiance") or "")
+    assert "already been activated" in (
+        _walker_refusal(scenario, "Chandra, Torch of Defiance") or ""
+    )
     scenario.activate(veil, auto=True)
     _resolve_all(scenario)
     assert _walker_refusal(scenario, "Chandra, Torch of Defiance") is None
     _mana_plus(scenario, "Chandra, Torch of Defiance")
     _resolve_all(scenario)
-    assert scenario.find("Chandra, Torch of Defiance", Zone.BATTLEFIELD, "alice").counter_count(
-        Counter.LOYALTY
-    ) == 6
+    assert (
+        scenario.find("Chandra, Torch of Defiance", Zone.BATTLEFIELD, "alice").counter_count(
+            Counter.LOYALTY
+        )
+        == 6
+    )
 
 
 def test_chain_veil_gives_one_extra_activation_per_planeswalker_not_two() -> None:
@@ -1107,20 +1163,26 @@ def test_chain_veil_gives_one_extra_activation_per_planeswalker_not_two() -> Non
     _resolve_all(scenario)
     _mana_plus(scenario, "Chandra, Torch of Defiance")
     _resolve_all(scenario)
-    assert "already been activated" in (_walker_refusal(scenario, "Chandra, Torch of Defiance") or "")
+    assert "already been activated" in (
+        _walker_refusal(scenario, "Chandra, Torch of Defiance") or ""
+    )
 
 
 def test_chain_veil_covers_every_planeswalker_the_controller_has() -> None:
     scenario, veil = _veil_board("Chandra, Torch of Defiance", "Nissa, Who Shakes the World")
     _mana_plus(scenario, "Chandra, Torch of Defiance")
     _resolve_all(scenario)
-    scenario.activate(scenario.find("Nissa, Who Shakes the World", Zone.BATTLEFIELD, "alice"), index=0, auto=True)
+    scenario.activate(
+        scenario.find("Nissa, Who Shakes the World", Zone.BATTLEFIELD, "alice"), index=0, auto=True
+    )
     _resolve_all(scenario)
     scenario.activate(veil, auto=True)
     _resolve_all(scenario)
     assert _walker_refusal(scenario, "Chandra, Torch of Defiance") is None
     assert (
-        scenario.why_cannot_activate(scenario.find("Nissa, Who Shakes the World", Zone.BATTLEFIELD, "alice"), 0)
+        scenario.why_cannot_activate(
+            scenario.find("Nissa, Who Shakes the World", Zone.BATTLEFIELD, "alice"), 0
+        )
         is None
     )
 

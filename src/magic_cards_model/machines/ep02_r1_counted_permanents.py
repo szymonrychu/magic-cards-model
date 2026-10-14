@@ -298,7 +298,6 @@ def _counted_sentence(
     from .amount_sentences import (
         add_mana_times,
         adding_player,
-        controller_of,
         parse_add_mana_for_each,
         parse_life_clause,
         split_where_x,
