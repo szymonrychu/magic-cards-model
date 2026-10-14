@@ -147,6 +147,16 @@ _WHO_MAY_ACTIVATE = re.compile(
     r"(?P<who>only your opponents|any player) may activate this ability(?P<rest>.*)",
     re.IGNORECASE,
 )
+#: CR 602.1b's "may define some aspect of the activation cost": Heirloom Epic's
+#: "For each mana in this ability's activation cost, you may tap an untapped
+#: creature you control rather than pay that mana." The tap is an alternative
+#: way to pay each mana of the cost (CR 601.2h via CR 602.2b), made while the
+#: ability is activated (`CostPayment.tap_creatures_for_mana`).
+_TAP_CREATURES_FOR_MANA = re.compile(
+    r"for each mana in this ability's activation cost, you may tap an untapped creature "
+    r"you control rather than pay that mana",
+    re.IGNORECASE,
+)
 _ACTIVATE_LEAD = re.compile(
     r"activate (?:this ability )?(?P<rest>(?:only|no more than)\b.*)", re.IGNORECASE
 )
@@ -197,7 +207,7 @@ def read_activation_instructions(instructions: str | None) -> ActivationInstruct
     `ActivationInstructions`. Text only - a condition's truth is asked later,
     against a game, by `Game.activation_instruction_refusal`."""
     who = "controller"
-    sorcery = once = False
+    sorcery = once = taps_creatures_for_mana = False
     per_turn: int | None = None
     per_turn_text: str | None = None
     windows: list[str] = []
@@ -208,6 +218,9 @@ def read_activation_instructions(instructions: str | None) -> ActivationInstruct
         if not sentence:
             continue
         rest: str
+        if _TAP_CREATURES_FOR_MANA.fullmatch(sentence):
+            taps_creatures_for_mana = True
+            continue
         if match := _WHO_MAY_ACTIVATE.fullmatch(sentence):
             who = "opponents" if match.group("who").lower() == "only your opponents" else "any"
             rest = match.group("rest")
@@ -246,6 +259,7 @@ def read_activation_instructions(instructions: str | None) -> ActivationInstruct
         once=once,
         windows=tuple(windows),
         conditions=tuple(conditions),
+        taps_creatures_for_mana=taps_creatures_for_mana,
         unread=tuple(unread),
     )
 
@@ -2800,6 +2814,9 @@ class ActivationMixin:
             ).model_copy(update={"color_rule": self.mana_color_rule(controller, permanent)}),
         )
         payment.paying_for = "ability"
+        payment.tap_creatures_for_mana = read_activation_instructions(
+            ability.instructions
+        ).taps_creatures_for_mana
         payment.restrict_x_from_text(
             ability.text,
             sum(

@@ -30,7 +30,7 @@ from magic_cards_model.machines.decisions import (
     NamedManaAbility,
     ScriptedAnswer,
 )
-from magic_cards_model.machines.objects_as_costs import waterbend
+from magic_cards_model.machines.objects_as_costs import tap_creatures_for_mana, waterbend
 from magic_cards_model.machines.triggers import AbilityOnStack
 from magic_cards_model.models import CardState, Color, Game, Match, Player, Zone
 from magic_cards_model.models.card_state import TargetRef
@@ -1412,7 +1412,12 @@ class PlayedScenario:
             division=division,
         )
         if tapping:
-            waterbend(payment, *tapping)
+            # CR 701.67a's waterbend, or an ability's own "tap an untapped
+            # creature you control rather than pay that mana" (Heirloom Epic).
+            if payment.tap_creatures_for_mana:
+                tap_creatures_for_mana(payment, *tapping)
+            else:
+                waterbend(payment, *tapping)
         if auto:
             payment.auto_tap(self.game.permanents_controlled_by(controller))
         else:

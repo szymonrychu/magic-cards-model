@@ -967,3 +967,95 @@ def test_soul_of_emancipation_with_no_targets_makes_no_angels() -> None:
     scenario.choose_trigger_targets("Soul of Emancipation", [])
     _cast_all(scenario, "Soul of Emancipation")
     assert _named(scenario, "Angel") == []
+
+
+# ---------------------------------------------------------------------------
+# Heirloom Epic: "{4}, {T}: Draw a card. For each mana in this ability's activation
+# cost, you may tap an untapped creature you control rather than pay that mana.
+# Activate only as a sorcery." (CR 602.2b, CR 601.2h: costs are paid as the ability
+# is activated; the taps replace mana of the cost)
+# ---------------------------------------------------------------------------
+
+
+def _epic(creatures: list[str]):
+    scenario = _scenario(["Heirloom Epic", *creatures], library=["Forest"] * 6)
+    return scenario, scenario.find("Heirloom Epic", Zone.BATTLEFIELD, "alice")
+
+
+def _lands_tapped(scenario) -> int:
+    return sum(
+        1
+        for s in scenario.game.battlefield
+        if s.controller == "alice" and s.name in set(LANDS) and s.tapped
+    )
+
+
+def test_heirloom_epic_taps_creatures_instead_of_paying_mana() -> None:
+    scenario, epic = _epic(["Grizzly Bears", "Memnite"])
+    bears, memnite = scenario.creatures("Grizzly Bears", "Memnite", username="alice")
+    scenario.activate(epic, tapping=[bears, memnite], auto=True)
+    _resolve_all(scenario)
+    assert bears.tapped and memnite.tapped
+    assert _lands_tapped(scenario) == 2  # {4} less the two creatures
+    assert _hand(scenario, "alice") == 1
+
+
+def test_heirloom_epic_can_be_paid_by_creatures_alone() -> None:
+    scenario, epic = _epic(["Grizzly Bears", "Memnite", "Serra Angel", "Hill Giant"])
+    creatures = scenario.creatures("Grizzly Bears", "Memnite", "Serra Angel", "Hill Giant", username="alice")
+    scenario.activate(epic, tapping=creatures, auto=True)
+    _resolve_all(scenario)
+    assert _lands_tapped(scenario) == 0
+    assert _hand(scenario, "alice") == 1
+
+
+def test_heirloom_epic_refuses_more_creatures_than_mana_in_the_cost() -> None:
+    scenario, epic = _epic(["Grizzly Bears"] * 5)
+    creatures = [
+        s for s in scenario.game.battlefield if s.controller == "alice" and s.name == "Grizzly Bears"
+    ]
+    with pytest.raises(ValueError, match="has no \\{1\\} left to pay"):
+        scenario.activate(epic, tapping=creatures, auto=True)
+
+
+def test_heirloom_epic_refuses_a_tapped_creature() -> None:
+    scenario, epic = _epic(["Grizzly Bears"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.tapped = True
+    with pytest.raises(ValueError, match="(?i)tapped"):
+        scenario.activate(epic, tapping=[bears], auto=True)
+
+
+def test_heirloom_epic_refuses_an_opponents_creature() -> None:
+    scenario = _scenario(["Heirloom Epic"], ["Grizzly Bears"])
+    epic = scenario.find("Heirloom Epic", Zone.BATTLEFIELD, "alice")
+    with pytest.raises(ValueError, match="(?i)control"):
+        scenario.activate(epic, tapping=[scenario.creature("Grizzly Bears", "bob")], auto=True)
+
+
+def _open_payment(cost: str, *, permitted: bool):
+    from magic_cards_model.machines.cost import CostPayment, TotalCost
+
+    scenario = _scenario(["Grizzly Bears"])
+    payment = CostPayment.for_total(TotalCost.of(cost), game=scenario.game, payer="alice")
+    payment.tap_creatures_for_mana = permitted
+    return payment, scenario.creature("Grizzly Bears", "alice")
+
+
+def test_a_creature_may_pay_a_coloured_symbol_of_the_cost() -> None:
+    """The permission is "for each mana", coloured or generic - unlike convoke it
+    does not ask for a creature of the symbol's colour."""
+    from magic_cards_model.machines.objects_as_costs import tap_creature_for_mana
+    from magic_cards_model.models.card import Color
+
+    payment, bears = _open_payment("{2}{U}", permitted=True)
+    substitution = tap_creature_for_mana(payment, bears, Color.BLUE)
+    assert substitution.option.color is Color.BLUE
+
+
+def test_tapping_a_creature_for_mana_needs_the_abilitys_permission() -> None:
+    from magic_cards_model.machines.objects_as_costs import tap_creature_for_mana
+
+    payment, bears = _open_payment("{2}", permitted=False)
+    with pytest.raises(ValueError, match="(?i)does not let"):
+        tap_creature_for_mana(payment, bears)
