@@ -699,3 +699,47 @@ def test_combustible_gearhulk_opponent_accepts_so_alice_draws_three():
     scenario.pass_until_resolved()
     assert len(scenario.player("alice").hand) == 3
     assert scenario.player("bob").life == 20
+
+
+# --------------------------------------------------------------------------
+# Part 9 - "Target player mills X cards. If this spell was cast from a
+# graveyard, that player mills twice that many cards instead." (Increasing
+# Confusion). CR 107.3a X; CR 702.34a flashback casts from the graveyard.
+# --------------------------------------------------------------------------
+
+
+def _confusion(zone, x):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Increasing Confusion"] if zone is Zone.HAND else [],
+            graveyard=["Increasing Confusion"] if zone is Zone.GRAVEYARD else [],
+            battlefield=["Island"] * 6,
+        )
+        .player("bob", library=[SWAMP] * 12)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    spell = scenario.find("Increasing Confusion", zone, "alice")
+    scenario.game.cast(
+        spell,
+        "alice",
+        x_value=x,
+        targets=["bob"],
+        mana_sources=scenario.untapped_sources(*["Island"] * (x + 1)),
+        keyword="Flashback" if zone is Zone.GRAVEYARD else None,
+    )
+    while scenario.game.stack:
+        scenario.resolve_top()
+    return scenario
+
+
+def test_increasing_confusion_cast_from_hand_mills_x():
+    scenario = _confusion(Zone.HAND, 3)
+    assert _graveyard(scenario, "bob") == 3
+
+
+def test_increasing_confusion_flashed_back_mills_twice_x():
+    scenario = _confusion(Zone.GRAVEYARD, 3)
+    assert _graveyard(scenario, "bob") == 6

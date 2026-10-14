@@ -44,11 +44,12 @@ from .amount_sentences import (
     apply_mill,
     clean,
     controller_of,
+    mill_players,
     parse_mill_clause,
     recipient_amount,
 )
 from .decisions import source_id_of
-from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE
+from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from .layers import ContinuousEffect, Duration, Layer, Sublayer, only_this_incarnation
 from .layers.model import SetPower
 
@@ -545,5 +546,39 @@ def _parse_opponent_may_have_you_draw_else_mill_damage(effect_text: str) -> "Abi
                 continue
             milled = _mill(game, controller, mill_count)
             game.deal_damage(opponent, aggregate(milled), source=ability.source_or_last_known(game))
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "Target player mills X cards. If this spell was cast from a graveyard, that
+# player mills twice that many cards instead."
+# --------------------------------------------------------------------------
+
+_MILL_X_DOUBLED_FROM_GRAVEYARD_RE = re.compile(
+    r"^target player mills x cards\. if this spell was cast from a graveyard, that player "
+    r"mills (?P<times>twice|three times) that many cards instead$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s14")
+def _parse_mill_x_doubled_from_graveyard(spell_text: str) -> "Callable[[Game, CardState], None] | None":
+    """CR 107.3a X milled (CR 701.17a); the cast record's origin zone
+    (CR 601.2a) says whether it was cast from a graveyard (flashback,
+    CR 702.34a), in which case the multiple replaces the plain amount."""
+    match = _MILL_X_DOUBLED_FROM_GRAVEYARD_RE.fullmatch(clean(spell_text))
+    if match is None:
+        return None
+    multiple = 2 if match.group("times").lower() == "twice" else 3
+
+    def effect(game: "Game", spell: CardState) -> None:
+        record = game.cast_record_of(spell)
+        x_value = 0 if record is None else record.x_value
+        from_graveyard = record is not None and record.origin_zone is Zone.GRAVEYARD
+        amount = x_value * multiple if from_graveyard else x_value
+        for target in game.resolve_targets(spell):
+            if isinstance(target, Player):
+                mill_players(game, [target], [amount])
 
     return effect
