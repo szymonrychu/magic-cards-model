@@ -1954,7 +1954,7 @@ class ActivationCostReduction(EngineModel):
     graveyard_quality: str | None = None
     #: Survey Mechan's "This ability costs {X} less to activate, where X is the
     #: number of differently named lands you control." - the printed phrase X is
-    #: defined as, read by `count_expression` (CR 107.3a, CR 601.2f) each time the
+    #: defined as, read by `count_expression` (CR 107.3f, CR 601.2f) each time the
     #: cost is determined. Exactly one of this and the fields above is ever set.
     where_x: str | None = None
 

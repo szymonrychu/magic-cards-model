@@ -526,6 +526,32 @@ _CANNOT_CAST_UNLESS_RE = re.compile(
 )
 
 
+def _legendary_instant_or_sorcery_refusal(spell: CardState, caster: str, game: Any) -> str | None:
+    """CR 205.4e: a legendary instant or sorcery spell can't be cast unless its caster controls
+    a legendary creature or a legendary planeswalker (read off the computed board, CR 613.5)."""
+    from ...models.card import Supertype
+
+    card = spell.card
+    if Supertype.LEGENDARY not in card.supertypes or not (
+        Type.INSTANT in card.types or Type.SORCERY in card.types
+    ):
+        return None
+    board = game.computed_board()
+    for permanent in game.battlefield:
+        chars = board.of(permanent)
+        if (
+            chars.controller == caster
+            and Supertype.LEGENDARY in chars.supertypes
+            and (Type.CREATURE in chars.types or Type.PLANESWALKER in chars.types)
+        ):
+            return None
+    return (
+        f"{spell.name} is a legendary {'instant' if Type.INSTANT in card.types else 'sorcery'}, "
+        f"so {caster} can't cast it without controlling a legendary creature or a legendary "
+        "planeswalker (CR 205.4e)"
+    )
+
+
 def why_cannot_cast_self_restriction(spell: CardState, caster: str, game: Any = None) -> str | None:
     """CR 601.2e: "The game checks to see if the proposed spell can legally
     be cast. If the proposed spell is illegal, the game returns to the
@@ -546,6 +572,9 @@ def why_cannot_cast_self_restriction(spell: CardState, caster: str, game: Any = 
     gate = self_turn_gate_reason(spell, caster, game)
     if gate is not None:
         return gate
+    legendary = _legendary_instant_or_sorcery_refusal(spell, caster, game)
+    if legendary is not None:
+        return legendary
     match = _CANNOT_CAST_UNLESS_RE.search(self_normalized_oracle(spell))
     if match is None:
         return None

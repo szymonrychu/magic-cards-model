@@ -9570,13 +9570,12 @@ def _parse_next_spell_has_keyword(text: str) -> TargetedClause | None:
 def _parse_this_turn_spell_grant_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_NEXT_SPELL_FREE_CAST_RE` (CR 118.9) or `_SPELLS_COST_LESS_THIS_TURN_
     RE` (CR 601.2f), for the resolving object's controller, this turn."""
+    from ..ep02_r3_damage_cost_amounts_costs import spells_that_are_normalised
     from ..next_spell import (
         NextSpellFreeCastGrant,
         SpellCostReductionGrant,
         spell_quality_is_readable,
     )
-
-    from ..ep02_r3_damage_cost_amounts_costs import spells_that_are_normalised
 
     text = spells_that_are_normalised(" ".join(clause.strip().split()))
     keyword_grant = _parse_next_spell_has_keyword(text)

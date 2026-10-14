@@ -12,7 +12,7 @@ and its spell-side twin) additively:
   creature's controller's hand" (the target's controller), "the power of the exiled
   card" (the card the source exiled, CR 607.2a).
 - `x_literal`: the sentence with its X written out, a negative X flipping the sign
-  of a "-X" the way arithmetic does (CR 107.3a defines X; "-X/-X" with X = -1 is +1/+1).
+  of a "-X" the way arithmetic does (CR 107.3f defines X in the text; "-X/-X" with X = -1 is +1/+1).
 - `may_have_pump`: "you may have target creature get +X/+X until end of turn, where X is ..."
   is the optional (CR 608.2d) form of the plain pump.
 """
@@ -81,9 +81,7 @@ def _stat_of(game: "Game", permanent: Any, stat: str) -> int:
     return max(chars.numeric_power, chars.numeric_toughness)
 
 
-def _greatest(
-    stat: str, group: str, *, other: bool
-) -> Callable[["Game", str, Any], int]:
+def _greatest(stat: str, group: str, *, other: bool) -> Callable[["Game", str, Any], int]:
     card_type = _GROUP_TYPES[group.lower()]
 
     def read(game: "Game", controller: str, excluded: Any) -> int:
@@ -165,7 +163,7 @@ _TIMES_RE = re.compile(
 
 
 def _times_reader(lowered: str) -> Callable[["Game", Any], int] | None:
-    """"The number of times this ability has resolved this turn" (CR 608.2h: the
+    """ "The number of times this ability has resolved this turn" (CR 608.2h: the
     resolution in progress counts), "... this creature was kicked" (CR 702.33d: a
     multikicker spell is kicked once per payment) and "... has mutated" (CR 702.140c:
     each spell merged into it)."""
@@ -190,7 +188,7 @@ _OWN_STAT_RE = re.compile(r"^this (?:creature|permanent)'s (?P<stat>power|toughn
 
 
 def _own_stat(stat: str) -> Callable[["Game", Any], int]:
-    """"This creature's power" as the object resolves (CR 608.2h): the source's value
+    """ "This creature's power" as the object resolves (CR 608.2h): the source's value
     now, or its last known value once it has left the battlefield (CR 603.10a)."""
 
     def read(game: "Game", obj: Any) -> int:
@@ -245,14 +243,14 @@ def _exiled_stat(stat: str) -> Callable[["Game", Any], int]:
 
 _MAY_HAVE_PUMP_RE = re.compile(
     r"^you may have (?P<subject>(?:up to \w+ )?target [\w -]+?) (?P<verb>get|gain|lose) "
-    r"(?P<rest>.+, where X is .+)$",
+    r"(?P<rest>[^.]+, where X is [^.]+\.?)$",
     re.IGNORECASE,
 )
 
 
 @ABILITY_TEXT.rung("s36", before=["amounts._parse_where_x_is_continuous_effect"])
 def may_have_pump(text: str) -> Any:
-    """"You may have target creature get +X/+X until end of turn, where X is ...": asked
+    """ "You may have target creature get +X/+X until end of turn, where X is ...": asked
     at resolution (CR 608.2d), then the plain pump."""
     stripped = " ".join(text.split())
     if not stripped.lower().startswith("you may have ") or "where x is" not in stripped.lower():
@@ -279,14 +277,19 @@ def may_have_pump(text: str) -> Any:
 
 _IT_PUMP_RE = re.compile(
     r"^(?P<lead>until end of turn, )?(?P<subject>it|equipped creature|enchanted creature) gets "
-    r"(?P<pump>[+-](?:X|\d+)/[+-](?:X|\d+))(?P<tail> until end of turn)?, where X is (?P<expr>[^.]+?)\.?$",
+    r"(?P<pump>[+-](?:X|\d+)/[+-](?:X|\d+))(?P<tail> until end of turn)?, "
+    r"where X is (?P<expr>[^.]+?)\.?$",
     re.IGNORECASE,
 )
 
 
-@ABILITY_TEXT.rung("s36", before=["amounts._parse_where_x_is_continuous_effect"])
+@ABILITY_TEXT.rung(
+    "s36",
+    before=["amounts._parse_where_x_is_continuous_effect"],
+    after=["amounts._parse_event_subject_variable_pump_clause"],
+)
 def it_gets_pump(text: str) -> Any:
-    """"It / equipped creature gets +X/+X until end of turn, where X is ...": the
+    """ "It / equipped creature gets +X/+X until end of turn, where X is ...": the
     subject is the object the ability is about - the event's subject (else the source)
     for "it", the permanent the source is attached to for "equipped creature" and
     "enchanted creature" (CR 301.5, 303.4); X is taken once as the effect applies
@@ -352,7 +355,7 @@ _UNTAP_IT_RE = re.compile(r"^untap it\.?$", re.IGNORECASE)
 
 @MIXED_CLAUSE.rung("s32", for_spell=FORWARD)
 def untap_the_target(text: str, *, for_spell: bool) -> Any:
-    """"Untap it." closing a sentence that targeted the permanent (Boon of Boseiju): the
+    """ "Untap it." closing a sentence that targeted the permanent (Boon of Boseiju): the
     target is untapped as the object resolves (CR 701.26b)."""
     if _UNTAP_IT_RE.fullmatch(text.strip()) is None:
         return None
@@ -403,7 +406,9 @@ def _becomes_creature_effect(text: str) -> Any:
         return None
 
     def effect(game: "Game", stack_object: Any) -> None:
-        name = stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        name = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
         for target in game.resolve_card_targets(stack_object):
             if target.zone is not Zone.BATTLEFIELD:
                 continue
@@ -497,7 +502,9 @@ def _grant_list_effect(text: str) -> Any:
     from .layers import ContinuousEffect, Duration, Layer, only_this_incarnation
 
     def effect(game: "Game", stack_object: Any) -> None:
-        name = stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        name = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
         for target in game.resolve_card_targets(stack_object):
             if target.zone is not Zone.BATTLEFIELD:
                 continue

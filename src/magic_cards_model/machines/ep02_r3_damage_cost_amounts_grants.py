@@ -22,7 +22,9 @@ from .effects._chains import ABILITY_TEXT
 if TYPE_CHECKING:
     from ..models.game import Game
 
-_THAT_CARDS_RE = re.compile(r"\bthe flashback cost is equal to that card's mana cost", re.IGNORECASE)
+_THAT_CARDS_RE = re.compile(
+    r"\bthe flashback cost is equal to that card's mana cost", re.IGNORECASE
+)
 _SADDLED_RE = re.compile(
     r"\s*that card gains flashback \{0\} until end of turn instead if this creature is saddled\.?$",
     re.IGNORECASE,

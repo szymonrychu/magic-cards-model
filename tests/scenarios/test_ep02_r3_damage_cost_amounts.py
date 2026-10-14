@@ -6,7 +6,7 @@ Rules, each looked up with `mise run rules:find` in the session that wrote this 
 
 - **CR 608.2h** - information about an object is taken once, as the effect applies.
 - **CR 608.2c** - instructions are followed in order; later text refers to earlier text.
-- **CR 107.3a** - X on a spell or ability is defined by the text that gives it a value.
+- **CR 107.3f** - X in the text of a spell or ability, not in a cost, is defined by that text.
 - **CR 202.3** - mana value is the total amount of mana in the mana cost.
 - **CR 119.3** - life gain and loss adjust a player's life total.
 - **CR 122.1** - counters.
@@ -502,7 +502,9 @@ def test_nibelheim_aflame_hits_every_other_creature_with_the_chosen_ones_power()
 
 
 def test_nibelheim_aflame_reads_the_power_as_it_resolves() -> None:
-    scenario = _scenario(["Grizzly Bears"], ["Hill Giant", "Wall of Omens"], hand=["Nibelheim Aflame"])
+    scenario = _scenario(
+        ["Grizzly Bears"], ["Hill Giant", "Wall of Omens"], hand=["Nibelheim Aflame"]
+    )
     bears = scenario.creature("Grizzly Bears", "alice")
     _cast_all(scenario, "Nibelheim Aflame", targets=[bears])
     assert scenario.creature("Hill Giant", "bob").zone is Zone.BATTLEFIELD  # 2 damage on a 3/3
@@ -551,3 +553,42 @@ def test_friendly_fire_with_an_empty_hand_does_nothing() -> None:
     _cast_all(scenario, "Friendly Fire", targets=[angel])
     assert angel.zone is Zone.BATTLEFIELD
     assert scenario.player("bob").life == 20
+
+
+def test_isildurs_fateful_strike_exiles_hand_cards_above_four() -> None:
+    scenario = _scenario(
+        ["Zur, Eternal Schemer"],
+        ["Serra Angel"],
+        hand=["Isildur's Fateful Strike"],
+        bob_hand=["Island"] * 6,
+    )
+    angel = scenario.creature("Serra Angel", "bob")
+    _cast_all(scenario, "Isildur's Fateful Strike", targets=[angel])
+    assert angel.zone is Zone.GRAVEYARD
+    assert len(scenario.player("bob").hand) == 4
+    assert len(scenario.game.exile) == 2  # six cards, more than four by two
+
+
+def test_isildurs_fateful_strike_leaves_a_four_card_hand_alone() -> None:
+    scenario = _scenario(
+        ["Zur, Eternal Schemer"],
+        ["Serra Angel"],
+        hand=["Isildur's Fateful Strike"],
+        bob_hand=["Island"] * 4,
+    )
+    angel = scenario.creature("Serra Angel", "bob")
+    _cast_all(scenario, "Isildur's Fateful Strike", targets=[angel])
+    assert angel.zone is Zone.GRAVEYARD
+    assert len(scenario.player("bob").hand) == 4
+    assert not scenario.game.exile
+
+
+def test_isildurs_fateful_strike_needs_a_legendary_creature_or_planeswalker() -> None:
+    scenario = _scenario([], ["Serra Angel"], hand=["Isildur's Fateful Strike"])
+    with pytest.raises(ValueError):
+        scenario.cast_onto_stack(
+            "Isildur's Fateful Strike",
+            username="alice",
+            targets=[scenario.creature("Serra Angel", "bob")],
+            auto=True,
+        )

@@ -76,28 +76,6 @@ from ..ep02_r2_cards_in_zone_counts import (
     parse_search_target_library_and_exile,
 )
 from ..ep02_r2_devotion_domain_party import up_to_x_targets, where_x_pump_text_normalised
-
-
-def r3_controller_amount(phrase: str):
-    """`ep02_r3_damage_cost_amounts_pumps.controller_amount`, imported on use."""
-    from ..ep02_r3_damage_cost_amounts_pumps import controller_amount
-
-    return controller_amount(phrase)
-
-
-def r3_object_amount(phrase: str):
-    """`ep02_r3_damage_cost_amounts_pumps.object_amount`, imported on use."""
-    from ..ep02_r3_damage_cost_amounts_pumps import object_amount
-
-    return object_amount(phrase)
-
-
-def r3_x_literal(sentence: str, magnitude: int) -> str:
-    """`ep02_r3_damage_cost_amounts_pumps.x_literal`, imported on use."""
-    from ..ep02_r3_damage_cost_amounts_pumps import x_literal
-
-    return x_literal(sentence, magnitude)
-
 from ..layers import (
     BASIC_LAND_TYPES,
     Characteristics,
@@ -910,6 +888,27 @@ def _nw06_counted_term(stripped: str) -> Callable[["Game", str], int] | None:
     if "color pairs" in lowered or "colour pairs" in lowered:
         return _color_pairs_count(stripped)
     return None
+
+
+def r3_controller_amount(phrase: str):
+    """`ep02_r3_damage_cost_amounts_pumps.controller_amount`, imported on use."""
+    from ..ep02_r3_damage_cost_amounts_pumps import controller_amount
+
+    return controller_amount(phrase)
+
+
+def r3_object_amount(phrase: str):
+    """`ep02_r3_damage_cost_amounts_pumps.object_amount`, imported on use."""
+    from ..ep02_r3_damage_cost_amounts_pumps import object_amount
+
+    return object_amount(phrase)
+
+
+def r3_x_literal(sentence: str, magnitude: int) -> str:
+    """`ep02_r3_damage_cost_amounts_pumps.x_literal`, imported on use."""
+    from ..ep02_r3_damage_cost_amounts_pumps import x_literal
+
+    return x_literal(sentence, magnitude)
 
 
 def count_expression(phrase: str) -> Callable[["Game", str], int] | None:

@@ -52,7 +52,10 @@ def _stat(game: "Game", creature: CardState, stat: str) -> int:
 @functools.cache
 def _choose_then_deals_to_group(text: str, for_spell: bool) -> Any:
     lowered = text.lower()
-    if not lowered.startswith("choose target creature") or "deals damage equal to its" not in lowered:
+    if (
+        not lowered.startswith("choose target creature")
+        or "deals damage equal to its" not in lowered
+    ):
         return None
     effect_lines = [line for line in text.split("\n") if not line.lower().startswith("flashback")]
     match = _STAT_DAMAGE_GROUP_RE.fullmatch(" ".join(" ".join(effect_lines).split()))
@@ -96,7 +99,10 @@ def choose_then_deals_to_group(effect_text: str) -> Any:
 
 @functools.cache
 def _may_deal_then_takes_back(text: str) -> Any:
-    if not text.lower().startswith("you may have ") or "if you do, that creature deals" not in text.lower():
+    if (
+        not text.lower().startswith("you may have ")
+        or "if you do, that creature deals" not in text.lower()
+    ):
         return None
     match = _MAY_DEAL_RE.fullmatch(" ".join(text.split()))
     if match is None:
