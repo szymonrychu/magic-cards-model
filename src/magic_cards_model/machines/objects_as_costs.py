@@ -115,6 +115,12 @@ class ObjectOffer(EngineModel):
     """Whether an object may cover a coloured symbol of one of *its own*
     colours - CR 702.51a's "an untapped creature of that color"."""
 
+    pays_any_color: bool = False
+    """Whether an object may cover a coloured symbol whatever its own colours
+    are - an ability's own "for each mana in this ability's activation cost,
+    you may tap an untapped creature you control rather than pay that mana"
+    (Heirloom Epic), which names no colour at all."""
+
     def why_not(self, card: CardState, payer: str, game: Any = None) -> str | None:
         """Why `card` may not be spent on this offer, or None."""
         if card.zone is not self.zone:
@@ -206,6 +212,8 @@ class ObjectOffer(EngineModel):
             if not self.pays_generic:
                 return _refuse(f"{self.keyword} does not pay generic mana ({self.rule})")
             return PaymentOption(generic=1)
+        if self.pays_any_color:
+            return PaymentOption(color=color)
         if not self.pays_own_colors:
             return _refuse(f"{self.keyword} does not pay coloured mana ({self.rule})")
         colors = _colors_of(card, game)
@@ -308,6 +316,7 @@ STATION_RULE = "CR 702.184a"
 IMPROVISE_RULE = "CR 702.126a"
 WATERBEND_RULE = "CR 701.67a"
 WATERBEND_RULE_B = "CR 701.67b"
+TAP_FOR_MANA_RULE = "CR 602.2b"
 
 
 def convoke_offer() -> ObjectOffer:
@@ -322,6 +331,24 @@ def convoke_offer() -> ObjectOffer:
         untapped_only=True,
         pays_generic=True,
         pays_own_colors=True,
+    )
+
+
+def tap_creature_for_mana_offer() -> ObjectOffer:
+    """An activated ability's own permission to tap an untapped creature you
+    control rather than pay a mana of its activation cost (Heirloom Epic).
+    CR 602.1b lets an activation instruction "define some aspect of the
+    activation cost"; the payment is then CR 601.2h's, which CR 602.2b applies
+    to activating. Any mana of the cost, generic or coloured, and any creature."""
+    return ObjectOffer(
+        keyword="tap a creature",
+        rule=TAP_FOR_MANA_RULE,
+        action=ObjectAction.TAP,
+        zone=Zone.BATTLEFIELD,
+        permitted_types=frozenset({Type.CREATURE}),
+        untapped_only=True,
+        pays_generic=True,
+        pays_any_color=True,
     )
 
 
@@ -762,6 +789,30 @@ def waterbend(payment: CostPayment, *permanents: CardState) -> list[CostSubstitu
                 )
         results.append(_substitute(payment, offer, permanent, None))
     return results
+
+
+def tap_creature_for_mana(
+    payment: CostPayment, creature: CardState, color: Color | None = None
+) -> CostSubstitution:
+    """Tap `creature` rather than pay one mana of the ability's activation cost.
+
+    `color` names the coloured symbol it covers; `None` covers a generic one.
+    Like convoke (CR 702.51b) it applies to the cost once determined, so it
+    acts on the open `CostPayment`; the payment must belong to an ability whose
+    printed instructions grant the permission (`CostPayment.
+    tap_creatures_for_mana`). The creature is tapped as the payment is paid and
+    untapped again if it is cancelled (CR 733.1)."""
+    if not payment.tap_creatures_for_mana:
+        raise ValueError(
+            f"{creature.name} cannot pay for this cost: the ability being paid for does not "
+            f"let a creature be tapped rather than pay its mana ({TAP_FOR_MANA_RULE})"
+        )
+    return _substitute(payment, tap_creature_for_mana_offer(), creature, color)
+
+
+def tap_creatures_for_mana(payment: CostPayment, *creatures: CardState) -> list[CostSubstitution]:
+    """`tap_creature_for_mana` against a generic mana for each of `creatures`."""
+    return [tap_creature_for_mana(payment, creature) for creature in creatures]
 
 
 def _substitute(

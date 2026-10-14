@@ -232,7 +232,8 @@ _TARGET_PLAYER_BEFORE_THAT_PLAYER_RE = re.compile(r"\btarget (?:player|opponent)
 #: "target opponent" is checked against below - a card could in principle
 #: print either first.
 _THAT_PLAYER_BINDING_RE = re.compile(
-    r"that player controls|that player'?s (?:graveyards?|hands?|libraries?|library|exile)",
+    r"that player controls|that player'?s (?:graveyards?|hands?|libraries?|library|exile)"
+    r"|target players other than that player",
     re.IGNORECASE,
 )
 

@@ -40,9 +40,11 @@ class ActivationInstructions:
     (the controller's opponents only) or `"any"`. `sorcery` is CR 602.5d's
     timing, `per_turn` CR 602.5b's per-turn count (with the words that set it
     in `per_turn_text`), `once` the never-reset "Activate only once", `windows`
-    the "during ..." phrases, `conditions` the "only if ..." conditions, and
-    `unread` every instruction this reads no meaning from - refused, never
-    allowed unchecked."""
+    the "during ..." phrases, `conditions` the "only if ..." conditions,
+    `taps_creatures_for_mana` the instruction that "defines some aspect of the
+    activation cost" by letting creatures be tapped instead of paying mana
+    (Heirloom Epic), and `unread` every instruction this reads no meaning from -
+    refused, never allowed unchecked."""
 
     who: str = "controller"
     sorcery: bool = False
@@ -51,6 +53,7 @@ class ActivationInstructions:
     once: bool = False
     windows: tuple[str, ...] = ()
     conditions: tuple[str, ...] = ()
+    taps_creatures_for_mana: bool = False
     unread: tuple[str, ...] = ()
 
 

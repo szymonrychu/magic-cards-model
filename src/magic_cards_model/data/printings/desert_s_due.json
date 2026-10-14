@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "35e899e4-e2de-44cf-b6f4-cace8d3770cb",
+  "oracle_id": "909eacf3-05ce-4c2b-97a8-49b6ea597b64",
+  "multiverse_ids": [
+    655026
+  ],
+  "mtgo_id": 124081,
+  "arena_id": 90431,
+  "tcgplayer_id": 544652,
+  "cardmarket_id": 764013,
+  "name": "Desert's Due",
+  "lang": "en",
+  "released_at": "2024-04-19",
+  "uri": "https://api.scryfall.com/cards/35e899e4-e2de-44cf-b6f4-cace8d3770cb",
+  "scryfall_uri": "https://scryfall.com/card/otj/85/deserts-due?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:03:54Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/5/35e899e4-e2de-44cf-b6f4-cace8d3770cb.jpg?1783911834",
+    "normal": "https://cards.scryfall.io/normal/front/3/5/35e899e4-e2de-44cf-b6f4-cace8d3770cb.jpg?1783911834",
+    "large": "https://cards.scryfall.io/large/front/3/5/35e899e4-e2de-44cf-b6f4-cace8d3770cb.jpg?1783911834",
+    "png": "https://cards.scryfall.io/png/front/3/5/35e899e4-e2de-44cf-b6f4-cace8d3770cb.png?1783911834",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/5/35e899e4-e2de-44cf-b6f4-cace8d3770cb.jpg?1783911834",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/5/35e899e4-e2de-44cf-b6f4-cace8d3770cb.jpg?1783911834",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/5/35e899e4-e2de-44cf-b6f4-cace8d3770cb.webp?1783911834",
+    "grid": "https://cards.scryfall.io/grid/front/3/5/35e899e4-e2de-44cf-b6f4-cace8d3770cb.webp?1783911834",
+    "display": "https://cards.scryfall.io/display/front/3/5/35e899e4-e2de-44cf-b6f4-cace8d3770cb.webp?1783911834",
+    "art": "https://cards.scryfall.io/art/front/3/5/35e899e4-e2de-44cf-b6f4-cace8d3770cb.webp?1783911834",
+    "crop": "https://cards.scryfall.io/crop/front/3/5/35e899e4-e2de-44cf-b6f4-cace8d3770cb.webp?1783911834"
+  },
+  "mana_cost": "{1}{B}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Target creature gets -2/-2 until end of turn. It gets an additional -1/-1 until end of turn for each Desert you control.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set": "otj",
+  "set_name": "Outlaws of Thunder Junction",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aotj&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/otj?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/35e899e4-e2de-44cf-b6f4-cace8d3770cb/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A909eacf3-05ce-4c2b-97a8-49b6ea597b64&unique=prints",
+  "collector_number": "85",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "He was glad when the mirages appeared. At least he wouldn't die alone.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "David Palumbo",
+  "artist_ids": [
+    "04ce1c75-e30c-4b7a-8cb0-b53e4ecc2f39"
+  ],
+  "illustration_id": "b0fc0195-ee0a-4963-a863-f06ac20b95ec",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 24341,
+  "penny_rank": 13469,
+  "prices": {
+    "usd": "0.17",
+    "usd_foil": "0.10",
+    "usd_etched": null,
+    "eur": "0.02",
+    "eur_foil": "0.03",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=655026&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDesert%2527s%2BDue",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDesert%2527s%2BDue",
+    "edhrec": "https://edhrec.com/route/?cc=Desert%27s+Due"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F544652%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=764013&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/124081?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

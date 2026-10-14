@@ -803,6 +803,13 @@ class TargetRequirement(EngineModel):
     303.4b) cannot be chosen. Read off the plain words; not the source itself
     (`excludes_source`), which is the Aura."""
 
+    excludes_event_player: bool = False
+    """"any number of target players other than that player" (Curse of
+    Surveillance) - the player the trigger event names (`event_player`, bound
+    by `TargetingProfile.for_event_player`, CR 603.3d) cannot be chosen. Unbound
+    (no event yet), it excludes nobody, the way every event-relative
+    restriction reads before its event."""
+
     total_mana_value_at_most: int | None = None
     """"up to two target creatures with total mana value 6 or less" (The Super
     Hero Civil War's chapter I) - like `distinct_controllers`, a restriction
@@ -2092,6 +2099,8 @@ class TargetRequirement(EngineModel):
     ) -> str | None:
         if not self.allows_players:
             return f"{self.phrase} cannot target the player {username}"
+        if self.excludes_event_player and username == self.event_player:
+            return f"{self.phrase} cannot target {username}, who is that player"
         if self.opponent_only and username == caster:
             return f"{self.phrase} cannot target {caster}, who is not an opponent"
         if self.dealt_damage_clause is not None and game is not None:
@@ -2225,6 +2234,7 @@ class TargetingProfile(EngineModel):
         as read, restriction unbound."""
         if player is None or not any(
             requirement.controller is ControllerRestriction.EVENT_PLAYER
+            or requirement.excludes_event_player
             for requirement in self.requirements
         ):
             return self
@@ -2233,6 +2243,7 @@ class TargetingProfile(EngineModel):
                 "requirements": tuple(
                     requirement.model_copy(update={"event_player": player})
                     if requirement.controller is ControllerRestriction.EVENT_PLAYER
+                    or requirement.excludes_event_player
                     else requirement
                     for requirement in self.requirements
                 )
@@ -4340,7 +4351,8 @@ _REFLEXIVE_CLAUSE_CONSEQUENCE_RE = re.compile(
 _FOR_EACH_OPPONENT_TARGET_RE = re.compile(
     r"for each (?P<who>opponent|other player|player),[^.]*?\b(?P<up_to>up to one )?target "
     r"(?P<desc>[^.]+?) "
-    r"that (?:player|opponent) controls\b",
+    r"(?:that (?:player|opponent) controls|(?P<graveyard>from that (?:player|opponent)'s "
+    r"graveyard))\b",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -4398,12 +4410,39 @@ def _for_each_opponent_profile(text: str) -> TargetingProfile | None:
     if match is None:
         return None
     description = match.group("desc").strip()
-    base = permanent_description(description)
+    in_graveyard = match.group("graveyard") is not None
+    # Sepulchral Primordial's "target creature card from that player's
+    # graveyard": the card sits in the graveyard of the opponent whose turn of
+    # the "for each" it is, so it is read as the ordinary "from an opponent's
+    # graveyard" phrase (CR 108.3: a card in a graveyard is its owner's).
+    if in_graveyard:
+        card_profile = profile_for_text(f"target {description} from an opponent's graveyard")
+        base = (
+            card_profile.requirements[0]
+            if card_profile.understood and len(card_profile.requirements) == 1
+            else None
+        )
+    else:
+        base = permanent_description(description)
     if base is None:
         return None
     mandatory = match.group("up_to") is None
     who = match.group("who").lower()
     opponents_only = who == "opponent"
+    if in_graveyard:
+        return TargetingProfile(
+            requirements=(
+                base.model_copy(
+                    update={
+                        "phrase": f"target {description} from an opponent's graveyard",
+                        "count": 0,
+                        "minimum": 1 if mandatory else 0,
+                        "unbounded": True,
+                        "distinct_controllers": True,
+                    }
+                ),
+            )
+        )
     requirement = base.model_copy(
         update={
             "phrase": f"target {description} "
@@ -5515,6 +5554,8 @@ _ON_THE_BATTLEFIELD_OR_CARD_RE = re.compile(
 
 #: " other than enchanted creature" - see `TargetRequirement.excludes_enchanted`.
 _OTHER_THAN_ENCHANTED_RE = re.compile(r" other than enchanted creature\b", re.IGNORECASE)
+#: " other than that player" - see `TargetRequirement.excludes_event_player`.
+_OTHER_THAN_THAT_PLAYER_RE = re.compile(r" other than that player\b", re.IGNORECASE)
 #: "enchanted creature deals ..." ahead of a solitary "any other target" in
 #: the same sentence (Pain for All) - the "other" is the enchanted creature.
 _ENCHANTED_CREATURE_DEALS_RE = re.compile(r"\benchanted creature deals\b", re.IGNORECASE)
@@ -5623,6 +5664,21 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             update={
                 "phrase": f"{base.phrase} other than enchanted creature",
                 "excludes_enchanted": True,
+            }
+        )
+    other_than_player = _OTHER_THAN_THAT_PLAYER_RE.search(suffix)
+    if other_than_player is not None:
+        base = _read_phrase(
+            prefix,
+            suffix[: other_than_player.start()] + suffix[other_than_player.end() :],
+            strict=strict,
+        )
+        if base is None:
+            return None
+        return base.model_copy(
+            update={
+                "phrase": f"{base.phrase} other than that player",
+                "excludes_event_player": True,
             }
         )
     battlefield_or_card = _ON_THE_BATTLEFIELD_OR_CARD_RE.match(suffix)
@@ -6077,6 +6133,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     # `_COLORS_OF_MANA_SPENT_CONDITION`).
     rest = _COLORS_OF_MANA_SPENT_CONDITION.sub("", rest).strip()
     rest = _UNSPENT_MANA_CONDITION.sub("", rest).strip()
+    rest = _IF_ITS_MANA_VALUE_AT_MOST_COUNT_CONDITION.sub("", rest).strip()
 
     # Same reason, for CR 613.4b's own effect verb rather than a restriction -
     # see `_SETS_BASE_POWER_TOUGHNESS_EFFECT`.
@@ -6834,7 +6891,8 @@ _COMPARISON_CLAUSE = re.compile(
     # Vedalken Shackles: "power less than or equal to the number of Islands
     # you control" - a count of the *caster's* board, carried on as CR
     # 107.3c's "where X is" definition (`comparison_x_definition`).
-    r"|(?P<expr_dir>less|greater) than or equal to (?P<expr>the number of [^,.]+? you control)"
+    r"|(?P<expr_dir>less|greater) than or equal to "
+    r"(?P<expr>the number of [^,.]+? (?:you control|in your (?:graveyard|hand)))"
     r"|(?P<life_dir>less|greater) than or equal to (?P<life_total>your life total)"
     r"|less than or equal to\s+(?P<le_num>x|\d+)\b"
     r"|greater than or equal to\s+(?P<ge_num>x|\d+)\b"
@@ -7041,6 +7099,20 @@ _COLORS_OF_MANA_SPENT_CONDITION = re.compile(
 #: `machines/ep02_r3_mill_exile_amounts.py` performs it at resolution.
 _UNSPENT_MANA_CONDITION = re.compile(
     r"\bif its mana value is equal to the amount of unspent mana you have\b", re.IGNORECASE
+)
+
+
+#: "Destroy target artifact or enchantment **if its mana value is less than or
+#: equal to the number of cards in your hand**" (Rending Vines), "... onto the
+#: battlefield under your control if its mana value is less than or equal to
+#: the number of Allies you control" (Agadeem Occultist): the "if" gates the
+#: instruction as it is followed (CR 608.2c), the count is taken then, and the
+#: target itself is the plain noun phrase (CR 115.1, CR 601.2c) - a
+#: higher-value permanent is a legal target that is simply left alone. Read out
+#: of the way for the reason `_COLORS_OF_MANA_SPENT_CONDITION` is; the
+#: resolving parser re-reads the same clause (`ep02_r3_for_each_cards`).
+_IF_ITS_MANA_VALUE_AT_MOST_COUNT_CONDITION = re.compile(
+    r"\bif its mana value is less than or equal to the number of [^.,]+", re.IGNORECASE
 )
 
 

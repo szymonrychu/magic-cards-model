@@ -297,7 +297,7 @@ def _counted_sentence(
     plain number (and `None` when that number means the sentence does nothing)."""
     from .amount_sentences import (
         add_mana_times,
-        controller_of,
+        adding_player,
         parse_add_mana_for_each,
         parse_life_clause,
         split_where_x,
@@ -315,12 +315,25 @@ def _counted_sentence(
     if (mana := parse_add_mana_for_each(text)) is not None:
         reader = _each_reader(mana[1])
         symbols = mana[0]
+        if reader is not None and text.lower().startswith("that player "):
+            # "that player adds {C} for each artifact they control": counted for
+            # the player who adds the mana, the trigger event's player.
+            from .effects.amounts import _for_each_multiplier
+
+            multiplier = _for_each_multiplier(mana[1])
+            if multiplier is not None:
+
+                def count_for_adder(game: "Game", obj: object) -> int:
+                    _controller, _source, source_id = _resolving_context(game, obj)
+                    return multiplier(game, adding_player(game, obj, text), source_id)
+
+                reader = count_for_adder
 
         def add(n: int):
             def run(game: "Game", obj: object) -> None:
                 add_mana_times(
                     game,
-                    controller_of(game, obj),
+                    adding_player(game, obj, text),
                     symbols,
                     n,
                     retain_until=retention,

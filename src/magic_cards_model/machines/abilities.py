@@ -3480,7 +3480,9 @@ _TRIGGER = re.compile(r"^(When|Whenever|At)\b\s*", re.IGNORECASE)
 #: boundary.
 _INSTRUCTIONS = re.compile(
     r"(?:^|(?<=\.\s)|(?<=\.[\"'”’]\s))"
-    r"((?:(?:Activate|Any player may activate|Only your opponents may activate)\b[^.]*\.\s*)+)$"
+    r"((?:(?:Activate|Any player may activate|Only your opponents may activate"
+    r"|For each mana in this ability's activation cost, you may tap an untapped creature "
+    r"you control rather than pay that mana)\b[^.]*\.\s*)+)$"
 )
 
 _REMINDER = re.compile(r"\([^()]*\)")

@@ -2955,6 +2955,11 @@ def _probe_condition(
         # Drinker) needs a damage event this turn, which this closure's
         # synthetic board never has - no occurrence to try.
         return None
+    if ability.event is TriggerEvent.DIES and "an enchanted " in ability.condition.lower():
+        # "an enchanted creature dies" (Hateful Eidolon) looks back at the
+        # Auras the dying creature had (CR 603.10a), which this closure's
+        # synthetic board never attaches - no occurrence to try.
+        return None
     if ability.event is TriggerEvent.ATTACKS and is_batched_attack_condition(ability.condition):
         # "one or more <description> attack" counts a declared attack, which
         # this closure's synthetic board has none of - no occurrence to try.

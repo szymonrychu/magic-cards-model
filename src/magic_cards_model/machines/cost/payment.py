@@ -3280,6 +3280,14 @@ class CostPayment(EngineModel):
     (every printing in the pool today) - `waterbend` then bounds itself by
     `cost` alone, exactly as convoke and delve already do."""
 
+    tap_creatures_for_mana: bool = False
+    """Whether the ability being paid for lets its controller "tap an untapped
+    creature you control rather than pay that mana" for each mana of its
+    activation cost (Heirloom Epic; CR 602.1b's instruction that defines an
+    aspect of the activation cost). Set by `Game.begin_activating` from the
+    ability's printed instructions; `machines/objects_as_costs.
+    tap_creature_for_mana` refuses a payment without it."""
+
     x_only_colors: tuple[Color, ...] = ()
     x_mana: int = 0
     x_restriction_text: str = ""

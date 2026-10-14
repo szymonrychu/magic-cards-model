@@ -240,6 +240,7 @@ FAMILIES = (
     "ep02_r3_board_amounts",
     "ep02_r3_life_total_amounts",
     "ep02_r3_token_counts",
+    "ep02_r3_for_each_cards",
 )
 
 ABILITY_TEXT = Chain(

@@ -2076,6 +2076,16 @@ def _condition_matches(
             # SBA-triggered fall (CR 303.4c, CR 704.5m) has not run the
             # sweep yet at the moment this event fires, so it still names
             # the creature that just died rather than nothing.
+            if _ATTACHED_SUBJECT_RE.search(lowered) is None:
+                # Hateful Eidolon's "Whenever an enchanted creature dies": any
+                # creature that had an Aura attached as it last existed on the
+                # battlefield (CR 603.10a, `last_known_attachments`).
+                dead = game.find_by_id(event.subject_id) if event.subject_id else None
+                return (
+                    isinstance(dead, CardState)
+                    and any("Aura" in snapshot.subtypes for snapshot in dead.last_known_attachments)
+                    and ("you control" not in lowered or event.subject_controller == controller)
+                )
             return event.subject_id is not None and event.subject_id == source.attached_to
         if DEALT_DAMAGE_BY_THIS_RE.search(lowered):
             # Vein Drinker's and Sengir Vampire's "a creature dealt damage by

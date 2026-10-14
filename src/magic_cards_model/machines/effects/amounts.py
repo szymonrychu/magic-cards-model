@@ -1019,6 +1019,10 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     stripped = phrase.strip().rstrip(".")
     if (player_level := count_term(stripped)) is not None:
         return player_level
+    from ..ep02_r3_for_each_cards import number_of_cards_counts
+
+    if (r3_number := number_of_cards_counts(stripped)) is not None:
+        return r3_number
     if stripped.lower().startswith(("twice the number of ", "three times the number of ")):
         # "twice the number of Blood tokens you control" (Bloodtithe Harvester): the
         # same count, doubled (or tripled) - the multiplier is arithmetic on the
@@ -1732,8 +1736,8 @@ _CARDS_EXILED_WITH_IT_RE = re.compile(
 #: "any abilities that trigger when a spell is cast" moment being the same
 #: moment this list gains an entry.
 _SPELLS_CAST_THIS_TURN_AMOUNT_RE = re.compile(
-    r"^(?:the number of )?(?P<other>other )?(?:(?P<types>[a-z, ]+?) )?spells? you'?ve cast "
-    r"this turn(?P<not_first> other than the first)?$",
+    r"^(?:the number of )?(?P<other>other )?(?:(?P<types>[a-z, -]+?) )?spells? "
+    r"(?:you'?ve|they'?ve|that player has) cast this turn(?P<not_first> other than the first)?$",
     re.IGNORECASE,
 )
 
@@ -1746,8 +1750,16 @@ def _spells_cast_this_turn_count(match: re.Match[str]) -> Callable[["Game", str]
     spells you've cast this turn" does not count itself - and is the whole
     list when nothing is resolving. `None` for a type list this cannot read."""
     types = None if match.group("types") is None else _read_type_word_list(match.group("types"))
+    quality = None
     if match.group("types") is not None and types is None:
-        return None
+        # "noncreature spells they've cast this turn" (Magebane Lizard): a
+        # negated type is no member of the type list, so the history
+        # reader's spell quality (`conditions/history._spell_quality`) reads it.
+        from ..conditions.history import _spell_quality
+
+        quality = _spell_quality(match.group("types"))
+        if quality is None:
+            return None
     leaves_out_resolving = match.group("other") is not None
     # "other than the first" (Outlaw Stitcher): the first spell cast is not
     # counted, so a lone spell counts none.
@@ -1763,6 +1775,7 @@ def _spells_cast_this_turn_count(match: re.Match[str]) -> Callable[["Game", str]
             for state in game.spells_cast_this_turn.get(controller, [])
             if (resolving is None or state.id != resolving.id)
             and (types is None or set(state.types) & types)
+            and (quality is None or quality(state))
         )
 
     return count_spells_cast_this_turn
@@ -3378,6 +3391,10 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
         # Vehicle" says what "other Mount or Vehicle you control" says - the
         # source itself is the one left out (CR 608.2h counts once).
         stripped = f"other {other_than_this.group('what').replace('and/or', 'or')} you control"
+    from ..ep02_r3_for_each_cards import for_each_cards_counts
+
+    if (r3_count := for_each_cards_counts(stripped)) is not None:
+        return r3_count
     if _TREASURE_MANA_SPENT_EACH_RE.fullmatch(stripped):
         # Fixed as the spell was cast (CR 601.2h), never the Treasures still
         # on the board as it resolves.
