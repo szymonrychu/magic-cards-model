@@ -12300,7 +12300,7 @@ _CANT_ATTACK_BLOCK_ACTIVATE_RE = re.compile(
     r"^(?:if (?P<gate>(?:\{[wubrgc]\})+) was spent to cast this spell, )?"
     r"(?:(?P<lead>until your next turn|until end of turn), )?"
     r"(?P<subject>those (?:permanents|creatures)|that (?:permanent|creature)|it|they"
-    r"|target [a-z' ]+?)"
+    r"|(?:up to \w+ )?target [a-z' ]+?)"
     r" can['’]?t attack or block"
     r"(?:,? and (?:its|their) activated abilities can['’]?t be activated)?"
     r"(?: (?P<trail>until your next turn|until end of turn))?\.?$",
@@ -12322,7 +12322,7 @@ def _cant_attack_block_activate_clause(clause: str, *, for_spell: bool) -> Targe
     if gate is not None and not for_spell:
         return None
     subject = match.group("subject")
-    own_phrase = subject if subject.lower().startswith("target ") else None
+    own_phrase = subject if "target " in subject.lower() else None
     if own_phrase is not None and not _targets_understood(own_phrase, count_agnostic=True):
         return None
     locks_activation = "activated abilities" in clause.lower()

@@ -1662,6 +1662,13 @@ class Game(
     planeswalker's loyalty abilities having been activated refuses the next
     one. Cleared when a new turn begins."""
 
+    loyalty_activation_allowance: dict[str, int] = Field(default_factory=dict)
+    """How often loyalty abilities of each permanent may be activated *this turn*, keyed by
+    permanent id, when an effect raised it above CR 606.3's one - Kaito, Dancing Shadow's "you
+    may activate loyalty abilities of Kaito twice this turn rather than only once". A permanent
+    with no entry has its printed allowance (`Game._loyalty_activations_allowed`). Cleared when
+    a new turn begins, alongside `loyalty_activations`."""
+
     text_change_originals: dict[str, Card] = Field(default_factory=dict)
     """CR 612.1 / CR 613.1c: the printed `Card` of each object (keyed by its id)
     whose rules text a color-word change (Swirl the Mists) is rewriting right

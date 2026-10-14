@@ -1742,6 +1742,7 @@ class ActivationMixin:
         if permanent.zone is not Zone.BATTLEFIELD:
             return 1
         legendary = Supertype.LEGENDARY in permanent.card.supertypes
+        raised = self.loyalty_activation_allowance.get(str(permanent.id), 1)
         for line in parse_abilities(permanent.card):
             if line.kind is not AbilityKind.STATIC:
                 continue
@@ -1751,8 +1752,8 @@ class ActivationMixin:
             ):
                 continue
             if self._still_has_static_line(permanent, text):
-                return 2
-        return 1
+                return max(2, raised)
+        return raised
 
     def _loyalty_activation_count(self: "Game", permanent: CardState) -> int:
         """How often any loyalty ability of this permanent was activated this turn.

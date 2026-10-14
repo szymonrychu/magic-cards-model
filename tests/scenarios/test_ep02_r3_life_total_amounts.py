@@ -760,3 +760,70 @@ def test_momentum_breaker_enters_and_an_opponent_who_cannot_sacrifice_discards_a
     assert [c.name for c in scenario.game.battlefield if c.name == "Sol Ring"] == ["Sol Ring"]
     assert scenario.player("bob").hand == []
     assert [c.name for c in scenario.player("bob").graveyard] == ["Island"]
+
+
+# --------------------------------------------------------------------------
+# Kaito, Dancing Shadow - CR 606.3, 508.1d, 509.1b, 611.2a, 603.2c
+# --------------------------------------------------------------------------
+
+
+def _kaito(bob=("Hill Giant",), alice_extra=()):
+    scenario = _build(["Kaito, Dancing Shadow", *alice_extra], list(bob))
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    kaito = next(c for c in scenario.game.battlefield if c.name == "Kaito, Dancing Shadow")
+    return scenario, kaito
+
+
+def test_kaito_plus_one_stops_the_target_creature_attacking_or_blocking_until_your_next_turn():
+    scenario, kaito = _kaito()
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.activate(kaito, index=0, targets=[giant])
+    scenario.pass_until_resolved()
+    while scenario.game.turn.active_player == "alice":
+        scenario.advance()
+    assert scenario.game.turn.active_player == "bob"
+    assert not scenario.game.can_attack(giant, "alice")
+
+
+def test_kaito_plus_one_target_cannot_block_this_turn_either():
+    scenario, kaito = _kaito(alice_extra=["Grizzly Bears"])
+    giant = scenario.creature("Hill Giant", "bob")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.activate(kaito, index=0, targets=[giant])
+    scenario.pass_until_resolved()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears)
+    assert not scenario.game.can_block(giant, bears)
+
+
+def _kaito_connects(*, take):
+    scenario, kaito = _kaito(alice_extra=["Grizzly Bears"])
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.attack_with(bears)
+    scenario.no_blocks()
+    scenario.will_take_the_may(take, source="Kaito, Dancing Shadow")
+    scenario.will_choose_cards(bears, source="Kaito, Dancing Shadow")
+    while scenario.turn.step is not Step.POSTCOMBAT_MAIN:
+        scenario.advance()
+        _settle(scenario)
+    return scenario, kaito, bears
+
+
+def test_kaito_combat_damage_trigger_returns_a_creature_and_allows_a_second_loyalty_activation():
+    scenario, kaito, bears = _kaito_connects(take=True)
+    assert bears.zone is Zone.HAND
+    hand = len(scenario.player("alice").hand)
+    scenario.activate(kaito, index=1)
+    scenario.pass_until_resolved()
+    scenario.activate(kaito, index=1)
+    scenario.pass_until_resolved()
+    assert len(scenario.player("alice").hand) == hand + 2  # two draws from "0: Draw a card."
+
+
+def test_kaito_without_the_return_keeps_the_one_activation_per_turn():
+    scenario, kaito, bears = _kaito_connects(take=False)
+    assert bears.zone is Zone.BATTLEFIELD
+    scenario.activate(kaito, index=1)
+    scenario.pass_until_resolved()
+    assert scenario.game.why_cannot_activate(kaito, 1) is not None

@@ -2535,6 +2535,7 @@ class TurnSbaMixin:
             self.extra_land_plays = {}  # Way of the Paradox's own "this turn" grant
             self.activations = {}  # CR 602.5b restrictions are per turn
             self.loyalty_activations = {}  # CR 606.3's once-per-turn is per turn too
+            self.loyalty_activation_allowance = {}  # a raised allowance lasts the turn
             self.forecast_activations = set()  # CR 702.57b's once-per-turn is per turn too
             self.once_per_turn_triggers = {}  # CR 603.2h restrictions are per turn too
             self.once_per_turn_cast_permissions_used = {}  # "Once during each of your turns"

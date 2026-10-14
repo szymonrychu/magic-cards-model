@@ -710,6 +710,84 @@ def _parse_edict_then_who_cant_discards(
 
 
 # --------------------------------------------------------------------------
+# "you may return one of them to its owner's hand. If you do, you may activate loyalty abilities
+# of <this> twice this turn rather than only once" (Kaito, Dancing Shadow)
+# --------------------------------------------------------------------------
+
+_RETURN_ONE_THEN_LOYALTY_TWICE_RE = re.compile(
+    r"^you may return one of them to its owner's hand\. if you do, you may activate loyalty "
+    r"abilities of (?P<who>this permanent|[\w ,'-]+?) twice this turn rather than only once\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_return_one_of_them_then_loyalty_twice(
+    effect_text: str,
+) -> "Callable[..., None] | None":
+    """After a batched "one or more creatures you control deal combat damage to a player"
+    trigger (CR 603.2c): the controller may return one of the creatures that dealt it to its
+    owner's hand (CR 701.19a); if they do, the source planeswalker's loyalty abilities may be
+    activated twice this turn (CR 606.3 raised for the turn, `Game.loyalty_activation_allowance`).
+    "Them" is the batch the trigger counted (`batched_combat_damage_sources`)."""
+    if "loyalty abilities of" not in effect_text.lower():
+        return None
+    match = _RETURN_ONE_THEN_LOYALTY_TWICE_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+
+    def effect(game: "Game", ability: "AbilityOnStack") -> None:
+        from ..models.card_state import CardState
+        from .decisions import Decision, DecisionKind, source_id_of
+        from .triggers.collect import batched_combat_damage_sources
+
+        source = ability.source(game)
+        event = ability.event
+        if source is None or event is None:
+            return
+        controller = game.controller_of(ability).username
+        ids = batched_combat_damage_sources(game, ability.ability.condition, controller, event)
+        candidates = [
+            state
+            for state in (game.find_by_id(card_id) for card_id in ids or ())
+            if isinstance(state, CardState) and state.zone is Zone.BATTLEFIELD
+        ]
+        if not candidates:
+            return
+        source_id = source_id_of(ability)
+        if not game.may(
+            controller,
+            "return one of the creatures that dealt combat damage to its owner's hand",
+            source=ability.source_name,
+            source_id=source_id,
+        ):
+            return
+        chosen = candidates[0]
+        if len(candidates) > 1:
+            picked = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller,
+                    prompt="return one of them to its owner's hand",
+                    source=ability.source_name,
+                    amount=1,
+                    cards=tuple(state.id for state in candidates),
+                    source_id=source_id,
+                )
+            )
+            by_id = {state.id: state for state in candidates}
+            chosen = next((by_id[card_id] for card_id in picked if card_id in by_id), chosen)
+        game.return_to_hand(chosen)
+        if chosen.zone is Zone.HAND and source.zone is Zone.BATTLEFIELD:
+            key = str(source.id)
+            game.loyalty_activation_allowance[key] = max(
+                2, game.loyalty_activation_allowance.get(key, 1)
+            )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
 # What a revealed card is worth: "you draw cards equal to its power and you gain life equal to
 # its toughness" (Nissa's Revelation)
 # --------------------------------------------------------------------------
