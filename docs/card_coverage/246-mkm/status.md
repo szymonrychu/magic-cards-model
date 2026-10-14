@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 74 | 27.6% |
+| Tested | 80 | 29.9% |
 | Works (untested) | 113 | 42.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 81 | 30.2% |
+| Not working | 75 | 28.0% |
 
 ## Cards needing work
 
@@ -31,8 +31,7 @@
 | Agrus Kos, Spirit of Justice | silent | Whenever Agrus Kos enters or attacks, choose up to one target creature. If it's suspected, exile it. Otherwise, suspect it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Airtight Alibi | silent | Enchanted creature gets +2/+2 and can't become suspected. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Analyze the Pollen | silent | As an additional cost to cast this spell, you may collect evidence 8. (Exile cards with total mana value 8 or greater from your graveyard.) Search your library  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Anzrag, the Quake-Mole | silent | Whenever Anzrag becomes blocked, untap each creature you control. After this phase, there is an additional combat phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Audience with Trostani | silent | Create a 0/1 green Plant creature token, then draw cards equal to the number of differently named creature tokens you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Anzrag, the Quake-Mole | silent | {3}{R}{R}{G}{G}: Anzrag must be blocked each combat this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Aurelia's Vindicator | silent | When this creature leaves the battlefield, return the exiled cards to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Burden of Proof | silent | Enchanted creature gets +2/+2 as long as it's a Detective you control. Otherwise, it has base power and toughness 1/1 and can't block Detectives. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Call a Surprise Witness | silent | Return target creature card with mana value 3 or less from your graveyard to the battlefield. Put a flying counter on it. It's a Spirit in addition to its other | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -53,16 +52,12 @@
 | Frantic Scapegoat | silent | Whenever one or more other creatures you control enter, if this creature is suspected, you may suspect one of the other creatures. If you do, this creature is n | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fuss // Bother | silent | Put a +1/+1 counter on each attacking creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Goblin Maskmaker | silent | Whenever this creature attacks, face-down spells you cast this turn cost {1} less to cast. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Harried Dronesmith | silent | At the beginning of combat on your turn, create a 1/1 colorless Thopter artifact creature token with flying. It gains haste until end of turn. Sacrifice it at t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hide in Plain Sight | silent | Look at the top five cards of your library, cloak two of them, and put the rest on the bottom of your library in a random order. (To cloak a card, put it onto t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Innocent Bystander | silent | Whenever this creature is dealt 3 or more damage, investigate. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Insidious Roots | silent | Whenever one or more creature cards leave your graveyard, create a 0/1 green Plant creature token, then put a +1/+1 counter on each Plant you control. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Intrude on the Mind | silent | Reveal the top five cards of your library and separate them into two piles. An opponent chooses one of those piles. Put that pile into your hand and the other i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Izoni, Center of the Web | silent | Whenever Izoni enters or attacks, you may collect evidence 4. If you do, create two 2/1 black and green Spider creature tokens with reach and menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Jaded Analyst | silent | Whenever you draw your second card each turn, this creature loses defender and gains vigilance until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Kaya, Spirits' Justice | silent | Whenever one or more creatures you control and/or creature cards in your graveyard are put into exile, you may choose a creature card from among them. Until end | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Kylox's Voltstrider | silent | Whenever this Vehicle attacks, you may cast an instant or sorcery spell from among cards exiled with it. If that spell would be put into a graveyard, put it on  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Kylox, Visionary Inventor | silent | Whenever Kylox attacks, sacrifice any number of other creatures, then exile the top X cards of your library, where X is their total power. You may cast any numb | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lamplight Phoenix | silent | When this creature dies, you may exile it and collect evidence 4. If you do, return this card to the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lazav, Wearer of Faces | silent | Whenever you sacrifice a Clue, you may have Lazav become a copy of a creature card exiled with it until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lumbering Laundry | silent | {2}: Until end of turn, you may look at face-down creatures you don't control any time. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -77,7 +72,6 @@
 | Repulsive Mutation | silent | Put X +1/+1 counters on target creature you control. Then counter up to one target spell unless its controller pays mana equal to the greatest power among creat | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rot Farm Mortipede | silent | Whenever one or more creature cards leave your graveyard, this creature gets +1/+0 and gains menace and lifelink until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Soul Enervation | silent | Whenever one or more creature cards leave your graveyard, each opponent loses 1 life and you gain 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Soul Search | silent | Target opponent reveals their hand. You choose a nonland card from it. Exile that card. If the card's mana value is 1 or less, create a 1/1 white and black Spir | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Steamcore Scholar | silent | When this creature enters, draw two cards. Then discard two cards unless you discard an instant or sorcery card or a creature card with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Surveillance Monitor | silent | When this creature enters, you may collect evidence 4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tenth District Hero | silent | {2}{W}, Collect evidence 4: If this creature is a Detective, it becomes a legendary creature named Mileva, the Stalwart, it has base power and toughness 5/5, an | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -87,7 +81,6 @@
 | Wojek Investigator | silent | At the beginning of your upkeep, investigate once for each opponent who has more cards in hand than you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Worldsoul's Rage | silent | Worldsoul's Rage deals X damage to any target. Put up to X land cards from your hand and/or graveyard onto the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Yarus, Roar of the Old Gods | silent | Whenever a face-down creature you control dies, return it to the battlefield face down under its owner's control if it's a permanent card, then turn it face up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Anzrag's Rampage | notice | Destroy all artifacts you don't control, then exile the top X cards of your library, where X is the number of artifacts that were put into graveyards from the b | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Archdruid's Charm | notice | Choose one — • Search your library for a creature or land card and reveal it. Put it onto the battlefield tapped if it's a land card. Otherwise, put it into you | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Behind the Mask | notice | As an additional cost to cast this spell, you may collect evidence 6. (Exile cards with total mana value 6 or greater from your graveyard.) Until end of turn, t | unparsed remainder: As an additional cost to cast this spell, you may collect evidence 6. If evidence was collected, it has base power and toughness 1/1 until end of turn instead. | Y/Y/Y | not_working |
 | Blood Spatter Analysis | notice | Whenever one or more creatures die, mill a card and put a bloodstain counter on this enchantment. Then sacrifice it if it has five or more bloodstain counters o | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -105,6 +98,7 @@
 | Reenact the Crime | notice | Exile target nonland card in a graveyard that was put there from anywhere this turn. Copy it. You may cast the copy without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Sample Collector | notice | Whenever this creature attacks, you may collect evidence 3. When you do, put a +1/+1 counter on target creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Sanctuary Wall | notice | {2}{W}, {T}: Tap target creature. You may put a stun counter on it. If you do, put a stun counter on this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Soul Search | notice | Target opponent reveals their hand. You choose a nonland card from it. Exile that card. If the card's mana value is 1 or less, create a 1/1 white and black Spir | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Torch the Witness | notice | Torch the Witness deals twice X damage to target creature. If excess damage was dealt to that creature this way, investigate. (Create a Clue token. It's an arti | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Unyielding Gatekeeper | notice | When this creature is turned face up, exile another target nonland permanent. If you controlled it, return it to the battlefield tapped. Otherwise, its controll | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Agency Coroner | handled | {2}{B}, Sacrifice another creature: Draw a card. If the sacrificed creature was suspected, draw two cards instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -224,12 +218,14 @@
 ## Fully supported
 
 <details>
-<summary>74 cards</summary>
+<summary>80 cards</summary>
 
 - Absolving Lammasu
 - Aftermath Analyst
 - Alley Assailant
+- Anzrag's Rampage
 - Assemble the Players
+- Audience with Trostani
 - Aurelia, the Law Above
 - Barbed Servitor
 - Bolrac-Clan Basher
@@ -260,12 +256,16 @@
 - Forensic Researcher
 - Fugitive Codebreaker
 - Get a Leg Up
+- Harried Dronesmith
 - Hedge Maze
 - Hedge Whisperer
 - Ill-Timed Explosion
+- Intrude on the Mind
 - Judith, Carnage Connoisseur
 - Karlov Watchdog
+- Kaya, Spirits' Justice
 - Krenko's Buzzcrusher
+- Kylox, Visionary Inventor
 - Leyline of the Guildpact
 - Living Conundrum
 - Lost in the Maze
@@ -313,14 +313,11 @@
 | as an additional cost to cast ~, collect evidence N, where N is the total mana value of the permanents ~ targets. destroy up to one target artifact, up to one t | 1 | Urgent Necropsy | mkm |
 | as an additional cost to cast ~, you may collect evidence N. (exile cards with total mana value N or greater from your graveyard.) search your library for a bas | 1 | Analyze the Pollen | mkm |
 | as an additional cost to cast ~, you may collect evidence N. (exile cards with total mana value N or greater from your graveyard.) until end of turn, target art | 1 | Behind the Mask | mkm |
-| at the beginning of combat on your turn, create a N/N colorless thopter artifact creature token with flying. it gains haste until end of turn. sacrifice it at t | 1 | Harried Dronesmith | mkm |
 | at the beginning of combat on your turn, you may collect evidence N. | 1 | Evidence Examiner | mkm |
 | at the beginning of your end step, target opponent may sacrifice two nonland, nontoken permanents of their choice. if they don't, you draw two cards. | 1 | Rakdos, Patron of Chaos | mkm |
 | at the beginning of your upkeep, investigate once for each opponent who has more cards in hand than you. | 1 | Wojek Investigator | mkm |
 | cloak | 1 | Expose the Culprit | mkm |
-| create a N/N green plant creature token, then draw cards equal to the number of differently named creature tokens you control. | 1 | Audience with Trostani | mkm |
 | creatures you control get +N/+N and gain trample until end of turn. you may turn a creature you control face up. | 1 | Hustle // Bustle | mkm |
-| destroy all artifacts you don't control, then exile the top N cards of your library, where N is the number of artifacts that were put into graveyards from the b | 1 | Anzrag's Rampage | mkm |
 | each opponent mills three cards, then you may cast a spell from each opponent's graveyard without paying its mana cost. if a spell cast ~ would be put into a gr | 1 | Flotsam // Jetsam | mkm |
 | each player who controls the most creatures investigates. then destroy all creatures. (to investigate, create a clue token. it's an artifact with "...") | 1 | No Witnesses | mkm |
 | enchanted creature gets +N/+N and can't become suspected. | 1 | Airtight Alibi | mkm |
@@ -336,7 +333,6 @@
 | return target creature card from your graveyard to the battlefield. suspect it. (it has menace and can't block.) | 1 | It Doesn't Add Up | mkm |
 | return target creature card with mana value N or less from your graveyard to the battlefield. put a flying counter on it. it's a spirit in addition to its other | 1 | Call a Surprise Witness | mkm |
 | return up to one target artifact card, up to one target land card, and up to one target non-aura enchantment card from your graveyard to the battlefield. they a | 1 | Relive the Past | mkm |
-| reveal the top five cards of your library and separate them into two piles. an opponent chooses one of those piles. put that pile into your hand and the other i | 1 | Intrude on the Mind | mkm |
 | target creature you control gets +N/+N and gains haste until end of turn. when that creature dies ~, create a N/N white and blue detective creature token. | 1 | Felonious Rage | mkm |
 | target opponent exiles the top N cards of their library face down. you may look at and play those cards for as long as they remain exiled. if you cast a spell ~ | 1 | Outrageous Robbery | mkm |
 | target opponent reveals their hand. you choose a nonland card from it. exile that card. if the card's mana value is N or less, create a N/N white and black spir | 1 | Soul Search | mkm |
@@ -359,16 +355,13 @@
 | whenever a wolf you control attacks, if tolsimir attacked ~, target creature an opponent controls blocks that wolf ~ if able. | 1 | Tolsimir, Midnight's Light | mkm |
 | whenever agrus kos enters or attacks, choose up to one target creature. if it's suspected, exile it. otherwise, suspect it. | 1 | Agrus Kos, Spirit of Justice | mkm |
 | whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses N life an | 1 | Tomik, Wielder of Law | mkm |
-| whenever anzrag becomes blocked, untap each creature you control. after ~, there is an additional combat phase. | 1 | Anzrag, the Quake-Mole | mkm |
 | whenever izoni enters or attacks, you may collect evidence N. if you do, create two N/N black and green spider creature tokens with reach and menace. | 1 | Izoni, Center of the Web | mkm |
 | whenever kellan attacks, destroy up to one target artifact. if you controlled that permanent, draw a card. | 1 | Kellan, Inquisitive Prodigy // Tail the Suspect | mkm |
-| whenever kylox attacks, sacrifice any number of other creatures, then exile the top N cards of your library, where N is their total power. you may cast any numb | 1 | Kylox, Visionary Inventor | mkm |
 | whenever one or more creature cards leave your graveyard, create a N/N green plant creature token, then put a +N/+N counter on each plant you control. | 1 | Insidious Roots | mkm |
 | whenever one or more creature cards leave your graveyard, create a N/N white and blue detective creature token, then investigate. | 1 | Chalk Outline | mkm |
 | whenever one or more creature cards leave your graveyard, each opponent loses N life and you gain N life. | 1 | Soul Enervation | mkm |
 | whenever one or more creature cards leave your graveyard, ~ gets +N/+N and gains menace and lifelink until end of turn. | 1 | Rot Farm Mortipede | mkm |
 | whenever one or more creatures die, mill a card and put a bloodstain counter on ~. then sacrifice it if it has five or more bloodstain counters on it. when you  | 1 | Blood Spatter Analysis | mkm |
-| whenever one or more creatures you control and/or creature cards in your graveyard are put into exile, you may choose a creature card from among them. until end | 1 | Kaya, Spirits' Justice | mkm |
 | whenever one or more other creatures you control enter, if ~ is suspected, you may suspect one of the other creatures. if you do, ~ is no longer suspected. | 1 | Frantic Scapegoat | mkm |
 | whenever you draw your second card each turn, ~ loses defender and gains vigilance until end of turn. | 1 | Jaded Analyst | mkm |
 | whenever you sacrifice a clue, you may have lazav become a copy of a creature card exiled with it until end of turn. | 1 | Lazav, Wearer of Faces | mkm |
@@ -382,6 +375,7 @@
 | {M}{M}, collect evidence N: if ~ is a detective, it becomes a legendary creature named mileva, the stalwart, it has base power and toughness N/N, and it gains " | 1 | Tenth District Hero | mkm |
 | {M}{M}, {M}: tap target creature. you may put a stun counter on it. if you do, put a stun counter on ~. | 1 | Sanctuary Wall | mkm |
 | {M}{M}: shuffle enchanted creature into its owner's library. | 1 | Dramatic Accusation | mkm |
+| {M}{M}{M}{M}{M}: anzrag must be blocked each combat ~ if able. | 1 | Anzrag, the Quake-Mole | mkm |
 | ~ can"..."t block.) | 1 | Caught Red-Handed | mkm |
 | ~ costs {M}{M} more to cast for each target beyond the first. choose any number of target players. investigate N times, where N is the total number of creatures | 1 | Officious Interrogation | mkm |
 | ~ deals N damage to any target. put up to N land cards from your hand and/or graveyard onto the battlefield tapped. | 1 | Worldsoul's Rage | mkm |

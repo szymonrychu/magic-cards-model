@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 19.9% |
+| Tested | 37 | 20.4% |
 | Works (untested) | 108 | 59.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 37 | 20.4% |
+| Not working | 36 | 19.9% |
 
 ## Cards needing work
 
@@ -38,9 +38,7 @@
 | Infectious Bloodlust | silent | Enchanted creature gets +2/+1, has haste, and attacks each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kytheon, Hero of Akros // Gideon, Battle-Forged | silent | +2: Up to one target creature an opponent controls attacks Gideon during its controller's next turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana, Heretical Healer // Liliana, Defiant Necromancer | silent | Whenever another nontoken creature you control dies, exile Liliana, Heretical Healer, then return her to the battlefield transformed under her owner's control.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nightsnare | silent | Target opponent reveals their hand. You may choose a nonland card from it. If you do, that player discards that card. If you don't, that player discards two car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa's Pilgrimage | silent | Search your library for up to two basic Forest cards, reveal those cards, and put one onto the battlefield tapped and the rest into your hand. Then shuffle. Spe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nissa's Revelation | silent | Scry 5, then reveal the top card of your library. If it's a creature card, you draw cards equal to its power and you gain life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa, Vastwood Seer // Nissa, Sage Animist | silent | −2: Create Ashaya, the Awoken World, a legendary 4/4 green Elemental creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Psychic Rebuttal | silent | Counter target instant or sorcery spell that targets you. Spell mastery — If there are two or more instant and/or sorcery cards in your graveyard, you may copy  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Relic Seeker | silent | When this creature becomes renowned, you may search your library for an Equipment card, reveal it, put it into your hand, then shuffle. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -62,6 +60,7 @@
 | Flameshadow Conjuring | notice | Whenever a nontoken creature you control enters, you may pay {R}. If you do, create a token that's a copy of that creature. That token gains haste. Exile it at  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Harbinger of the Tides | notice | You may cast this spell as though it had flash if you pay {2} more to cast it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Necromantic Summons | notice | Put target creature card from a graveyard onto the battlefield under your control. Spell mastery — If there are two or more instant and/or sorcery cards in your | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Nightsnare | notice | Target opponent reveals their hand. You may choose a nonland card from it. If you do, that player discards that card. If you don't, that player discards two car | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Woodland Bellower | notice | When this creature enters, you may search your library for a nonlegendary green creature card with mana value 3 or less, put it onto the battlefield, then shuff | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Abbot of Keral Keep | handled | When this creature enters, exile the top card of your library. Until end of turn, you may play that card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aerial Volley | handled | Aerial Volley deals 3 damage divided as you choose among one, two, or three target creatures with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -175,7 +174,7 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>37 cards</summary>
 
 - Acolyte of the Inferno
 - Alhammarret's Archive
@@ -202,6 +201,7 @@
 - Jace, Vryn's Prodigy // Jace, Telepath Unbound
 - Kytheon's Tactics
 - Mage-Ring Network
+- Nissa's Revelation
 - Orbs of Warding
 - Scab-Clan Berserker
 - Shaman of the Pack
@@ -236,7 +236,6 @@
 | regenerate target creature. draw a card. (the next time the creature would be destroyed ~, instead tap it, remove it from combat, and heal all damage on it.) sp | 1 | Dark Dabbling | ori |
 | reveal the top N cards of your library. put all land cards from among them onto the battlefield tapped and the rest on the bottom of your library in a random or | 1 | Animist's Awakening | ori |
 | reveal the top five cards of your library. you may put a creature card from among them into your hand. put the rest into your graveyard. spell mastery — if ther | 1 | Gather the Pack | ori |
-| scry N, then reveal the top card of your library. if it's a creature card, you draw cards equal to its power and you gain life equal to its toughness. | 1 | Nissa's Revelation | ori |
 | search your library for up to two basic forest cards, reveal those cards, and put one onto the battlefield tapped and the rest into your hand. then shuffle. spe | 1 | Nissa's Pilgrimage | ori |
 | tap up to two target creatures. spell mastery — if there are two or more instant and/or sorcery cards in your graveyard, those creatures don"..." next untap ste | 1 | Send to Sleep | ori |
 | target creature you control gets +N/+N and gains deathtouch until end of turn. whenever a creature dealt damage by that creature dies ~, its controller loses N  | 1 | Touch of Moonglove | ori |

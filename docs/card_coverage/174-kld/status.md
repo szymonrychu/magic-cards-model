@@ -17,58 +17,44 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 47 | 19.1% |
-| Works (untested) | 156 | 63.4% |
+| Tested | 52 | 21.1% |
+| Works (untested) | 166 | 67.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 43 | 17.5% |
+| Not working | 28 | 11.4% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Accomplished Automaton | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Aetherborn Marauder | silent | When this creature enters, move any number of +1/+1 counters from other permanents you control onto this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aethersquall Ancient | silent | Pay eight {E}: Return all other creatures to their owners' hands. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aetherworks Marvel | silent | Whenever a permanent you control is put into a graveyard, you get {E} . | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Ambitious Aetherborn | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Angel of Invention | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Animation Module | silent | {3}, {T}: Choose a counter on target permanent or player. Give that permanent or player another counter of that kind. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aviary Mechanic | silent | When this creature enters, you may return another permanent you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cataclysmic Gearhulk | silent | When this creature enters, each player chooses an artifact, a creature, an enchantment, and a planeswalker from among the nonland permanents they control, then  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Combustible Gearhulk | silent | When this creature enters, target opponent may have you draw three cards. If the player doesn't, you mill three cards, then this creature deals damage to that p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Confiscation Coup | silent | Choose target artifact or creature. You get {E}{E}{E}{E} (four energy counters), then you may pay an amount of {E} equal to that permanent's mana value. If you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Consulate Surveillance | silent | Pay {E}{E}: Prevent all damage that would be dealt to you this turn by a source of your choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cultivator of Blades | silent | Whenever this creature attacks, you may have other attacking creatures get +X/+X until end of turn, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deadlock Trap | silent | {T}, Pay {E}: Tap target creature or planeswalker. Its activated abilities can't be activated this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Depala, Pilot Exemplar | silent | Each Vehicle you control gets +1/+1 as long as it's a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dovin Baan | silent | +1: Until your next turn, up to one target creature gets -3/-0 and its activated abilities can't be activated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dubious Challenge | silent | Look at the top ten cards of your library, exile up to two creature cards from among them, then shuffle. Target opponent may choose one of the exiled cards and  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eager Construct | silent | When this creature enters, each player may scry 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Elegant Edgecrafters | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Empyreal Voyager | silent | Whenever this creature deals combat damage to a player, you get that many {E} . | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gearshift Ace | silent | Whenever this creature crews a Vehicle, that Vehicle gains first strike until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Ghirapur Guide | silent | {2}{G}: Target creature you control can't be blocked by creatures with power 2 or less this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Glint-Sleeve Artisan | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hazardous Conditions | silent | Creatures with no counters on them get -2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Highspire Artisan | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hightide Hermit | silent | Pay {E}{E}: This creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Iron League Steed | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Marionette Master | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Maulfist Squad | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Multiform Wonder | silent | Pay {E}: This creature gets +2/-2 or -2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa, Nature's Artisan | silent | −4: Reveal the top two cards of your library. Put all land cards from among them onto the battlefield and the rest into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Peema Outrider | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Propeller Pioneer | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Rashmi, Eternities Crafter | silent | Whenever you cast your first spell each turn, reveal the top card of your library. You may cast it without paying its mana cost if it's a spell with lesser mana | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shrewd Negotiation | silent | Exchange control of target artifact you control and target artifact or creature you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Speedway Fanatic | silent | Whenever this creature crews a Vehicle, that Vehicle gains haste until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Verdant Crescendo | silent | Search your library for a basic land card and put it onto the battlefield tapped. Search your library and graveyard for a card named Nissa, Nature's Artisan, re | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Veteran Motorist | silent | Whenever this creature crews a Vehicle, that Vehicle gets +1/+1 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Visionary Augmenter | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Weaponcraft Enthusiast | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Built to Last | notice | Target creature gets +2/+2 until end of turn. If it's an artifact creature, it gains indestructible until end of turn. (Damage and effects that say "destroy" do | unparsed remainder: If it's an artifact creature, it gains indestructible until end of turn. | Y/Y/- | not_working |
 | Built to Smash | notice | Target attacking creature gets +3/+3 until end of turn. If it's an artifact creature, it gains trample until end of turn. | unparsed remainder: If it's an artifact creature, it gains trample until end of turn. | Y/Y/- | not_working |
 | Insidious Will | notice | Choose one — • Counter target spell. • You may choose new targets for target spell. • Copy target instant or sorcery spell. You may choose new targets for the c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Accomplished Automaton | handled | Fabricate | machines/keywords.py | Y/Y/- | not_tested |
 | Acrobatic Maneuver | handled | Exile target creature you control, then return that card to the battlefield under its owner's control. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aerial Responder | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Aether Hub | handled | When this land enters, you get {E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -76,6 +62,7 @@
 | Aether Theorist | handled | When this creature enters, you get {E}{E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aetherflux Reservoir | handled | Whenever you cast a spell, you gain 1 life for each spell you've cast this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aethertorch Renegade | handled | When this creature enters, you get {E}{E}{E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ambitious Aetherborn | handled | Fabricate | machines/keywords.py | Y/Y/- | not_tested |
 | Appetite for the Unnatural | handled | Destroy target artifact or enchantment. You gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aradara Express | handled | Crew | machines/keywords.py | Y/Y/- | not_tested |
 | Arborback Stomper | handled | When this creature enters, you gain 5 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -106,6 +93,7 @@
 | Durable Handicraft | handled | Whenever a creature you control enters, you may pay {1}. If you do, put a +1/+1 counter on that creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dynavolt Tower | handled | Whenever you cast an instant or sorcery spell, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Electrostatic Pummeler | handled | When this creature enters, you get {E}{E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Elegant Edgecrafters | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eliminate the Competition | handled | As an additional cost to cast this spell, sacrifice X creatures. Destroy X target creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Embraal Bruiser | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Engineered Might | handled | Choose one — • Target creature gets +5/+5 and gains trample until end of turn. • Creatures you control get +2/+2 and gain vigilance until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -129,14 +117,17 @@
 | Glassblower's Puzzleknot | handled | When this artifact enters, scry 2, then you get {E}{E}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glimmer of Genius | handled | Scry 2, then draw two cards. You get {E}{E} (two energy counters). | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glint-Nest Crane | handled | When this creature enters, look at the top four cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest o | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Glint-Sleeve Artisan | handled | Fabricate | machines/keywords.py | Y/Y/- | not_tested |
 | Guardian of the Great Conduit | handled | As long as you control a Nissa planeswalker, this creature gets +2/+0 and has vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Harsh Scrutiny | handled | Target opponent reveals their hand. You choose a creature card from it. That player discards that card. Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Herald of the Fair | handled | When this creature enters, target creature you control gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Highspire Artisan | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
 | Impeccable Timing | handled | Impeccable Timing deals 3 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Incendiary Sabotage | handled | As an additional cost to cast this spell, sacrifice an artifact. Incendiary Sabotage deals 3 damage to each creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inventor's Apprentice | handled | This creature gets +1/+1 as long as you control an artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inventor's Goggles | handled | Equipped creature gets +1/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inventors' Fair | handled | At the beginning of your upkeep, if you control three or more artifacts, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Iron League Steed | handled | Haste | machines/combat.py | Y/Y/- | not_tested |
 | Janjeet Sentry | handled | When this creature enters, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kambal, Consul of Allocation | handled | Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Key to the City | handled | {T}, Discard a card: Up to one target creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -149,6 +140,7 @@
 | Longtusk Cub | handled | Whenever this creature deals combat damage to a player, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Make Obsolete | handled | Creatures your opponents control get -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Malfunction | handled | When this Aura enters, tap enchanted permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Marionette Master | handled | Whenever an artifact you control is put into a graveyard from the battlefield, target opponent loses life equal to this creature's power. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Master Trinketeer | handled | Servos and Thopters you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Metalspinner's Puzzleknot | handled | When this artifact enters, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Minister of Inquiries | handled | When this creature enters, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -163,10 +155,12 @@
 | Ovalchase Daredevil | handled | Whenever an artifact you control enters, you may return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ovalchase Dragster | handled | Haste | machines/combat.py | Y/Y/- | not_tested |
 | Oviya Pashiri, Sage Lifecrafter | handled | {2}{G}, {T}: Create a 1/1 colorless Servo artifact creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Peema Outrider | handled | Trample | machines/combat.py | Y/Y/- | not_tested |
 | Perpetual Timepiece | handled | {T}: Mill two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pia Nalaar | handled | When Pia Nalaar enters, create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prakhata Club Security | handled |  |  | Y/Y/- | not_tested |
 | Prakhata Pillar-Bug | handled | {B}: This creature gains lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Propeller Pioneer | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Quicksmith Genius | handled | Whenever an artifact you control enters, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reckless Fireweaver | handled | Whenever an artifact you control enters, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Refurbish | handled | Return target artifact card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -208,12 +202,13 @@
 | Tidy Conclusion | handled | Destroy target creature. You gain 1 life for each artifact you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Toolcraft Exemplar | handled | At the beginning of combat on your turn, if you control an artifact, this creature gets +2/+1 until end of turn. If you control three or more artifacts, it also | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Torch Gauntlet | handled | Equipped creature gets +2/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Torrential Gearhulk | handled | When this creature enters, you may cast target instant card from your graveyard without paying its mana cost. If that spell would be put into your graveyard, ex | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Underhanded Designs | handled | Whenever an artifact you control enters, you may pay {1}. If you do, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unlicensed Disintegration | handled | Destroy target creature. If you control an artifact, Unlicensed Disintegration deals 3 damage to that creature's controller. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vedalken Blademaster | handled | Prowess | machines/keywords.py | Y/Y/- | not_tested |
 | Verdurous Gearhulk | handled | When this creature enters, distribute four +1/+1 counters among any number of target creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Visionary Augmenter | handled | Fabricate | machines/keywords.py | Y/Y/- | not_tested |
 | Wayward Giant | handled | Menace | machines/combat.py | Y/Y/- | not_tested |
+| Weaponcraft Enthusiast | handled | Fabricate | machines/keywords.py | Y/Y/- | not_tested |
 | Weldfast Monitor | handled | {R}: This creature gains menace until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Weldfast Wingsmith | handled | Whenever an artifact you control enters, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Welding Sparks | handled | Welding Sparks deals X damage to target creature, where X is 3 plus the number of artifacts you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -229,9 +224,10 @@
 ## Fully supported
 
 <details>
-<summary>47 cards</summary>
+<summary>52 cards</summary>
 
 - Aetherstorm Roc
+- Angel of Invention
 - Armorcraft Judge
 - Blooming Marsh
 - Blossoming Defense
@@ -239,9 +235,11 @@
 - Captured by the Consulate
 - Cathartic Reunion
 - Chandra, Torch of Defiance
+- Combustible Gearhulk
 - Commencement of Festivities
 - Concealed Courtyard
 - Consul's Shieldguard
+- Cultivator of Blades
 - Cultivator's Caravan
 - Demolition Stomper
 - Die Young
@@ -260,6 +258,7 @@
 - Lost Legacy
 - Madcap Experiment
 - Maulfist Doorbuster
+- Maulfist Squad
 - Metallurgic Summonings
 - Metalwork Colossus
 - Midnight Oil
@@ -276,6 +275,7 @@
 - Spark of Creativity
 - Spirebluff Canal
 - Territorial Gorger
+- Torrential Gearhulk
 - Trusty Companion
 - Voltaic Brawler
 
@@ -285,7 +285,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| fabricate | 13 | Accomplished Automaton, Ambitious Aetherborn, Angel of Invention, Elegant Edgecrafters, Glint-Sleeve Artisan | kld |
 | Choose one | 1 | Insidious Will | kld |
 | +N: until your next turn, up to one target creature gets -N/-N and its activated abilities can't be activated. | 1 | Dovin Baan | kld |
 | choose target artifact or creature. you get {M}{M}{M}{M} (four energy counters), then you may pay an amount of {M} equal to that permanent's mana value. if you  | 1 | Confiscation Coup | kld |
@@ -303,11 +302,9 @@
 | when ~ enters, each player chooses an artifact, a creature, an enchantment, and a planeswalker from among the nonland permanents they control, then sacrifices t | 1 | Cataclysmic Gearhulk | kld |
 | when ~ enters, each player may scry N. | 1 | Eager Construct | kld |
 | when ~ enters, move any number of +N/+N counters from other permanents you control onto ~. | 1 | Aetherborn Marauder | kld |
-| when ~ enters, target opponent may have you draw three cards. if the player doesn't, you mill three cards, then ~ deals damage to that player equal to the total | 1 | Combustible Gearhulk | kld |
 | when ~ enters, you may return another permanent you control to its owner's hand. | 1 | Aviary Mechanic | kld |
 | whenever a permanent you control is put into a graveyard, you get {M} . | 1 | Aetherworks Marvel | kld |
 | whenever you cast your first spell each turn, reveal the top card of your library. you may cast it without paying its mana cost if it"..."t cast it, put it into | 1 | Rashmi, Eternities Crafter | kld |
-| whenever ~ attacks, you may have other attacking creatures get +N/+N until end of turn, where N is ~ power. | 1 | Cultivator of Blades | kld |
 | whenever ~ crews a vehicle, that vehicle gains first strike until end of turn. | 1 | Gearshift Ace | kld |
 | whenever ~ crews a vehicle, that vehicle gains haste until end of turn. | 1 | Speedway Fanatic | kld |
 | whenever ~ crews a vehicle, that vehicle gets +N/+N until end of turn. | 1 | Veteran Motorist | kld |

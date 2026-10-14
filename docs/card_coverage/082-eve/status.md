@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 15.1% |
+| Tested | 32 | 17.9% |
 | Works (untested) | 120 | 67.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 32 | 17.9% |
+| Not working | 27 | 15.1% |
 
 ## Cards needing work
 
@@ -29,14 +29,11 @@
 | Cankerous Thirst | silent | If {B} was spent to cast this spell, you may have target creature get -3/-3 until end of turn. If {G} was spent to cast this spell, you may have target creature | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cauldron Haze | silent | Choose any number of target creatures. Each of those creatures gains persist until end of turn. (When it dies, if it had no -1/-1 counters on it, return it to t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crag Puca | silent | {U/R}: Switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Desecrator Hag | silent | When this creature enters, return to your hand the creature card in your graveyard with the greatest power. If two or more cards are tied for greatest power, yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dominus of Fealty | silent | At the beginning of your upkeep, you may gain control of target permanent until end of turn. If you do, untap it and it gains haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Endless Horizons | silent | When this enchantment enters, search your library for any number of Plains cards, exile them, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Fiery Bombardment | silent | Chroma — {2}, Sacrifice a creature: This enchantment deals damage to any target equal to the number of red mana symbols in the sacrificed creature's mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gift of the Deity | silent | As long as enchanted creature is green, it gets +1/+1 and all creatures able to block it do so. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gilder Bairn | silent | {2}{G/U}, {Q}: Double the number of each kind of counter on target permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glamerdye | silent | Change the text of target spell or permanent by replacing all instances of one color word with another. Retrace (You may cast this card from your graveyard by d | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Light from Within | silent | Chroma — Each creature you control gets +1/+1 for each white mana symbol in its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mindwrack Liege | silent | {U/R}{U/R}{U/R}{U/R}: You may put a blue or red creature card from your hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mirror Sheen | silent | {1}{U/R}{U/R}: Copy target instant or sorcery spell that targets you. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Moonhold | silent | Target player can't play lands this turn if {R} was spent to cast this spell and can't cast creature spells this turn if {W} was spent to cast this spell. (Do b | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -46,9 +43,7 @@
 | Pyrrhic Revival | silent | Each player returns each creature card from their graveyard to the battlefield with an additional -1/-1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rise of the Hobgoblins | silent | When this enchantment enters, you may pay {X}. If you do, create X 1/1 red and white Goblin Soldier creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Riverfall Mimic | silent | Whenever you cast a spell that's both blue and red, this creature has base power and toughness 3/3 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sanity Grinding | silent | Chroma — Reveal the top ten cards of your library. For each blue mana symbol in the mana costs of the revealed cards, target opponent mills a card. Then put the | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shrewd Hatchling | silent | {U/R}: Target creature can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Springjack Shepherd | silent | Chroma — When this creature enters, create a 0/1 white Goat creature token for each white mana symbol in the mana costs of permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stigma Lasher | silent | Whenever this creature deals damage to a player, that player can't gain life for the rest of the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Swirling Spriggan | silent | {G/U}{G/U}: Target creature you control becomes the color or colors of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Umbra Stalker | silent | Chroma — Umbra Stalker's power and toughness are each equal to the number of black mana symbols in the mana costs of cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -182,7 +177,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>32 cards</summary>
 
 - Antler Skulkin
 - Batwing Brume
@@ -190,9 +185,11 @@
 - Bloom Tender
 - Canker Abomination
 - Chaotic Backlash
+- Desecrator Hag
 - Divinity of Pride
 - Duergar Hedge-Mage
 - Endure
+- Fiery Bombardment
 - Figure of Destiny
 - Flickerwisp
 - Flooded Grove
@@ -201,13 +198,16 @@
 - Hotheaded Giant
 - Impelled Giant
 - Kithkin Zealot
+- Light from Within
 - Merrow Bonegnawer
 - Murkfiend Liege
 - Nightmare Incursion
 - Outrage Shaman
+- Sanity Grinding
 - Sapling of Colfenor
 - Shorecrasher Mimic
 - Soul Snuffers
+- Springjack Shepherd
 - Talara's Bane
 - Talara's Battalion
 - Ward of Bones
@@ -218,7 +218,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Chroma | 6 | Fiery Bombardment, Light from Within, Primalcrux, Sanity Grinding, Springjack Shepherd | eve |
+| Chroma | 2 | Primalcrux, Umbra Stalker | eve |
 | as long as enchanted creature is green, it gets +N/+N and all creatures able to block it do so. | 1 | Gift of the Deity | eve |
 | at the beginning of your upkeep, you may gain control of target permanent until end of turn. if you do, untap it and it gains haste until end of turn. | 1 | Dominus of Fealty | eve |
 | attacking creatures you control get +N/+N. | 1 | Nobilis of War | eve |
@@ -231,7 +231,6 @@
 | target player can"..."t cast creature spells ~ if {M} was spent to cast ~. (do both if {M}{M} was spent.) | 1 | Moonhold | eve |
 | untap all creatures that attacked ~. after ~ phase, there is an additional combat phase followed by an additional main phase. retrace (you may cast ~ from your  | 1 | Waves of Aggression | eve |
 | until end of turn, target creature gains "..." | 1 | Banishing Knack | eve |
-| when ~ enters, return to your hand the creature card in your graveyard with the greatest power. if two or more cards are tied for greatest power, you choose one | 1 | Desecrator Hag | eve |
 | when ~ enters, search your library for any number of plains cards, exile them, then shuffle. | 1 | Endless Horizons | eve |
 | when ~ enters, you may pay {M}. if you do, create N N/N red and white goblin soldier creature tokens. | 1 | Rise of the Hobgoblins | eve |
 | whenever ashling deals combat damage to a player, choose target creature that player controls. the player sacrifices that creature. | 1 | Ashling, the Extinguisher | eve |

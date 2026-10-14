@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 31 | 22.0% |
-| Works (untested) | 87 | 61.7% |
+| Works (untested) | 88 | 62.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 23 | 16.3% |
+| Not working | 22 | 15.6% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Frontline Sage | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Giltspire Avenger | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Malfegor | silent | When Malfegor enters, discard your hand. Each opponent sacrifices a creature of their choice for each card discarded this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Manaforce Mace | silent | Domain — Equipped creature gets +1/+1 for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nicol Bolas, Planeswalker | silent | −9: Nicol Bolas deals 7 damage to target player or planeswalker. That player or that planeswalker's controller discards seven cards, then sacrifices seven perma | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Noble Hierarch | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Paragon of the Amesha | silent | {W}{U}{B}{R}{G}: Until end of turn, this creature becomes an Angel, gets +3/+3, and gains flying and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -94,6 +93,7 @@
 | Kranioceros | handled | {1}{W}: This creature gets +0/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lapse of Certainty | handled | Counter target spell. If that spell is countered this way, put it on top of its owner's library instead of into that player's graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Maelstrom Archangel | handled | Whenever this creature deals combat damage to a player, you may cast a spell from your hand without paying its mana cost. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Manaforce Mace | handled | Domain — Equipped creature gets +1/+1 for each basic land type among lands you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Martial Coup | handled | Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all other creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Master Transmuter | handled | {U}, {T}, Return an artifact you control to its owner's hand: You may put an artifact card from your hand onto the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Matca Rioters | handled | Domain — Matca Rioters's power and toughness are each equal to the number of basic land types among lands you control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -181,7 +181,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | exalted | 5 | Aven Squire, Frontline Sage, Giltspire Avenger, Noble Hierarch, Rhox Bodyguard | con |
-| Domain | 1 | Manaforce Mace | con |
 | destroy target artifact or enchantment. if that permanent was blue or black, draw a card. | 1 | Filigree Fracture | con |
 | destroy target creature if it has the least power or is tied for least power among creatures on the battlefield. | 1 | Wretched Banquet | con |
 | search your library for a plains card, an island card, a swamp card, and a mountain card. reveal those cards, put them into your hand, then shuffle. | 1 | Shard Convergence | con |

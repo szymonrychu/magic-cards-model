@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 45 | 27.8% |
-| Works (untested) | 89 | 54.9% |
+| Works (untested) | 90 | 55.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 28 | 17.3% |
+| Not working | 27 | 16.7% |
 
 ## Cards needing work
 
@@ -48,7 +48,6 @@
 | Xenograft | silent | Each creature you control is the chosen type in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Apostle's Blessing | notice | ({W/P} can be paid with either {W} or 2 life.) Target artifact or creature you control gains protection from artifacts or from the color of your choice until en | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Auriok Survivors | notice | When this creature enters, you may return target Equipment card from your graveyard to the battlefield. If you do, you may attach it to this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Brutalizer Exarch | notice | When this creature enters, choose one — • Search your library for a creature card, reveal it, then shuffle and put that card on top. • Put target noncreature pe | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Chancellor of the Tangle | notice | You may reveal this card from your opening hand. If you do, at the beginning of your first main phase of the game, add {G}. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Dispatch | notice | Tap target creature. Metalcraft — If you control three or more artifacts, exile that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ichor Explosion | notice | As an additional cost to cast this spell, sacrifice a creature. All creatures get -X/-X until end of turn, where X is the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -63,6 +62,7 @@
 | Blighted Agent | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blind Zealot | handled | Whenever this creature deals combat damage to a player, you may sacrifice it. If you do, destroy target creature that player controls. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blinding Souleater | handled | {W/P}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Brutalizer Exarch | handled | When this creature enters, choose one — • Search your library for a creature card, reveal it, then shuffle and put that card on top. • Put target noncreature pe | the engine reads this text and performs it | Y/-/- | not_tested |
 | Caress of Phyrexia | handled | Target player draws three cards, loses 3 life, and gets three poison counters. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chancellor of the Dross | handled | You may reveal this card from your opening hand. If you do, at the beginning of the first upkeep, each opponent loses 3 life, then you gain life equal to the li | the engine reads this text and performs it | Y/-/- | not_tested |
 | Conversion Chamber | handled | {2}, {T}: Exile target artifact card from a graveyard. Put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -215,7 +215,6 @@
 | search target opponent's library for a card and exile it face down. then that player shuffles. you may play that card for as long as it remains exiled. | 1 | Praetor's Grasp | nph |
 | tap target creature. metalcraft — if you control three or more artifacts, exile that creature. | 1 | Dispatch | nph |
 | when enchanted artifact is put into a graveyard, you gain N life. | 1 | Viridian Harvest | nph |
-| when ~ enters, choose one — • search your library for a creature card, reveal it, then shuffle and put that card on top. • put target noncreature permanent on t | 1 | Brutalizer Exarch | nph |
 | when ~ enters, you may cast target instant or sorcery card from an opponent's graveyard without paying its mana cost. | 1 | Chancellor of the Spires | nph |
 | when ~ enters, you may return target equipment card from your graveyard to the battlefield. if you do, you may attach it to ~. | 1 | Auriok Survivors | nph |
 | whenever a source deals damage to ~, that source's controller gets a poison counter. | 1 | Reaper of Sheoldred | nph |

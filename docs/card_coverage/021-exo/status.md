@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 6 | 26.1% |
+| Tested | 7 | 30.4% |
 | Works (untested) | 14 | 60.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 3 | 13.0% |
+| Not working | 2 | 8.7% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Coat of Arms | silent | Each creature gets +1/+1 for each other creature on the battlefield that shares at least one creature type with it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pandemonium | silent | Whenever a creature enters, that creature's controller may have it deal damage equal to its power to any target of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thrull Surgeon | notice | {1}{B}, Sacrifice this creature: Look at target player's hand and choose a card from it. That player discards that card. Activate only as a sorcery. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Anarchist | handled | When this creature enters, you may return target sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -47,8 +46,9 @@
 ## Fully supported
 
 <details>
-<summary>6 cards</summary>
+<summary>7 cards</summary>
 
+- Coat of Arms
 - Elvish Berserker
 - High Ground
 - Merfolk Looter
@@ -62,7 +62,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| each creature gets +N/+N for each other creature on the battlefield that shares at least one creature type with it. | 1 | Coat of Arms | exo |
 | whenever a creature enters, that creature's controller may have it deal damage equal to its power to any target of their choice. | 1 | Pandemonium | exo |
 | {M}{M}, sacrifice ~: look at target player's hand and choose a card from it. that player discards that card. activate only as a sorcery. | 1 | Thrull Surgeon | exo |
 

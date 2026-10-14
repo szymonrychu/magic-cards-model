@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 64 | 25.4% |
-| Works (untested) | 144 | 57.1% |
+| Tested | 70 | 27.8% |
+| Works (untested) | 145 | 57.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 44 | 17.5% |
+| Not working | 37 | 14.7% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Adagia, Windswept Bastion | silent | {3}{W}, {T}: Create a token that's a copy of target artifact or enchantment you control, except it's legendary. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Anticausal Vestige | silent | When this creature leaves the battlefield, draw a card, then you may put a permanent card with mana value less than or equal to the number of lands you control  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Atomic Microsizer | silent | Whenever equipped creature attacks, choose up to one target creature. That creature can't be blocked this turn and has base power and toughness 1/1 until end of | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Auxiliary Boosters | silent | When this Equipment enters, create a 2/2 colorless Robot artifact creature token and attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Beyond the Quiet | silent | Exile all creatures and Spacecraft. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -41,17 +40,13 @@
 | Kavaron, Memorial World | silent | {1}{R}, {T}, Sacrifice a land: Create a 2/2 colorless Robot artifact creature token, then creatures you control get +1/+0 and gain haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lightstall Inquisitor | silent | When this creature enters, each opponent exiles a card from their hand and may play that card for as long as it remains exiled. Each spell cast this way costs { | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mechan Shieldmate | silent | As long as an artifact entered the battlefield under your control this turn, this creature can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Mouth of the Storm | silent | When this creature enters, creatures your opponents control get -3/-0 until your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mutinous Massacre | silent | Choose odd or even. Destroy each creature with mana value of the chosen quality. Then gain control of all creatures until end of turn. Untap them. They gain has | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Orbital Plunge | silent | Orbital Plunge deals 6 damage to target creature. If excess damage was dealt this way, create a Lander token. (It's an artifact with "{2}, {T}, Sacrifice this t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Possibility Technician | silent | Whenever this creature or another Kavu you control enters, exile the top card of your library. For as long as that card remains exiled, you may play it if you c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Pulsar Squadron Ace | silent | When this creature enters, look at the top five cards of your library. You may reveal a Spacecraft card from among them and put it into your hand. Put the rest  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ragost, Deft Gastronaut | silent | Artifacts you control are Foods in addition to their other types and have "{2}, {T}, Sacrifice this artifact: You gain 3 life." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Requiem Monolith | silent | {T}: Until end of turn, target creature gains "Whenever this creature is dealt damage, you draw that many cards and lose that much life." That creature's contro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Singularity Rupture | silent | Destroy all creatures, then any number of target players each mill half their library, rounded down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sothera, the Supervoid | silent | Whenever a creature you control dies, each opponent chooses a creature they control and exiles it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Space-Time Anomaly | silent | Target player mills cards equal to your life total. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Survey Mechan | silent | {10}, Sacrifice this creature: It deals 3 damage to any target. Target player draws three cards and gains 3 life. This ability costs {X} less to activate, where | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Synthesizer Labship | silent | At the beginning of combat on your turn, up to one other target artifact you control becomes an artifact creature with base power and toughness 2/2 and gains fl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Terrapact Intimidator | silent | When this creature enters, target opponent may have you create two Lander tokens. If they don't, put two +1/+1 counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Thaumaton Torpedo | silent | {6}, {T}, Sacrifice this artifact: Destroy target nonland permanent. This ability costs {3} less to activate if you attacked with a Spacecraft this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -65,8 +60,6 @@
 | Emissary Escort | notice | This creature gets +X/+0, where X is the greatest mana value among other artifacts you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Faller's Faithful | notice | When this creature enters, destroy up to one other target creature. If that creature wasn't dealt damage this turn, its controller draws two cards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Full Bore | notice | Target creature you control gets +3/+2 until end of turn. If that creature was cast for its warp cost, it also gains trample and haste until end of turn. | unparsed remainder: If that creature was cast for its warp cost, it also gains trample and haste until end of turn. | Y/Y/Y | not_working |
-| Larval Scoutlander | notice | When this Spacecraft enters, you may sacrifice a land or Lander. If you do, search your library for up to two basic land cards, put them onto the battlefield ta | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Memorial Vault | notice | {T}, Sacrifice another artifact: Exile the top X cards of your library, where X is one plus the mana value of the sacrificed artifact. You may play those cards  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Systems Override | notice | Gain control of target artifact or creature until end of turn. Untap that permanent. It gains haste until end of turn. If it's a Spacecraft, put ten charge coun | unparsed remainder: Untap that permanent. It gains haste until end of turn. If it's a Spacecraft, put ten charge counters on it. If you do, remove ten charge counters from it at the beginning of the next end step. | Y/Y/Y | not_working |
 | Tezzeret, Cruel Captain | notice | 0: Untap target artifact or creature. If it's an artifact creature, put a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Xu-Ifit, Osteoharmonist | notice | {T}: Return target creature card from your graveyard to the battlefield. It's a Skeleton in addition to its other types and has no abilities. Activate only as a | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -133,6 +126,7 @@
 | Invasive Maneuvers | handled | Invasive Maneuvers deals 3 damage to target creature. It deals 5 damage instead if you control a Spacecraft. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kavaron Turbodrone | handled | {T}: Target creature you control gets +1/+1 and gains haste until end of turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Knight Luminary | handled | When this creature enters, create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Larval Scoutlander | handled | When this Spacecraft enters, you may sacrifice a land or Lander. If you do, search your library for up to two basic land cards, put them onto the battlefield ta | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lashwhip Predator | handled | This spell costs {2} less to cast if your opponents control three or more creatures. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lightless Evangel | handled | Whenever you sacrifice another creature or artifact, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lost in Space | handled | Target artifact or creature's owner puts it on their choice of the top or bottom of their library. Surveil 1. (Look at the top card of your library. You may put | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -218,8 +212,9 @@
 ## Fully supported
 
 <details>
-<summary>64 cards</summary>
+<summary>70 cards</summary>
 
+- Anticausal Vestige
 - Archenemy's Charm
 - Bioengineered Future
 - Biotech Specialist
@@ -252,8 +247,10 @@
 - Lumen-Class Frigate
 - Luxknight Breacher
 - Meltstrider's Resolve
+- Memorial Vault
 - Mightform Harmonizer
 - Moonlit Meditation
+- Mouth of the Storm
 - Nova Hellkite
 - Ouroboroid
 - Pain for All
@@ -264,10 +261,13 @@
 - Sami's Curiosity
 - Sami, Wildcat Captain
 - Seam Rip
+- Singularity Rupture
+- Space-Time Anomaly
 - Starfield Shepherd
 - Starfield Vocalist
 - Sunset Saboteur
 - Sunstar Chaplain
+- Survey Mechan
 - Syr Vondam, Sunstar Exemplar
 - Tapestry Warden
 - Terminal Velocity
@@ -300,7 +300,6 @@
 | choose odd or even. destroy each creature with mana value of the chosen quality. then gain control of all creatures until end of turn. untap them. they gain has | 1 | Mutinous Massacre | eoe |
 | counter target spell unless its controller pays {M}. if they do, you create a lander token. (it's an artifact with "...") | 1 | Divert Disaster | eoe |
 | destroy all creatures with toughness N or less. you lose N life. if N is N or more, return a creature card put into a graveyard ~ to the battlefield under your  | 1 | Zero Point Ballad | eoe |
-| destroy all creatures, then any number of target players each mill half their library, rounded down. | 1 | Singularity Rupture | eoe |
 | exile all creatures and spacecraft. | 1 | Beyond the Quiet | eoe |
 | gain control of target artifact or creature until end of turn. untap that permanent. it gains haste until end of turn. if it's a spacecraft, put ten charge coun | 1 | Systems Override | eoe |
 | return target nonland permanent to its owner's hand. if it was attacking, create a N/N colorless drone artifact creature token with flying and "..." | 1 | Desculpting Blast | eoe |
@@ -308,24 +307,18 @@
 | target creature gets -N/-N until end of turn. then if that creature's power is N or less, destroy it. | 1 | Depressurize | eoe |
 | target creature you control gains double strike until end of turn. if it has a +N/+N counter on it, draw a card. | 1 | Dual-Sun Technique | eoe |
 | target creature you control gets +N/+N until end of turn. if that creature was cast for its warp cost, it also gains trample and haste until end of turn. | 1 | Full Bore | eoe |
-| target player mills cards equal to your life total. | 1 | Space-Time Anomaly | eoe |
 | when ~ enters, choose one — • put two +N/+N counters on ~. • put target exiled card with warp on the bottom of its owner's library. | 1 | Blade of the Swarm | eoe |
 | when ~ enters, create a N/N colorless robot artifact creature token and attach ~ to it. | 1 | Auxiliary Boosters | eoe |
 | when ~ enters, create a lander token. at the beginning of the end step on your next turn, sacrifice that token. | 1 | Kav Landseeker | eoe |
-| when ~ enters, creatures your opponents control get -N/-N until your next turn. | 1 | Mouth of the Storm | eoe |
 | when ~ enters, destroy up to one other target creature. if that creature wasn't dealt damage ~, its controller draws two cards. | 1 | Faller's Faithful | eoe |
 | when ~ enters, each opponent exiles a card from their hand and may play that card for as long as it remains exiled. each spell cast ~ costs {M} more to cast. ea | 1 | Lightstall Inquisitor | eoe |
 | when ~ enters, look at the top five cards of your library. you may reveal a spacecraft card from among them and put it into your hand. put the rest on the botto | 1 | Pulsar Squadron Ace | eoe |
 | when ~ enters, sacrifice it unless you tap an untapped permanent you control. | 1 | Command Bridge | eoe |
 | when ~ enters, target opponent may have you create two lander tokens. if they don't, put two +N/+N counters on ~. | 1 | Terrapact Intimidator | eoe |
-| when ~ enters, you may sacrifice a land or lander. if you do, search your library for up to two basic land cards, put them onto the battlefield tapped, then shu | 1 | Larval Scoutlander | eoe |
-| when ~ leaves the battlefield, draw a card, then you may put a permanent card with mana value less than or equal to the number of lands you control from your ha | 1 | Anticausal Vestige | eoe |
 | whenever a creature you control dies, each opponent chooses a creature they control and exiles it. | 1 | Sothera, the Supervoid | eoe |
 | whenever enchanted creature attacks, put target creature card from defending player's graveyard onto the battlefield under your control tapped and attacking. | 1 | Chorale of the Void | eoe |
 | whenever equipped creature attacks, choose up to one target creature. that creature can't be blocked ~ and has base power and toughness N/N until end of turn. | 1 | Atomic Microsizer | eoe |
 | whenever ~ or another kavu you control enters, exile the top card of your library. for as long as that card remains exiled, you may play it if you control a kav | 1 | Possibility Technician | eoe |
-| {M}, sacrifice another artifact: exile the top N cards of your library, where N is one plus the mana value of the sacrificed artifact. you may play those cards  | 1 | Memorial Vault | eoe |
-| {M}, sacrifice ~: it deals N damage to any target. target player draws three cards and gains N life. ~ costs {M} less to activate, where N is the number of diff | 1 | Survey Mechan | eoe |
 | {M}, {M}, sacrifice ~: destroy target nonland permanent. ~ costs {M} less to activate if you attacked with a spacecraft ~. | 1 | Thaumaton Torpedo | eoe |
 | {M}: return target creature card from your graveyard to the battlefield. it's a skeleton in addition to its other types and has no abilities. activate only as a | 1 | Xu-Ifit, Osteoharmonist | eoe |
 | {M}: until end of turn, target creature gains "..." that creature's controller may have ~ deal N damage to it. activate only as a sorcery. | 1 | Requiem Monolith | eoe |

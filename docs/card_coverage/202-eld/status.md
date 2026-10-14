@@ -17,21 +17,19 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 77 | 28.6% |
-| Works (untested) | 146 | 54.3% |
+| Tested | 80 | 29.7% |
+| Works (untested) | 148 | 55.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 46 | 17.1% |
+| Not working | 41 | 15.2% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| All That Glitters | silent | Enchanted creature gets +1/+1 for each artifact and/or enchantment you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Belle of the Brawl | silent | Whenever this creature attacks, other Knights you control get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blacklance Paragon | silent | When this creature enters, target Knight gains deathtouch and lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blow Your House Down | silent | Up to three target creatures can't block this turn. Destroy any of them that are Walls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cauldron's Gift | silent | Adamant — If at least three black mana was spent to cast this spell, mill four cards. You may choose a creature card in your graveyard. If you do, return it to  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Chittering Witch | silent | When this creature enters, create a number of 1/1 black Rat creature tokens equal to the number of opponents you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Clackbridge Troll | silent | At the beginning of combat on your turn, any opponent may sacrifice a creature of their choice. If a player does, tap this creature, you gain 3 life, and you dr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Covetous Urge | silent | Target opponent reveals their hand. You choose a nonland card from that player's graveyard or hand and exile it. You may cast that card for as long as it remain | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dance of the Manse | silent | Return up to X target artifact and/or non-Aura enchantment cards each with mana value X or less from your graveyard to the battlefield. If X is 6 or more, those | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -39,11 +37,8 @@
 | Escape to the Wilds | silent | Exile the top five cards of your library. You may play cards exiled this way until the end of your next turn. You may play an additional land this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ferocity of the Wilds | silent | Attacking non-Human creatures you control get +1/+0 and have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gingerbrute | silent | {1}: This creature can't be blocked this turn except by creatures with haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Gluttonous Troll | silent | When this creature enters, create a number of Food tokens equal to the number of opponents you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Irencrag Feat | silent | Add seven {R}. You can cast only one more spell this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Knights' Charge | silent | {6}{W}{B}, Sacrifice this enchantment: Return all Knight creature cards from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mace of the Valiant | silent | Equipped creature gets +1/+1 for each charge counter on this Equipment and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Memory Theft | silent | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. You may put a card that has an Adventure that player owns | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Midnight Clock | silent | When the twelfth hour counter is put on this artifact, shuffle your hand and graveyard into your library, then draw seven cards. Exile this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mirrormade | silent | You may have this enchantment enter as a copy of any artifact or enchantment on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Oko, Thief of Crowns | silent | −5: Exchange control of target artifact or creature you control and target creature an opponent controls with power 3 or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -54,9 +49,7 @@
 | Robber of the Rich | silent | Whenever this creature attacks, if defending player has more cards in hand than you, exile the top card of their library. During any turn you attacked with a Ro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rosethorn Acolyte // Seasonal Ritual | silent | Add one mana of any color. (Then exile this card. You may cast the creature later from exile.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rowan's Stalwarts | silent | When this creature enters, you may search your library and/or graveyard for a card named Rowan, Fearless Sparkmage, reveal it, and put it into your hand. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Silverwing Squadron | silent | Whenever this creature attacks, create a number of 2/2 white Knight creature tokens with vigilance equal to the number of opponents you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skullknocker Ogre | silent | Whenever this creature deals damage to an opponent, that player discards a card at random. If the player does, they draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Specter's Shriek | silent | Target opponent reveals their hand. You may choose a nonland card from it. If you do, that player exiles that card. If a nonblack card is exiled this way, exile | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wicked Guardian | silent | When this creature enters, you may have it deal 2 damage to another creature you control. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wishclaw Talisman | silent | {1}, {T}, Remove a wish counter from this artifact: Search your library for a card, put it into your hand, then shuffle. An opponent gains control of this artif | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wishful Merfolk | silent | {1}{U}: This creature loses defender and becomes a Human until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -67,13 +60,16 @@
 | Flaxen Intruder // Welcome Home | notice | Whenever this creature deals combat damage to a player, you may sacrifice it. When you do, destroy target artifact or enchantment. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Giant Opportunity | notice | You may sacrifice two Foods. If you do, create a 7/7 green Giant creature token. Otherwise, create three Food tokens. (They're artifacts with "{2}, {T}, Sacrifi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Insatiable Appetite | notice | You may sacrifice a Food. If you do, target creature gets +5/+5 until end of turn. Otherwise, that creature gets +3/+3 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Memory Theft | notice | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. You may put a card that has an Adventure that player owns | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Return of the Wildspeaker | notice | Choose one — • Draw cards equal to the greatest power among non-Human creatures you control. • Non-Human creatures you control get +3/+3 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Roving Keep | notice | {7}: This creature gets +2/+0 and gains trample until end of turn. It can attack this turn as though it didn't have defender. | unparsed remainder: It can attack this turn as though it didn't have defender. | Y/Y/- | not_working |
+| Specter's Shriek | notice | Target opponent reveals their hand. You may choose a nonland card from it. If you do, that player exiles that card. If a nonblack card is exiled this way, exile | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Syr Elenora, the Discerning | notice | Spells your opponents cast that target Syr Elenora cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Wildborn Preserver | notice | Whenever another non-Human creature you control enters, you may pay {X}. When you do, put X +1/+1 counters on this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Yorvo, Lord of Garenbrig | notice | Whenever another green creature you control enters, put a +1/+1 counter on Yorvo. Then if that creature's power is greater than Yorvo's power, put another +1/+1 | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Acclaimed Contender | handled | When this creature enters, if you control another Knight, look at the top five cards of your library. You may reveal a Knight, Aura, Equipment, or legendary art | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alela, Artful Provocateur | handled | Other creatures you control with flying get +1/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| All That Glitters | handled | Enchanted creature gets +1/+1 for each artifact and/or enchantment you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Animating Faerie // Bring to Life | handled | Target noncreature artifact you control becomes a 0/0 artifact creature. Put four +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arcane Signet | handled |  |  | Y/Y/- | not_tested |
 | Arcanist's Owl | handled | When this creature enters, look at the top four cards of your library. You may reveal an artifact or enchantment card from among them and put it into your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -144,6 +140,7 @@
 | Lonesome Unicorn // Rider in Need | handled | Create a 2/2 white Knight creature token with vigilance. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lost Legion | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lucky Clover | handled | Whenever you cast an Adventure instant or sorcery spell, copy it. You may choose new targets for the copy. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mace of the Valiant | handled | Equipped creature gets +1/+1 for each charge counter on this Equipment and has vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mad Ratter | handled | Whenever you draw your second card each turn, create two 1/1 black Rat creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Malevolent Noble | handled | {2}, Sacrifice an artifact or another creature: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mantle of Tides | handled | Equipped creature gets +1/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -222,7 +219,7 @@
 ## Fully supported
 
 <details>
-<summary>77 cards</summary>
+<summary>80 cards</summary>
 
 - Archon of Absolution
 - Ardenvale Paladin
@@ -234,6 +231,7 @@
 - Castle Locthwain
 - Cauldron Familiar
 - Charmed Sleep
+- Chittering Witch
 - Claim the Firstborn
 - Clockwork Servant
 - Command Tower
@@ -254,6 +252,7 @@
 - Foulmire Knight // Profane Insight
 - Garenbrig Paladin
 - Gilded Goose
+- Gluttonous Troll
 - Grumgully, the Generous
 - Happily Ever After
 - Harmonious Archon
@@ -288,6 +287,7 @@
 - Seven Dwarves
 - Shambling Suit
 - Shimmer Dragon
+- Silverwing Squadron
 - Slaying Fire
 - Smitten Swordmaster // Curry Favor
 - Steelclaw Lance
@@ -318,8 +318,6 @@
 | attacking non-human creatures you control get +N/+N and have trample. | 1 | Ferocity of the Wilds | eld |
 | creatures of the creature type of your choice get -N/-N until end of turn. | 1 | Witch's Vengeance | eld |
 | destroy all non-giant creatures. (then exile ~. you may cast the creature later from exile.) | 1 | Realm-Cloaked Giant // Cast Off | eld |
-| enchanted creature gets +N/+N for each artifact and/or enchantment you control. | 1 | All That Glitters | eld |
-| equipped creature gets +N/+N for each charge counter on ~ and has vigilance. | 1 | Mace of the Valiant | eld |
 | exile the top five cards of your library. you may play cards exiled ~ until the end of your next turn. you may play an additional land ~. | 1 | Escape to the Wilds | eld |
 | if ~ is the first spell you've cast ~, you may cast it without paying its mana cost. look at the top five cards of your library. you may reveal a creature or la | 1 | Once Upon a Time | eld |
 | return target card from your graveyard to your hand. put up to one other target card from your graveyard on top of your library. exile ~. adamant — if at least  | 1 | Once and Future | eld |
@@ -333,14 +331,11 @@
 | when the twelfth hour counter is put on ~, shuffle your hand and graveyard into your library, then draw seven cards. exile ~. | 1 | Midnight Clock | eld |
 | when ~ enters, choose one — • scry N. • you gain N life. • exile another target creature you own. return it to the battlefield under your control at the beginni | 1 | Charming Prince | eld |
 | when ~ enters, choose target human or artifact an opponent controls. for as long as ~ remains on the battlefield, gain control of that permanent, it loses all a | 1 | Opportunistic Dragon | eld |
-| when ~ enters, create a number of N/N black rat creature tokens equal to the number of opponents you have. | 1 | Chittering Witch | eld |
-| when ~ enters, create a number of food tokens equal to the number of opponents you have. | 1 | Gluttonous Troll | eld |
 | when ~ enters, target knight gains deathtouch and lifelink until end of turn. | 1 | Blacklance Paragon | eld |
 | when ~ enters, you may have it deal N damage to another creature you control. if you do, draw a card. | 1 | Wicked Guardian | eld |
 | when ~ enters, you may search your library and/or graveyard for a card named rowan, fearless sparkmage, reveal it, and put it into your hand. if you search your | 1 | Rowan's Stalwarts | eld |
 | whenever another green creature you control enters, put a +N/+N counter on yorvo. then if that creature"..."s power, put another +N/+N counter on yorvo. | 1 | Yorvo, Lord of Garenbrig | eld |
 | whenever another non-human creature you control enters, you may pay {M}. when you do, put N +N/+N counters on ~. | 1 | Wildborn Preserver | eld |
-| whenever ~ attacks, create a number of N/N white knight creature tokens with vigilance equal to the number of opponents you have. | 1 | Silverwing Squadron | eld |
 | whenever ~ attacks, if defending player has more cards in hand than you, exile the top card of their library. during any turn you attacked with a rogue, you may | 1 | Robber of the Rich | eld |
 | whenever ~ attacks, other knights you control get +N/+N until end of turn. | 1 | Belle of the Brawl | eld |
 | whenever ~ deals combat damage to a player, you may sacrifice it. when you do, destroy target artifact or enchantment. | 1 | Flaxen Intruder // Welcome Home | eld |

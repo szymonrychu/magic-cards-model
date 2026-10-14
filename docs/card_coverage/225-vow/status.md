@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 76 | 30.0% |
-| Works (untested) | 111 | 43.9% |
+| Tested | 79 | 31.2% |
+| Works (untested) | 112 | 44.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 66 | 26.1% |
+| Not working | 62 | 24.5% |
 
 ## Cards needing work
 
@@ -34,14 +34,12 @@
 | By Invitation Only | silent | Choose a number between 0 and 13. Each player sacrifices that many creatures of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra, Dressed to Kill | silent | +1: Exile the top card of your library. If it's red, you may cast it this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cloaked Cadet | silent | Training | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Concealing Curtains // Revealing Eye | silent | When this creature transforms into Revealing Eye, target opponent reveals their hand. You may choose a nonland card from it. If you do, that player discards tha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Consuming Tide | silent | Each player chooses a nonland permanent they control. Return all nonland permanents not chosen this way to their owners' hands. Then you draw a card for each op | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Curse of Hospitality | silent | Creatures attacking enchanted player have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Demonic Bargain | silent | Exile the top thirteen cards of your library, then search your library for a card. Put that card into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Diver Skaab | silent | When this creature exploits a creature, target creature's owner puts it on their choice of the top or bottom of their library. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Dollhouse of Horrors | silent | {1}, {T}, Exile a creature card from your graveyard: Create a token that's a copy of the exiled card, except it's a 0/0 Construct artifact in addition to its ot | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fell Stinger | silent | When this creature exploits a creature, target player draws two cards and loses 2 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Flourishing Hunter | silent | When this creature enters, you gain life equal to the greatest toughness among other creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Foreboding Statue // Forsaken Thresher | silent | At the beginning of your end step, if there are three or more omen counters on this creature, untap it, then transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Geistlight Snare | silent | This spell costs {1} less to cast if you control a Spirit. It also costs {1} less to cast if you control an enchantment. Counter target spell unless its control | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gift of Fangs | silent | Enchanted creature gets +2/+2 as long as it's a Vampire. Otherwise, it gets -2/-2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -54,8 +52,6 @@
 | Innocent Traveler // Malicious Invader | silent | At the beginning of your upkeep, any opponent may sacrifice a creature of their choice. If no one does, transform this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inspired Idea | silent | Cleave {3}{U}{U} (You may cast this spell for its cleave cost. If you do, remove the words in square brackets.) Draw three cards. Your maximum hand size is redu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Into the Night | silent | It becomes night. Discard any number of cards, then draw that many cards plus one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Kaya, Geist Hunter | silent | −2: Until end of turn, if one or more tokens would be created under your control, twice that many of those tokens are created instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Lantern of the Lost | silent | {1}, {T}, Exile this artifact: Exile all cards from all graveyards, then draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mindleech Ghoul | silent | When this creature exploits a creature, each opponent exiles a card from their hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Necroduality | silent | Whenever a nontoken Zombie you control enters, create a token that's a copy of that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Odric, Blood-Cursed | silent | When Odric enters, create X Blood tokens, where X is the number of abilities from among flying, first strike, double strike, deathtouch, haste, hexproof, indest | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -86,9 +82,9 @@
 | Blood Petal Celebrant | notice | This creature has first strike as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Cemetery Desecrator | notice | When this creature enters or dies, exile another card from a graveyard. When you do, choose one — • Remove X counters from target permanent, where X is the mana | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Cemetery Prowler | notice | Spells you cast cost {1} less to cast for each card type they share with cards exiled with this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Concealing Curtains // Revealing Eye | notice | When this creature transforms into Revealing Eye, target opponent reveals their hand. You may choose a nonland card from it. If you do, that player discards tha | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dreamshackle Geist | notice | At the beginning of combat on your turn, choose up to one — • Tap target creature. • Target creature doesn't untap during its controller's next untap step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Edgar, Charmed Groom // Edgar Markov's Coffin | notice | At the beginning of your upkeep, create a 1/1 white and black Vampire creature token with lifelink and put a bloodline counter on Edgar Markov's Coffin. Then if | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Manaform Hellkite | notice | Whenever you cast a noncreature spell, create an X/X red Dragon Illusion creature token with flying and haste, where X is the amount of mana spent to cast that  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Oakshade Stalker // Moonlit Ambusher | notice | You may cast this spell as though it had flash if you pay {2} more to cast it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Reclusive Taxidermist | notice | This creature gets +3/+2 as long as there are four or more creature cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Undying Malice | notice | Until end of turn, target creature gains "When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -153,6 +149,7 @@
 | Kessig Wolfrider | handled | {2}{R}, {T}, Exile three cards from your graveyard: Create a 3/2 red Wolf creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Laid to Rest | handled | Whenever a Human you control dies, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lambholt Raconteur // Lambholt Ravager | handled | Whenever you cast a noncreature spell, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Lantern of the Lost | handled | When this artifact enters, exile target card from a graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lightning Wolf | handled | {1}{R}: This creature gains first strike until end of turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lunar Rejection | handled | Cleave {3}{U} (You may cast this spell for its cleave cost. If you do, remove the words in square brackets.) Return target Wolf or Werewolf creature to its owne | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Markov Purifier | handled | At the beginning of your end step, if you gained life this turn, you may pay {2}. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -207,7 +204,7 @@
 ## Fully supported
 
 <details>
-<summary>76 cards</summary>
+<summary>79 cards</summary>
 
 - Aim for the Head
 - Ancient Lumberknot
@@ -238,6 +235,7 @@
 - Faithbound Judge // Sinner's Judgment
 - Fear of Death
 - Fleeting Spirit
+- Flourishing Hunter
 - Geralf, Visionary Stitcher
 - Grolnok, the Omnivore
 - Gutter Skulker // Gutter Shortcut
@@ -247,11 +245,13 @@
 - Investigator's Journal
 - Jacob Hauken, Inspector // Hauken's Insight
 - Katilda, Dawnhart Martyr // Katilda's Rising Dawn
+- Kaya, Geist Hunter
 - Kindly Ancestor // Ancestor's Embrace
 - Lacerate Flesh
 - Lantern Bearer // Lanterns' Lift
 - Lantern Flare
 - Magma Pummeler
+- Manaform Hellkite
 - Markov Retribution
 - Militia Rallier
 - Mirrorhall Mimic // Ghastly Mimicry
@@ -323,7 +323,6 @@
 | when ~ enters and at the beginning of your upkeep, mill a card. if a land card is milled ~, create a treasure token. if a creature card is milled ~, create a N/ | 1 | Old Rutstein | vow |
 | when ~ enters or dies, exile another card from a graveyard. when you do, choose one — • remove N counters from target permanent, where N is the mana value of th | 1 | Cemetery Desecrator | vow |
 | when ~ enters, target creature an opponent controls gets -N/-N until end of turn if that opponent controls no other creatures. | 1 | Skulking Killer | vow |
-| when ~ enters, you gain life equal to the greatest toughness among other creatures you control. | 1 | Flourishing Hunter | vow |
 | when ~ exploits a creature, counter target spell, activated ability, or triggered ability. | 1 | Overcharged Amalgam | vow |
 | when ~ exploits a creature, destroy target planeswalker. | 1 | Graf Reaver | vow |
 | when ~ exploits a creature, each opponent exiles a card from their hand. | 1 | Mindleech Ghoul | vow |
@@ -337,7 +336,6 @@
 | whenever a nontoken zombie you control enters, create a token that's a copy of that creature. | 1 | Necroduality | vow |
 | whenever an enchantment you control enters, ~ can attack ~ as though it didn't have defender. | 1 | Steelclad Spirit | vow |
 | whenever you cast a creature spell, create a N/N green and white human soldier creature token with training. | 1 | Torens, Fist of the Angels | vow |
-| whenever you cast a noncreature spell, create an N/N red dragon illusion creature token with flying and haste, where N is the amount of mana spent to cast that  | 1 | Manaform Hellkite | vow |
 | whenever you create a blood token, if you control five or more blood tokens, transform ~. | 1 | Voldaren Bloodcaster // Bloodbat Summoner | vow |
 | whenever you sacrifice a blood token, you may have ~ become a N/N vampire artifact creature with haste until end of turn. | 1 | Sanguine Statuette | vow |
 | whenever ~ attacks, you may search your library for a basic land card that doesn't share a land type with a land you control, put that card onto the battlefield | 1 | Hiveheart Shaman | vow |
@@ -345,13 +343,11 @@
 | whenever ~ trains, exile up to one other target creature from the battlefield or creature card from a graveyard. | 1 | Savior of Ollenbock | vow |
 | you may cast ~ as though it had flash if you pay {M} more to cast it. | 1 | Oakshade Stalker // Moonlit Ambusher | vow |
 | {M}, {M}, exile a creature card from your graveyard: create a token that"..."s a N/N construct artifact in addition to its other types and it has "..." it gains | 1 | Dollhouse of Horrors | vow |
-| {M}, {M}, exile ~: exile all cards from all graveyards, then draw a card. | 1 | Lantern of the Lost | vow |
 | {M}{M}: ~ and another target creature each get +N/+N until end of turn. | 1 | Alluring Suitor // Deadly Dancer | vow |
 | {M}{M}{M}: each creature you control with flying, deathtouch, and/or lifelink gets +N/+N until end of turn. | 1 | Henrika Domnathi // Henrika, Infernal Seer | vow |
 | ~ costs {M} less to cast if you control a spirit. it also costs {M} less to cast if you control an enchantment. counter target spell unless its controller pays  | 1 | Geistlight Snare | vow |
 | ~ gets +N/+N as long as there are four or more creature cards in your graveyard. | 1 | Reclusive Taxidermist | vow |
 | ~ has first strike as long as it's attacking. | 1 | Blood Petal Celebrant | vow |
-| −N: until end of turn, if one or more tokens would be created under your control, twice that many of those tokens are created instead. | 1 | Kaya, Geist Hunter | vow |
 
 ## Notes
 

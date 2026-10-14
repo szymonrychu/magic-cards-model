@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 37.1% |
-| Works (untested) | 18 | 51.4% |
+| Tested | 14 | 40.0% |
+| Works (untested) | 17 | 48.6% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 4 | 11.4% |
 
@@ -42,7 +42,6 @@
 | Fyndhorn Elder | handled |  |  | Y/-/- | not_tested |
 | Sabretooth Tiger | handled | First strike | machines/combat.py | Y/-/- | not_tested |
 | Scaled Wurm | handled |  |  | Y/-/- | not_tested |
-| Snow-Covered Plains | handled |  |  | Y/Y/- | not_tested |
 | Snow-Covered Swamp | handled |  |  | Y/Y/- | not_tested |
 | Stormbind | handled | {2}, Discard a card at random: This enchantment deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sulfurous Springs | handled |  |  | Y/Y/- | not_tested |
@@ -52,7 +51,7 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Enduring Renewal
 - Goblin Snowman
@@ -64,6 +63,7 @@
 - Snow-Covered Forest
 - Snow-Covered Island
 - Snow-Covered Mountain
+- Snow-Covered Plains
 - Vexing Arcanix
 - Wrath of Marit Lage
 - Zur's Weirding

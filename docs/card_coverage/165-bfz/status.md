@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 38 | 16.8% |
+| Tested | 39 | 17.3% |
 | Works (untested) | 171 | 75.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 17 | 7.5% |
+| Not working | 16 | 7.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Bane of Bala Ged | silent | Whenever this creature attacks, defending player exiles two permanents they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Bring to Light | silent | Converge — Search your library for a creature, instant, or sorcery card with mana value less than or equal to the number of colors of mana spent to cast this sp | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crumble to Dust | silent | Devoid (This card has no color.) Exile target nonbasic land. Search its controller's graveyard, hand, and library for any number of cards with the same name as  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Drana, Liberator of Malakir | silent | Whenever Drana deals combat damage to a player, put a +1/+1 counter on each attacking creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Exert Influence | silent | Converge — Gain control of target creature if its power is less than or equal to the number of colors of mana spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -39,9 +38,9 @@
 | Sire of Stagnation | silent | Whenever a land an opponent controls enters, that player exiles the top two cards of their library and you draw two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skyline Cascade | silent | When this land enters, target creature an opponent controls doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slab Hammer | silent | Whenever equipped creature attacks, you may return a land you control to its owner's hand. If you do, the creature gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Transgress the Mind | silent | Devoid (This card has no color.) Target player reveals their hand. You choose a card from it with mana value 3 or greater and exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zada, Hedron Grinder | silent | Whenever you cast an instant or sorcery spell that targets only Zada, copy that spell for each other creature you control that the spell could target. Each copy | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Emeria Shepherd | notice | Landfall — Whenever a land you control enters, you may return target nonland permanent card from your graveyard to your hand. If that land is a Plains, you may  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Transgress the Mind | notice | Devoid (This card has no color.) Target player reveals their hand. You choose a card from it with mana value 3 or greater and exile that card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Unnatural Aggression | notice | Devoid (This card has no color.) Target creature you control fights target creature an opponent controls. If the creature an opponent controls would die this tu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Adverse Conditions | handled | Devoid (This card has no color.) Tap up to two target creatures. Those creatures don't untap during their controller's next untap step. Create a 1/1 colorless E | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akoum Firebird | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -218,13 +217,14 @@
 ## Fully supported
 
 <details>
-<summary>38 cards</summary>
+<summary>39 cards</summary>
 
 - Akoum Hellkite
 - Aligned Hedron Network
 - Barrage Tyrant
 - Blisterpod
 - Breaker of Armies
+- Bring to Light
 - Canopy Vista
 - Clutch of Currents
 - Conduit of Ruin
@@ -265,7 +265,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Converge | 2 | Bring to Light, Exert Influence | bfz |
+| Converge | 1 | Exert Influence | bfz |
 | Landfall | 1 | Emeria Shepherd | bfz |
 | Rally | 1 | Munda, Ambush Leader | bfz |
 | +N: until end of turn, gideon becomes a N/N human soldier ally creature with indestructible that's still a planeswalker. prevent all damage that would be dealt  | 1 | Gideon, Ally of Zendikar | bfz |

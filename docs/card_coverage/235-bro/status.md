@@ -17,21 +17,19 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 54 | 21.1% |
-| Works (untested) | 154 | 60.2% |
+| Tested | 58 | 22.7% |
+| Works (untested) | 153 | 59.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 48 | 18.8% |
+| Not working | 45 | 17.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Airlift Chaplain | silent | When this creature enters, mill three cards. You may put a Plains card or a creature card with mana value 3 or less from among the cards milled this way into yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Arcane Proxy | silent | When this creature enters, if you cast it, exile target instant or sorcery card with mana value less than or equal to this creature's power from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Argivian Avenger | silent | {1}: Until end of turn, this creature gets -1/-1 and gains your choice of flying, vigilance, deathtouch, or haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Calamity's Wake | silent | Exile all graveyards. Players can't cast noncreature spells this turn. Exile Calamity's Wake. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Draconic Destiny | silent | Enchanted creature gets +1/+1 and has flying, haste, and "{1}: This creature gets +1/+0 until end of turn." It's a Dragon in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dreams of Steel and Oil | silent | Target opponent reveals their hand. You choose an artifact or creature card from it, then choose an artifact or creature card from their graveyard. Exile the ch | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Evangel of Synthesis | silent | As long as you've drawn two or more cards this turn, this creature gets +1/+0 and has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fade from History | silent | Each player who controls an artifact or enchantment creates a 2/2 green Bear creature token. Then destroy all artifacts and enchantments. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fateful Handoff | silent | Draw cards equal to the mana value of target artifact or creature you control. An opponent gains control of that permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -62,6 +60,7 @@
 | Urza's Sylex | silent | {2}{W}{W}, {T}, Exile Urza's Sylex: Each player chooses six lands they control. Destroy all other permanents. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Urza, Powerstone Prodigy | silent | Whenever you discard one or more artifact cards, create a tapped Powerstone token. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Arms Race | notice | {3}{R}: You may put an artifact card from your hand onto the battlefield. That artifact gains haste. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Dreams of Steel and Oil | notice | Target opponent reveals their hand. You choose an artifact or creature card from it, then choose an artifact or creature card from their graveyard. Exile the ch | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Feldon, Ronom Excavator | notice | Whenever Feldon is dealt damage, exile that many cards from the top of your library. Choose one of them. Until the end of your next turn, you may play that card | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gix's Command | notice | Choose two — • Put two +1/+1 counters on up to one creature. It gains lifelink until end of turn. • Destroy each creature with power 2 or less. • Return up to t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hulking Metamorph | notice | You may have this creature enter as a copy of an artifact or creature you control, except it's an artifact creature in addition to its other types, and its powe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -69,10 +68,8 @@
 | Legions to Ashes | notice | Exile target nonland permanent an opponent controls and all tokens that player controls with the same name as that permanent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Meticulous Excavation | notice | {2}{W}: Return target permanent you control to its owner's hand. If it has unearth, instead exile it, then return that card to its owner's hand. Activate only d | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mishra's Research Desk | notice | {1}, {T}, Sacrifice this artifact: Exile the top two cards of your library. Choose one of them. Until the end of your next turn, you may play that card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Mishra, Lost to Phyrexia | notice | Whenever Mishra enters or attacks, choose three — • Target opponent discards two cards. • Mishra deals 3 damage to any target. • Destroy target artifact or plan | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Portal to Phyrexia | notice | At the beginning of your upkeep, put target creature card from a graveyard onto the battlefield under your control. It's a Phyrexian in addition to its other ty | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Recommission | notice | Return target artifact or creature card with mana value 3 or less from your graveyard to the battlefield. If a creature enters this way, it enters with an addit | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Urza's Command | notice | Choose two — • Creatures you don't control get -2/-0 until end of turn. • Create a tapped Powerstone token. • Create a tapped 0/0 colorless Construct artifact c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Woodcaller Automaton | notice | When this creature enters, if you cast it, untap target land you control. It becomes a Treefolk creature with haste and base power and toughness equal to this c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Aeronaut's Wings | handled | Equipped creature gets +1/+0 and has flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Air Marshal | handled | {3}: Target Soldier gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -128,7 +125,6 @@
 | Goring Warplow | handled | Prototype | machines/casting.py | Y/Y/- | not_tested |
 | Great Desert Prospector | handled | When this creature enters, create a tapped Powerstone token for each other creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gruesome Realization | handled | Choose one — • You draw two cards and you lose 2 life. • Creatures your opponents control get -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Gurgling Anointer | handled | Whenever you draw your second card each turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gwenna, Eyes of Gaea | handled | Whenever you cast a creature spell with power 5 or greater, put a +1/+1 counter on Gwenna and untap it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hajar, Loyal Bodyguard | handled | Sacrifice Hajar: Legendary creatures you control get +1/+0 and gain indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hall of Tagsin | handled | {4}, {T}: Create a tapped Powerstone token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -142,7 +138,6 @@
 | Kill-Zone Acrobat | handled | Whenever this creature attacks, you may sacrifice another creature or artifact. If you do, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Koilos Roc | handled | When this creature enters, create a tapped Powerstone token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lat-Nam Adept | handled | Whenever you draw your second card each turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Lay Down Arms | handled | Exile target creature with mana value less than or equal to the number of Plains you control. Its controller gains 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Levitating Statue | handled | Whenever you cast a noncreature spell, put a +1/+1 counter on this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Loran of the Third Path | handled | When Loran enters, destroy up to one target artifact or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Loran's Escape | handled | Target artifact or creature gains hexproof and indestructible until end of turn. Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -156,6 +151,7 @@
 | Mishra's Foundry | handled | {2}: This land becomes a 2/2 Assembly-Worker artifact creature until end of turn. It's still a land. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mishra's Juggernaut | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mishra's Onslaught | handled | Choose one — • Create two 1/1 colorless Soldier artifact creature tokens. • Creatures you control get +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mishra, Lost to Phyrexia | handled | Whenever Mishra enters or attacks, choose three — • Target opponent discards two cards. • Mishra deals 3 damage to any target. • Destroy target artifact or plan | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Moment of Defiance | handled | Target creature gets +2/+1 and gains lifelink until end of turn. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | No One Left Behind | handled | This spell costs {3} less to cast if it targets a creature card with mana value 3 or less. Return target creature card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Obliterating Bolt | handled | Obliterating Bolt deals 4 damage to target creature or planeswalker. If that creature or planeswalker would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -203,7 +199,6 @@
 | Third Path Savant | handled | {7}: Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thopter Architect | handled | Whenever an artifact you control enters, target creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thopter Mechanic | handled | Whenever you draw your second card each turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Thran Power Suit | handled | Equipped creature gets +1/+1 for each Aura and Equipment attached to it and has ward {2}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thraxodemon | handled | {3}, {T}, Sacrifice another creature or artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Titania's Command | handled | Choose two — • Exile target player's graveyard. You gain 1 life for each card exiled this way. • Search your library for up to two land cards, put them onto the | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tocasia's Dig Site | handled | {3}, {T}: Surveil 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -216,6 +211,7 @@
 | Tyrant of Kher Ridges | handled | When this creature enters, it deals 4 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Union of the Third Path | handled | Draw a card, then you gain life equal to the number of cards in your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unleash Shell | handled | Unleash Shell deals 5 damage to target creature or planeswalker and 2 damage to that permanent's controller. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Urza's Command | handled | Choose two — • Creatures you don't control get -2/-0 until end of turn. • Create a tapped Powerstone token. • Create a tapped 0/0 colorless Construct artifact c | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Urza's Rebuff | handled | Choose one — • Counter target spell. • Tap up to two target creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Urza, Lord Protector | handled | Artifact, instant, and sorcery spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Urza, Prince of Kroog | handled | Artifact creatures you control get +2/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -232,10 +228,11 @@
 ## Fully supported
 
 <details>
-<summary>54 cards</summary>
+<summary>58 cards</summary>
 
 - Aeronaut Cavalry
 - Alloy Animist
+- Arcane Proxy
 - Argoth, Sanctum of Nature
 - Awaken the Woods
 - Battlefield Butcher
@@ -254,9 +251,11 @@
 - Fortified Beachhead
 - Gix, Yawgmoth Praetor
 - Goblin Blast-Runner
+- Gurgling Anointer
 - Haywire Mite
 - Hurkyl, Master Wizard
 - In the Trenches
+- Lay Down Arms
 - Liberator, Urza's Battlethopter
 - Mechanized Warfare
 - Mine Worker
@@ -281,6 +280,7 @@
 - Terisian Mindbreaker
 - The Stone Brain
 - The Temporal Anchor
+- Thran Power Suit
 - Titania, Gaea Incarnate
 - Tocasia, Dig Site Mentor
 - Tower Worker
@@ -295,7 +295,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Choose two | 3 | Gix's Command, Kayla's Command, Urza's Command | bro |
+| Choose two | 2 | Gix's Command, Kayla's Command | bro |
 | +N: scry N. you may tap an untapped artifact you control. if you do, draw a card. | 1 | Saheeli, Filigree Master | bro |
 | as long as you control enchanted creature, it gets +N/+N. otherwise, it can't block. | 1 | Mishra's Domination | bro |
 | as long as you've drawn two or more cards ~, ~ gets +N/+N and has menace. | 1 | Evangel of Synthesis | bro |
@@ -317,13 +317,11 @@
 | return target artifact or creature card with mana value N or less from your graveyard to the battlefield. if a creature enters ~, it enters with an additional + | 1 | Recommission | bro |
 | target opponent reveals their hand. you choose an artifact or creature card from it, then choose an artifact or creature card from their graveyard. exile the ch | 1 | Dreams of Steel and Oil | bro |
 | when ~ dies, add eight {M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Su-Chi Cave Guard | bro |
-| when ~ enters, if you cast it, exile target instant or sorcery card with mana value less than or equal to ~ power from your graveyard. copy that card. you may c | 1 | Arcane Proxy | bro |
 | when ~ enters, if you cast it, untap target land you control. it becomes a treefolk creature with haste and base power and toughness equal to ~ power and toughn | 1 | Woodcaller Automaton | bro |
 | when ~ enters, mill three cards. you may put a plains card or a creature card with mana value N or less from among the cards milled ~ into your hand. if you don | 1 | Airlift Chaplain | bro |
 | when ~ enters, you and target opponent each create a tapped powerstone token. | 1 | Thran Spider | bro |
 | whenever an artifact you control enters, look at the top card of your library. if it"..."t put the card into your hand, you may put it into your graveyard. | 1 | Sarinth Steelseeker | bro |
 | whenever feldon is dealt damage, exile that many cards from the top of your library. choose one of them. until the end of your next turn, you may play that card | 1 | Feldon, Ronom Excavator | bro |
-| whenever mishra enters or attacks, choose three — • target opponent discards two cards. • mishra deals N damage to any target. • destroy target artifact or plan | 1 | Mishra, Lost to Phyrexia | bro |
 | whenever one or more artifact and/or creature cards leave your graveyard during your turn, put a +N/+N counter on target creature you control. | 1 | Thran Vigil | bro |
 | whenever you attack, each opponent loses N life and you gain N life, where N is the number of attacking creatures. if ~ and a creature named phyrexian dragon en | 1 | Mishra, Claimed by Gix | bro |
 | whenever you cast a beast or bird creature spell, you may copy it, except the copy is an artifact in addition to its other types. | 1 | Tawnos, the Toymaker | bro |

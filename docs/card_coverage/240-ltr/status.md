@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 73 | 26.0% |
-| Works (untested) | 146 | 52.0% |
+| Tested | 75 | 26.7% |
+| Works (untested) | 147 | 52.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 62 | 22.1% |
+| Not working | 59 | 21.0% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Entish Restoration | silent | Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If you control a creature with power 4 | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fall of Cair Andros | silent | Whenever a creature an opponent controls is dealt excess noncombat damage, amass Orcs X, where X is that excess damage. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Fall of Gil-galad | silent | III — Until end of turn, target creature you control gains "When this creature dies, draw two cards." Then that creature fights up to one other target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Fangorn, Tree Shepherd | silent | Whenever one or more Treefolk you control attack, add twice that much {G}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Faramir, Prince of Ithilien | silent | At the beginning of your end step, choose an opponent. At the beginning of that player's next end step, you draw a card if they didn't attack you that turn. Oth | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fire of Orthanc | silent | Destroy target artifact or land. Creatures without flying can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Foray of Orcs | silent | Amass Orcs 2. When you do, Foray of Orcs deals X damage to target creature an opponent controls, where X is the amassed Army's power. (To amass Orcs 2, put two  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -48,7 +47,6 @@
 | Goldberry, River-Daughter | silent | {T}: Move a counter of each kind not on Goldberry from another target permanent you control onto Goldberry. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gollum, Scheming Guide | silent | Whenever Gollum attacks, look at the top two cards of your library, put them back in any order, then choose land or nonland. An opponent guesses whether the top | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | King of the Oathbreakers | silent | Whenever King of the Oathbreakers or another Spirit you control becomes the target of a spell, it phases out. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Legolas, Counter of Kills | silent | Whenever you scry, if Legolas is tapped, you may untap it. Do this only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lembas | silent | When this artifact is put into a graveyard from the battlefield, its owner shuffles it into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Long List of the Ents | silent | I, II, III, IV, V, VI — Note a creature type that hasn't been noted for this Saga. When you next cast a creature spell of that type this turn, that creature ent | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mount Doom | silent | {5}{B}{R}, {T}, Sacrifice Mount Doom and a legendary artifact: Choose up to two creatures, then destroy the rest. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -82,7 +80,6 @@
 | Glorious Gale | notice | Counter target creature spell. If it was a legendary spell, the Ring tempts you. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gorbag of Minas Morgul | notice | Whenever a Goblin or Orc you control deals combat damage to a player, you may sacrifice it. When you do, choose one — • Draw a card. • Create a Treasure token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Grishnákh, Brash Instigator | notice | When Grishnákh enters, amass Orcs 2. When you do, until end of turn, gain control of target nonlegendary creature an opponent controls with power less than or e | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Isildur's Fateful Strike | notice | (You may cast a legendary instant only if you control a legendary creature or planeswalker.) Destroy target creature. If its controller has more than four cards | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Merry, Esquire of Rohan | notice | Merry has first strike as long as it's equipped. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Nimble Hobbit | notice | Whenever this creature attacks, you may sacrifice a Food or pay {2}{W}. When you do, tap target creature an opponent controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pippin's Bravery | notice | You may sacrifice a Food. If you do, target creature gets +4/+4 until end of turn. Otherwise, that creature gets +2/+2 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -154,6 +151,7 @@
 | Knights of Dol Amroth | handled | Whenever you draw your second card each turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Landroval, Horizon Witness | handled | Whenever two or more creatures you control attack a player, target attacking creature without flying gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lash of the Balrog | handled | As an additional cost to cast this spell, sacrifice a creature or pay {4}. Destroy target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Legolas, Counter of Kills | handled | Whenever you scry, if Legolas is tapped, you may untap it. Do this only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lost Isle Calling | handled | Whenever you scry, put a verse counter on this enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lost to Legend | handled | Put target nonland historic permanent into its owner's library fourth from the top. (Artifacts, legendaries, and Sagas are historic.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lothlórien Lookout | handled | Whenever this creature attacks, scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -238,7 +236,7 @@
 ## Fully supported
 
 <details>
-<summary>73 cards</summary>
+<summary>75 cards</summary>
 
 - Arwen, Mortal Queen
 - Bag End Porter
@@ -256,6 +254,7 @@
 - Elven Chorus
 - Ent's Fury
 - Esquire of the King
+- Fangorn, Tree Shepherd
 - Fear, Fire, Foes!
 - Flame of Anor
 - Fog on the Barrow-Downs
@@ -278,6 +277,7 @@
 - Gollum, Patient Plotter
 - Grond, the Gatebreaker
 - Hew the Entwood
+- Isildur's Fateful Strike
 - Last March of the Ents
 - Legolas, Master Archer
 - Lobelia Sackville-Baggins
@@ -320,7 +320,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| (you may cast a legendary instant only if you control a legendary creature or planeswalker.) destroy target creature. if its controller has more than four cards | 1 | Isildur's Fateful Strike | ltr |
 | amass orcs N, then goblins and orcs you control gain double strike and haste until end of turn. (to amass orcs N, put N +N/+N counters on an army you control. i | 1 | Assault on Osgiliath | ltr |
 | amass orcs N, then target player mills N cards, where N is the amassed army"..."s also an orc. if you don't control an army, create a N/N black orc army creatur | 1 | Surrounded by Orcs | ltr |
 | amass orcs N. when you do, ~ deals N damage to target creature an opponent controls, where N is the amassed army"..."s also an orc. if you don't control an army | 1 | Foray of Orcs | ltr |
@@ -359,7 +358,6 @@
 | whenever equipped creature attacks, create two tapped N/N white spirit creature tokens with flying. if that creature is legendary, instead create two of those t | 1 | Andúril, Flame of the West | ltr |
 | whenever gollum attacks, look at the top two cards of your library, put them back in any order, then choose land or nonland. an opponent guesses whether the top | 1 | Gollum, Scheming Guide | ltr |
 | whenever one or more creatures deal combat damage to you, each opponent sacrifices a creature of their choice that dealt combat damage to you ~. the ring tempts | 1 | Witch-king of Angmar | ltr |
-| whenever one or more treefolk you control attack, add twice that much {M}. | 1 | Fangorn, Tree Shepherd | ltr |
 | whenever sauron attacks, exile target creature card from your graveyard. create a tapped and attacking token that"..."s a N/N black wraith with menace. at the b | 1 | Sauron, the Necromancer | ltr |
 | whenever shadowfax attacks, you may put a creature card with lesser power from your hand onto the battlefield tapped and attacking. | 1 | Shadowfax, Lord of Horses | ltr |
 | whenever the ring tempts you, if you chose a creature other than aragorn as your ring-bearer, put your choice of a counter from among first strike, vigilance, d | 1 | Aragorn, Company Leader | ltr |
@@ -369,7 +367,6 @@
 | whenever you cast your second spell each turn, each opponent mills two cards. when one or more cards are milled ~, exile target enchantment, instant, or sorcery | 1 | Saruman of Many Colors | ltr |
 | whenever you choose a creature as your ring-bearer, you may pay N life. if you do, draw a card. | 1 | Call of the Ring | ltr |
 | whenever you create a token, put a +N/+N counter on target creature you control other than rosie cotton. | 1 | Rosie Cotton of South Lane | ltr |
-| whenever you scry, if legolas is tapped, you may untap it. do ~ once each turn. | 1 | Legolas, Counter of Kills | ltr |
 | whenever you scry, you may reveal the top card of your library. if a land card is revealed ~, put it onto the battlefield tapped. | 1 | Galadriel of Lothlórien | ltr |
 | whenever you scry, ~ gets +N/+N until end of turn and can't be blocked ~. ~ triggers only once each turn. | 1 | Nimrodel Watcher | ltr |
 | whenever ~ attacks, you may sacrifice a food or pay {M}{M}. when you do, tap target creature an opponent controls. | 1 | Nimble Hobbit | ltr |

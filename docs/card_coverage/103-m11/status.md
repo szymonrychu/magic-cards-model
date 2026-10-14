@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 24.8% |
+| Tested | 27 | 25.7% |
 | Works (untested) | 66 | 62.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 13 | 12.4% |
+| Not working | 12 | 11.4% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Autumn's Veil | silent | Spells you control can't be countered by blue or black spells this turn, and creatures you control can't be the targets of blue or black spells this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cyclops Gladiator | silent | Whenever this creature attacks, you may have it deal damage equal to its power to target creature defending player controls. If you do, that creature deals dama | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elixir of Immortality | silent | {2}, {T}: You gain 5 life. Shuffle this artifact and your graveyard into their owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gargoyle Sentinel | silent | {3}: Until end of turn, this creature loses defender and gains flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hunters' Feast | silent | Any number of target players each gain 6 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -109,7 +108,7 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>27 cards</summary>
 
 - Aether Adept
 - Ajani's Mantra
@@ -121,6 +120,7 @@
 - Combust
 - Conundrum Sphinx
 - Cultivate
+- Cyclops Gladiator
 - Fire Servant
 - Frost Titan
 - Gaea's Revenge
@@ -151,7 +151,6 @@
 | target creature becomes red until end of turn and attacks ~ if able. | 1 | Incite | m11 |
 | when enchanted creature dies, its controller chooses target creature one of their opponents controls. return ~ from its owner's graveyard to the battlefield att | 1 | Necrotic Plague | m11 |
 | when ~ enters, you may search your library for up to three cards named ~, reveal them, put them into your hand, then shuffle. | 1 | Squadron Hawk | m11 |
-| whenever ~ attacks, you may have it deal damage equal to its power to target creature defending player controls. if you do, that creature deals damage equal to  | 1 | Cyclops Gladiator | m11 |
 | whenever ~ deals combat damage to a player, that player reveals a card at random from their hand. | 1 | Merfolk Spy | m11 |
 | you may choose new targets for target spell. | 1 | Redirect | m11 |
 | {M}, {M}: you gain N life. shuffle ~ and your graveyard into their owner's library. | 1 | Elixir of Immortality | m11 |

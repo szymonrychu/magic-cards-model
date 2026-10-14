@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 20.3% |
+| Tested | 30 | 21.0% |
 | Works (untested) | 83 | 58.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 31 | 21.7% |
+| Not working | 30 | 21.0% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Grixis Grimblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jund Hackblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Karrthus, Tyrant of Jund | silent | When Karrthus enters, gain control of all Dragons, then untap all Dragons. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Knight of New Alara | silent | Each other multicolored creature you control gets +1/+1 for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Naya Hushblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has shroud. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nulltread Gargantuan | silent | When this creature enters, put a creature you control on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Qasali Pridemage | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -144,7 +143,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>30 cards</summary>
 
 - Anathemancer
 - Architects of Will
@@ -156,6 +155,7 @@
 - Firewild Borderpost
 - Identity Crisis
 - Intimidation Bolt
+- Knight of New Alara
 - Lich Lord of Unx
 - Maelstrom Nexus
 - Maelstrom Pulse
@@ -196,7 +196,6 @@
 | destroy all blocking creatures and all blocked creatures. | 1 | Fight to the Death | arb |
 | discard your hand. draw seven cards, then discard three cards at random. | 1 | Drastic Revelation | arb |
 | during turns other than yours, creatures you control get +N/+N. | 1 | Glory of Warfare | arb |
-| each other multicolored creature you control gets +N/+N for each of its colors. | 1 | Knight of New Alara | arb |
 | gain control of target creature. untap that creature. it gains haste until end of turn. sacrifice it at the beginning of the next end step. | 1 | Slave of Bolas | arb |
 | return all creatures on the battlefield and all creature cards in graveyards to their owners' hands. | 1 | Soulquake | arb |
 | until end of turn, creatures you control get +N/+N and creatures your opponents control get -N/-N. | 1 | Zealous Persecution | arb |

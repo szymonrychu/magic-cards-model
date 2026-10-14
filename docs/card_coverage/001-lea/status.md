@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 43 | 37.1% |
-| Works (untested) | 63 | 54.3% |
+| Tested | 44 | 37.9% |
+| Works (untested) | 62 | 53.4% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 10 | 8.6% |
 
@@ -60,7 +60,6 @@
 | Iron Star | handled | Whenever a player casts a red spell, you may pay {1}. If you do, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ivory Cup | handled | Whenever a player casts a white spell, you may pay {1}. If you do, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jayemdae Tome | handled | {4}, {T}: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Jump | handled | Target creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ley Druid | handled | {T}: Untap target land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mahamoti Djinn | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Manabarbs | handled | Whenever a player taps a land for mana, this enchantment deals 1 damage to that player. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -103,7 +102,7 @@
 ## Fully supported
 
 <details>
-<summary>43 cards</summary>
+<summary>44 cards</summary>
 
 - Birds of Paradise
 - Black Knight
@@ -128,6 +127,7 @@
 - Invisibility
 - Island
 - Juggernaut
+- Jump
 - Karma
 - Lightning Bolt
 - Llanowar Elves

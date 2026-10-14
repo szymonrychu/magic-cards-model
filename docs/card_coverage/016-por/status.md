@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 7 | 17.9% |
+| Tested | 8 | 20.5% |
 | Works (untested) | 25 | 64.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 7 | 17.9% |
+| Not working | 6 | 15.4% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Baleful Stare | silent | Target opponent reveals their hand. You draw a card for each Mountain and red card in it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Blessed Reversal | silent | You gain 3 life for each creature attacking you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Boiling Seas | silent | Destroy all Islands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Exhaustion | silent | Creatures and lands target opponent controls don't untap during their next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Primeval Force | silent | When this creature enters, sacrifice it unless you sacrifice three Forests. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -62,10 +61,11 @@
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>8 cards</summary>
 
 - Angelic Blessing
 - Balance of Power
+- Blessed Reversal
 - Charging Rhino
 - Mind Rot
 - Raging Goblin
@@ -84,7 +84,6 @@
 | target opponent reveals their hand. you draw a card for each mountain and red card in it. | 1 | Baleful Stare | por |
 | when ~ enters, sacrifice it unless you sacrifice three forests. | 1 | Primeval Force | por |
 | when ~ enters, tap all other creatures. | 1 | Thundermare | por |
-| you gain N life for each creature attacking you. | 1 | Blessed Reversal | por |
 
 ## Notes
 

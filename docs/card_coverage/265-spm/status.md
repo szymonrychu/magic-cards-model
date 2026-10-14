@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 49 | 26.2% |
+| Tested | 52 | 27.8% |
 | Works (untested) | 102 | 54.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 36 | 19.3% |
+| Not working | 33 | 17.6% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Black Cat, Cunning Thief | silent | When Black Cat enters, look at the top nine cards of target opponent's library, exile two of them face down, then put the rest on the bottom of their library in | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cosmic Spider-Man | silent | At the beginning of combat on your turn, other Spiders you control gain flying, first strike, trample, lifelink, and haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gwen Stacy // Ghost-Spider | silent | When Gwen Stacy enters, exile the top card of your library. You may play that card for as long as you control this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Gwenom, Remorseless | silent | Whenever Gwenom attacks, until end of turn, you may look at the top card of your library any time and you may play cards from the top of your library. If you ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Iron Spider, Stark Upgrade | silent | {T}: Put a +1/+1 counter on each artifact creature and/or Vehicle you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Jackal, Genius Geneticist | silent | Whenever you cast a creature spell with mana value equal to Jackal's power, copy that spell, except the copy isn't legendary. Then put a +1/+1 counter on Jackal | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lady Octopus, Inspired Inventor | silent | Whenever you draw your first or second card each turn, put an ingenuity counter on Lady Octopus. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
@@ -37,7 +36,6 @@
 | Maximum Carnage | silent | I — Until your next turn, each creature attacks each combat if able and attacks a player other than you if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Miles Morales // Ultimate Spider-Man | silent | Whenever you attack, double the number of each kind of counter on each Spider and legendary creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mysterio, Master of Illusion | silent | When Mysterio enters, create a 3/3 blue Illusion Villain creature token for each nontoken Villain you control. Exile those tokens when Mysterio leaves the battl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Parker Luck | silent | At the beginning of your end step, two target players each reveal the top card of their library. They each lose life equal to the mana value of the card reveale | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rent Is Due | silent | At the beginning of your end step, you may tap two untapped creatures and/or Treasures you control. If you do, draw a card. Otherwise, sacrifice this enchantmen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rhino's Rampage | silent | Target creature you control gets +1/+0 until end of turn. It fights target creature an opponent controls. When excess damage is dealt to the creature an opponen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sandman, Shifting Scoundrel | silent | {3}{G}{G}: Return this card and target land card from your graveyard to the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -55,7 +53,6 @@
 | Urban Retreat | silent | {2}, Return a tapped creature you control to its owner's hand: Put this card from your hand onto the battlefield. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Vulture, Scheming Scavenger | silent | Whenever Vulture attacks, other Villains you control gain flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wall Crawl | silent | Spiders you control get +1/+1 and can't be blocked by creatures with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Eddie Brock // Venom, Lethal Protector | notice | Whenever Venom attacks, you may sacrifice another creature. If you do, draw X cards, then you may put a permanent card with mana value X or less from your hand  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Heroes' Hangout | notice | Choose one — • Date Night — Exile the top two cards of your library. Choose one of them. Until the end of your next turn, you may play that card. • Patrol Night | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Hide on the Ceiling | notice | Exile X target artifacts and/or creatures. Return the exiled cards to the battlefield under their owners' control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kraven's Last Hunt | notice | I — Mill five cards. When you do, this Saga deals damage equal to the greatest power among creature cards in your graveyard to target creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -168,7 +165,7 @@
 ## Fully supported
 
 <details>
-<summary>49 cards</summary>
+<summary>52 cards</summary>
 
 - Alien Symbiosis
 - Anti-Venom, Horrifying Healer
@@ -181,8 +178,10 @@
 - Doc Ock's Tentacles
 - Doc Ock, Sinister Scientist
 - Doctor Octopus, Master Planner
+- Eddie Brock // Venom, Lethal Protector
 - Electro's Bolt
 - Flash Thompson, Spider-Fan
+- Gwenom, Remorseless
 - Hydro-Man, Fluid Felon
 - Impostor Syndrome
 - Interdimensional Web Watch
@@ -194,6 +193,7 @@
 - Morlun, Devourer of Spiders
 - Multiversal Passage
 - Norman Osborn // Green Goblin
+- Parker Luck
 - Peter Parker // Amazing Spider-Man
 - Peter Parker's Camera
 - Prison Break
@@ -231,7 +231,6 @@
 | animal may-ham — other spiders, boars, bats, bears, birds, cats, dogs, frogs, jackals, lizards, mice, otters, rabbits, raccoons, rats, squirrels, turtles, and w | 1 | Spider-Ham, Peter Porker | spm |
 | at the beginning of combat on your turn, other spiders you control gain flying, first strike, trample, lifelink, and haste until end of turn. | 1 | Cosmic Spider-Man | spm |
 | at the beginning of combat on your turn, target non-equipment artifact you control becomes an artifact creature with base power and toughness N/N until end of t | 1 | Living Brain, Mechanical Marvel | spm |
-| at the beginning of your end step, two target players each reveal the top card of their library. they each lose life equal to the mana value of the card reveale | 1 | Parker Luck | spm |
 | at the beginning of your end step, you may tap two untapped creatures and/or treasures you control. if you do, draw a card. otherwise, sacrifice ~. | 1 | Rent Is Due | spm |
 | each player may discard a card. each player who doesn't loses N life. | 1 | The Death of Gwen Stacy | spm |
 | exile N target artifacts and/or creatures. return the exiled cards to the battlefield under their owners' control at the beginning of the next end step. | 1 | Hide on the Ceiling | spm |
@@ -249,8 +248,6 @@
 | when you next cast a creature spell ~, copy it, except the copy isn't legendary. | 1 | The Clone Saga | spm |
 | when ~ enters, exile the top card of your library. you may play that card for as long as you control ~. | 1 | Gwen Stacy // Ghost-Spider | spm |
 | when ~ leaves the battlefield, put its +N/+N counters on target creature you control. | 1 | Selfless Police Captain | spm |
-| whenever gwenom attacks, until end of turn, you may look at the top card of your library any time and you may play cards from the top of your library. if you ca | 1 | Gwenom, Remorseless | spm |
-| whenever venom attacks, you may sacrifice another creature. if you do, draw N cards, then you may put a permanent card with mana value N or less from your hand  | 1 | Eddie Brock // Venom, Lethal Protector | spm |
 | whenever vulture attacks, other villains you control gain flying until end of turn. | 1 | Vulture, Scheming Scavenger | spm |
 | whenever you attack, double the number of each kind of counter on each spider and legendary creature you control. | 1 | Miles Morales // Ultimate Spider-Man | spm |
 | whenever you cast a creature spell with mana value equal to jackal"..."t legendary. then put a +N/+N counter on jackal. | 1 | Jackal, Genius Geneticist | spm |

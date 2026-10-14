@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 8 | 10.1% |
-| Works (untested) | 59 | 74.7% |
+| Works (untested) | 60 | 75.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 12 | 15.2% |
+| Not working | 11 | 13.9% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Bramble Elemental | silent | Whenever an Aura becomes attached to this creature, create two 1/1 green Saproling creature tokens. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Burning-Tree Bloodscale | silent | {2}{R}: Target creature can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Clutch of the Undercity | silent | Return target permanent to its owner's hand. Its controller loses 3 life. Transmute {1}{U}{B} ({1}{U}{B}, Discard this card: Search your library for a card with | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Fertile Imagination | silent | Choose a card type. Target opponent reveals their hand. Create two 1/1 green Saproling creature tokens for each card of the chosen type revealed this way. (Arti | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Infiltrator's Magemark | silent | Creatures you control that are enchanted get +1/+1 and can't be blocked except by creatures with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lovisa Coldeyes | silent | Each creature that's a Barbarian, a Warrior, or a Berserker gets +2/+2 and has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sanguine Praetor | silent | {B}, Sacrifice a creature: Destroy each creature with the same mana value as the sacrificed creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -42,6 +41,7 @@
 | Carrion Howler | handled | Pay 1 life: This creature gets +2/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dimir Guildmage | handled | {3}{U}: Target player draws a card. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dimir Infiltrator | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Fertile Imagination | handled | Choose a card type. Target opponent reveals their hand. Create two 1/1 green Saproling creature tokens for each card of the chosen type revealed this way. (Arti | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flight of Fancy | handled | When this Aura enters, draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Freewind Equenaut | handled | As long as this creature is enchanted, it has "{T}: This creature deals 2 damage to target attacking or blocking creature." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghor-Clan Savage | handled | Bloodthirst | machines/keywords.py | Y/-/- | not_tested |
@@ -119,7 +119,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Radiance | 1 | Wojek Apothecary | psal |
-| choose a card type. target opponent reveals their hand. create two N/N green saproling creature tokens for each card of the chosen type revealed ~. (artifact, b | 1 | Fertile Imagination | psal |
 | creatures you control that are enchanted get +N/+N and can't be blocked except by creatures with defender. | 1 | Infiltrator's Magemark | psal |
 | each creature that's a barbarian, a warrior, or a berserker gets +N/+N and has haste. | 1 | Lovisa Coldeyes | psal |
 | return target permanent to its owner's hand. its controller loses N life. transmute {M}{M}{M} ({M}{M}{M}, discard ~: search your library for a card with the sam | 1 | Clutch of the Undercity | psal |

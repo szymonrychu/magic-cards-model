@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 59 | 33.1% |
+| Tested | 60 | 33.7% |
 | Works (untested) | 82 | 46.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 37 | 20.8% |
+| Not working | 36 | 20.2% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Jhoira of the Ghitu | silent | {2}, Exile a nonland card from your hand: Put four time counters on the exiled card. If it doesn't have suspend, it gains suspend. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Linessa, Zephyr Mage | silent | Grandeur — Discard another card named Linessa, Zephyr Mage: Target player returns a creature they control to its owner's hand, then repeats this process for an  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Llanowar Mentor | silent | {G}, {T}, Discard a card: Create a 1/1 green Elf Druid creature token named Llanowar Elves. It has "{T}: Add {G}." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lost Hours | silent | Target player reveals their hand. You choose a nonland card from it. That player puts that card into their library third from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Maelstrom Djinn | silent | When this creature is turned face up, put two time counters on it and it gains vanishing. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Muraganda Petroglyphs | silent | Creatures with no abilities get +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mystic Speculation | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -54,13 +53,13 @@
 | Shapeshifter's Marrow | silent | At the beginning of each opponent's upkeep, that player reveals the top card of their library. If it's a creature card, the player puts the card into their grav | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shimian Specter | silent | Whenever this creature deals combat damage to a player, that player reveals their hand. You choose a nonland card from it. Search that player's graveyard, hand, | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skirk Ridge Exhumer | silent | {B}, {T}, Discard a card: Create a 1/1 black Zombie Goblin creature token named Festering Goblin. It has "When this token dies, target creature gets -1/-1 until | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sliver Legion | silent | All Sliver creatures get +1/+1 for each other Sliver on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sparkspitter | silent | {R}, {T}, Discard a card: Create a 3/1 red Elemental creature token named Spark Elemental. It has trample, haste, and "At the beginning of the end step, sacrifi | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spellweaver Volute | silent | Whenever you cast a sorcery spell, copy the enchanted instant card. You may cast the copy without paying its mana cost. If you do, exile the enchanted card and  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sprout Swarm | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Thunderblade Charge | silent | Thunderblade Charge deals 3 damage to any target. Whenever one or more creatures you control deal combat damage to a player, if this card is in your graveyard,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Veilstone Amulet | silent | Whenever you cast a spell, creatures you control can't be the targets of spells or abilities your opponents control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dust of Moments | notice | Choose one — • Remove two time counters from each permanent and each suspended card. • Put two time counters on each permanent with a time counter on it and eac | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Lost Hours | notice | Target player reveals their hand. You choose a nonland card from it. That player puts that card into their library third from the top. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Saltskitter | notice | Whenever another creature enters, exile this creature. Return this creature to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sword of the Meek | notice | Whenever a 1/1 creature you control enters, you may return this card from your graveyard to the battlefield, then attach it to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Augur il-Vec | handled | Sacrifice this creature: You gain 4 life. Activate only during your upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -149,7 +148,7 @@
 ## Fully supported
 
 <details>
-<summary>59 cards</summary>
+<summary>60 cards</summary>
 
 - Akroma's Memorial
 - Angel of Salvation
@@ -197,6 +196,7 @@
 - Riddle of Lightning
 - Rites of Flourishing
 - Scourge of Kher Ridges
+- Sliver Legion
 - Snake Cult Initiation
 - Spellwild Ouphe
 - Spin into Myth
@@ -220,7 +220,6 @@
 | buyback | 3 | Haze of Rage, Mystic Speculation, Sprout Swarm | fut |
 | Grandeur | 2 | Linessa, Zephyr Mage, Oriss, Samite Guardian | fut |
 | Choose one | 1 | Dust of Moments | fut |
-| all sliver creatures get +N/+N for each other sliver on the battlefield. | 1 | Sliver Legion | fut |
 | at the beginning of each opponent"..."s a creature card, the player puts the card into their graveyard and ~ becomes a copy of that card. | 1 | Shapeshifter's Marrow | fut |
 | aura swap | 1 | Arcanum Wings | fut |
 | counter target spell if no mana was spent to cast it. | 1 | Nix | fut |

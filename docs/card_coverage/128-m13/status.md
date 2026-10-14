@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 15.9% |
-| Works (untested) | 69 | 64.5% |
+| Tested | 18 | 16.8% |
+| Works (untested) | 68 | 63.6% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 21 | 19.6% |
 
@@ -48,7 +48,6 @@
 | Void Stalker | silent | {2}{U}, {T}: Put this creature and target creature on top of their owners' libraries, then those players shuffle their libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Xathrid Gorgon | notice | {2}{B}, {T}: Put a petrification counter on target creature. It gains defender and becomes a colorless artifact in addition to its other types. Its activated ab | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ajani's Sunstriker | handled | Lifelink | machines/combat.py | Y/-/- | not_tested |
-| Ajani, Caller of the Pride | handled | +1: Put a +1/+1 counter on up to one target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Archaeomancer | handled | When this creature enters, return target instant or sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arctic Aven | handled | This creature gets +1/+1 as long as you control a Plains. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Attended Knight | handled | When this creature enters, create a 1/1 white Soldier creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -120,8 +119,9 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>18 cards</summary>
 
+- Ajani, Caller of the Pride
 - Augur of Bolas
 - Blood Reckoning
 - Chandra's Fury

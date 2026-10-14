@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 54 | 22.6% |
-| Works (untested) | 155 | 64.9% |
+| Tested | 57 | 23.8% |
+| Works (untested) | 154 | 64.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 30 | 12.6% |
+| Not working | 28 | 11.7% |
 
 ## Cards needing work
 
@@ -41,7 +41,6 @@
 | Full Moon's Rise | silent | Sacrifice this enchantment: Regenerate all Werewolf creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grimoire of the Dead | silent | {T}, Remove three study counters from Grimoire of the Dead and sacrifice it: Put all creature cards from all graveyards onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hamlet Captain | silent | Whenever this creature attacks or blocks, other Humans you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Heretic's Punishment | silent | {3}{R}: Choose any target, then mill three cards. This enchantment deals damage to that permanent or player equal to the greatest mana value among the milled ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Instigator Gang // Wildblood Pack | silent | Attacking creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Make a Wish | silent | Return two cards at random from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Manor Gargoyle | silent | {1}: Until end of turn, this creature loses defender and gains flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -50,7 +49,6 @@
 | Nightbird's Clutches | silent | Up to two target creatures can't block this turn. Flashback {3}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Runechanter's Pike | silent | Equipped creature has first strike and gets +X/+0, where X is the number of instant and sorcery cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Runic Repetition | silent | Return target exiled card with flashback you own to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Tree of Redemption | silent | {T}: Exchange your life total with this creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Victim of Night | silent | Destroy target non-Vampire, non-Werewolf, non-Zombie creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Witchbane Orb | silent | When this artifact enters, destroy all Curses attached to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wooden Stake | silent | Whenever equipped creature blocks or becomes blocked by a Vampire, destroy that creature. It can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -82,7 +80,6 @@
 | Crossway Vampire | handled | When this creature enters, target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Curse of Death's Hold | handled | Creatures enchanted player controls get -1/-1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Curse of Stalked Prey | handled | Whenever a creature deals combat damage to enchanted player, put a +1/+1 counter on that creature. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Curse of the Bloody Tome | handled | At the beginning of enchanted player's upkeep, that player mills two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Darkthicket Wolf | handled | {2}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Daybreak Ranger // Nightfall Predator | handled | {T}: This creature deals 2 damage to target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dead Weight | handled | Enchanted creature gets -2/-2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -215,7 +212,7 @@
 ## Fully supported
 
 <details>
-<summary>54 cards</summary>
+<summary>57 cards</summary>
 
 - Ambush Viper
 - Army of the Damned
@@ -229,6 +226,7 @@
 - Cloistered Youth // Unholy Fiend
 - Corpse Lunge
 - Curse of Oblivion
+- Curse of the Bloody Tome
 - Curse of the Nightly Hunt
 - Dearly Departed
 - Delver of Secrets // Insectile Aberration
@@ -241,6 +239,7 @@
 - Ghostly Possession
 - Grave Bramble
 - Grimgrin, Corpse-Born
+- Heretic's Punishment
 - Inquisitor's Flail
 - Intangible Virtue
 - Kessig Cagebreakers
@@ -262,6 +261,7 @@
 - Slayer of the Wicked
 - Snapcaster Mage
 - Stony Silence
+- Tree of Redemption
 - Trepanation Blade
 - Tribute to Hunger
 - Typhoid Rats
@@ -304,9 +304,7 @@
 | whenever ~ deals combat damage to a creature, flip a coin. if you win the flip, destroy that creature. | 1 | Creepy Doll | isd |
 | {M}, remove three study counters from ~ and sacrifice it: put all creature cards from all graveyards onto the battlefield under your control. they're black zomb | 1 | Grimoire of the Dead | isd |
 | {M}, {M}: target player puts the bottom card of their library into their graveyard. if it's a creature card, you create a N/N black zombie creature token. | 1 | Cellar Door | isd |
-| {M}: exchange your life total with ~ toughness. | 1 | Tree of Redemption | isd |
 | {M}: until end of turn, ~ loses defender and gains flying. | 1 | Manor Gargoyle | isd |
-| {M}{M}: choose any target, then mill three cards. ~ deals damage to that permanent or player equal to the greatest mana value among the milled cards. | 1 | Heretic's Punishment | isd |
 | {M}{M}: ~ owner shuffles it into their library. if that player does, they reveal cards from the top of that library until a card named ~ is revealed. the player | 1 | Mirror-Mad Phantasm | isd |
 
 ## Notes

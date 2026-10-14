@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 18 | 36.7% |
-| Works (untested) | 13 | 26.5% |
+| Works (untested) | 14 | 28.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 18 | 36.7% |
+| Not working | 17 | 34.7% |
 
 ## Cards needing work
 
@@ -40,7 +40,6 @@
 | Tazri, Stalwart Survivor | silent | {W}{U}{B}{R}{G}, {T}: Mill five cards. Put all creature cards with activated abilities that aren't mana abilities from among the milled cards into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tolarian Contempt | silent | At the beginning of your end step, for each opponent, choose up to one target creature they control with a rejection counter on it. That creature's owner puts i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tranquil Frillback | silent | When this creature enters, you may pay {G} up to three times. When you pay this cost one or more times, choose up to that many — • Destroy target artifact or en | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tyvar the Bellicose | silent | Whenever one or more Elves you control attack, they gain deathtouch until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vesuvan Drifter | silent | At the beginning of each combat, you may reveal the top card of your library. If you reveal a creature card this way, this creature becomes a copy of that card  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nahiri, Forged in Fury | notice | Whenever an equipped creature you control attacks, exile the top card of your library. You may play that card this turn. You may cast Equipment spells this way  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Urborg Scavengers | notice | This creature has flying as long as a card exiled with it has flying. The same is true for first strike, double strike, deathtouch, haste, hexproof, indestructi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -57,6 +56,7 @@
 | Nissa, Resurgent Animist | handled | Landfall — Whenever a land you control enters, add one mana of any color. Then if this is the second time this ability has resolved this turn, reveal cards from | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Open the Way | handled | X can't be greater than the number of players in the game. Reveal cards from the top of your library until you reveal X land cards. Put those land cards onto th | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pia Nalaar, Consul of Revival | handled | Thopters you control have haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Tyvar the Bellicose | handled | Whenever one or more Elves you control attack, they gain deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
 
@@ -101,7 +101,6 @@
 | whenever a dragon you control enters, you may have sarkhan become a copy of it until end of turn, except its name is ~ and it's legendary in addition to its oth | 1 | Sarkhan, Soul Aflame | mat |
 | whenever an equipped creature you control attacks, exile the top card of your library. you may play that card ~. you may cast equipment spells ~ without paying  | 1 | Nahiri, Forged in Fury | mat |
 | whenever calix or an enchanted creature you control deals combat damage to a player, you may create a token that's a copy of a nonlegendary enchantment you cont | 1 | Calix, Guided by Fate | mat |
-| whenever one or more elves you control attack, they gain deathtouch until end of turn. | 1 | Tyvar the Bellicose | mat |
 | whenever one or more opponents each lose exactly N life, put a +N/+N counter on ob nixilis. exile the top card of your library. until your next end step, you ma | 1 | Ob Nixilis, Captive Kingpin | mat |
 | whenever ~ is dealt damage, you gain that much life. | 1 | Metropolis Reformer | mat |
 | {M}{M}{M}{M}{M}, {M}: mill five cards. put all creature cards with activated abilities that aren't mana abilities from among the milled cards into your hand. | 1 | Tazri, Stalwart Survivor | mat |

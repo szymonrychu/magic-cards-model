@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 47 | 25.4% |
-| Works (untested) | 114 | 61.6% |
+| Works (untested) | 115 | 62.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 24 | 13.0% |
+| Not working | 23 | 12.4% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Gremlin Infestation | silent | At the beginning of your end step, this Aura deals 2 damage to enchanted artifact's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lightning Runner | silent | Whenever this creature attacks, you get {E}{E} , then you may pay eight {E}. If you pay, untap all creatures you control, and after this phase, there is an addi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mechanized Production | silent | At the beginning of your upkeep, create a token that's a copy of enchanted artifact. Then if you control eight or more artifacts with the same name as one anoth | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Natural Obsolescence | silent | Put target artifact on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Peacewalker Colossus | silent | {1}{W}: Another target Vehicle you control becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Restoration Specialist | silent | {W}, Sacrifice this creature: Return up to one target artifact card and up to one target enchantment card from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scrap Trawler | silent | Whenever this creature dies or another artifact you control is put into a graveyard from the battlefield, return to your hand target artifact card in your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -116,6 +115,7 @@
 | Midnight Entourage | handled | Other Aetherborn you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mobile Garrison | handled | Whenever this Vehicle attacks, untap another target artifact or creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Narnam Renegade | handled | Revolt — This creature enters with a +1/+1 counter on it if a permanent left the battlefield under your control this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Natural Obsolescence | handled | Put target artifact on the bottom of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Night Market Aeronaut | handled | Revolt — This creature enters with a +1/+1 counter on it if a permanent left the battlefield under your control this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oath of Ajani | handled | When Oath of Ajani enters, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Outland Boar | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -233,7 +233,6 @@
 | exile target nonland card from your graveyard. search your library for any number of cards with the same name as that card, reveal them, put them into your hand | 1 | Secret Salvage | aer |
 | pay {M}: ~ gains lifelink until end of turn. | 1 | Aethersphere Harvester | aer |
 | put N +N/+N counters on target artifact you control. if it isn't a creature or vehicle, it becomes a N/N construct artifact creature. | 1 | Lifecraft Awakening | aer |
-| put target artifact on the bottom of its owner's library. | 1 | Natural Obsolescence | aer |
 | when enchanted artifact is put into a graveyard, return that card to its owner's hand. | 1 | Tezzeret's Touch | aer |
 | when ~ dies, reveal cards from the top of your library until you reveal a nonland card with mana value N or less. you may cast that card without paying its mana | 1 | Treasure Keeper | aer |
 | when ~ enters, pay {M}{M} . if you can"..."s hand and you get {M}. | 1 | Greenbelt Rampager | aer |

@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 38 | 23.5% |
+| Tested | 41 | 25.3% |
 | Works (untested) | 88 | 54.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 36 | 22.2% |
+| Not working | 33 | 20.4% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Braids, Conjurer Adept | silent | At the beginning of each player's upkeep, that player may put an artifact, creature, or land card from their hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dichotomancy | silent | For each tapped nonland permanent target opponent controls, search that player's library for a card with the same name as that permanent. Put those cards onto t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dismal Failure | silent | Counter target spell. Its controller discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Extirpate | silent | Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) Choose target card in a gravey | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fa'adiyah Seer | silent | {T}: Draw a card and reveal it. If it isn't a land card, discard it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -55,13 +54,11 @@
 | Timbermare | silent | When this creature enters, tap all other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vampiric Link | silent | Whenever enchanted creature deals damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Veiling Oddity | silent | When the last time counter is removed from this card while it's exiled, creatures can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Venarian Glimmer | silent | Target player reveals their hand. You choose a nonland card with mana value X or less from it. That player discards that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Wild Pair | silent | Whenever a creature enters, if you cast it from your hand, you may search your library for a creature card with the same total power and toughness, put it onto  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magus of the Arena | notice | {3}, {T}: Tap target creature you control and target creature of an opponent's choice they control. Those creatures fight each other. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Molten Firebird | notice | When this creature dies, return it to the battlefield under its owner's control at the beginning of the next end step and you skip your next draw step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Pongify | notice | Destroy target creature. It can't be regenerated. Its controller creates a 3/3 green Ape creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Timecrafting | notice | Choose one — • Remove X time counters from target permanent or suspended card. • Put X time counters on target permanent with a time counter on it or suspended  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Treacherous Urge | notice | Target opponent reveals their hand. You may put a creature card from it onto the battlefield under your control. That creature gains haste. Sacrifice it at the  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Venarian Glimmer | notice | Target player reveals their hand. You choose a nonland card with mana value X or less from it. That player discards that card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Akroma, Angel of Fury | handled | This spell can't be countered. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Auramancer's Guise | handled | Enchanted creature gets +2/+2 for each Aura attached to it and has vigilance. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Battering Sliver | handled | All Sliver creatures have trample. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -154,7 +151,7 @@
 ## Fully supported
 
 <details>
-<summary>38 cards</summary>
+<summary>41 cards</summary>
 
 - Aeon Chronicler
 - Aether Membrane
@@ -169,6 +166,7 @@
 - Dash Hopes
 - Deadly Grub
 - Detritivore
+- Dichotomancy
 - Dunerider Outlaw
 - Enslave
 - Erratic Mutation
@@ -182,6 +180,7 @@
 - Magus of the Tabernacle
 - Mana Tithe
 - Phantasmagorian
+- Pongify
 - Pouncing Wurm
 - Primal Plasma
 - Pyrohemia
@@ -194,6 +193,7 @@
 - Urborg, Tomb of Yawgmoth
 - Voidstone Gargoyle
 - Volcano Hellion
+- Wild Pair
 
 </details>
 
@@ -209,9 +209,7 @@
 | counter target instant or sorcery spell. its controller reveals cards from the top of their library until they reveal an instant or sorcery card. that player ma | 1 | Spellshift | plc |
 | counter target spell that targets a permanent you control. | 1 | Rebuff the Wicked | plc |
 | counter target spell. its controller discards a card. | 1 | Dismal Failure | plc |
-| destroy target creature. it can't be regenerated. its controller creates a N/N green ape creature token. | 1 | Pongify | plc |
 | enchanted creature gets +N/+N as long as it's white. otherwise, it gets -N/-N. | 1 | Serra's Boon | plc |
-| for each tapped nonland permanent target opponent controls, search that player's library for a card with the same name as that permanent. put those cards onto t | 1 | Dichotomancy | plc |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) search your library for up to two forest cards, put them onto the battlefield tapped, then shuff | 1 | Hunting Wilds | plc |
 | return each aura card from your graveyard to the battlefield. only creatures can be enchanted ~. (aura cards that can't enchant a creature on the battlefield re | 1 | Retether | plc |
 | sacrifice a saproling: each creature you control that's a fungus or a saproling gets +N/+N until end of turn. | 1 | Pallid Mycoderm | plc |
@@ -227,7 +225,6 @@
 | when ~ enters, tap all other creatures. | 1 | Timbermare | plc |
 | when ~ is turned face up, target creature gets +N/-N or -N/+N until end of turn. | 1 | Shaper Parasite | plc |
 | when ~ leaves the battlefield, enchanted permanent's controller sacrifices it. | 1 | Reality Acid | plc |
-| whenever a creature enters, if you cast it from your hand, you may search your library for a creature card with the same total power and toughness, put it onto  | 1 | Wild Pair | plc |
 | whenever enchanted creature deals damage, you gain that much life. | 1 | Vampiric Link | plc |
 | whenever intet deals combat damage to a player, you may pay {M}{M}. if you do, exile the top card of your library face down. you may look at that card for as lo | 1 | Intet, the Dreamer | plc |
 | whenever you play a card, draw a card. | 1 | Null Profusion | plc |

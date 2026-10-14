@@ -17,17 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 46 | 17.1% |
-| Works (untested) | 169 | 62.8% |
+| Tested | 52 | 19.3% |
+| Works (untested) | 168 | 62.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 54 | 20.1% |
+| Not working | 49 | 18.2% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Banshee's Blade | silent | Equipped creature gets +1/+1 for each charge counter on this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Blinkmoth Urn | silent | At the beginning of each player's first main phase, if this artifact is untapped, that player adds {C} for each artifact they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chimney Imp | silent | When this creature dies, target opponent puts a card from their hand on top of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chrome Mox | silent | {T}: Add one mana of any of the exiled card's colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Confusion in the Ranks | silent | Whenever an artifact, creature, or enchantment enters, its controller chooses target permanent another player controls that shares a card type with it. Exchange | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -40,12 +38,10 @@
 | Fiery Gambit | silent | Flip a coin until you lose a flip or choose to stop flipping. If you lose a flip, Fiery Gambit has no effect. If you win one or more flips, Fiery Gambit deals 3 | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fractured Loyalty | silent | Whenever enchanted creature becomes the target of a spell or ability, that spell or ability's controller gains control of that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gate to the Aether | silent | At the beginning of each player's upkeep, that player reveals the top card of their library. If it's an artifact, creature, enchantment, or land card, the playe | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Glissa Sunseeker | silent | {T}: Destroy target artifact if its mana value is equal to the amount of unspent mana you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grim Reminder | silent | Search your library for a nonland card and reveal it. Each opponent who cast a spell this turn with the same name as that card loses 6 life. Then shuffle. {B}{B | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jinxed Choker | silent | At the beginning of your end step, target opponent gains control of this artifact and puts a charge counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Liar's Pendulum | silent | {2}, {T}: Choose a card name. Target opponent guesses whether a card with that name is in your hand. You may reveal your hand. If you do and your opponent guess | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lumengrid Augur | silent | {1}, {T}: Target player draws a card, then discards a card. If that player discards an artifact card this way, untap this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| March of the Machines | silent | Each noncreature artifact is an artifact creature with power and toughness each equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mourner's Shield | silent | {2}, {T}: Prevent all damage that would be dealt this turn by a source of your choice that shares a color with the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Myr Incubator | silent | {6}, {T}, Sacrifice this artifact: Search your library for any number of artifact cards, exile them, then create that many 1/1 colorless Myr artifact creature t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Override | silent | Counter target spell unless its controller pays {1} for each artifact you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -62,7 +58,6 @@
 | Synod Sanctum | silent | {2}, Sacrifice this artifact: Return all cards exiled with this artifact to the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Taj-Nar Swordsmith | silent | When this creature enters, you may pay {X}. If you do, search your library for an Equipment card with mana value X or less, put that card onto the battlefield,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tel-Jilad Stylus | silent | {T}: Put target permanent you own on the bottom of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Thought Prison | silent | Imprint — When this artifact enters, you may have target player reveal their hand. If you do, choose a nonland card from it and exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Timesifter | silent | At the beginning of each upkeep, each player exiles the top card of their library. The player who exiled the card with the greatest mana value takes an extra tu | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vulshok Battlemaster | silent | When this creature enters, attach all Equipment on the battlefield to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wanderguard Sentry | silent | When this creature enters, look at target opponent's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -73,13 +68,13 @@
 | Clockwork Condor | notice | Whenever this creature attacks or blocks, remove a +1/+1 counter from it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Clockwork Dragon | notice | Whenever this creature attacks or blocks, remove a +1/+1 counter from it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Clockwork Vorrac | notice | Whenever this creature attacks or blocks, remove a +1/+1 counter from it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Copperhoof Vorrac | notice | This creature gets +1/+1 for each untapped permanent your opponents control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Hum of the Radix | notice | Each artifact spell costs {1} more to cast for each artifact its controller controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Incite War | notice | Choose one — • Creatures target player controls attack this turn if able. • Creatures you control gain first strike until end of turn. Entwine {2} (Choose both  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Journey of Discovery | notice | Choose one — • Search your library for up to two basic land cards, reveal them, put them into your hand, then shuffle. • You may play up to two additional lands | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Molten Rain | notice | Destroy target land. If that land was nonbasic, Molten Rain deals 2 damage to the land's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Razor Barrier | notice | Target permanent you control gains protection from artifacts or from the color of your choice until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Soul Nova | notice | Exile target attacking creature and all Equipment attached to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Thought Prison | notice | Imprint — When this artifact enters, you may have target player reveal their hand. If you do, choose a nonland card from it and exile that card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Alpha Myr | handled |  |  | Y/-/- | not_tested |
 | Altar of Shadows | handled | At the beginning of your first main phase, add {B} for each charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Altar's Light | handled | Exile target artifact or enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -88,6 +83,7 @@
 | Assert Authority | handled | Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.) Counter target spell. If that spell is countered this way, exile it in | the engine reads this text and performs it | Y/-/- | not_tested |
 | Auriok Bladewarden | handled | {T}: Target creature gets +X/+X until end of turn, where X is this creature's power. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Auriok Transfixer | handled | {W}, {T}: Tap target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Banshee's Blade | handled | Equipped creature gets +1/+1 for each charge counter on this Equipment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Barter in Blood | handled | Each player sacrifices two creatures of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Battlegrowth | handled | Put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Betrayal of Flesh | handled | Choose one — • Destroy target creature. • Return target creature card from your graveyard to the battlefield. Entwine—Sacrifice three lands. (Choose both if you | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -97,7 +93,6 @@
 | Cloudpost | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cobalt Golem | handled | {1}{U}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Copper Myr | handled |  |  | Y/-/- | not_tested |
-| Culling Scales | handled | At the beginning of your upkeep, destroy target nonland permanent with the lowest mana value. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deconstruct | handled | Destroy target artifact. Add {G}{G}{G}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Disciple of the Vault | handled | Whenever an artifact is put into a graveyard from the battlefield, you may have target opponent lose 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dream's Grip | handled | Choose one — • Tap target permanent. • Untap target permanent. Entwine {1} (Choose both if you pay the entwine cost.) | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -154,7 +149,6 @@
 | Mirror Golem | handled | Imprint — When this creature enters, you may exile target card from a graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Molder Slug | handled | At the beginning of each player's upkeep, that player sacrifices an artifact of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moriok Scavenger | handled | When this creature enters, you may return target artifact creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Myr Adapter | handled | This creature gets +1/+1 for each Equipment attached to it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Myr Enforcer | handled | Affinity | models/game.py (Game.cost_reduction_for, CR 702.41a) | Y/-/- | not_tested |
 | Myr Mindservant | handled | {2}, {T}: Shuffle your library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Myr Retriever | handled | When this creature dies, return another target artifact card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -253,22 +247,26 @@
 ## Fully supported
 
 <details>
-<summary>46 cards</summary>
+<summary>52 cards</summary>
 
 - Aether Spellbomb
 - Auriok Steelshaper
 - Awe Strike
+- Blinkmoth Urn
 - Bonesplitter
 - Bosh, Iron Golem
 - Chalice of the Void
 - Consume Spirit
 - Contaminated Bond
+- Copperhoof Vorrac
+- Culling Scales
 - Damping Matrix
 - Domineer
 - Electrostatic Bolt
 - Empyrial Plate
 - Frogmite
 - Glimmervoid
+- Glissa Sunseeker
 - Goblin Charbelcher
 - Grab the Reins
 - Great Furnace
@@ -282,8 +280,10 @@
 - Lightning Greaves
 - Loxodon Peacekeeper
 - Loxodon Punisher
+- March of the Machines
 - Mindslaver
 - Mindstorm Crown
+- Myr Adapter
 - Myr Prototype
 - Oblivion Stone
 - Platinum Angel
@@ -314,16 +314,13 @@
 | as long as a card exiled with ~ is a creature card, ~ has the power, toughness, and creature types of the last creature card exiled with it. it's still a shapes | 1 | Duplicant | mrd |
 | at the beginning of each opponent's upkeep, that player chooses draw step, main phase, or combat phase. the player skips each instance of the chosen step or pha | 1 | Fatespinner | mrd |
 | at the beginning of each player"..."s an artifact, creature, enchantment, or land card, the player may put it onto the battlefield. | 1 | Gate to the Aether | mrd |
-| at the beginning of each player's first main phase, if ~ is untapped, that player adds {M} for each artifact they control. | 1 | Blinkmoth Urn | mrd |
 | at the beginning of each player's upkeep, that player puts a flood counter on target non-island land they control of their choice. that land is an island for as | 1 | Quicksilver Fountain | mrd |
 | at the beginning of each upkeep, each player exiles the top card of their library. the player who exiled the card with the greatest mana value takes an extra tu | 1 | Timesifter | mrd |
 | at the beginning of your end step, target opponent gains control of ~ and puts a charge counter on it. | 1 | Jinxed Choker | mrd |
 | counter target spell unless its controller pays {M} for each artifact you control. | 1 | Override | mrd |
 | destroy target land. if that land was nonbasic, ~ deals N damage to the land's controller. | 1 | Molten Rain | mrd |
 | each artifact spell costs {M} more to cast for each artifact its controller controls. | 1 | Hum of the Radix | mrd |
-| each noncreature artifact is an artifact creature with power and toughness each equal to its mana value. | 1 | March of the Machines | mrd |
 | each player returns to the battlefield all artifact, creature, enchantment, and land cards in their graveyard that were put there from the battlefield ~. | 1 | Second Sunrise | mrd |
-| equipped creature gets +N/+N for each charge counter on ~. | 1 | Banshee's Blade | mrd |
 | exile target attacking creature and all equipment attached to it. | 1 | Soul Nova | mrd |
 | flip a coin until you lose a flip or choose to stop flipping. if you lose a flip, ~ has no effect. if you win one or more flips, ~ deals N damage to target crea | 1 | Fiery Gambit | mrd |
 | search your library for a nonland card and reveal it. each opponent who cast a spell ~ with the same name as that card loses N life. then shuffle. {M}{M}: retur | 1 | Grim Reminder | mrd |
@@ -353,10 +350,8 @@
 | {M}, {M}: prevent all damage that would be dealt ~ by a source of your choice that shares a color with the exiled card. | 1 | Mourner's Shield | mrd |
 | {M}, {M}: target player draws a card, then discards a card. if that player discards an artifact card ~, untap ~. | 1 | Lumengrid Augur | mrd |
 | {M}: add one mana of any of the exiled card's colors. | 1 | Chrome Mox | mrd |
-| {M}: destroy target artifact if its mana value is equal to the amount of unspent mana you have. | 1 | Glissa Sunseeker | mrd |
 | {M}: put target permanent you own on the bottom of your library. | 1 | Tel-Jilad Stylus | mrd |
 | {M}{M}, {M}: put target creature on the bottom of its owner"..."s controller reveals cards from the top of their library until they reveal a creature card. the  | 1 | Proteus Staff | mrd |
-| ~ gets +N/+N for each untapped permanent your opponents control. | 1 | Copperhoof Vorrac | mrd |
 
 ## Notes
 

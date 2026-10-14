@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 42 | 18.1% |
-| Works (untested) | 134 | 57.8% |
+| Tested | 47 | 20.3% |
+| Works (untested) | 142 | 61.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 56 | 24.1% |
+| Not working | 43 | 18.5% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Alms Beast | silent | Creatures blocking or blocked by this creature have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Angelic Skirmisher | silent | At the beginning of each combat, choose first strike, vigilance, or lifelink. Creatures you control gain that ability until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bioshift | silent | Move any number of +1/+1 counters from target creature onto another target creature with the same controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Call of the Nightwing | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Cartel Aristocrat | silent | Sacrifice another creature: This creature gains protection from the color of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Clinging Anemones | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Cloudfin Raptor | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -47,46 +46,33 @@
 | Fathom Mage | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Frontline Medic | silent | Sacrifice this creature: Counter target spell with {X} in its mana cost unless its controller pays {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gyre Sage | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Hands of Binding | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hellkite Tyrant | silent | Whenever this creature deals combat damage to a player, gain control of all artifacts that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Illusionist's Bracers | silent | Whenever an ability of equipped creature is activated, if it isn't a mana ability, copy that ability. You may choose new targets for the copy. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Incursion Specialist | silent | Whenever you cast your second spell each turn, this creature gets +2/+0 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Last Thoughts | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Lazav, Dimir Mastermind | silent | Whenever a creature card is put into an opponent's graveyard from anywhere, you may have Lazav become a copy of that card, except its name is Lazav, Dimir Maste | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lord of the Void | silent | Whenever this creature deals combat damage to a player, exile the top seven cards of that player's library, then put a creature card from among them onto the ba | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Master Biomancer | silent | Each other creature you control enters with a number of additional +1/+1 counters on it equal to this creature's power and as a Mutant in addition to its other  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mental Vapors | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Midnight Recovery | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Mind Grind | silent | Each opponent reveals cards from the top of their library until they reveal X land cards, then puts all cards revealed this way into their graveyard. X can't be | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Paranoid Delusions | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Realmwright | silent | Lands you control are the chosen type in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sepulchral Primordial | silent | When this creature enters, for each opponent, you may put up to one target creature card from that player's graveyard onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Shadow Slice | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Shambleshark | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Signal the Clans | silent | Search your library for three creature cards and reveal them. If you reveal three cards with different names, choose one of them at random and put that card int | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Simic Fluxmage | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Simic Manipulator | silent | {T}, Remove one or more +1/+1 counters from this creature: Gain control of target creature with power less than or equal to the number of +1/+1 counters removed | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soul Ransom | silent | Discard two cards: This Aura's controller sacrifices it, then draws two cards. Only your opponents may activate this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Stolen Identity | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Thrull Parasite | silent | {T}, Pay 2 life: Remove a counter from target nonland permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Undercity Plague | silent | Target player loses 1 life, discards a card, then sacrifices a permanent of their choice. Cipher (Then you may exile this spell card encoded on a creature you c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unexpected Results | silent | Shuffle your library, then reveal the top card. If it's a nonland card, you may cast it without paying its mana cost. If it's a land card, you may put it onto t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vizkopa Guildmage | silent | {1}{W}{B}: Whenever you gain life this turn, each opponent loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Voidwalk | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Whispering Madness | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Zameck Guildmage | silent | {G}{U}: This turn, each creature you control enters with an additional +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dimir Charm | notice | Choose one — • Counter target sorcery spell. • Destroy target creature with power 2 or less. • Look at the top three cards of target player's library. Put one b | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gruul Charm | notice | Choose one — • Creatures without flying can't block this turn. • Gain control of all permanents you own. • Gruul Charm deals 3 damage to each creature with flyi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hellraiser Goblin | notice | Creatures you control have haste and attack each combat if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Molten Primordial | notice | When this creature enters, for each opponent, gain control of up to one target creature that player controls until end of turn. Untap those creatures. They gain | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Obzedat, Ghost Council | notice | At the beginning of your end step, you may exile Obzedat. If you do, return it to the battlefield under its owner's control at the beginning of your next upkeep | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Orzhov Charm | notice | Choose one — • Return target creature you control and all Auras you control attached to it to their owner's hand. • Destroy target creature and you lose life eq | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Rapid Hybridization | notice | Destroy target creature. It can't be regenerated. That creature's controller creates a 3/3 green Frog Lizard creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Alpha Authority | handled | Enchanted creature has hexproof and can't be blocked by more than one creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angelic Edict | handled | Exile target creature or enchantment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Arrows of Justice | handled | Arrows of Justice deals 4 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Assemble the Legion | handled | At the beginning of your upkeep, put a muster counter on this enchantment. Then create a 1/1 red and white Soldier creature token with haste for each muster cou | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Aurelia, the Warleader | handled | Whenever Aurelia attacks for the first time each turn, untap all creatures you control. After this phase, there is an additional combat phase. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Balustrade Spy | handled | When this creature enters, target player reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Basilica Guards | handled | Extort | machines/keywords.py | Y/Y/- | not_tested |
 | Basilica Screecher | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -99,6 +85,7 @@
 | Boros Keyrune | handled | {R}{W}: This artifact becomes a 1/1 red and white Soldier artifact creature with double strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Burning-Tree Emissary | handled | When this creature enters, add {R}{G}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Burst of Strength | handled | Put a +1/+1 counter on target creature and untap it. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Call of the Nightwing | handled | Create a 1/1 blue and black Horror creature token with flying. Cipher (Then you may exile this spell card encoded on a creature you control. Whenever that creat | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Clan Defiance | handled | Choose one or more — • Clan Defiance deals X damage to target creature with flying. • Clan Defiance deals X damage to target creature without flying. • Clan Def | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Corpse Blockade | handled | Sacrifice another creature: This creature gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Court Street Denizen | handled | Whenever another white creature you control enters, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -145,14 +132,17 @@
 | Kingpin's Pet | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Knight Watch | handled | Create two 2/2 white Knight creature tokens with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Knight of Obligation | handled | Extort | machines/keywords.py | Y/Y/- | not_tested |
+| Last Thoughts | handled | Draw a card. Cipher (Then you may exile this spell card encoded on a creature you control. Whenever that creature deals combat damage to a player, its controlle | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Legion Loyalist | handled | Battalion — Whenever this creature and at least two other creatures attack, creatures you control gain first strike and trample until end of turn and can't be b | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Leyline Phantom | handled | When this creature deals combat damage, return it to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Madcap Skills | handled | Enchanted creature gets +3/+0 and has menace. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Martial Glory | handled | Target creature gets +3/+0 until end of turn. Target creature gets +0/+3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Massive Raid | handled | Massive Raid deals damage to any target equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mental Vapors | handled | Target player discards a card. Cipher (Then you may exile this spell card encoded on a creature you control. Whenever that creature deals combat damage to a pla | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Merciless Eviction | handled | Choose one — • Exile all artifacts. • Exile all creatures. • Exile all enchantments. • Exile all planeswalkers. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Merfolk of the Depths | handled | Flash | machines/casting.py (timing) | Y/Y/- | not_tested |
 | Metropolis Sprite | handled | {U}: This creature gets +1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Midnight Recovery | handled | Return target creature card from your graveyard to your hand. Cipher (Then you may exile this spell card encoded on a creature you control. Whenever that creatu | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Millennial Gargoyle | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Miming Slime | handled | Create an X/X green Ooze creature token, where X is the greatest power among creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mindeye Drake | handled | When this creature dies, target player mills five cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -165,10 +155,12 @@
 | Ogre Slumlord | handled | Whenever another nontoken creature dies, you may create a 1/1 black Rat creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ordruun Veteran | handled | Battalion — Whenever this creature and at least two other creatures attack, this creature gains double strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Orzhov Keyrune | handled | {W}{B}: This artifact becomes a 1/4 white and black Thrull artifact creature with lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Paranoid Delusions | handled | Target player mills three cards. Cipher (Then you may exile this spell card encoded on a creature you control. Whenever that creature deals combat damage to a p | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pit Fight | handled | Target creature you control fights another target creature. (Each deals damage equal to its power to the other.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Primal Visitation | handled | Enchanted creature gets +3/+3 and has haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Psychic Strike | handled | Counter target spell. Its controller mills two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Purge the Profane | handled | Target opponent discards two cards and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Rapid Hybridization | handled | Destroy target creature. It can't be regenerated. That creature's controller creates a 3/3 green Frog Lizard creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Razortip Whip | handled | {1}, {T}: This artifact deals 1 damage to target opponent or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Riot Gear | handled | Equipped creature gets +1/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ripscale Predator | handled | Menace | machines/combat.py | Y/Y/- | not_tested |
@@ -182,6 +174,7 @@
 | Scatter Arc | handled | Counter target noncreature spell. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scorchwalker | handled | Bloodrush — {1}{R}{R}, Discard this card: Target attacking creature gets +5/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shadow Alley Denizen | handled | Whenever another black creature you control enters, target creature gains intimidate until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Shadow Slice | handled | Target opponent loses 3 life. Cipher (Then you may exile this spell card encoded on a creature you control. Whenever that creature deals combat damage to a play | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shattering Blow | handled | Exile target artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Simic Charm | handled | Choose one — • Target creature gets +3/+3 until end of turn. • Permanents you control gain hexproof until end of turn. • Return target creature to its owner's h | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Simic Keyrune | handled | {G}{U}: This artifact becomes a 2/3 green and blue Crab artifact creature with hexproof until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -195,6 +188,7 @@
 | Smog Elemental | handled | Creatures with flying your opponents control get -1/-1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spark Trooper | handled | At the beginning of the end step, sacrifice this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spell Rupture | handled | Counter target spell unless its controller pays {X}, where X is the greatest power among creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Stolen Identity | handled | Create a token that's a copy of target artifact or creature. Cipher (Then you may exile this spell card encoded on a creature you control. Whenever that creatur | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sunhome Guildmage | handled | {1}{R}{W}: Creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Syndicate Enforcer | handled | Extort | machines/keywords.py | Y/Y/- | not_tested |
 | Thespian's Stage | handled | {2}, {T}: This land becomes a copy of target land, except it has this ability. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -209,6 +203,7 @@
 | Urbis Protector | handled | When this creature enters, create a 4/4 white Angel creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Verdant Haven | handled | When this Aura enters, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Viashino Shanktail | handled | Bloodrush — {2}{R}, Discard this card: Target attacking creature gets +3/+1 and gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Voidwalk | handled | Exile target creature. Return it to the battlefield under its owner's control at the beginning of the next end step. Cipher (Then you may exile this spell card  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Warmind Infantry | handled | Battalion — Whenever this creature and at least two other creatures attack, this creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wasteland Viper | handled | Bloodrush — {G}, Discard this card: Target attacking creature gets +1/+2 and gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wildwood Rebirth | handled | Return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -220,12 +215,13 @@
 ## Fully supported
 
 <details>
-<summary>42 cards</summary>
+<summary>47 cards</summary>
 
 - Aerial Maneuver
 - Agoraphobia
 - Armored Transport
 - Aurelia's Fury
+- Aurelia, the Warleader
 - Bane Alley Broker
 - Biovisionary
 - Boros Guildgate
@@ -242,6 +238,7 @@
 - Grisly Spectacle
 - Gruul Guildgate
 - Guardian of the Gateless
+- Hands of Binding
 - Hindervines
 - Hold the Gates
 - Homing Lightning
@@ -250,9 +247,11 @@
 - Mystic Genesis
 - One Thousand Lashes
 - Ooze Flux
+- Orzhov Charm
 - Orzhov Guildgate
 - Predator's Rapport
 - Prime Speaker Zegana
+- Sepulchral Primordial
 - Serene Remembrance
 - Shielded Passage
 - Simic Guildgate
@@ -263,6 +262,7 @@
 - Syndic of Tithes
 - Vizkopa Confessor
 - Way of the Thief
+- Whispering Madness
 - Wight of Precinct Six
 
 </details>
@@ -271,15 +271,13 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| cipher | 10 | Call of the Nightwing, Hands of Binding, Last Thoughts, Mental Vapors, Midnight Recovery | gtc |
 | evolve | 9 | Adaptive Snapjaw, Clinging Anemones, Cloudfin Raptor, Crocanura, Elusive Krasis | gtc |
-| Choose one | 3 | Dimir Charm, Gruul Charm, Orzhov Charm | gtc |
+| Choose one | 2 | Dimir Charm, Gruul Charm | gtc |
 | +N: look at the top card of your library. if it's a creature card, you may reveal it and put it into your hand. | 1 | Domri Rade | gtc |
 | at the beginning of each combat, choose first strike, vigilance, or lifelink. creatures you control gain that ability until end of turn. | 1 | Angelic Skirmisher | gtc |
 | at the beginning of your end step, you may exile obzedat. if you do, return it to the battlefield under its owner's control at the beginning of your next upkeep | 1 | Obzedat, Ghost Council | gtc |
 | creatures blocking or blocked by ~ have lifelink. | 1 | Alms Beast | gtc |
 | creatures you control have haste and attack each combat if able. | 1 | Hellraiser Goblin | gtc |
-| destroy target creature. it can"..."s controller creates a N/N green frog lizard creature token. | 1 | Rapid Hybridization | gtc |
 | discard two cards: ~ controller sacrifices it, then draws two cards. only your opponents may activate ~. | 1 | Soul Ransom | gtc |
 | draw cards equal to the number of cards in your library, then put a card from your hand on top of your library. you have no maximum hand size until your next tu | 1 | Enter the Infinite | gtc |
 | each opponent reveals cards from the top of their library until they reveal N land cards, then puts all cards revealed ~ into their graveyard. N can't be N. | 1 | Mind Grind | gtc |
@@ -295,7 +293,6 @@
 | target player loses N life, discards a card, then sacrifices a permanent of their choice. cipher (then you may exile ~ card encoded on a creature you control. w | 1 | Undercity Plague | gtc |
 | when ~ enters, for each opponent, gain control of up to one target creature that player controls until end of turn. untap those creatures. they gain haste until | 1 | Molten Primordial | gtc |
 | when ~ enters, for each opponent, you may cast up to one target instant or sorcery card from that player's graveyard without paying its mana cost. if a spell ca | 1 | Diluvian Primordial | gtc |
-| when ~ enters, for each opponent, you may put up to one target creature card from that player's graveyard onto the battlefield under your control. | 1 | Sepulchral Primordial | gtc |
 | whenever a creature card is put into an opponent"..."s legendary in addition to its other types, and it has hexproof and ~. | 1 | Lazav, Dimir Mastermind | gtc |
 | whenever an ability of equipped creature is activated, if it isn't a mana ability, copy that ability. you may choose new targets for the copy. | 1 | Illusionist's Bracers | gtc |
 | whenever you cast a spell, each opponent reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | 1 | Consuming Aberration | gtc |

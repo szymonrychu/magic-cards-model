@@ -17,19 +17,17 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 55 | 23.9% |
+| Tested | 60 | 26.1% |
 | Works (untested) | 133 | 57.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 42 | 18.3% |
+| Not working | 37 | 16.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Deep Freeze | silent | Enchanted creature has base power and toughness 0/4, has defender, loses all other abilities, and is a blue Wall in addition to its other colors and types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Demonlord Belzenlok | silent | When Demonlord Belzenlok enters, exile cards from the top of your library until you exile a nonland card, then put that card into your hand. If the card's mana  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Drudge Sentinel | silent | {3}: Tap this creature. It gains indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Evra, Halcyon Witness | silent | {4}: Exchange your life total with Evra's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fall of the Thran | silent | II, III — Each player returns two land cards from their graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Final Parting | silent | Search your library for two cards. Put one into your hand and the other into your graveyard. Then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Garna, the Bloodflame | silent | When Garna enters, return to your hand all creature cards in your graveyard that were put there from anywhere this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -53,21 +51,18 @@
 | Sylvan Awakening | silent | Until your next turn, all lands you control become 2/2 Elemental creatures with reach, indestructible, and haste. They're still lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thran Temporal Gateway | silent | {4}, {T}: You may put a historic permanent card from your hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Time of Ice | silent | III — Return all tapped creatures to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Triumph of Gerrard | silent | III — Target creature you control with the greatest power gains flying, first strike, and lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Two-Headed Giant | silent | Whenever this creature attacks, flip two coins. If both coins come up heads, this creature gains double strike until end of turn. If both coins come up tails, t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unwind | silent | Counter target noncreature spell. Untap up to three lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Urgoros, the Empty One | silent | Whenever Urgoros deals combat damage to a player, that player discards a card at random. If the player can't, you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Urza's Ruinous Blast | silent | (You may cast a legendary sorcery only if you control a legendary creature or planeswalker.) Exile all nonland permanents that aren't legendary. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Urza's Tome | silent | {3}, {T}: Draw a card. Then discard a card unless you exile a historic card from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warcry Phoenix | silent | Whenever you attack with three or more creatures, you may pay {2}{R}. If you do, return this card from your graveyard to the battlefield tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Champion of the Flame | notice | This creature gets +2/+2 for each Aura and Equipment attached to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Chandra's Outburst | notice | Chandra's Outburst deals 4 damage to target player or planeswalker. Search your library and/or graveyard for a card named Chandra, Bold Pyromancer, reveal it, a | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Corrosive Ooze | notice | Whenever this creature blocks or becomes blocked by an equipped creature, destroy all Equipment attached to that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Merfolk Trickster | notice | When this creature enters, tap target creature an opponent controls. It loses all abilities until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rampaging Cyclops | notice | This creature gets -2/-0 as long as two or more creatures are blocking it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Teferi, Hero of Dominaria | notice | +1: Draw a card. At the beginning of the next end step, untap up to two lands. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Thallid Omnivore | notice | {1}, Sacrifice another creature: This creature gets +2/+2 until end of turn. If a Saproling was sacrificed this way, you gain 2 life. | unparsed remainder: If a Saproling was sacrificed this way, you gain 2 life. | Y/Y/- | not_working |
-| Valduk, Keeper of the Flame | notice | At the beginning of combat on your turn, for each Aura and Equipment attached to Valduk, create a 3/1 red Elemental creature token with trample and haste. Exile | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Academy Journeymage | handled | This spell costs {1} less to cast if you control a Wizard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Adeliz, the Cinder Wind | handled | Whenever you cast an instant or sorcery spell, Wizards you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Amaranthine Wall | handled | {2}: This creature gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -205,7 +200,7 @@
 ## Fully supported
 
 <details>
-<summary>55 cards</summary>
+<summary>60 cards</summary>
 
 - Academy Drake
 - Adamant Will
@@ -218,10 +213,13 @@
 - Blessing of Belzenlok
 - Bloodstone Goblin
 - Cabal Stronghold
+- Champion of the Flame
 - Curator's Ward
 - Damping Sphere
 - Darigaaz Reincarnated
 - Dauntless Bodyguard
+- Demonlord Belzenlok
+- Evra, Halcyon Witness
 - Gaea's Protector
 - Grand Warlord Radha
 - Grunn, the Lonely King
@@ -260,7 +258,9 @@
 - The Flame of Keld
 - Torgaar, Famine Incarnate
 - Traxos, Scourge of Kroog
+- Triumph of Gerrard
 - Untamed Kavu
+- Valduk, Keeper of the Flame
 - Zahid, Djinn of the Lamp
 
 </details>
@@ -277,7 +277,6 @@
 | +N: reveal the top two cards of your library. an opponent chooses one of them. put that card into your hand and exile the other with a silver counter on it. | 1 | Karn, Scion of Urza | dom |
 | as long as there are two or more instant and/or sorcery cards in your graveyard, ~ gets +N/+N and has haste. | 1 | Ghitu Lavarunner | dom |
 | at the beginning of combat on your turn, create a token that"..."t legendary. that token gains haste. | 1 | Helm of the Host | dom |
-| at the beginning of combat on your turn, for each aura and equipment attached to valduk, create a N/N red elemental creature token with trample and haste. exile | 1 | Valduk, Keeper of the Flame | dom |
 | counter target noncreature spell. untap up to three lands. | 1 | Unwind | dom |
 | creatures you control with first strike have double strike. | 1 | Kwende, Pride of Femeref | dom |
 | destroy target land. up to two target creatures can't block ~. | 1 | Seismic Shift | dom |
@@ -289,14 +288,12 @@
 | kicker {M} (you may pay an additional {M} as you cast ~.) untap target creature. it gets +N/+N until end of turn. if ~ was kicked, that creature gets +N/+N unti | 1 | Gift of Growth | dom |
 | return all tapped creatures to their owners' hands. | 1 | Time of Ice | dom |
 | search your library for two cards. put one into your hand and the other into your graveyard. then shuffle. | 1 | Final Parting | dom |
-| target creature you control with the greatest power gains flying, first strike, and lifelink until end of turn. | 1 | Triumph of Gerrard | dom |
 | until your next turn, all lands you control become N/N elemental creatures with reach, indestructible, and haste. they're still lands. | 1 | Sylvan Awakening | dom |
 | until your next turn, creatures you control gain "..." | 1 | Song of Freyalise | dom |
 | when garna enters, return to your hand all creature cards in your graveyard that were put there from anywhere ~. | 1 | Garna, the Bloodflame | dom |
 | when niambi enters, you may search your library and/or graveyard for a card named teferi, timebender, reveal it, and put it into your hand. if you search your l | 1 | Niambi, Faithful Healer | dom |
 | when slinn voda enters, if it was kicked, return all creatures to their owners' hands except for merfolk, krakens, leviathans, octopuses, and serpents. | 1 | Slinn Voda, the Rising Deep | dom |
 | when ~ enters, choose four nonenchantment permanents you don't control and put an aim counter on each of them. | 1 | Haphazard Bombardment | dom |
-| when ~ enters, exile cards from the top of your library until you exile a nonland card, then put that card into your hand. if the card's mana value is N or grea | 1 | Demonlord Belzenlok | dom |
 | when ~ enters, tap target creature an opponent controls. it loses all abilities until end of turn. | 1 | Merfolk Trickster | dom |
 | whenever urgoros deals combat damage to a player, that player discards a card at random. if the player can't, you draw a card. | 1 | Urgoros, the Empty One | dom |
 | whenever you attack with three or more creatures, you may pay {M}{M}. if you do, return ~ from your graveyard to the battlefield tapped and attacking. | 1 | Warcry Phoenix | dom |
@@ -305,11 +302,9 @@
 | {M}, sacrifice another creature: ~ gets +N/+N until end of turn. if a saproling was sacrificed ~, you gain N life. | 1 | Thallid Omnivore | dom |
 | {M}, {M}: draw a card. then discard a card unless you exile a historic card from your graveyard. | 1 | Urza's Tome | dom |
 | {M}, {M}: you may put a historic permanent card from your hand onto the battlefield. | 1 | Thran Temporal Gateway | dom |
-| {M}: exchange your life total with evra's power. | 1 | Evra, Halcyon Witness | dom |
 | {M}: tap ~. it gains indestructible until end of turn. | 1 | Drudge Sentinel | dom |
 | {M}: until end of turn, target land you control becomes the basic land type of your choice in addition to its other types. | 1 | Navigator's Compass | dom |
 | ~ deals N damage to target player or planeswalker. search your library and/or graveyard for a card named chandra, bold pyromancer, reveal it, and put it into yo | 1 | Chandra's Outburst | dom |
-| ~ gets +N/+N for each aura and equipment attached to it. | 1 | Champion of the Flame | dom |
 | ~ gets -N/-N as long as two or more creatures are blocking it. | 1 | Rampaging Cyclops | dom |
 
 ## Notes

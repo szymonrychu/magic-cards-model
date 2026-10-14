@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 43 | 26.1% |
+| Tested | 45 | 27.3% |
 | Works (untested) | 82 | 49.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 40 | 24.2% |
+| Not working | 38 | 23.0% |
 
 ## Cards needing work
 
@@ -53,8 +53,6 @@
 | Pain's Reward | silent | Each player may bid life. You start the bidding with a bid of any number. In turn order, each player may top the high bid. The bidding ends if the high bid stan | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Promised Kannushi | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Pure Intentions | silent | Whenever a spell or ability an opponent controls causes you to discard cards this turn, return those cards from your graveyard to your hand. When a spell or abi | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Rally the Horde | silent | Exile the top card of your library. Exile the top card of your library. Exile the top card of your library. If the last card exiled isn't a land card, repeat th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Rending Vines | silent | Destroy target artifact or enchantment if its mana value is less than or equal to the number of cards in your hand. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rune-Tail, Kitsune Ascendant // Rune-Tail's Essence | silent | When you have 30 or more life, flip Rune-Tail. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Sasaya, Orochi Ascendant // Sasaya's Essence | silent | Reveal your hand: If you have seven or more land cards in your hand, flip Sasaya. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Secretkeeper | silent | As long as you have more cards in hand than each opponent, this creature gets +2/+2 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -152,7 +150,7 @@
 ## Fully supported
 
 <details>
-<summary>43 cards</summary>
+<summary>45 cards</summary>
 
 - Barrel Down Sokenzan
 - Bounteous Kirin
@@ -185,7 +183,9 @@
 - Plow Through Reito
 - Presence of the Wise
 - Promise of Bunrei
+- Rally the Horde
 - Razorjaw Oni
+- Rending Vines
 - Reverence
 - Rushing-Tide Zubera
 - Sakura-Tribe Scout
@@ -218,12 +218,10 @@
 | at the beginning of your upkeep, if you have more cards in hand than each opponent, you may sacrifice a swamp. if you do, return akuta from your graveyard to th | 1 | Akuta, Born of Ash | sok |
 | cast ~ only during combat after blockers are declared. target unblocked attacking creature becomes blocked. (~ works on creatures that can't be blocked.) draw a | 1 | Curtain of Light | sok |
 | counter target spell unless its controller pays {M} for each card in your hand. | 1 | Oppressive Will | sok |
-| destroy target artifact or enchantment if its mana value is less than or equal to the number of cards in your hand. draw a card. | 1 | Rending Vines | sok |
 | draw three cards. discard three cards at the beginning of the next end step. | 1 | Ideas Unbound | sok |
 | each creature card in your graveyard has the chosen creature type in addition to its other types. | 1 | Ashes of the Fallen | sok |
 | each player may bid life. you start the bidding with a bid of any number. in turn order, each player may top the high bid. the bidding ends if the high bid stan | 1 | Pain's Reward | sok |
 | each player sacrifices a land of their choice for each card in your hand. | 1 | Thoughts of Ruin | sok |
-| exile the top card of your library. exile the top card of your library. exile the top card of your library. if the last card exiled isn't a land card, repeat ~. | 1 | Rally the Horde | sok |
 | legendary landwalk | 1 | Ayumi, the Last Visitor | sok |
 | masumaro's power and toughness are each equal to twice the number of cards in your hand. | 1 | Masumaro, First to Live | sok |
 | reveal the top three cards of your library. an opponent chooses one of them. put that card into your graveyard and the rest into your hand. | 1 | Murmurs from Beyond | sok |

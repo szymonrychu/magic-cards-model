@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 70 | 28.7% |
+| Tested | 74 | 30.3% |
 | Works (untested) | 124 | 50.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 50 | 20.5% |
+| Not working | 46 | 18.9% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Academy Loremaster | silent | At the beginning of each player's draw step, that player may draw an additional card. If they do, spells they cast this turn cost {2} more to cast. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Braids's Frightful Return | silent | III — Target opponent may sacrifice a nonland, nontoken permanent of their choice. If they don't, they lose 2 life and you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cut Down | silent | Destroy target creature with total power and toughness 5 or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Danitha, Benalia's Hope | silent | When Danitha enters, you may put an Aura or Equipment card from your hand or graveyard onto the battlefield attached to Danitha. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Evolved Sleeper | silent | {1}{B}: If this creature is a Cleric, put a deathtouch counter on it and it becomes a Phyrexian Human Cleric with base power and toughness 3/3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Founding the Third Path | silent | I — You may cast an instant or sorcery spell with mana value 1 or 2 from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -46,7 +45,6 @@
 | Silver Scrutiny | silent | You may cast this spell as though it had flash if X is 3 or less. Draw X cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soul of Windgrace | silent | Whenever Soul of Windgrace enters or attacks, you may put a land card from a graveyard onto the battlefield tapped under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stall for Time | silent | Kicker {1}{U} (You may pay an additional {1}{U} as you cast this spell.) Tap up to two target creatures. If this spell was kicked, put a stun counter on each of | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Stronghold Arena | silent | When this enchantment enters, you gain 3 life for each time it was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Temporary Lockdown | silent | When this enchantment enters, exile each nonland permanent with mana value 2 or less until this enchantment leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Territorial Maro | silent | Domain — Territorial Maro's power and toughness are each equal to twice the number of basic land types among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Cruelty of Gix | silent | Read Ahead | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -58,9 +56,7 @@
 | Tori D'Avenant, Fury Rider | silent | Whenever Tori D'Avenant attacks, all other attacking creatures you control get +1/+1 until end of turn. Other red attacking creatures you control gain trample u | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Urza Assembles the Titans | silent | I — Scry 4, then you may reveal the top card of your library. If a planeswalker card is revealed this way, put it into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vesuvan Duplimancy | silent | Whenever you cast a spell that targets only a single artifact or creature you control, create a token that's a copy of that artifact or creature, except it's no | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Walking Bulwark | silent | {2}: Until end of turn, target creature with defender gains haste, can attack as though it didn't have defender, and assigns combat damage equal to its toughnes | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yotia Declares War | silent | III — Up to one target artifact you control becomes an artifact creature with base power and toughness 4/4 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Zur, Eternal Schemer | silent | {1}{W}: Target non-Aura enchantment you control becomes a creature in addition to its other types and has base power and base toughness each equal to its mana v | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Braids, Arisen Nightmare | notice | At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each opponent may sacrifice a permane | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Choking Miasma | notice | Kicker {G} (You may pay an additional {G} as you cast this spell.) If this spell was kicked, put a +1/+1 counter on a creature you control. All creatures get -2 | unparsed remainder: If this spell was kicked, put a +1/+1 counter on a creature you control. | Y/Y/- | not_working |
 | Djinn of the Fountain | notice | Whenever you cast an instant or sorcery spell, choose one — • This creature gets +1/+1 until end of turn. • Exile this creature. Return it to the battlefield un | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -204,7 +200,7 @@
 ## Fully supported
 
 <details>
-<summary>70 cards</summary>
+<summary>74 cards</summary>
 
 - Aggressive Sabotage
 - Ajani, Sleeper Agent
@@ -221,6 +217,7 @@
 - Coral Colony
 - Cosmic Epiphany
 - Cult Conscript
+- Cut Down
 - Defiler of Dreams
 - Defiler of Faith
 - Defiler of Flesh
@@ -260,6 +257,7 @@
 - Sphinx of Clear Skies
 - Squee, Dubious Monarch
 - Stenn, Paranoid Partisan
+- Stronghold Arena
 - Tail Swipe
 - Tear Asunder
 - Temporal Firestorm
@@ -273,9 +271,11 @@
 - Voda Sea Scavenger
 - Vodalian Mindsinger
 - Vohar, Vodalian Desecrator
+- Walking Bulwark
 - Warhost's Frenzy
 - Wingmantle Chaplain
 - Zar Ojanen, Scion of Efrava
+- Zur, Eternal Schemer
 
 </details>
 
@@ -290,7 +290,6 @@
 | at the beginning of each player's draw step, that player may draw an additional card. if they do, spells they cast ~ cost {M} more to cast. | 1 | Academy Loremaster | dmu |
 | at the beginning of your end step, choose one that hasn"..."kanar deals N damage to up to one other target creature or planeswalker. • exile sol"..."s control. | 1 | Sol'Kanar the Tainted | dmu |
 | at the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. if you do, each opponent may sacrifice a permane | 1 | Braids, Arisen Nightmare | dmu |
-| destroy target creature with total power and toughness N or less. | 1 | Cut Down | dmu |
 | kicker {M} (you may pay an additional {M} as you cast ~.) if ~ was kicked, create a N/N white soldier creature token. counter target spell unless its controller | 1 | Protect the Negotiators | dmu |
 | kicker {M} (you may pay an additional {M} as you cast ~.) if ~ was kicked, put a +N/+N counter on a creature you control. all creatures get -N/-N until end of t | 1 | Choking Miasma | dmu |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) gain control of target creature until end of turn. untap that creature. it gains haste until end | 1 | In Thrall to the Pit | dmu |
@@ -308,7 +307,6 @@
 | when danitha enters, you may put an aura or equipment card from your hand or graveyard onto the battlefield attached to danitha. | 1 | Danitha, Benalia's Hope | dmu |
 | when ~ enters, choose up to one — • counter target spell, activated ability, or triggered ability. its controller draws a card. • destroy another target creatur | 1 | Ertai Resurrected | dmu |
 | when ~ enters, exile each nonland permanent with mana value N or less until ~ leaves the battlefield. | 1 | Temporary Lockdown | dmu |
-| when ~ enters, you gain N life for each time it was kicked. | 1 | Stronghold Arena | dmu |
 | when ~ enters, you may search your library for an instant or sorcery card with mana value N, reveal it, put it into your hand, then shuffle. | 1 | Micromancer | dmu |
 | whenever a creature you control dies, put a phyresis counter on ~. then draw a card if it has seven or more phyresis counters on it. if it doesn't, scry N. | 1 | Weatherlight Compleated | dmu |
 | whenever another legendary creature you control dies, create a token that"..."s not legendary and it's a N/N black zombie in addition to its other colors and ty | 1 | Ratadrabik of Urborg | dmu |
@@ -323,9 +321,7 @@
 | you may cast an instant or sorcery spell with mana value N or N from your hand without paying its mana cost. | 1 | Founding the Third Path | dmu |
 | you may cast ~ as though it had flash if N is N or less. draw N cards. | 1 | Silver Scrutiny | dmu |
 | {M}, {M}, sacrifice ~: reveal the top five cards of your library. put a land card from among them into your hand and the rest on the bottom of your library in a | 1 | Inscribed Tablet | dmu |
-| {M}: until end of turn, target creature with defender gains haste, can attack as though it didn't have defender, and assigns combat damage equal to its toughnes | 1 | Walking Bulwark | dmu |
 | {M}{M}: if ~ is a cleric, put a deathtouch counter on it and it becomes a phyrexian human cleric with base power and toughness N/N. | 1 | Evolved Sleeper | dmu |
-| {M}{M}: target non-aura enchantment you control becomes a creature in addition to its other types and has base power and base toughness each equal to its mana v | 1 | Zur, Eternal Schemer | dmu |
 | {M}{M}{M}: put a +N/+N counter on king darien and create a N/N white soldier creature token. | 1 | King Darien XLVIII | dmu |
 | −N: choose target creature an opponent controls. whenever you attack ~, jaya deals damage equal to the number of attacking creatures to that creature. | 1 | Jaya, Fiery Negotiator | dmu |
 

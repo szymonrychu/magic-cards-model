@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 79 | 31.3% |
+| Tested | 82 | 32.5% |
 | Works (untested) | 134 | 53.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 39 | 15.5% |
+| Not working | 36 | 14.3% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | All-Out Assault | silent | When this enchantment enters, if it's your main phase, there is an additional combat phase after this phase followed by an additional main phase. When you next  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Anafenza, Unyielding Lineage | silent | Endure | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Attuned Hunter | silent | Whenever one or more cards leave your graveyard during your turn, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Betor, Kin to All | silent | At the beginning of your end step, if creatures you control have total toughness 10 or greater, draw a card. Then if creatures you control have total toughness  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bloomvine Regent // Claim Territory | silent | Search your library for up to two basic Forest cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle. (Also shuffle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Call the Spirit Dragons | silent | At the beginning of your upkeep, for each color, put a +1/+1 counter on a Dragon you control of that color. If you put +1/+1 counters on five Dragons this way,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Descendant of Storms | silent | Endure | no machine in the engine executes this keyword | Y/Y/Y | not_working |
@@ -50,18 +49,16 @@
 | Riverwheel Sweep | silent | Tap target creature. Put three stun counters on it. (If a permanent with a stun counter would become untapped, remove one from it instead.) Exile the top two ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Roar of Endless Song | silent | III — Double the power and toughness of each creature you control until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Scavenger Regent // Exude Toxin | silent | Each non-Dragon creature gets -X/-X until end of turn. (Then shuffle this card into its owner's library.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Severance Priest | silent | When this creature enters, target opponent reveals their hand. You may choose a nonland card from it. If you do, exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sinkhole Surveyor | silent | Whenever this creature attacks, you lose 1 life and this creature endures 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Smile at Death | silent | At the beginning of your upkeep, return up to two target creature cards with power 2 or less from your graveyard to the battlefield. Put a +1/+1 counter on each | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Songcrafter Mage | silent | When this creature enters, target instant or sorcery card in your graveyard gains harmonize until end of turn. Its harmonize cost is equal to its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Stillness in Motion | silent | At the beginning of your upkeep, mill three cards. Then if your library has no cards in it, exile this enchantment and put five cards from your graveyard on top | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Trade Route Envoy | silent | When this creature enters, draw a card if you control a creature with a counter on it. If you don't draw a card this way, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Traveling Botanist | silent | Whenever this creature becomes tapped, look at the top card of your library. If it's a land card, you may reveal it and put it into your hand. If you don't put  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Veteran Ice Climber | silent | Whenever this creature attacks, up to one target player mills cards equal to this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Warden of the Grove | silent | Endure | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Desperate Measures | notice | Target creature gets +1/-1 until end of turn. When it dies under your control this turn, draw two cards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kishla Trawlers | notice | When this creature enters, you may exile a creature card from your graveyard. When you do, return target instant or sorcery card from your graveyard to your han | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Naga Fleshcrafter | notice | Renew — {2}{U}, Exile this card from your graveyard: Put a +1/+1 counter on target nonlegendary creature you control. Each other creature you control becomes a  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Severance Priest | notice | When this creature enters, target opponent reveals their hand. You may choose a nonland card from it. If you do, exile that card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Shiko, Paragon of the Way | notice | When Shiko enters, exile target nonland card with mana value 3 or less from your graveyard. Copy it, then you may cast the copy without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Synchronized Charge | notice | Distribute two +1/+1 counters among one or two target creatures you control. Creatures you control with counters on them gain vigilance and trample until end of | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Temur Battlecrier | notice | During your turn, spells you cast cost {1} less to cast for each creature you control with power 4 or greater. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -203,13 +200,14 @@
 ## Fully supported
 
 <details>
-<summary>79 cards</summary>
+<summary>82 cards</summary>
 
 - Aegis Sculptor
 - Agent of Kotis
 - Ainok Wayfarer
 - Avenger of the Fallen
 - Barrensteppe Siege
+- Betor, Kin to All
 - Breaching Dragonstorm
 - Caustic Exhale
 - Clarion Conqueror
@@ -259,6 +257,7 @@
 - Sarkhan, Dragon Ascendant
 - Shock Brigade
 - Snowmelt Stag
+- Songcrafter Mage
 - Sonic Shrieker
 - Stadium Headliner
 - Stalwart Successor
@@ -275,6 +274,7 @@
 - Ugin, Eye of the Storms
 - United Battlefront
 - Ureni, the Song Unending
+- Veteran Ice Climber
 - Voice of Victory
 - Wail of War
 - Whirlwing Stormbrood // Dynamic Soar
@@ -293,7 +293,6 @@
 |---|---|---|---|
 | endure | 3 | Anafenza, Unyielding Lineage, Descendant of Storms, Warden of the Grove | tdm |
 | Renew | 1 | Naga Fleshcrafter | tdm |
-| at the beginning of your end step, if creatures you control have total toughness N or greater, draw a card. then if creatures you control have total toughness N | 1 | Betor, Kin to All | tdm |
 | at the beginning of your upkeep, for each color, put a +N/+N counter on a dragon you control of that color. if you put +N/+N counters on five dragons ~, you win | 1 | Call the Spirit Dragons | tdm |
 | at the beginning of your upkeep, mill three cards. then if your library has no cards in it, exile ~ and put five cards from your graveyard on top of your librar | 1 | Stillness in Motion | tdm |
 | at the beginning of your upkeep, return up to two target creature cards with power N or less from your graveyard to the battlefield. put a +N/+N counter on each | 1 | Smile at Death | tdm |
@@ -311,7 +310,6 @@
 | when ~ enters, if it's your main phase, there is an additional combat phase after ~ followed by an additional main phase. when you next attack ~, untap each cre | 1 | All-Out Assault | tdm |
 | when ~ enters, search your library for a black card, a green card, and a blue card. put those cards into your graveyard, then shuffle. | 1 | Lotuslight Dancers | tdm |
 | when ~ enters, target creature an opponent controls gets -N/-N until end of turn and target creature you control gets +N/+N until end of turn. | 1 | Gurmag Rakshasa | tdm |
-| when ~ enters, target instant or sorcery card in your graveyard gains harmonize until end of turn. its harmonize cost is equal to its mana cost. | 1 | Songcrafter Mage | tdm |
 | when ~ enters, target opponent reveals their hand. you may choose a nonland card from it. if you do, exile that card. | 1 | Severance Priest | tdm |
 | when ~ enters, you may exile a creature card from your graveyard. when you do, return target instant or sorcery card from your graveyard to your hand. | 1 | Kishla Trawlers | tdm |
 | when ~ enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top. if you control a dragon, put that card onto  | 1 | Embermouth Sentinel | tdm |
@@ -319,7 +317,6 @@
 | whenever one or more cards leave your graveyard during your turn, create a treasure token. | 1 | Kheru Goldkeeper | tdm |
 | whenever one or more cards leave your graveyard during your turn, put a +N/+N counter on ~. | 1 | Attuned Hunter | tdm |
 | whenever ~ attacks, for each opponent, create a tapped token that's a copy of the exiled card attacking that opponent. at the beginning of your next end step, s | 1 | Mardu Siegebreaker | tdm |
-| whenever ~ attacks, up to one target player mills cards equal to ~ power. | 1 | Veteran Ice Climber | tdm |
 | whenever ~ attacks, you lose N life and ~ endures N. | 1 | Sinkhole Surveyor | tdm |
 | whenever ~ becomes tapped, look at the top card of your library. if it"..."t put the card into your hand, you may put it into your graveyard. | 1 | Traveling Botanist | tdm |
 | you may cast ~ as though it had flash if you behold a dragon as an additional cost to cast it. (to behold a dragon, choose a dragon you control or reveal a drag | 1 | Molten Exhale | tdm |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 33.3% |
+| Tested | 10 | 37.0% |
 | Works (untested) | 7 | 25.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 11 | 40.7% |
+| Not working | 10 | 37.0% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Transmutation Font | silent | {T}: Create your choice of a Blood token, a Clue token, or a Food token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Vaultborn Tyrant | silent | When this creature dies, if it's not a token, create a token that's a copy of it, except it's an artifact in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Generous Plunderer | notice | At the beginning of your upkeep, you may create a Treasure token. When you do, target opponent creates a tapped Treasure token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Loot, the Key to Everything | notice | At the beginning of your upkeep, exile the top X cards of your library, where X is the number of card types among other nonland permanents you control. You may  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Nexus of Becoming | notice | At the beginning of combat on your turn, draw a card. Then you may exile an artifact or creature card from your hand. If you do, create a token that's a copy of | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Fomori Vault | handled | {3}, {T}, Discard a card: Look at the top X cards of your library, where X is the number of artifacts you control. Put one of those cards into your hand and the | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Greed's Gambit | handled | When this enchantment enters, you draw three cards, gain 6 life, and create three 2/1 black Bat creature tokens with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -48,11 +47,12 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>10 cards</summary>
 
 - Ancient Cornucopia
 - Bristlebud Farmer
 - Harvester of Misery
+- Loot, the Key to Everything
 - Molten Duplication
 - Pest Control
 - Simulacrum Synthesizer
@@ -67,7 +67,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | at the beginning of combat on your turn, draw a card. then you may exile an artifact or creature card from your hand. if you do, create a token that"..."s a N/N | 1 | Nexus of Becoming | big |
-| at the beginning of your upkeep, exile the top N cards of your library, where N is the number of card types among other nonland permanents you control. you may  | 1 | Loot, the Key to Everything | big |
 | at the beginning of your upkeep, you may create a treasure token. when you do, target opponent creates a tapped treasure token. | 1 | Generous Plunderer | big |
 | when ~ dies, if it"..."s a copy of it, except it's an artifact in addition to its other types. | 1 | Vaultborn Tyrant | big |
 | when ~ enters, search your library for up to five land cards that have different names, exile them, then shuffle. | 1 | Omenpath Journey | big |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 42 | 16.1% |
-| Works (untested) | 188 | 72.0% |
+| Tested | 43 | 16.5% |
+| Works (untested) | 189 | 72.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 31 | 11.9% |
+| Not working | 29 | 11.1% |
 
 ## Cards needing work
 
@@ -30,7 +30,6 @@
 | Corrupted Grafstone | silent | {T}: Choose a color of a card in your graveyard. Add one mana of that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Creeping Dread | silent | At the beginning of your upkeep, each player discards a card. Each opponent who discarded a card that shares a card type with the card you discarded loses 3 lif | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cult of the Waxing Moon | silent | Whenever a permanent you control transforms into a non-Human creature, create a 2/2 green Wolf creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Engulf the Shore | silent | Return to their owners' hands all creatures with toughness less than or equal to the number of Islands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Epiphany at the Drownyard | silent | Reveal the top X plus one cards of your library and separate them into two piles. An opponent chooses one of those piles. Put that pile into your hand and the o | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Erdwal Illuminator | silent | Whenever you investigate for the first time each turn, investigate an additional time. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Ever After | silent | Return up to two target creature cards from your graveyard to the battlefield. Each of those creatures is a black Zombie in addition to its other colors and typ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -43,8 +42,6 @@
 | Neglected Heirloom // Ashmouth Blade | silent | When equipped creature transforms, transform this Equipment. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Not Forgotten | silent | Put target card from a graveyard on your choice of the top or bottom of its owner's library. Create a 1/1 white Spirit creature token with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Olivia, Mobilized for War | silent | Whenever another creature you control enters, you may discard a card. If you do, put a +1/+1 counter on that creature, it gains haste until end of turn, and it  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Pick the Brain | silent | Target opponent reveals their hand. You choose a nonland card from it and exile that card. Delirium — If there are four or more card types among cards in your g | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Pieces of the Puzzle | silent | Reveal the top five cards of your library. Put up to two instant and/or sorcery cards from among them into your hand and the rest into your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sage of Ancient Lore // Werewolf of Ancient Hunger | silent | Werewolf of Ancient Hunger's power and toughness are each equal to the total number of cards in all players' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seasons Past | silent | Return any number of cards with different mana values from your graveyard to your hand. Put Seasons Past on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Second Harvest | silent | For each token you control, create a token that's a copy of that permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -56,6 +53,7 @@
 | Avacyn's Judgment | notice | Madness {X}{R} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your graveyard.) Avacyn's Judgment dea | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Essence Flux | notice | Exile target creature you control, then return that card to the battlefield under its owner's control. If it's a Spirit, put a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Malevolent Whispers | notice | Gain control of target creature until end of turn. Untap that creature. It gets +2/+0 and gains haste until end of turn. Madness {3}{R} (If you discard this car | unparsed remainder: Untap that creature. It gets +2/+0 and gains haste until end of turn. | Y/Y/- | not_working |
+| Pick the Brain | notice | Target opponent reveals their hand. You choose a nonland card from it and exile that card. Delirium — If there are four or more card types among cards in your g | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Triskaidekaphobia | notice | At the beginning of your upkeep, choose one — • Each player with exactly 13 life loses the game, then each player gains 1 life. • Each player with exactly 13 li | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Aberrant Researcher // Perfected Form | handled | At the beginning of your upkeep, mill a card. If an instant or sorcery card was milled this way, transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aim High | handled | Untap target creature. It gets +2/+2 and gains reach until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -174,6 +172,7 @@
 | Pack Guardian | handled | When this creature enters, you may discard a land card. If you do, create a 2/2 green Wolf creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pale Rider of Trostad | handled | When this creature enters, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Paranoid Parish-Blade | handled | Delirium — This creature gets +1/+0 and has first strike as long as there are four or more card types among cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Pieces of the Puzzle | handled | Reveal the top five cards of your library. Put up to two instant and/or sorcery cards from among them into your hand and the rest into your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pious Evangel // Wayward Disciple | handled | Whenever this creature or another creature you control enters, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Press for Answers | handled | Tap target creature. It doesn't untap during its controller's next untap step. Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this tok | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pyre Hound | handled | Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -249,7 +248,7 @@
 ## Fully supported
 
 <details>
-<summary>42 cards</summary>
+<summary>43 cards</summary>
 
 - Accursed Witch // Infectious Curse
 - Always Watching
@@ -266,6 +265,7 @@
 - Diregraf Colossus
 - Dual Shot
 - Duskwatch Recruiter // Krallenhorde Howler
+- Engulf the Shore
 - Falkenrath Gorger
 - Fevered Visions
 - Geralf's Masterpiece
@@ -313,10 +313,8 @@
 | madness {M}{M}{M} (if you discard ~, discard it into exile. when you do, cast it for its madness cost or put it into your graveyard.) gain control of target cre | 1 | Welcome to the Fold | soi |
 | put target card from a graveyard on your choice of the top or bottom of its owner's library. create a N/N white spirit creature token with flying. | 1 | Not Forgotten | soi |
 | return any number of cards with different mana values from your graveyard to your hand. put ~ on the bottom of its owner's library. | 1 | Seasons Past | soi |
-| return to their owners' hands all creatures with toughness less than or equal to the number of islands you control. | 1 | Engulf the Shore | soi |
 | return up to two target creature cards from your graveyard to the battlefield. each of those creatures is a black zombie in addition to its other colors and typ | 1 | Ever After | soi |
 | reveal the top N plus one cards of your library and separate them into two piles. an opponent chooses one of those piles. put that pile into your hand and the o | 1 | Epiphany at the Drownyard | soi |
-| reveal the top five cards of your library. put up to two instant and/or sorcery cards from among them into your hand and the rest into your graveyard. | 1 | Pieces of the Puzzle | soi |
 | search your library for up to two basic land cards and reveal them. put one into your hand and the other into your graveyard. then shuffle. | 1 | Fork in the Road | soi |
 | target opponent reveals their hand. you choose a nonland card from it and exile that card. delirium — if there are four or more card types among cards in your g | 1 | Pick the Brain | soi |
 | werewolf of ancient hunger"..." hands. | 1 | Sage of Ancient Lore // Werewolf of Ancient Hunger | soi |

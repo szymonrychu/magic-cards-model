@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 25.9% |
-| Works (untested) | 68 | 47.6% |
+| Tested | 38 | 26.6% |
+| Works (untested) | 69 | 48.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 38 | 26.6% |
+| Not working | 36 | 25.2% |
 
 ## Cards needing work
 
@@ -37,9 +37,7 @@
 | Dark Depths | silent | When Dark Depths has no ice counters on it, sacrifice it. If you do, create Marit Lage, a legendary 20/20 black Avatar creature token with flying and indestruct | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Fury of the Horde | silent | You may exile two red cards from your hand rather than pay this spell's mana cost. Untap all creatures that attacked this turn. After this main phase, there is  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Garza's Assassin | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Glacial Plating | silent | Enchanted creature gets +3/+3 for each age counter on this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grim Harvest | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Herald of Leshrac | silent | When this creature leaves the battlefield, each player gains control of each land they own that you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hibernation's End | silent | Whenever you pay this enchantment's cumulative upkeep, you may search your library for a creature card with mana value equal to the number of age counters on th | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Icefall | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Jester's Scepter | silent | {2}, {T}, Put a card exiled with this artifact into its owner's graveyard: Counter target spell if it has the same name as that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -88,6 +86,7 @@
 | Frostweb Spider | handled | Whenever this creature blocks a creature with flying, put a +1/+1 counter on this creature at end of combat. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Garza Zol, Plague Queen | handled | Whenever a creature dealt damage by Garza Zol this turn dies, put a +1/+1 counter on Garza Zol. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gelid Shackles | handled | Enchanted creature can't block, and its activated abilities can't be activated. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Glacial Plating | handled | Enchanted creature gets +3/+3 for each age counter on this Aura. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Rimerunner | handled | {T}: Target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Greater Stone Spirit | handled | This creature can't be blocked by creatures with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gristle Grinner | handled | Whenever a creature dies, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -136,7 +135,7 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>38 cards</summary>
 
 - Adarkar Windform
 - Allosaurus Rider
@@ -148,6 +147,7 @@
 - Freyalise's Radiance
 - Goblin Furrier
 - Haakon, Stromgald Scourge
+- Herald of Leshrac
 - Karplusan Strider
 - Kjeldoran Javelineer
 - Kjeldoran War Cry
@@ -189,11 +189,9 @@
 | at the beginning of each end step, each player gains control of all nontoken permanents they own. | 1 | Brooding Saurian | csp |
 | at the beginning of your upkeep, put a +N/+N counter on enchanted creature if it attacked or blocked since your last upkeep. otherwise, remove a +N/+N counter f | 1 | Shape of the Wiitigo | csp |
 | counter target spell unless its controller pays {M} plus an additional {M} for each card named ~ in each graveyard. | 1 | Rune Snag | csp |
-| enchanted creature gets +N/+N for each age counter on ~. | 1 | Glacial Plating | csp |
 | remove a healing counter from ~: prevent the next N damage that would be dealt to ~ ~. | 1 | Ursine Fylgja | csp |
 | when ~ enters, sacrifice it unless you sacrifice five lands. | 1 | Jokulmorder | csp |
 | when ~ has no ice counters on it, sacrifice it. if you do, create marit lage, a legendary N/N black avatar creature token with flying and indestructible. | 1 | Dark Depths | csp |
-| when ~ leaves the battlefield, each player gains control of each land they own that you control. | 1 | Herald of Leshrac | csp |
 | whenever a noncreature source you control deals damage, you gain that much life. | 1 | Tamanoa | csp |
 | whenever an opponent casts a spell, you may reveal the top card of your library. if you do, counter that spell if it has the same mana value as the revealed car | 1 | Counterbalance | csp |
 | whenever you pay ~ cumulative upkeep, you may search your library for a creature card with mana value equal to the number of age counters on ~, put it onto the  | 1 | Hibernation's End | csp |

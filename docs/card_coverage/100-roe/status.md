@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 56 | 25.5% |
+| Tested | 57 | 25.9% |
 | Works (untested) | 132 | 60.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 32 | 14.5% |
+| Not working | 31 | 14.1% |
 
 ## Cards needing work
 
@@ -39,10 +39,8 @@
 | Irresistible Prey | silent | Target creature must be blocked this turn if able. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | It That Betrays | silent | Whenever an opponent sacrifices a nontoken permanent, put that card onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lay Bare | silent | Counter target spell. Look at its controller's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lightmine Field | silent | Whenever one or more creatures attack, this enchantment deals damage to each of those creatures equal to the number of attacking creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Not of This World | silent | Counter target spell or ability that targets a permanent you control. This spell costs {7} less to cast if it targets a spell or ability that targets a creature | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Oust | silent | Put target creature into its owner's library second from the top. Its controller gains 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Perish the Thought | silent | Target opponent reveals their hand. You choose a card from it. That player shuffles that card into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Raid Bombardment | silent | Whenever a creature you control with power 2 or less attacks, this enchantment deals 1 damage to the player or planeswalker that creature is attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Realms Uncharted | silent | Search your library for up to four land cards with different names and reveal them. An opponent chooses two of those cards. Put the chosen cards into your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Renegade Doppelganger | silent | Whenever another creature you control enters, you may have this creature become a copy of that creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -58,6 +56,7 @@
 | Champion's Drake | notice | This creature gets +3/+3 as long as you control a creature with three or more level counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Distortion Strike | notice | Target creature gets +1/+0 until end of turn and can't be blocked this turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beg | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Drana, Kalastria Bloodchief | notice | {X}{B}{B}: Target creature gets -0/-X until end of turn and Drana gets +X/+0 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Perish the Thought | notice | Target opponent reveals their hand. You choose a card from it. That player shuffles that card into their library. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Affa Guard Hound | handled | When this creature enters, target creature gets +0/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Akoum Boulderfoot | handled | When this creature enters, it deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Artisan of Kozilek | handled | When you cast this spell, you may return target creature card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -194,7 +193,7 @@
 ## Fully supported
 
 <details>
-<summary>56 cards</summary>
+<summary>57 cards</summary>
 
 - All Is Dust
 - Ancient Stirrings
@@ -222,6 +221,7 @@
 - Joraga Treespeaker
 - Keening Stone
 - Khalni Hydra
+- Lightmine Field
 - Living Destiny
 - Lord of Shatterskull Pass
 - Lust for War
@@ -281,7 +281,6 @@
 | whenever a creature you control with power N or less attacks, ~ deals N damage to the player or planeswalker that creature is attacking. | 1 | Raid Bombardment | roe |
 | whenever an opponent sacrifices a nontoken permanent, put that card onto the battlefield under your control. | 1 | It That Betrays | roe |
 | whenever another creature you control enters, you may have ~ become a copy of that creature until end of turn. | 1 | Renegade Doppelganger | roe |
-| whenever one or more creatures attack, ~ deals damage to each of those creatures equal to the number of attacking creatures. | 1 | Lightmine Field | roe |
 | whenever you become the target of a spell, you may untap ~. | 1 | Dormant Gomazoa | roe |
 | whenever you're dealt damage, you may put that many charge counters on ~. | 1 | Angelheart Vial | roe |
 | whenever ~ attacks, switch its power and toughness until end of turn. | 1 | Valakut Fireboar | roe |

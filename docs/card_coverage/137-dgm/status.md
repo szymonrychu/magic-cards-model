@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 23.1% |
-| Works (untested) | 79 | 55.2% |
+| Tested | 34 | 23.8% |
+| Works (untested) | 86 | 60.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 31 | 21.7% |
+| Not working | 23 | 16.1% |
 
 ## Cards needing work
 
@@ -32,22 +32,14 @@
 | Breaking // Entering | silent | Put a creature card from a graveyard onto the battlefield under your control. It gains haste until end of turn. Fuse (You may cast one or both halves of this ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Catch // Release | silent | Each player sacrifices an artifact, a creature, an enchantment, a land, and a planeswalker of their choice. Fuse (You may cast one or both halves of this card f | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deadbridge Chant | silent | At the beginning of your upkeep, choose a card at random in your graveyard. If it's a creature card, put it onto the battlefield. Otherwise, put it into your ha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Exava, Rakdos Blood Witch | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Fluxcharger | silent | Whenever you cast an instant or sorcery spell, you may switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gruul War Chant | silent | Attacking creatures you control get +1/+0 and have menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hidden Strings | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hired Torturer | silent | {3}{B}, {T}: Target opponent loses 2 life, then reveals a card at random from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lavinia of the Tenth | silent | When Lavinia enters, detain each nonland permanent your opponents control with mana value 4 or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Legion's Initiative | silent | {R}{W}, Exile this enchantment: Exile all creatures you control. At the beginning of the next combat, return those cards to the battlefield under their owner's  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lyev Decree | silent | Detain up to two target creatures your opponents control. (Until your next turn, those creatures can't attack or block and their activated abilities can't be ac | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Maze Abomination | silent | Multicolored creatures you control have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Maze Behemoth | silent | Multicolored creatures you control have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Maze Glider | silent | Multicolored creatures you control have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Maze Rusher | silent | Multicolored creatures you control have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Maze Sentinel | silent | Multicolored creatures you control have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nivix Cyclops | silent | Whenever you cast an instant or sorcery spell, this creature gets +3/+0 until end of turn and can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pyrewild Shaman | silent | Whenever one or more creatures you control deal combat damage to a player, if this card is in your graveyard, you may pay {3}. If you do, return this card to yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rakdos Drake | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Ral Zarek | silent | −7: Flip five coins. Take an extra turn after this one for each coin that comes up heads. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Render Silent | silent | Counter target spell. Its controller can't cast spells this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Renegade Krasis | silent | Whenever this creature evolves, put a +1/+1 counter on each other creature you control with a +1/+1 counter on it. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -74,6 +66,7 @@
 | Deputy of Acquittals | handled | When this creature enters, you may return another target creature you control to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dimir Cluestone | handled | {U}{B}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Down // Dirty | handled | Target player discards two cards. Fuse (You may cast one or both halves of this card from your hand.) | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Exava, Rakdos Blood Witch | handled | Each other creature you control with a +1/+1 counter on it has haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Far // Away | handled | Return target creature to its owner's hand. Fuse (You may cast one or both halves of this card from your hand.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fatal Fumes | handled | Target creature gets -4/-2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gaze of Granite | handled | Destroy each nonland permanent with mana value X or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -83,10 +76,16 @@
 | Gruul Cluestone | handled | {R}{G}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Haazda Snare Squad | handled | Whenever this creature attacks, you may pay {W}. If you do, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Haunter of Nightveil | handled | Creatures your opponents control get -1/-0. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Hidden Strings | handled | You may tap or untap target permanent, then you may tap or untap another target permanent. Cipher (Then you may exile this spell card encoded on a creature you  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Izzet Cluestone | handled | {U}{R}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jelenn Sphinx | handled | Whenever this creature attacks, other attacking creatures get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kraul Warrior | handled | {5}{G}: This creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Maw of the Obzedat | handled | Sacrifice a creature: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Maze Abomination | handled | Multicolored creatures you control have deathtouch. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Maze Behemoth | handled | Multicolored creatures you control have trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Maze Glider | handled | Multicolored creatures you control have flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Maze Rusher | handled | Multicolored creatures you control have haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Maze Sentinel | handled | Multicolored creatures you control have vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mending Touch | handled | Regenerate target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mindstatic | handled | Counter target spell unless its controller pays {6}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mirko Vosk, Mind Drinker | handled | Whenever Mirko Vosk deals combat damage to a player, that player reveals cards from the top of their library until they reveal four land cards, then puts those  | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -140,7 +139,7 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>34 cards</summary>
 
 - Aetherling
 - Beck // Call
@@ -166,6 +165,7 @@
 - Plasm Capture
 - Possibility Storm
 - Protect // Serve
+- Rakdos Drake
 - Ready // Willing
 - Reap Intellect
 - Riot Control
@@ -182,22 +182,15 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| unleash | 2 | Exava, Rakdos Blood Witch, Rakdos Drake | dgm |
 | at the beginning of each combat, up to one target creature attacks or blocks ~ if able and up to one target creature can't attack or block ~. | 1 | Boros Battleshaper | dgm |
 | at the beginning of your upkeep, choose a card at random in your graveyard. if it's a creature card, put it onto the battlefield. otherwise, put it into your ha | 1 | Deadbridge Chant | dgm |
 | attacking creatures you control get +N/+N and have menace. | 1 | Gruul War Chant | dgm |
 | change the text of target permanent by replacing all instances of one color word with another or one basic land type with another until end of turn. cipher (the | 1 | Trait Doctoring | dgm |
-| cipher | 1 | Hidden Strings | dgm |
 | counter target spell. its controller can't cast spells ~. | 1 | Render Silent | dgm |
 | detain up to two target creatures your opponents control. (until your next turn, those creatures can"..."t be activated.) | 1 | Lyev Decree | dgm |
 | each player sacrifices an artifact, a creature, an enchantment, a land, and a planeswalker of their choice. fuse (you may cast one or both halves of ~ from your | 1 | Catch // Release | dgm |
 | evolve | 1 | Battering Krasis | dgm |
 | monocolored creatures can't block ~. | 1 | Awe for the Guilds | dgm |
-| multicolored creatures you control have deathtouch. | 1 | Maze Abomination | dgm |
-| multicolored creatures you control have flying. | 1 | Maze Glider | dgm |
-| multicolored creatures you control have haste. | 1 | Maze Rusher | dgm |
-| multicolored creatures you control have trample. | 1 | Maze Behemoth | dgm |
-| multicolored creatures you control have vigilance. | 1 | Maze Sentinel | dgm |
 | other creatures you control have extort. | 1 | Pontiff of Blight | dgm |
 | populate. (create a token that's a copy of a creature token you control.) | 1 | Wake the Reflections | dgm |
 | put a creature card from a graveyard onto the battlefield under your control. it gains haste until end of turn. fuse (you may cast one or both halves of ~ from  | 1 | Breaking // Entering | dgm |

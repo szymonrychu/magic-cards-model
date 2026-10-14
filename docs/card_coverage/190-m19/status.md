@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 12.2% |
+| Tested | 23 | 12.8% |
 | Works (untested) | 135 | 75.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 23 | 12.8% |
+| Not working | 22 | 12.2% |
 
 ## Cards needing work
 
@@ -44,7 +44,6 @@
 | Tezzeret's Gatebreaker | silent | {5}{U}, {T}, Sacrifice this artifact: Creatures you control can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tezzeret, Cruel Machinist | silent | 0: Until your next turn, target artifact you control becomes a 5/5 creature in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ursine Champion | silent | {5}{G}: This creature gets +3/+3 and becomes a Bear Berserker until end of turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Vivien's Invocation | silent | Look at the top seven cards of your library. You may put a creature card from among them onto the battlefield. Put the rest on the bottom of your library in a r | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chaos Wand | notice | {4}, {T}: Target opponent exiles cards from the top of their library until they exile an instant or sorcery card. You may cast that card without paying its mana | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Cleansing Nova | notice | Choose one — • Destroy all creatures. • Destroy all artifacts and enchantments. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Declare Dominance | notice | Target creature gets +3/+3 until end of turn. All creatures able to block it this turn do so. | unparsed remainder: All creatures able to block it this turn do so. | Y/Y/- | not_working |
@@ -188,7 +187,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>23 cards</summary>
 
 - Alpine Moon
 - Arisen Gorgon
@@ -212,6 +211,7 @@
 - Suncleanser
 - Supreme Phantom
 - Vine Mare
+- Vivien's Invocation
 
 </details>
 
@@ -226,7 +226,6 @@
 | at the beginning of each end step, if ~ attacked or blocked ~, its owner shuffles it into their library. | 1 | Inferno Hellion | m19 |
 | each player loses half their life, then discards half the cards in their hand, then sacrifices half the creatures they control of their choice. round up each ti | 1 | Fraying Omnipotence | m19 |
 | exile the top seven cards of your library. until end of turn, you may cast spells from among them. if ~ was cast from your hand, add ten mana of any one color. | 1 | Apex of Power | m19 |
-| look at the top seven cards of your library. you may put a creature card from among them onto the battlefield. put the rest on the bottom of your library in a r | 1 | Vivien's Invocation | m19 |
 | target creature gets +N/+N until end of turn. all creatures able to block it ~ do so. | 1 | Declare Dominance | m19 |
 | when ~ enters, look at the top four cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put th | 1 | Militia Bugler | m19 |
 | when ~ enters, target artifact you control becomes an artifact creature with base power and toughness N/N for as long as ~ remains on the battlefield. | 1 | Skilled Animator | m19 |

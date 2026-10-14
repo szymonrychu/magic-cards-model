@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 20.4% |
+| Tested | 21 | 21.4% |
 | Works (untested) | 62 | 63.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 16 | 16.3% |
+| Not working | 15 | 15.3% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Arbalest Elite | silent | {2}{W}, {T}: This creature deals 3 damage to target attacking or blocking creature. This creature doesn't untap during your next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloodlord of Vaasgoth | silent | Whenever you cast a Vampire creature spell, it gains bloodthirst 3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Circle of Flame | silent | Whenever a creature without flying attacks you or a planeswalker you control, this enchantment deals 1 damage to that creature. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
-| Doubling Chant | silent | For each creature you control, you may search your library for a creature card with the same name as that creature. Put those cards onto the battlefield, then s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Druidic Satchel | silent | {2}, {T}: Reveal the top card of your library. If it's a creature card, create a 1/1 green Saproling creature token. If it's a land card, put that card onto the | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goblin Bangchuckers | silent | {T}: Flip a coin. If you win the flip, this creature deals 2 damage to any target. If you lose the flip, this creature deals 2 damage to itself. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jace, Memory Adept | silent | −7: Any number of target players each draw twenty cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -108,12 +107,13 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Adaptive Automaton
 - Aegis Angel
 - Arachnus Web
 - Crown of Empires
+- Doubling Chant
 - Dungrove Elder
 - Frost Breath
 - Gladecover Scout
@@ -139,7 +139,6 @@
 |---|---|---|---|
 | destroy target land. creatures without flying can't block ~. | 1 | Tectonic Rift | m12 |
 | draw a card. if a graveyard has twenty or more cards in it, draw three cards instead. | 1 | Visions of Beyond | m12 |
-| for each creature you control, you may search your library for a creature card with the same name as that creature. put those cards onto the battlefield, then s | 1 | Doubling Chant | m12 |
 | for each nonland permanent, choose a player at random. then each player gains control of each permanent for which they were chosen. untap those permanents. | 1 | Scrambleverse | m12 |
 | if you have less life than an opponent, you gain N life. if you control fewer creatures than an opponent, create three N/N white soldier creature tokens. | 1 | Timely Reinforcements | m12 |
 | tap an untapped spider you control: search your graveyard and/or library for a card named arachnus web and put it onto the battlefield attached to target creatu | 1 | Arachnus Spinner | m12 |

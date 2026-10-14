@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 17.9% |
+| Tested | 31 | 19.1% |
 | Works (untested) | 96 | 59.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 37 | 22.8% |
+| Not working | 35 | 21.6% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Death Cloud | silent | Each player loses X life, discards X cards, sacrifices X creatures of their choice, then sacrifices X lands of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Death-Mask Duplicant | silent | As long as a card exiled with this creature has flying, this creature has flying. The same is true for fear, first strike, double strike, haste, landwalk, prote | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Eater of Days | silent | When this creature enters, you skip your next two turns. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Emissary of Hope | silent | Whenever this creature deals combat damage to a player, you gain 1 life for each artifact that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fangren Firstborn | silent | Whenever this creature attacks, put a +1/+1 counter on each attacking creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Genesis Chamber | silent | Whenever a nontoken creature enters, if this artifact is untapped, that creature's controller creates a 1/1 colorless Myr artifact creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goblin Archaeologist | silent | {R}, {T}: Flip a coin. If you win the flip, destroy target artifact and untap this creature. If you lose the flip, sacrifice this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -58,7 +57,6 @@
 | Dismantle | notice | Destroy target artifact. If that artifact had counters on it, put that many +1/+1 counters or charge counters on an artifact you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Echoing Calm | notice | Destroy target enchantment and all other enchantments with the same name as that enchantment. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Echoing Ruin | notice | Destroy target artifact and all other artifacts with the same name as that artifact. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Gemini Engine | notice | Whenever this creature attacks, create a colorless Construct artifact creature token named Twin that's attacking. Its power is equal to this creature's power an | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Murderous Spoils | notice | Destroy target nonblack creature. It can't be regenerated. You gain control of all Equipment that were attached to it. (This effect lasts indefinitely.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pulse of the Forge | notice | Pulse of the Forge deals 4 damage to target player or planeswalker. Then if that player or that planeswalker's controller has more life than you, return Pulse o | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Second Sight | notice | Choose one — • Look at the top five cards of target opponent's library, then put them back in any order. • Look at the top five cards of your library, then put  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -163,7 +161,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>31 cards</summary>
 
 - Aether Snap
 - Aether Vial
@@ -175,8 +173,10 @@
 - Darksteel Gargoyle
 - Echoing Courage
 - Echoing Truth
+- Emissary of Hope
 - Flamebreak
 - Furnace Dragon
+- Gemini Engine
 - Hallow
 - Hoverguard Observer
 - Leonin Shikari
@@ -227,10 +227,8 @@
 | when ~ has twenty or more charge counters on it, you win the game. | 1 | Darksteel Reactor | dst |
 | whenever a nontoken creature enters, if ~ is untapped, that creature's controller creates a N/N colorless myr artifact creature token. | 1 | Genesis Chamber | dst |
 | whenever you gain life, you may pay {M}, where N is less than or equal to the amount of life you gained. if you do, draw N cards. | 1 | Well of Lost Dreams | dst |
-| whenever ~ attacks, create a colorless construct artifact creature token named twin that's attacking. its power is equal to ~ power and its toughness is equal t | 1 | Gemini Engine | dst |
 | whenever ~ attacks, put a +N/+N counter on each attacking creature. | 1 | Fangren Firstborn | dst |
 | whenever ~ deals combat damage to a creature, destroy that creature. the creature can't be regenerated. | 1 | Mephitic Ooze | dst |
-| whenever ~ deals combat damage to a player, you gain N life for each artifact that player controls. | 1 | Emissary of Hope | dst |
 | you gain N life. then if an opponent has more life than you, return ~ to its owner's hand. | 1 | Pulse of the Fields | dst |
 | {M}, {M}: flip a coin. if you win the flip, create a N/N colorless insect artifact creature token with flying named wirefly. if you lose the flip, destroy all p | 1 | Wirefly Hive | dst |
 | {M}, {M}: flip a coin. if you win the flip, destroy target artifact and untap ~. if you lose the flip, sacrifice ~. | 1 | Goblin Archaeologist | dst |

@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 51 | 22.4% |
-| Works (untested) | 129 | 56.6% |
+| Tested | 56 | 24.6% |
+| Works (untested) | 132 | 57.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 48 | 21.1% |
+| Not working | 40 | 17.5% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Archipelagore | silent | Whenever this creature mutates, tap up to X target creatures, where X is the number of times this creature has mutated. Those creatures don't untap during their | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Auspicious Starrix | silent | Whenever this creature mutates, exile cards from the top of your library until you exile X permanent cards, where X is the number of times this creature has mut | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blood Curdle | silent | Destroy target creature. Put a menace counter on a creature you control. (It can't be blocked except by two or more creatures.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Charge of the Forever-Beast | silent | As an additional cost to cast this spell, reveal a creature card from your hand. Charge of the Forever-Beast deals damage to target creature or planeswalker equ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -36,33 +35,26 @@
 | Eerie Ultimatum | silent | Return any number of permanent cards with different names from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Emergent Ultimatum | silent | Search your library for up to three monocolored cards with different names and exile them. An opponent chooses one of those cards. Shuffle that card into your l | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Extinction Event | silent | Choose odd or even. Exile each creature with mana value of the chosen quality. (Zero is even.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Exuberant Wolfbear | silent | Whenever this creature attacks, you may have the base power and toughness of target Human you control become equal to this creature's power and toughness until  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Frillscare Mentor | silent | {2}{R}, {T}: Put a +1/+1 counter on each creature you control with menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Genesis Ultimatum | silent | Look at the top five cards of your library. Put any number of permanent cards from among them onto the battlefield and the rest into your hand. Exile Genesis Ul | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hornbash Mentor | silent | {2}{G}, {T}: Put a +1/+1 counter on each creature you control with trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hunted Nightmare | silent | When this creature enters, target opponent puts a deathtouch counter on a creature they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Huntmaster Liger | silent | Whenever this creature mutates, other creatures you control get +X/+X until end of turn, where X is the number of times this creature has mutated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Illuna, Apex of Wishes | silent | Whenever this creature mutates, exile cards from the top of your library until you exile a nonland permanent card. Put that card onto the battlefield or into yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Insatiable Hemophage | silent | Whenever this creature mutates, each opponent loses X life and you gain X life, where X is the number of times this creature has mutated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Keensight Mentor | silent | {1}{W}, {T}: Put a +1/+1 counter on each creature you control with vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Keep Safe | silent | Counter target spell that targets a permanent you control. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Labyrinth Raptor | silent | Whenever a creature you control with menace becomes blocked, defending player sacrifices a creature of their choice that's blocking it. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
-| Lukka, Coppercoat Outcast | silent | +1: Exile the top three cards of your library. Creature cards exiled this way gain "You may cast this card from exile as long as you control a Lukka planeswalke | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Memory Leak | silent | Target opponent reveals their hand. You choose a nonland card from that player's graveyard or hand and exile it. Cycling {1} ({1}, Discard this card: Draw a car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Momentum Rumbler | silent | Whenever this creature attacks, if it doesn't have first strike, put a first strike counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mutual Destruction | silent | This spell has flash as long as you control a permanent with flash. As an additional cost to cast this spell, sacrifice a creature. Destroy target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mythos of Brokkos | silent | If {U}{B} was spent to cast this spell, search your library for a card, put that card into your graveyard, then shuffle. Return up to two permanent cards from y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mythos of Nethroi | silent | Destroy target nonland permanent if it's a creature or if {G}{W} was spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mythos of Snapdax | silent | Each player chooses an artifact, a creature, an enchantment, and a planeswalker from among the nonland permanents they control, then sacrifices the rest. If {B} | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Perimeter Sergeant | silent | Whenever this creature attacks, other Humans you control get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Porcuparrot | silent | {T}: This creature deals X damage to any target, where X is the number of times this creature has mutated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Primal Empathy | silent | At the beginning of your upkeep, draw a card if you control a creature with the greatest power among creatures on the battlefield. Otherwise, put a +1/+1 counte | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reptilian Reflection | silent | Whenever you cycle a card, you may have this enchantment become a 5/4 Dinosaur creature with trample and haste in addition to its other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sanctuary Smasher | silent | When you cycle this card, put a first strike counter on target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sleeper Dart | silent | {T}, Sacrifice this artifact: Target creature doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Solid Footing | silent | As long as enchanted creature has vigilance, it assigns combat damage equal to its toughness rather than its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Ozolith | silent | Whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on The Ozolith. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Vadrok, Apex of Thunder | silent | Whenever this creature mutates, you may cast target noncreature card with mana value 3 or less from your graveyard without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vivien, Monsters' Advocate | silent | +1: Create a 3/3 green Beast creature token. Put your choice of a reach counter, a vigilance counter, or a trample counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wingspan Mentor | silent | {2}{U}, {T}: Put a +1/+1 counter on each creature you control with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Winota, Joiner of Forces | silent | Whenever a non-Human creature you control attacks, look at the top six cards of your library. You may put a Human creature card from among them onto the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -78,6 +70,7 @@
 | Aegis Turtle | handled |  |  | Y/Y/Y | not_tested |
 | Alert Heedbonder | handled | At the beginning of your end step, you gain 1 life for each creature you control with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Almighty Brushwagg | handled | {3}{G}: This creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Archipelagore | handled | Whenever this creature mutates, tap up to X target creatures, where X is the number of times this creature has mutated. Those creatures don't untap during their | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Avian Oddity | handled | When you cycle this card, put a flying counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Barrier Breach | handled | Exile up to three target enchantments. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bastion of Remembrance | handled | When this enchantment enters, create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -86,7 +79,6 @@
 | Bonders' Enclave | handled | {3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Boneyard Lurker | handled | Whenever this creature mutates, return target permanent card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Boon of the Wish-Giver | handled | Draw four cards. Cycling {1} ({1}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Bushmeat Poacher | handled | {1}, {T}, Sacrifice another creature: You gain life equal to the sacrificed creature's toughness. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cavern Whisperer | handled | Whenever this creature mutates, each opponent discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Channeled Force | handled | As an additional cost to cast this spell, discard X cards. Target player draws X cards. Channeled Force deals X damage to up to one target creature or planeswal | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Checkpoint Officer | handled | {1}{W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -126,8 +118,10 @@
 | Hampering Snare | handled | Creatures your opponents control get -2/-0 until end of turn. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Honey Mammoth | handled | When this creature enters, you gain 4 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Humble Naturalist | handled |  |  | Y/Y/- | not_tested |
+| Huntmaster Liger | handled | Whenever this creature mutates, other creatures you control get +X/+X until end of turn, where X is the number of times this creature has mutated. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Imposing Vantasaur | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Indatha Crystal | handled | Cycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/- | not_tested |
+| Insatiable Hemophage | handled | Whenever this creature mutates, each opponent loses X life and you gain X life, where X is the number of times this creature has mutated. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inspired Ultimatum | handled | Target player gains 5 life, Inspired Ultimatum deals 5 damage to any target, then you draw five cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jubilant Skybonder | handled | Creatures you control with flying have "Spells your opponents cast that target this creature cost {2} more to cast." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ketria Crystal | handled | Cycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/- | not_tested |
@@ -193,6 +187,7 @@
 | Titans' Nest | handled | At the beginning of your upkeep, surveil 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Trumpeting Gnarr | handled | Whenever this creature mutates, create a 3/3 green Beast creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unexpected Fangs | handled | Put a +1/+1 counter and a lifelink counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Vadrok, Apex of Thunder | handled | Whenever this creature mutates, you may cast target noncreature card with mana value 3 or less from your graveyard without paying its mana cost. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Valiant Rescuer | handled | Whenever you cycle another card for the first time each turn, create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Void Beckoner | handled | When you cycle this card, put a deathtouch counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Voracious Greatshark | handled | When this creature enters, counter target artifact or creature spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -207,17 +202,19 @@
 ## Fully supported
 
 <details>
-<summary>51 cards</summary>
+<summary>56 cards</summary>
 
 - Back for More
 - Blade Banish
 - Blitz Leech
 - Boot Nipper
 - Brokkos, Apex of Forever
+- Bushmeat Poacher
 - Chevill, Bane of Monsters
 - Cunning Nightbonder
 - Dire Tactics
 - Drannith Magistrate
+- Exuberant Wolfbear
 - Ferocious Tigorilla
 - Fiend Artisan
 - Fight as One
@@ -235,12 +232,15 @@
 - Kaheera, the Orphanguard
 - Keruga, the Macrosage
 - Kinnan, Bonder Prodigy
+- Lukka, Coppercoat Outcast
 - Lurrus of the Dream-Den
 - Lutri, the Spellchaser
+- Mythos of Brokkos
 - Mythos of Vadrok
 - Narset of the Ancient Way
 - Obosh, the Preypiercer
 - Offspring's Revenge
+- Porcuparrot
 - Proud Wildbonder
 - Quartzwood Crasher
 - Ram Through
@@ -268,7 +268,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | +N: create a N/N green beast creature token. put your choice of a reach counter, a vigilance counter, or a trample counter on it. | 1 | Vivien, Monsters' Advocate | iko |
-| +N: exile the top three cards of your library. creature cards exiled ~ gain "..." | 1 | Lukka, Coppercoat Outcast | iko |
 | as an additional cost to cast ~, reveal a creature card from your hand. ~ deals damage to target creature or planeswalker equal to the revealed card's power. | 1 | Charge of the Forever-Beast | iko |
 | as long as enchanted creature has vigilance, it assigns combat damage equal to its toughness rather than its power. | 1 | Solid Footing | iko |
 | at the beginning of combat on your turn, choose a kind of counter at random that ~ doesn't have on it from among flying, first strike, deathtouch, hexproof, lif | 1 | Crystalline Giant | iko |
@@ -279,7 +278,6 @@
 | destroy target creature. put a menace counter on a creature you control. (it can't be blocked except by two or more creatures.) | 1 | Blood Curdle | iko |
 | destroy target nonland permanent if it's a creature or if {M}{M} was spent to cast ~. | 1 | Mythos of Nethroi | iko |
 | each player chooses an artifact, a creature, an enchantment, and a planeswalker from among the nonland permanents they control, then sacrifices the rest. if {M} | 1 | Mythos of Snapdax | iko |
-| if {M}{M} was spent to cast ~, search your library for a card, put that card into your graveyard, then shuffle. return up to two permanent cards from your grave | 1 | Mythos of Brokkos | iko |
 | look at the top five cards of your library. put any number of permanent cards from among them onto the battlefield and the rest into your hand. exile ~. | 1 | Genesis Ultimatum | iko |
 | return any number of permanent cards with different names from your graveyard to the battlefield. | 1 | Eerie Ultimatum | iko |
 | return up to two target creature cards with total mana value N or less from your graveyard to the battlefield. put a deathtouch counter on either of them. then  | 1 | Call of the Death-Dweller | iko |
@@ -299,15 +297,9 @@
 | whenever you cycle a card, you may have ~ become a N/N dinosaur creature with trample and haste in addition to its other types until end of turn. | 1 | Reptilian Reflection | iko |
 | whenever ~ attacks, if it doesn't have first strike, put a first strike counter on it. | 1 | Momentum Rumbler | iko |
 | whenever ~ attacks, other humans you control get +N/+N until end of turn. | 1 | Perimeter Sergeant | iko |
-| whenever ~ attacks, you may have the base power and toughness of target human you control become equal to ~ power and toughness until end of turn. | 1 | Exuberant Wolfbear | iko |
-| whenever ~ mutates, each opponent loses N life and you gain N life, where N is the number of times ~ has mutated. | 1 | Insatiable Hemophage | iko |
 | whenever ~ mutates, exile cards from the top of your library until you exile N permanent cards, where N is the number of times ~ has mutated. put those permanen | 1 | Auspicious Starrix | iko |
 | whenever ~ mutates, exile cards from the top of your library until you exile a nonland permanent card. put that card onto the battlefield or into your hand. | 1 | Illuna, Apex of Wishes | iko |
-| whenever ~ mutates, other creatures you control get +N/+N until end of turn, where N is the number of times ~ has mutated. | 1 | Huntmaster Liger | iko |
-| whenever ~ mutates, tap up to N target creatures, where N is the number of times ~ has mutated. those creatures don"..."s next untap step. | 1 | Archipelagore | iko |
-| whenever ~ mutates, you may cast target noncreature card with mana value N or less from your graveyard without paying its mana cost. | 1 | Vadrok, Apex of Thunder | iko |
 | {M}, sacrifice ~: target creature doesn"..."s next untap step. | 1 | Sleeper Dart | iko |
-| {M}: ~ deals N damage to any target, where N is the number of times ~ has mutated. | 1 | Porcuparrot | iko |
 | {M}{M}, {M}: put a +N/+N counter on each creature you control with flying. | 1 | Wingspan Mentor | iko |
 | {M}{M}, {M}: put a +N/+N counter on each creature you control with lifelink. | 1 | Duskfang Mentor | iko |
 | {M}{M}, {M}: put a +N/+N counter on each creature you control with menace. | 1 | Frillscare Mentor | iko |

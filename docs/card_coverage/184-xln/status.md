@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 48 | 19.6% |
-| Works (untested) | 161 | 65.7% |
+| Tested | 50 | 20.4% |
+| Works (untested) | 160 | 65.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 36 | 14.7% |
+| Not working | 35 | 14.3% |
 
 ## Cards needing work
 
@@ -48,7 +48,6 @@
 | River Heralds' Boon | silent | Put a +1/+1 counter on target creature and a +1/+1 counter on up to one target Merfolk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | River's Rebuke | silent | Return all nonland permanents target player controls to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rowdy Crew | silent | When this creature enters, draw three cards, then discard two cards at random. If two cards that share a card type are discarded this way, put two +1/+1 counter | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sanguine Sacrament | silent | You gain twice X life. Put Sanguine Sacrament on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shadowed Caravel | silent | Whenever a creature you control explores, put a +1/+1 counter on this Vehicle. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Sun-Blessed Mount | silent | When this creature enters, you may search your library and/or graveyard for a card named Huatli, Dinosaur Knight, reveal it, then put it into your hand. If you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sword-Point Diplomacy | silent | Reveal the top three cards of your library. For each of those cards, put that card into your hand unless any opponent pays 3 life. Then exile the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -110,7 +109,6 @@
 | Fell Flagship | handled | Pirates you control get +1/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fire Shrine Keeper | handled | {7}{R}, {T}, Sacrifice this creature: It deals 3 damage to each of up to two target creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Firecannon Blast | handled | Firecannon Blast deals 3 damage to target creature. Raid — Firecannon Blast deals 6 damage instead if you attacked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Fleet Swallower | handled | Whenever this creature attacks, target player mills half their library, rounded up. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Frenzied Raptor | handled |  |  | Y/Y/- | not_tested |
 | Gilded Sentinel | handled |  |  | Y/Y/- | not_tested |
 | Glorifier of Dusk | handled | Pay 2 life: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -227,7 +225,7 @@
 ## Fully supported
 
 <details>
-<summary>48 cards</summary>
+<summary>50 cards</summary>
 
 - Admiral Beckett Brass
 - Arcane Adaptation
@@ -247,6 +245,7 @@
 - Dreamcaller Siren
 - Field of Ruin
 - Fiery Cannonade
+- Fleet Swallower
 - Herald of Secret Streams
 - Hostage Taker
 - Huatli, Warrior Poet
@@ -262,6 +261,7 @@
 - Raptor Companion
 - Rigging Runner
 - Ruin Raider
+- Sanguine Sacrament
 - Search for Azcanta // Azcanta, the Sunken Ruin
 - Settle the Wreckage
 - Siren Stormtamer
@@ -317,7 +317,6 @@
 | whenever equipped creature deals combat damage to a player, you may transform ~. | 1 | Dowsing Dagger // Lost Vale | xln |
 | whenever gishath deals combat damage to a player, reveal that many cards from the top of your library. put any number of dinosaur creature cards from among them | 1 | Gishath, Sun's Avatar | xln |
 | whenever ~ enters or attacks, you may exile target card from a graveyard. if a creature card is exiled ~, you gain N life. if a noncreature card is exiled ~, ~  | 1 | Deathgorge Scavenger | xln |
-| you gain twice N life. put ~ on the bottom of its owner's library. | 1 | Sanguine Sacrament | xln |
 | {M}: untap target attacking creature an opponent controls and remove it from combat. | 1 | Thaumatic Compass // Spires of Orazca | xln |
 | ~ gets +N/+N as long as you control another merfolk or an island. | 1 | Kumena's Speaker | xln |
 

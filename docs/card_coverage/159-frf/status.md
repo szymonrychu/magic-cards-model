@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 35 | 21.7% |
+| Tested | 37 | 23.0% |
 | Works (untested) | 81 | 50.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 45 | 28.0% |
+| Not working | 43 | 26.7% |
 
 ## Cards needing work
 
@@ -35,14 +35,12 @@
 | Cached Defenses | silent | Bolster 3. (Choose a creature with the least toughness among creatures you control and put three +1/+1 counters on it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cloudform | silent | When this enchantment enters, it becomes an Aura with enchant creature. Manifest the top card of your library and attach this enchantment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Daghatar the Adamant | silent | {1}{B/G}{B/G}: Move a +1/+1 counter from target creature onto a second target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Diplomacy of the Wastes | silent | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. If you control a Warrior, that player loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dragonrage | silent | Add {R} for each attacking creature you control. Until end of turn, attacking creatures you control gain "{R}: This creature gets +1/+0 until end of turn." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dragonscale General | silent | At the beginning of your end step, bolster X, where X is the number of tapped creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dromoka, the Eternal | silent | Whenever a Dragon you control attacks, bolster 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elite Scaleguard | silent | When this creature enters, bolster 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fierce Invocation | silent | Manifest the top card of your library, then put two +1/+1 counters on it. (To manifest a card, put it onto the battlefield face down as a 2/2 creature. Turn it  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Formless Nurturing | silent | Manifest the top card of your library, then put a +1/+1 counter on it. (To manifest a card, put it onto the battlefield face down as a 2/2 creature. Turn it fac | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Friendly Fire | silent | Target creature's controller reveals a card at random from their hand. Friendly Fire deals damage to that creature and that player equal to the revealed card's  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ghastly Conscription | silent | Exile all creature cards from target player's graveyard in a face-down pile, shuffle that pile, then manifest those cards. (To manifest a card, put it onto the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Honor's Reward | silent | You gain 4 life. Bolster 2. (Choose a creature with the least toughness among creatures you control and put two +1/+1 counters on it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Humble Defector | silent | {T}: Draw two cards. Target opponent gains control of this creature. Activate only during your turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -52,7 +50,6 @@
 | Rageform | silent | When this enchantment enters, it becomes an Aura with enchant creature. Manifest the top card of your library and attach this enchantment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rakshasa's Disdain | silent | Counter target spell unless its controller pays {1} for each card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rite of Undoing | silent | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Return target nonland permanent you control and target nonland permanent  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sage's Reverie | silent | When this Aura enters, draw a card for each Aura you control that's attached to a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sandsteppe Mastodon | silent | When this creature enters, bolster 5. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Silumgar, the Drifting Death | silent | Whenever a Dragon you control attacks, creatures defending player controls get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soulfire Grand Master | silent | Instant and sorcery spells you control have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -67,6 +64,7 @@
 | Write into Being | silent | Look at the top two cards of your library. Manifest one of those cards, then put the other on the top or bottom of your library. (To manifest a card, put it ont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bloodfire Enforcers | notice | This creature has first strike and trample as long as an instant card and a sorcery card are in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crux of Fate | notice | Choose one — • Destroy all Dragon creatures. • Destroy all non-Dragon creatures. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Diplomacy of the Wastes | notice | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. If you control a Warrior, that player loses 2 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Fearsome Awakening | notice | Return target creature card from your graveyard to the battlefield. If it's a Dragon, put two +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rally the Ancestors | notice | Return each creature card with mana value X or less from your graveyard to the battlefield. Exile those creatures at the beginning of your next upkeep. Exile Ra | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Reality Shift | notice | Exile target creature. Its controller manifests the top card of their library. (That player puts the top card of their library onto the battlefield face down as | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -156,7 +154,7 @@
 ## Fully supported
 
 <details>
-<summary>35 cards</summary>
+<summary>37 cards</summary>
 
 - Ainok Guide
 - Arcbond
@@ -168,6 +166,7 @@
 - Dark Deal
 - Ethereal Ambush
 - Flamerush Rider
+- Friendly Fire
 - Frontier Mastodon
 - Frontier Siege
 - Fruit of the First Tree
@@ -181,6 +180,7 @@
 - Monastery Siege
 - Outpost Siege
 - Palace Siege
+- Sage's Reverie
 - Scroll of the Masters
 - Shaman of the Great Hunt
 - Shifting Loyalties
@@ -223,12 +223,10 @@
 | return target creature to its owner"..."s a copy of that creature. | 1 | Supplant Form | frf |
 | sacrifice ~: until end of turn, face-up nontoken creatures you control gain "..." | 1 | Whisperwood Elemental | frf |
 | search your library for a basic land card, put it onto the battlefield tapped, then shuffle. bolster N. (choose a creature with the least toughness among creatu | 1 | Map the Wastes | frf |
-| target creature"..."s mana value. | 1 | Friendly Fire | frf |
 | target opponent reveals their hand. you choose a nonland card from it. that player discards that card. if you control a warrior, that player loses N life. | 1 | Diplomacy of the Wastes | frf |
 | target player sacrifices an enchantment of their choice. bolster N. (choose a creature with the least toughness among creatures you control and put a +N/+N coun | 1 | Abzan Advantage | frf |
 | when ~ deals combat damage to a player, exile it and the top card of your library in a face-down pile, shuffle that pile, then manifest those cards. | 1 | Jeskai Infiltrator | frf |
 | when ~ dies, bolster N. | 1 | Abzan Skycaptain | frf |
-| when ~ enters, draw a card for each aura you control that's attached to a creature. | 1 | Sage's Reverie | frf |
 | when ~ enters, return another creature you control to its owner's hand. | 1 | Ambush Krotiq | frf |
 | whenever a dragon you control attacks, bolster N. | 1 | Dromoka, the Eternal | frf |
 | whenever a dragon you control attacks, creatures defending player controls get -N/-N until end of turn. | 1 | Silumgar, the Drifting Death | frf |

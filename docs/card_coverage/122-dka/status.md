@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 41 | 26.6% |
+| Tested | 43 | 27.9% |
 | Works (untested) | 89 | 57.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 24 | 15.6% |
+| Not working | 22 | 14.3% |
 
 ## Cards needing work
 
@@ -30,13 +30,11 @@
 | Call to the Kindred | silent | At the beginning of your upkeep, you may look at the top five cards of your library. If you do, you may put a creature card that shares a creature type with enc | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curse of Echoes | silent | Whenever enchanted player casts an instant or sorcery spell, each other player may copy that spell and may choose new targets for the copy they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curse of Misfortunes | silent | At the beginning of your upkeep, you may search your library for a Curse card that doesn't have the same name as a Curse attached to enchanted player, put it on | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Curse of Thirst | silent | At the beginning of enchanted player's upkeep, this Aura deals damage to that player equal to the number of Curses attached to them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fiend of the Shadows | silent | Whenever this creature deals combat damage to a player, that player exiles a card from their hand. You may play that card for as long as it remains exiled. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Havengul Lich | silent | {1}: You may cast target creature card in a graveyard this turn. When you cast it this turn, this creature gains all activated abilities of that card until end  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Havengul Runebinder | silent | {2}{U}, {T}, Exile a creature card from your graveyard: Create a 2/2 black Zombie creature token, then put a +1/+1 counter on each Zombie creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Helvault | silent | When Helvault is put into a graveyard from the battlefield, return all cards exiled with it to the battlefield under their owners' control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Increasing Ambition | silent | Search your library for a card and put that card into your hand. If this spell was cast from a graveyard, instead search your library for two cards and put thos | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Increasing Confusion | silent | Target player mills X cards. If this spell was cast from a graveyard, that player mills twice that many cards instead. Flashback {X}{U} (You may cast this card  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lost in the Woods | silent | Whenever a creature attacks you or a planeswalker you control, reveal the top card of your library. If it's a Forest card, remove that creature from combat. The | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Markov Warlord | silent | When this creature enters, up to two target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scorch the Fields | silent | Destroy target land. Scorch the Fields deals 1 damage to each Human creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -143,7 +141,7 @@
 ## Fully supported
 
 <details>
-<summary>41 cards</summary>
+<summary>43 cards</summary>
 
 - Alpha Brawl
 - Archangel's Light
@@ -153,6 +151,7 @@
 - Clinging Mists
 - Curse of Bloodletting
 - Curse of Exhaustion
+- Curse of Thirst
 - Death's Caress
 - Dungeon Geists
 - Elbrus, the Binding Blade // Withengar Unbound
@@ -172,6 +171,7 @@
 - Hollowhenge Spirit
 - Huntmaster of the Fells // Ravager of the Fells
 - Immerwolf
+- Increasing Confusion
 - Increasing Vengeance
 - Predator Ooze
 - Ravenous Demon // Archdemon of Greed
@@ -194,7 +194,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | at the beginning of each upkeep, you may exile target creature card from your graveyard. if you do, create a token that"..."s a spirit in addition to its other  | 1 | Séance | dka |
-| at the beginning of enchanted player's upkeep, ~ deals damage to that player equal to the number of curses attached to them. | 1 | Curse of Thirst | dka |
 | at the beginning of your upkeep, you may look at the top five cards of your library. if you do, you may put a creature card that shares a creature type with enc | 1 | Call to the Kindred | dka |
 | at the beginning of your upkeep, you may search your library for a curse card that doesn't have the same name as a curse attached to enchanted player, put it on | 1 | Curse of Misfortunes | dka |
 | counter target spell. you may cast a spell that shares a card type with it from your hand without paying its mana cost. | 1 | Counterlash | dka |
@@ -205,7 +204,6 @@
 | search your library for a card and put that card into your hand. if ~ was cast from a graveyard, instead search your library for two cards and put those cards i | 1 | Increasing Ambition | dka |
 | target creature gains deathtouch until end of turn and must be blocked ~ if able. flashback {M} (you may cast ~ from your graveyard for its flashback cost. then | 1 | Deadly Allure | dka |
 | target permanent you control gains protection from the color of your choice until end of turn. fateful hour — if you have N or less life, instead you and each p | 1 | Faith's Shield | dka |
-| target player mills N cards. if ~ was cast from a graveyard, that player mills twice that many cards instead. flashback {M}{M} (you may cast ~ from your graveya | 1 | Increasing Confusion | dka |
 | when ~ dies, return it to the battlefield transformed under your control at the beginning of the next end step. | 1 | Loyal Cathar // Unhallowed Cathar | dka |
 | when ~ dies, target opponent discards a card at random. | 1 | Black Cat | dka |
 | when ~ enters, up to two target creatures can't block ~. | 1 | Markov Warlord | dka |

@@ -42,7 +42,7 @@
 | Foe-Razer Regent | silent | Whenever a creature you control fights, put two +1/+1 counters on it at the beginning of the next end step. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Foul-Tongue Shriek | silent | Target opponent loses 1 life for each attacking creature you control. You gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glade Watcher | silent | Formidable — {G}: This creature can attack this turn as though it didn't have defender. Activate only if creatures you control have total power 8 or greater. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Gleam of Authority | silent | Enchanted creature gets +1/+1 for each +1/+1 counter on other creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Gleam of Authority | silent | Bolster | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Gurmag Drowner | silent | When this creature exploits a creature, look at the top four cards of your library. Put one of them into your hand and the rest into your graveyard. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Hardened Berserker | silent | Whenever this creature attacks, the next spell you cast this turn costs {1} less to cast. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Herdchaser Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -275,17 +275,16 @@
 | when ~ is turned face up, put a +N/+N counter on each other dragon creature you control. | 5 | Acid-Spewer Dragon, Belltoll Dragon, Herdchaser Dragon, Shieldhide Dragon, Stormwing Dragon | dtk |
 | when ~ enters, bolster N. | 3 | Aven Tactician, Sandcrafter Mage, Sandsteppe Scavenger | dtk |
 | Formidable | 2 | Crater Elemental, Glade Watcher | dtk |
+| bolster | 2 | Gleam of Authority, Sunbringer's Touch | dtk |
 | Choose one | 1 | Display of Dominance | dtk |
 | +N: draw a card, then add one mana of any color. | 1 | Sarkhan Unbroken | dtk |
 | +N: look at the top card of your library. if it's a noncreature, nonland card, you may reveal it and put it into your hand. | 1 | Narset Transcendent | dtk |
 | as long as you control exactly one creature, that creature gets +N/+N and has deathtouch and lifelink. | 1 | Deadly Wanderings | dtk |
-| bolster | 1 | Sunbringer's Touch | dtk |
 | bolster N, then put a +N/+N counter on each creature you control with a +N/+N counter on it. (to bolster N, choose a creature with the least toughness among cre | 1 | Scale Blessing | dtk |
 | bolster N. (choose a creature with the least toughness among creatures you control and put four +N/+N counters on it.) | 1 | Dromoka's Gift | dtk |
 | creatures without flying can't block ~. | 1 | Magmatic Chasm | dtk |
 | destroy target attacking or blocking creature. bolster N. (choose a creature with the least toughness among creatures you control and put a +N/+N counter on it. | 1 | Enduring Victory | dtk |
 | destroy target creature with flying. bolster N. (choose a creature with the least toughness among creatures you control and put two +N/+N counters on it.) | 1 | Pinion Feast | dtk |
-| enchanted creature gets +N/+N for each +N/+N counter on other creatures you control. | 1 | Gleam of Authority | dtk |
 | prevent all combat damage that would be dealt ~. you may look at each face-down creature that's attacking or blocking. | 1 | Revealing Wind | dtk |
 | target creature gets +N/+N and gains lifelink until end of turn. regenerate it. (damage dealt by a creature with lifelink also causes its controller to gain tha | 1 | Butcher's Glee | dtk |
 | target creature gets +N/+N until end of turn and can't be blocked ~. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of your ne | 1 | Taigam's Strike | dtk |

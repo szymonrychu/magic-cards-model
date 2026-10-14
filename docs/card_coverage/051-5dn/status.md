@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 18.5% |
+| Tested | 31 | 19.1% |
 | Works (untested) | 104 | 64.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 28 | 17.3% |
+| Not working | 27 | 16.7% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Acquire | silent | Search target opponent's library for an artifact card and put that card onto the battlefield under your control. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| All Suns' Dawn | silent | For each color, return up to one target card of that color from your graveyard to your hand. Exile All Suns' Dawn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Avarice Totem | silent | {5}: Exchange control of this artifact and target nonland permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Beacon of Immortality | silent | Double target player's life total. Shuffle Beacon of Immortality into its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Beacon of Tomorrows | silent | Target player takes an extra turn after this one. Shuffle Beacon of Tomorrows into its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -44,13 +43,13 @@
 | Myr Servitor | silent | At the beginning of your upkeep, if this creature is on the battlefield, each player returns all cards named Myr Servitor from their graveyard to the battlefiel | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Possessed Portal | silent | At the beginning of each end step, each player sacrifices a permanent of their choice unless they discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Retaliate | silent | Destroy all creatures that dealt damage to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Reversal of Fortune | silent | Target opponent reveals their hand. You may copy an instant or sorcery card in it. If you do, you may cast the copy without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Roar of Reclamation | silent | Each player returns all artifact cards from their graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skullcage | silent | At the beginning of each opponent's upkeep, this artifact deals 2 damage to that player unless they have exactly three or exactly four cards in hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spinal Parasite | silent | Remove two +1/+1 counters from this creature: Remove a counter from target permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Summoner's Egg | silent | Imprint — When this creature enters, you may exile a card from your hand face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bringer of the Red Dawn | notice | At the beginning of your upkeep, you may untap target creature and gain control of it until end of turn. That creature gains haste until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Chimeric Coils | notice | {X}{1}: This artifact becomes an X/X Construct artifact creature. Sacrifice it at the beginning of the next end step. | unparsed remainder: Sacrifice it at the beginning of the next end step. | Y/-/- | not_working |
+| Reversal of Fortune | notice | Target opponent reveals their hand. You may copy an instant or sorcery card in it. If you do, you may cast the copy without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Rude Awakening | notice | Choose one — • Untap all lands you control. • Until end of turn, lands you control become 2/2 creatures that are still lands. Entwine {2}{G} (Choose both if you | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Spectral Shift | notice | Choose one — • Change the text of target spell or permanent by replacing all instances of one basic land type with another. (This effect lasts indefinitely.) •  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Tangle Asp | notice | Whenever this creature blocks or becomes blocked by a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -162,8 +161,9 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>31 cards</summary>
 
+- All Suns' Dawn
 - Beacon of Unrest
 - Cranial Plating
 - Crucible of Worlds
@@ -214,7 +214,6 @@
 | double target player"..."s library. | 1 | Beacon of Immortality | 5dn |
 | each creature you control is a vampire in addition to its other creature types and has "..." | 1 | Mephidross Vampire | 5dn |
 | each player returns all artifact cards from their graveyard to the battlefield. | 1 | Roar of Reclamation | 5dn |
-| for each color, return up to one target card of that color from your graveyard to your hand. exile ~. | 1 | All Suns' Dawn | 5dn |
 | remove two +N/+N counters from ~: remove a counter from target permanent. | 1 | Spinal Parasite | 5dn |
 | search target opponent's library for an artifact card and put that card onto the battlefield under your control. then that player shuffles. | 1 | Acquire | 5dn |
 | target opponent reveals their hand. you may copy an instant or sorcery card in it. if you do, you may cast the copy without paying its mana cost. | 1 | Reversal of Fortune | 5dn |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 48 | 24.1% |
-| Works (untested) | 121 | 60.8% |
+| Tested | 50 | 25.1% |
+| Works (untested) | 122 | 61.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 30 | 15.1% |
+| Not working | 27 | 13.6% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Coax from the Blind Eternities | silent | You may reveal an Eldrazi card you own from outside the game or choose a face-up Eldrazi card you own in exile. Put that card into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Conduit of Storms // Conduit of Emrakul | silent | Whenever this creature attacks, add {R} at the beginning of your next main phase this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crop Sigil | silent | Delirium — {2}{G}, Sacrifice this enchantment: Return up to one target creature card and up to one target land card from your graveyard to your hand. Activate o | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dark Salvation | silent | Target player creates X 2/2 black Zombie creature tokens, then up to one target creature gets -1/-1 until end of turn for each Zombie that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fogwalker | silent | When this creature enters, target creature an opponent controls doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fortune's Favor | silent | Target opponent looks at the top four cards of your library and separates them into a face-down pile and a face-up pile. Put one pile into your hand and the oth | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Geist of the Lonely Vigil | silent | Delirium — This creature can attack as though it didn't have defender as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -37,7 +36,6 @@
 | Grizzled Angler // Grisly Anglerfish | silent | {6}: Creatures your opponents control attack this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harmless Offering | silent | Target opponent gains control of target permanent you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Heron's Grace Champion | silent | When this creature enters, other Humans you control get +1/+1 and gain lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mausoleum Wanderer | silent | Sacrifice this creature: Counter target instant or sorcery spell unless its controller pays {X}, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mind's Dilation | silent | Whenever an opponent casts their first spell each turn, that player exiles the top card of their library. If it's a nonland card, you may cast it without paying | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mirrorwing Dragon | silent | Whenever a player casts an instant or sorcery spell that targets only this creature, that player copies that spell for each other creature they control that the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mournwillow | silent | Delirium — When this creature enters, if there are four or more card types among cards in your graveyard, creatures with power 2 or less can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -49,7 +47,6 @@
 | Spirit of the Hunt | silent | When this creature enters, each other creature you control that's a Wolf or a Werewolf gets +0/+3 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stitcher's Graft | silent | Whenever equipped creature attacks, it doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tamiyo, Field Researcher | silent | +1: Choose up to two target creatures. Until your next turn, whenever either of those creatures deals combat damage, you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tree of Perdition | silent | {T}: Exchange target opponent's life total with this creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Whispers of Emrakul | silent | Target opponent discards a card at random. Delirium — If there are four or more card types among cards in your graveyard, that player discards two cards at rand | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Collective Defiance | notice | Escalate {1} (Pay this cost for each mode chosen beyond the first.) Choose one or more — • Target player discards all the cards in their hand, then draws that m | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Give No Ground | notice | Target creature gets +2/+6 until end of turn and can block any number of creatures this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -131,6 +128,7 @@
 | Lunarch Mantle | handled | Enchanted creature gets +2/+2 and has "{1}, Sacrifice a permanent: This creature gains flying until end of turn." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Make Mischief | handled | Make Mischief deals 1 damage to any target. Create a 1/1 red Devil creature token. It has "When this token dies, it deals 1 damage to any target." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Markov Crusader | handled | This creature has haste as long as you control another Vampire. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mausoleum Wanderer | handled | Whenever another Spirit you control enters, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mercurial Geists | handled | Whenever you cast an instant or sorcery spell, this creature gets +3/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mockery of Nature | handled | When you cast this spell, you may destroy target artifact or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nebelgast Herald | handled | Whenever this creature or another Spirit you control enters, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -181,7 +179,7 @@
 ## Fully supported
 
 <details>
-<summary>48 cards</summary>
+<summary>50 cards</summary>
 
 - Assembled Alphas
 - Blessed Alliance
@@ -191,6 +189,7 @@
 - Chittering Host
 - Collective Brutality
 - Cryptolith Fragment // Aurora of Emrakul
+- Dark Salvation
 - Displace
 - Distended Mindbender
 - Eldritch Evolution
@@ -227,6 +226,7 @@
 - Tangleclaw Werewolf // Fibrous Entangler
 - Tattered Haunter
 - Thirsting Axe
+- Tree of Perdition
 - Unsubstantiate
 - Vexing Scuttler
 - Wharf Infiltrator
@@ -245,13 +245,11 @@
 | escalate {M} (pay ~ for each mode chosen beyond the first.) choose one or more — • target player discards all the cards in their hand, then draws that many card | 1 | Collective Defiance | emn |
 | exile target creature. at the beginning of the next end step, return that card to the battlefield under its owner's control with a +N/+N counter on it. | 1 | Long Road Home | emn |
 | return up to one target instant card and up to one target sorcery card from your graveyard to your hand, then discard a card. exile ~. | 1 | Shreds of Sanity | emn |
-| sacrifice ~: counter target instant or sorcery spell unless its controller pays {M}, where N is ~ power. | 1 | Mausoleum Wanderer | emn |
 | target creature gets +N/+N until end of turn and can block any number of creatures ~. | 1 | Give No Ground | emn |
 | target opponent discards a card at random. delirium — if there are four or more card types among cards in your graveyard, that player discards two cards at rand | 1 | Whispers of Emrakul | emn |
 | target opponent gains control of target permanent you control. | 1 | Harmless Offering | emn |
 | target opponent looks at the top four cards of your library and separates them into a face-down pile and a face-up pile. put one pile into your hand and the oth | 1 | Fortune's Favor | emn |
 | target opponent loses N life and puts a card from their hand on top of their library. | 1 | Prying Questions | emn |
-| target player creates N N/N black zombie creature tokens, then up to one target creature gets -N/-N until end of turn for each zombie that player controls. | 1 | Dark Salvation | emn |
 | transform up to one target werewolf you control. creatures you control gain trample until end of turn. | 1 | Waxing Moon | emn |
 | when ~ enters, each other creature you control that's a wolf or a werewolf gets +N/+N until end of turn. | 1 | Spirit of the Hunt | emn |
 | when ~ enters, other humans you control get +N/+N and gain lifelink until end of turn. | 1 | Heron's Grace Champion | emn |
@@ -265,7 +263,6 @@
 | whenever ~ deals combat damage to a creature, that creature becomes a copy of ~. | 1 | Permeating Mass | emn |
 | you may reveal an eldrazi card you own from outside the game or choose a face-up eldrazi card you own in exile. put that card into your hand. | 1 | Coax from the Blind Eternities | emn |
 | {M}: creatures your opponents control attack ~ if able. | 1 | Grizzled Angler // Grisly Anglerfish | emn |
-| {M}: exchange target opponent's life total with ~ toughness. | 1 | Tree of Perdition | emn |
 
 ## Notes
 

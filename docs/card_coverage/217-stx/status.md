@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 57 | 20.8% |
+| Tested | 62 | 22.6% |
 | Works (untested) | 157 | 57.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 60 | 21.9% |
+| Not working | 55 | 20.1% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Archway Commons | silent | When this land enters, sacrifice it unless you pay {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Augmenter Pugilist // Echoing Equation | silent | Choose target creature you control. Each other creature you control becomes a copy of it until end of turn, except those creatures aren't legendary. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Baleful Mastery | silent | You may pay {1}{B} rather than pay this spell's mana cost. If the {1}{B} cost was paid, an opponent draws a card. Exile target creature or planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Blex, Vexing Pest // Search for Blex | silent | Look at the top five cards of your library. You may put any number of them into your hand and the rest into your graveyard. You lose 3 life for each card you pu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blood Age General | silent | {T}: Attacking Spirits get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blot Out the Sky | silent | Create X tapped 2/1 white and black Inkling creature tokens with flying. If X is 6 or more, destroy all noncreature, nonland permanents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Conspiracy Theorist | silent | Whenever this creature attacks, you may pay {1} and discard a card. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -44,11 +43,9 @@
 | Fervent Mastery | silent | You may pay {2}{R}{R} rather than pay this spell's mana cost. If the {2}{R}{R} cost was paid, an opponent discards any number of cards, then draws that many car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harness Infinity | silent | Exchange your hand and graveyard. Exile Harness Infinity. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hofri Ghostforge | silent | Whenever another nontoken creature you control dies, exile it. If you do, create a token that's a copy of that creature, except it's a Spirit in addition to its | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Humiliate | silent | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. Put a +1/+1 counter on a creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ingenious Mastery | silent | You may pay {2}{U} rather than pay this spell's mana cost. If the {2}{U} cost was paid, you draw three cards, then an opponent creates two Treasure tokens and t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jadzi, Oracle of Arcavios // Journey to the Oracle | silent | You may put any number of land cards from your hand onto the battlefield. Then if you control eight or more lands, you may discard a card. If you do, return Jou | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kianne, Dean of Substance // Imbraham, Dean of Theory | silent | {T}: Exile the top card of your library. If it's a land card, put it into your hand. Otherwise, put a study counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Maelstrom Muse | silent | Whenever this creature attacks, the next instant or sorcery spell you cast this turn costs {X} less to cast, where X is this creature's power as this ability re | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mavinda, Students' Advocate | silent | {0}: You may cast target instant or sorcery card from your graveyard this turn. If that spell doesn't target a creature you control, it costs {8} more to cast t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mercurial Transformation | silent | Until end of turn, target nonland permanent loses all abilities and becomes your choice of a blue Frog creature with base power and toughness 1/1 or a blue Octo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mila, Crafty Companion // Lukka, Wayward Bonder | silent | +1: You may discard a card. If you do, draw a card. If a creature card was discarded this way, draw two cards instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -73,14 +70,12 @@
 | The Biblioplex | silent | {2}, {T}: Look at the top card of your library. If it's an instant or sorcery card, you may reveal it and put it into your hand. If you don't put the card into  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thunderous Orator | silent | Whenever this creature attacks, it gains flying until end of turn if you control a creature with flying. The same is true for first strike, double strike, death | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Uvilda, Dean of Perfection // Nassari, Dean of Expression | silent | At the beginning of your upkeep, exile the top card of each opponent's library. Until end of turn, you may cast spells from among those exiled cards, and you ma | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Velomachus Lorehold | silent | Whenever Velomachus Lorehold attacks, look at the top seven cards of your library. You may cast an instant or sorcery spell with mana value less than or equal t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Verdant Mastery | silent | You may pay {3}{G} rather than pay this spell's mana cost. Search your library for up to four basic land cards and reveal them. Put one of them onto the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vortex Runner | silent | As long as you control eight or more lands, this creature gets +1/+0 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wandering Archaic // Explore the Vastlands | silent | Each player looks at the top five cards of their library and may reveal a land card and/or an instant or sorcery card from among them. Each player puts the card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Academic Probation | notice | Choose one — • Choose a nonland card name. Opponents can't cast spells with the chosen name until your next turn. • Choose target nonland permanent. Until your  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ardent Dustspeaker | notice | Whenever this creature attacks, you may put an instant or sorcery card from your graveyard on the bottom of your library. If you do, exile the top two cards of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Emergent Sequence | notice | Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. That land becomes a 0/0 green and blue Fractal creature that's stil | unparsed remainder: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Put a +1/+1 counter on it for each land you had enter the battlefield under your control this turn. | Y/Y/- | not_working |
-| Flunk | notice | Target creature gets -X/-X until end of turn, where X is 7 minus the number of cards in that creature's controller's hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Humiliate | notice | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. Put a +1/+1 counter on a creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Prismari Apprentice | notice | Magecraft — Whenever you cast or copy an instant or sorcery spell, this creature can't be blocked this turn. If that spell has mana value 5 or greater, put a +1 | unparsed remainder: If that spell has mana value 5 or greater, put a +1/+1 counter on this creature. | Y/Y/- | not_working |
 | Quandrix Command | notice | Choose two — • Return target creature or planeswalker to its owner's hand. • Counter target artifact or enchantment spell. • Put two +1/+1 counters on target cr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rowan, Scholar of Sparks // Will, Scholar of Frost | notice | +1: Up to one target creature has base power and toughness 0/2 until your next turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -247,10 +242,11 @@
 ## Fully supported
 
 <details>
-<summary>57 cards</summary>
+<summary>62 cards</summary>
 
 - Academic Dispute
 - Bayou Groff
+- Blex, Vexing Pest // Search for Blex
 - Body of Research
 - Brackish Trudge
 - Burrog Befuddler
@@ -269,12 +265,14 @@
 - Dueling Coach
 - Elemental Masterpiece
 - Elite Spellbinder
+- Emergent Sequence
 - Environmental Sciences
 - Expressive Iteration
 - Extus, Oriq Overlord // Awaken the Blood Avatar
 - Eyetwitch
 - First Day of Class
 - Flamescroll Celebrant // Revel in Silence
+- Flunk
 - Go Blank
 - Igneous Inspiration
 - Infuse with Vitality
@@ -284,6 +282,7 @@
 - Killian, Ink Duelist
 - Lorehold Command
 - Lorehold Excavation
+- Maelstrom Muse
 - Mage Hunters' Onslaught
 - Make Your Mark
 - Mascot Exhibition
@@ -304,6 +303,7 @@
 - Torrent Sculptor // Flamethrower Sonata
 - Valentin, Dean of the Vein // Lisette, Dean of the Root
 - Vanishing Verse
+- Velomachus Lorehold
 - Witherbloom Command
 - Zimone, Quandrix Prodigy
 
@@ -338,12 +338,9 @@
 | if N is N, scry N, then draw a card. if N is N, you may choose a player. they return a creature they control to its owner's hand. if N is N, create a N/N blue a | 1 | Multiple Choice | stx |
 | if an opponent has more cards in hand than you, draw two cards. draw three cards instead if an opponent has at least four more cards in hand than you. | 1 | Teachings of the Archaics | stx |
 | instant and sorcery spells you control have lifelink. | 1 | Radiant Scrollwielder | stx |
-| look at the top five cards of your library. you may put any number of them into your hand and the rest into your graveyard. you lose N life for each card you pu | 1 | Blex, Vexing Pest // Search for Blex | stx |
 | other tapped creatures you control get +N/+N. | 1 | Plargg, Dean of Chaos // Augusta, Dean of Order | stx |
 | return up to one target artifact card, up to one target enchantment card, up to one target instant card, up to one target sorcery card, and up to one target pla | 1 | Reconstruct History | stx |
 | search your library and graveyard for up to four creature cards with different names that each have mana value N or less and reveal them. an opponent chooses tw | 1 | Ecological Appreciation | stx |
-| search your library for a basic land card, put it onto the battlefield tapped, then shuffle. that land becomes a N/N green and blue fractal creature that's stil | 1 | Emergent Sequence | stx |
-| target creature gets -N/-N until end of turn, where N is N minus the number of cards in that creature"..."s hand. | 1 | Flunk | stx |
 | target opponent reveals their hand. you choose a nonland card from it. that player discards that card. put a +N/+N counter on a creature you control. | 1 | Humiliate | stx |
 | until end of turn, double target creature's power N times. | 1 | Exponential Growth | stx |
 | until end of turn, target nonland permanent loses all abilities and becomes your choice of a blue frog creature with base power and toughness N/N or a blue octo | 1 | Mercurial Transformation | stx |
@@ -353,8 +350,6 @@
 | whenever another nontoken creature you control dies, exile it. if you do, create a token that"..."s a spirit in addition to its other types and it has "..." | 1 | Hofri Ghostforge | stx |
 | whenever one or more cards are put into exile during your turn, put a +N/+N counter on ~. ~ triggers only once each turn. | 1 | Stonebinder's Familiar | stx |
 | whenever ~ attacks, it gains flying until end of turn if you control a creature with flying. the same is true for first strike, double strike, deathtouch, indes | 1 | Thunderous Orator | stx |
-| whenever ~ attacks, look at the top seven cards of your library. you may cast an instant or sorcery spell with mana value less than or equal to ~'s power from a | 1 | Velomachus Lorehold | stx |
-| whenever ~ attacks, the next instant or sorcery spell you cast ~ costs {M} less to cast, where N is ~ power as ~ resolves. | 1 | Maelstrom Muse | stx |
 | whenever ~ attacks, you may pay {M} and discard a card. if you do, draw a card. | 1 | Conspiracy Theorist | stx |
 | whenever ~ attacks, you may put an instant or sorcery card from your graveyard on the bottom of your library. if you do, exile the top two cards of your library | 1 | Ardent Dustspeaker | stx |
 | you may pay {M}{M} rather than pay ~ mana cost. if the {M}{M} cost was paid, an opponent draws a card. exile target creature or planeswalker. | 1 | Baleful Mastery | stx |

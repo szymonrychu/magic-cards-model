@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 65 | 24.5% |
-| Works (untested) | 117 | 44.2% |
+| Tested | 69 | 26.0% |
+| Works (untested) | 118 | 44.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 83 | 31.3% |
+| Not working | 78 | 29.4% |
 
 ## Cards needing work
 
@@ -66,21 +66,18 @@
 | Oblivious Bookworm | silent | At the beginning of your end step, you may draw a card. If you do, discard a card unless a permanent entered the battlefield face down under your control this t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Omnivorous Flytrap | silent | Delirium — Whenever this creature enters or attacks, if there are four or more card types among cards in your graveyard, distribute two +1/+1 counters among one | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Optimistic Scavenger | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, put a +1/+1 counter on target creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Osseous Sticktwister | silent | Delirium — At the beginning of your end step, if there are four or more card types among cards in your graveyard, each opponent may sacrifice a nonland permanen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Paranormal Analyst | silent | Whenever you manifest dread, put a card you put into your graveyard this way into your hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Reluctant Role Model | silent | Survival — At the beginning of your second main phase, if this creature is tapped, put a flying, lifelink, or +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rip, Spawn Hunter | silent | Survival — At the beginning of your second main phase, if Rip is tapped, reveal the top X cards of your library, where X is its power. Put any number of creatur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Say Its Name | silent | Mill three cards. Then you may return a creature or land card from your graveyard to your hand. Exile this card and two other cards named Say Its Name from your | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Scrabbling Skullcrab | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, target player mills two cards. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Skullsnap Nuisance | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, surveil 1. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Smoky Lounge // Misty Salon | silent | When you unlock this door, create an X/X blue Spirit creature token with flying, where X is the number of unlocked doors among Rooms you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sporogenic Infection | silent | When this Aura enters, target player sacrifices a creature of their choice other than enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Stalked Researcher | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, this creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Stay Hidden, Stay Silent | silent | {4}{U}{U}: Shuffle enchanted creature into its owner's library, then manifest dread. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Tale of Tamiyo | silent | I, II, III — Mill two cards. If two cards that share a card type were milled this way, draw a card and repeat this process. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Trial of Agony | silent | Choose two target creatures controlled by the same opponent. That player chooses one of those creatures. Trial of Agony deals 5 damage to that creature, and the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tunnel Surveyor | silent | When this creature enters, create a 1/1 white Glimmer enchantment creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Under the Skin | silent | Manifest dread. (Look at the top two cards of your library. Put one onto the battlefield face down as a 2/2 creature and the other into your graveyard. Turn it  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Unwilling Vessel | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, put a possession counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Valgavoth's Onslaught | silent | Manifest dread X times, then put X +1/+1 counters on each of those creatures. (To manifest dread, look at the top two cards of your library, then put one onto t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Veteran Survivor | silent | As long as there are three or more cards exiled with this creature, it gets +3/+3 and has hexproof. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -92,7 +89,6 @@
 | Attack-in-the-Box | notice | Whenever this creature attacks, you may have it get +4/+0 until end of turn. If you do, sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Come Back Wrong | notice | Destroy target creature. If a creature card is put into a graveyard this way, return it to the battlefield under your control. Sacrifice it at the beginning of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Cracked Skull | notice | When this Aura enters, look at target player's hand. You may choose a nonland card from it. That player discards that card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Dollmaker's Shop // Porcelain Gallery | notice | Creatures you control have base power and toughness each equal to the number of creatures you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Don't Make a Sound | notice | Counter target spell unless its controller pays {2}. If they do, surveil 2. (Look at the top two cards of your library, then put any number of them into your gr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Fear of Burning Alive | notice | Delirium — Whenever a source you control deals noncombat damage to an opponent, if there are four or more card types among cards in your graveyard, this creatur | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Fear of Immobility | notice | When this creature enters, tap up to one target creature. If an opponent controls that creature, put a stun counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -100,7 +96,6 @@
 | Marvin, Murderous Mimic | notice | Marvin has all activated abilities of creatures you control that don't have the same name as this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Niko, Light of Hope | notice | {2}, {T}: Exile target nonlegendary creature you control. Shards you control become copies of it until the next end step. Return it to the battlefield under its | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Possessed Goat | notice | {3}, Discard a card: Put three +1/+1 counters on this creature and it becomes a black Demon in addition to its other colors and types. Activate only once. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Rampaging Soulrager | notice | This creature gets +3/+0 as long as there are two or more unlocked doors among Rooms you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Razorkin Needlehead | notice | This creature has first strike during your turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Saw | notice | Whenever equipped creature attacks, you may sacrifice a permanent other than that creature or this Equipment. If you do, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Silent Hallcreeper | notice | Whenever this creature deals combat damage to a player, choose one that hasn't been chosen — • Put two +1/+1 counters on this creature. • Draw a card. • This cr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -213,6 +208,7 @@
 | Ticket Booth // Tunnel of Hate | handled | When you unlock this door, manifest dread. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Trapped in the Screen | handled | When this enchantment enters, exile target artifact, creature, or enchantment an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Twist Reality | handled | Choose one — • Counter target spell. • Manifest dread. (Look at the top two cards of your library. Put one onto the battlefield face down as a 2/2 creature and  | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Under the Skin | handled | Manifest dread. (Look at the top two cards of your library. Put one onto the battlefield face down as a 2/2 creature and the other into your graveyard. Turn it  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Underwater Tunnel // Slimy Aquarium | handled | When you unlock this door, surveil 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Unnerving Grasp | handled | Return up to one target nonland permanent to its owner's hand. Manifest dread. (Look at the top two cards of your library. Put one onto the battlefield face dow | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Unsettling Twins | handled | When this creature enters, manifest dread. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -230,7 +226,7 @@
 ## Fully supported
 
 <details>
-<summary>65 cards</summary>
+<summary>69 cards</summary>
 
 - Abhorrent Oculus
 - Arabella, Abandoned Doll
@@ -246,6 +242,7 @@
 - Coordinated Clobbering
 - Dazzling Theater // Prop Room
 - Derelict Attic // Widow's Walk
+- Dollmaker's Shop // Porcelain Gallery
 - Doomsday Excruciator
 - Drag to the Roots
 - Enduring Curiosity
@@ -274,14 +271,17 @@
 - Nashi, Searcher in the Dark
 - Nowhere to Run
 - Orphans of the Wheat
+- Osseous Sticktwister
 - Overlord of the Balemurk
 - Overlord of the Mistmoors
 - Patched Plaything
 - Patchwork Beastie
 - Peer Past the Veil
+- Rampaging Soulrager
 - Screaming Nemesis
 - Shardmage's Rescue
 - Sheltered by Ghosts
+- Smoky Lounge // Misty Salon
 - The Mindskinner
 - The Rollercrusher Ride
 - Thornspire Verge
@@ -305,9 +305,9 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Eerie | 14 | Balemurk Leech, Cult Healer, Dashing Bloodsucker, Entity Tracker, Erratic Apparition | dsk |
-| Delirium | 4 | Fear of Burning Alive, Let's Play a Game, Omnivorous Flytrap, Osseous Sticktwister | dsk |
 | Survival | 4 | Acrobatic Cheerleader, Glimmer Seeker, Reluctant Role Model, Rip, Spawn Hunter | dsk |
 | when ~ enters, manifest dread, then attach ~ to that creature. | 4 | Conductive Machete, Cursed Windbreaker, Dissection Tools, Killer's Mask | dsk |
+| Delirium | 3 | Fear of Burning Alive, Let's Play a Game, Omnivorous Flytrap | dsk |
 | Choose one | 2 | Split Up, Untimely Malfunction | dsk |
 | when ~ enters, create a N/N white glimmer enchantment creature token. | 2 | Glimmerlight, Tunnel Surveyor | dsk |
 | as an additional cost to cast ~, choose a creature you control or reveal a creature card from your hand. ~ deals damage equal to the power of the creature you c | 1 | Monstrous Emergence | dsk |
@@ -318,11 +318,9 @@
 | choose two target creatures controlled by the same opponent. that player chooses one of those creatures. ~ deals N damage to that creature, and the other can't  | 1 | Trial of Agony | dsk |
 | counter target spell unless its controller pays {M}. if they do, surveil N. (look at the top two cards of your library, then put any number of them into your gr | 1 | Don't Make a Sound | dsk |
 | create three N/N red gremlin creature tokens. gremlins you control gain menace, lifelink, and haste until end of turn. (a creature with menace can't be blocked  | 1 | Midnight Mayhem | dsk |
-| creatures you control have base power and toughness each equal to the number of creatures you control. | 1 | Dollmaker's Shop // Porcelain Gallery | dsk |
 | destroy target creature. if a creature card is put into a graveyard ~, return it to the battlefield under your control. sacrifice it at the beginning of your ne | 1 | Come Back Wrong | dsk |
 | draw two cards. create a N/N white glimmer enchantment creature token. | 1 | Glimmerburst | dsk |
 | manifest dread N times, then put N +N/+N counters on each of those creatures. (to manifest dread, look at the top two cards of your library, then put one onto t | 1 | Valgavoth's Onslaught | dsk |
-| manifest dread. (look at the top two cards of your library. put one onto the battlefield face down as a N/N creature and the other into your graveyard. turn it  | 1 | Under the Skin | dsk |
 | marvin has all activated abilities of creatures you control that don't have the same name as ~. | 1 | Marvin, Murderous Mimic | dsk |
 | mill three cards. then you may return a creature or land card from your graveyard to your hand. exile ~ and two other cards named ~ from your graveyard: search  | 1 | Say Its Name | dsk |
 | mill two cards. if two cards that share a card type were milled ~, draw a card and repeat ~. | 1 | The Tale of Tamiyo | dsk |
@@ -331,7 +329,6 @@
 | the owner of target artifact or enchantment an opponent controls shuffles it into their library. you may shuffle up to four target cards from your graveyard int | 1 | Cathartic Parting | dsk |
 | until end of turn, target creature gets +N/+N, gains flying, and becomes a horror enchantment creature in addition to its other types. | 1 | Jump Scare | dsk |
 | when you unlock ~, create a N/N white glimmer enchantment creature token. | 1 | Grand Entryway // Elegant Rotunda | dsk |
-| when you unlock ~, create an N/N blue spirit creature token with flying, where N is the number of unlocked doors among rooms you control. | 1 | Smoky Lounge // Misty Salon | dsk |
 | when you unlock ~, you may cast spells from your graveyard ~, and if a card would be put into your graveyard from anywhere ~, exile it instead. | 1 | Walk-In Closet // Forgotten Cellar | dsk |
 | when ~ dies, look at the top five cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put the  | 1 | Living Phone | dsk |
 | when ~ enters, each opponent sacrifices a nontoken enchantment of their choice, then sacrifices a nontoken creature of their choice. | 1 | Vile Mutilator | dsk |
@@ -361,7 +358,6 @@
 | {M}, {M}: exile target nonlegendary creature you control. shards you control become copies of it until the next end step. return it to the battlefield under its | 1 | Niko, Light of Hope | dsk |
 | {M}{M}: reveal target face-down permanent. if it's a creature card, you may turn it face up. | 1 | Hauntwoods Shrieker | dsk |
 | {M}{M}{M}: shuffle enchanted creature into its owner's library, then manifest dread. activate only as a sorcery. | 1 | Stay Hidden, Stay Silent | dsk |
-| ~ gets +N/+N as long as there are two or more unlocked doors among rooms you control. | 1 | Rampaging Soulrager | dsk |
 | ~ has first strike during your turn. | 1 | Razorkin Needlehead | dsk |
 
 ## Notes

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 54 | 24.9% |
+| Tested | 55 | 25.3% |
 | Works (untested) | 131 | 60.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 32 | 14.7% |
+| Not working | 31 | 14.3% |
 
 ## Cards needing work
 
@@ -30,8 +30,6 @@
 | Angel of Glory's Rise | silent | When this creature enters, exile all Zombies, then return all Human creature cards from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Angel's Tomb | silent | Whenever a creature you control enters, you may have this artifact become a 3/3 white Angel artifact creature with flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Angelic Armaments | silent | Equipped creature gets +2/+2, has flying, and is a white Angel in addition to its other colors and types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Appetite for Brains | silent | Target opponent reveals their hand. You choose a card from it with mana value 4 or greater and exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Banishing Stroke | silent | Put target artifact, creature, or enchantment on the bottom of its owner's library. Miracle {W} (You may cast this card for its miracle cost when you draw it if | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bladed Bracers | silent | As long as equipped creature is a Human or an Angel, it has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bruna, Light of Alabaster | silent | Whenever Bruna attacks or blocks, you may attach to it any number of Auras on the battlefield and you may put onto the battlefield attached to it any number of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Builder's Blessing | silent | Untapped creatures you control get +0/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -53,6 +51,7 @@
 | Undead Executioner | silent | When this creature dies, you may have target creature get -2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vanguard's Shield | silent | Equipped creature gets +0/+3 and can block an additional creature each combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vexing Devil | silent | When this creature enters, any opponent may have it deal 4 damage to them. If a player does, sacrifice this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Appetite for Brains | notice | Target opponent reveals their hand. You choose a card from it with mana value 4 or greater and exile that card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Defy Death | notice | Return target creature card from your graveyard to the battlefield. If it's an Angel, put two +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Eaten by Spiders | notice | Destroy target creature with flying and all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Joint Assault | notice | Target creature gets +2/+2 until end of turn. If it's paired with a creature, that creature also gets +2/+2 until end of turn. | unparsed remainder: If it's paired with a creature, that creature also gets +2/+2 until end of turn. | Y/-/- | not_working |
@@ -62,6 +61,7 @@
 | Alchemist's Apprentice | handled | Sacrifice this creature: Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Amass the Components | handled | Draw three cards, then put a card from your hand on the bottom of your library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Archwing Dragon | handled | At the beginning of the end step, return this creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Banishing Stroke | handled | Put target artifact, creature, or enchantment on the bottom of its owner's library. Miracle {W} (You may cast this card for its miracle cost when you draw it if | the engine reads this text and performs it | Y/-/- | not_tested |
 | Banners Raised | handled | Creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blessings of Nature | handled | Distribute four +1/+1 counters among any number of target creatures. Miracle {G} (You may cast this card for its miracle cost when you draw it if it's the first | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bloodflow Connoisseur | handled | Sacrifice a creature: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -166,7 +166,6 @@
 | Spectral Prison | handled | Enchanted creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spirit Away | handled | You control enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stonewright | handled | As long as Stonewright is paired with another creature, each of those creatures has "{R}: This creature gets +1/+0 until end of turn." | the engine reads this text and performs it | Y/-/- | not_tested |
-| Tamiyo, the Moon Sage | handled | +1: Tap target permanent. It doesn't untap during its controller's next untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Temporal Mastery | handled | Take an extra turn after this one. Exile Temporal Mastery. Miracle {1}{U} (You may cast this card for its miracle cost when you draw it if it's the first card y | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thatcher Revolt | handled | Create three 1/1 red Human creature tokens with haste. Sacrifice those tokens at the beginning of the next end step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thraben Valiant | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
@@ -193,7 +192,7 @@
 ## Fully supported
 
 <details>
-<summary>54 cards</summary>
+<summary>55 cards</summary>
 
 - Aggravate
 - Angel of Jubilation
@@ -242,6 +241,7 @@
 - Silverblade Paladin
 - Stern Mentor
 - Stolen Goods
+- Tamiyo, the Moon Sage
 - Tandem Lookout
 - Terminus
 - Terrifying Presence
@@ -268,7 +268,6 @@
 | equipped creature gets +N/+N, has flying, and is a white angel in addition to its other colors and types. | 1 | Angelic Armaments | avr |
 | exile the top card of your library. if it's a permanent card, you may put it onto the battlefield. if you do, repeat ~. | 1 | Primal Surge | avr |
 | for each creature, its controller sacrifices it unless they pay N life. | 1 | Killing Wave | avr |
-| put target artifact, creature, or enchantment on the bottom of its owner"..."s the first card you drew ~.) | 1 | Banishing Stroke | avr |
 | return target creature card from your graveyard to the battlefield. if it's an angel, put two +N/+N counters on it. | 1 | Defy Death | avr |
 | reveal the top two cards of your library. put all creature and land cards revealed ~ into your hand and the rest on the bottom of your library in any order. | 1 | Lair Delve | avr |
 | target creature gains deathtouch until end of turn. regenerate it. (the next time that creature would be destroyed ~, instead tap it, remove it from combat, and | 1 | Necrobite | avr |

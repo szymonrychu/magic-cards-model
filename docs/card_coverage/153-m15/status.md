@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 15.4% |
+| Tested | 24 | 16.8% |
 | Works (untested) | 95 | 66.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 26 | 18.2% |
+| Not working | 24 | 16.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Aetherspouts | silent | For each attacking creature, its owner puts it on their choice of the top or bottom of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ajani Steadfast | silent | −2: Put a +1/+1 counter on each creature you control and a loyalty counter on each other planeswalker you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Avacyn, Guardian Angel | silent | {1}{W}: Prevent all damage that would be dealt to another target creature this turn by sources of the color of your choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Avarice Amulet | silent | Whenever equipped creature dies, target opponent gains control of this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -47,7 +46,6 @@
 | Quickling | silent | When this creature enters, sacrifice it unless you return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siege Dragon | silent | When this creature enters, destroy all Walls your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spectra Ward | silent | Enchanted creature gets +2/+2 and has protection from each color. This effect doesn't remove Auras. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| The Chain Veil | silent | {4}, {T}: For each planeswalker you control, you may activate one of its loyalty abilities once this turn as though none of its loyalty abilities have been acti | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Waste Not | silent | Whenever an opponent discards a noncreature, nonland card, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Xathrid Slyblade | silent | {3}{B}: Until end of turn, this creature loses hexproof and gains first strike and deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blastfire Bolt | notice | Blastfire Bolt deals 5 damage to target creature. Destroy all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -151,8 +149,9 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>24 cards</summary>
 
+- Aetherspouts
 - Aggressive Mining
 - Chasm Skulker
 - Coral Barrier
@@ -173,6 +172,7 @@
 - Shield of the Avatar
 - Sliver Hivelord
 - Soul of Shandalar
+- The Chain Veil
 - Undergrowth Scavenger
 - Yisan, the Wanderer Bard
 
@@ -185,7 +185,6 @@
 | at the beginning of your upkeep, draw a card unless target opponent sacrifices a creature of their choice or pays N life. | 1 | Indulgent Tormentor | m15 |
 | destroy all creatures you don"..."t control. | 1 | In Garruk's Wake | m15 |
 | enchanted creature gets +N/+N and has protection from each color. ~ doesn't remove auras. | 1 | Spectra Ward | m15 |
-| for each attacking creature, its owner puts it on their choice of the top or bottom of their library. | 1 | Aetherspouts | m15 |
 | nonblack creatures get -N/-N until end of turn. | 1 | Festergloom | m15 |
 | until end of turn, each creature target player controls loses all abilities and becomes a blue frog with base power and toughness N/N. | 1 | Polymorphist's Jest | m15 |
 | when ~ dies, return it to the battlefield tapped under its owner's control at the beginning of their next upkeep. | 1 | Phytotitan | m15 |
@@ -198,7 +197,6 @@
 | whenever equipped creature dies, target opponent gains control of ~. | 1 | Avarice Amulet | m15 |
 | whenever you activate an ability of an artifact, if it isn't a mana ability, you may pay {M}. if you do, copy that ability. you may choose new targets for the c | 1 | Kurkesh, Onakke Ancient | m15 |
 | whenever ~ deals combat damage to a player, choose a card in your hand. that player guesses whether the card's mana value is greater than N. if the player guess | 1 | Master of Predicaments | m15 |
-| {M}, {M}: for each planeswalker you control, you may activate one of its loyalty abilities once ~ as though none of its loyalty abilities have been activated ~. | 1 | The Chain Veil | m15 |
 | {M}{M}, discard a creature card: draw a card. if the discarded card was a zombie card, create a tapped N/N black zombie creature token. | 1 | Necromancer's Stockpile | m15 |
 | {M}{M}, {M}, sacrifice another creature: reveal cards from the top of your library until you reveal a nonlegendary creature card. put that card onto the battlef | 1 | Jalira, Master Polymorphist | m15 |
 | {M}{M}: prevent all damage that would be dealt to another target creature ~ by sources of the color of your choice. | 1 | Avacyn, Guardian Angel | m15 |

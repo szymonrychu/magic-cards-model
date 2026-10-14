@@ -17,26 +17,21 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 46 | 25.8% |
+| Tested | 53 | 29.8% |
 | Works (untested) | 98 | 55.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 34 | 19.1% |
+| Not working | 27 | 15.2% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Admiral's Order | silent | Raid — If you attacked this turn, you may pay {U} rather than pay this spell's mana cost. Counter target spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Angrath, Minotaur Pirate | silent | −11: Destroy all creatures target opponent controls. Angrath deals damage to that player equal to their total power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Awakened Amalgam | silent | Awakened Amalgam's power and toughness are each equal to the number of differently named lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Azor's Gateway // Sanctum of the Sun | silent | {1}, {T}: Draw a card, then exile a card from your hand. If cards with five or more different mana values are exiled with Azor's Gateway, you gain 5 life, untap | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Azor, the Lawbringer | silent | When Azor enters, each opponent can't cast instant or sorcery spells during that player's next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Bishop of Binding | silent | Whenever this creature attacks, target Vampire gets +X/+X until end of turn, where X is the power of the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Blazing Hope | silent | Exile target creature with power greater than or equal to your life total. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Captain's Hook | silent | Equipped creature gets +2/+0, has menace, and is a Pirate in addition to its other creature types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cherished Hatchling | silent | When this creature dies, you may cast Dinosaur spells this turn as though they had flash, and whenever you cast a Dinosaur spell this turn, it gains "When this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crashing Tide | silent | This spell has flash as long as you control a Merfolk. Return target creature to its owner's hand. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dead Man's Chest | silent | When enchanted creature dies, exile cards equal to its power from the top of its owner's library. You may cast spells from among those cards for as long as they | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dire Fleet Neckbreaker | silent | Attacking Pirates you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Etali, Primal Storm | silent | Whenever Etali attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana cos | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fathom Fleet Boarder | silent | When this creature enters, you lose 2 life unless you control another Pirate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -50,11 +45,9 @@
 | Tetzimoc, Primal Death | silent | When Tetzimoc enters, destroy each creature your opponents control with a prey counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vona's Hunger | silent | Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.) Each opponent sacrifices a creature of their choice. If yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warkite Marauder | silent | Whenever this creature attacks, target creature defending player controls loses all abilities and has base power and toughness 0/1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Angrath, the Flame-Chained | notice | −3: Gain control of target creature until end of turn. Untap it. It gains haste until end of turn. Sacrifice it at the beginning of the next end step if it has  | unparsed remainder: Untap it. It gains haste until end of turn. Sacrifice it at the beginning of the next end step if it has mana value 3 or less. | Y/Y/- | not_working |
 | Dusk Charger | notice | This creature gets +2/+2 as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Expel from Orazca | notice | Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.) Return target nonland permanent to its owner's hand. If yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Grasping Scoundrel | notice | This creature gets +1/+0 as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Hadana's Climb // Winged Temple of Orazca | notice | At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. Then if that creature has three or more +1/+1 counters on it, trans | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kitesail Corsair | notice | This creature has flying as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Profane Procession // Tomb of the Dusk Rose | notice | {3}{W}{B}: Exile target creature. Then if there are three or more cards exiled with Profane Procession, transform it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Snubhorn Sentry | notice | This creature gets +3/+0 as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -162,14 +155,20 @@
 ## Fully supported
 
 <details>
-<summary>46 cards</summary>
+<summary>53 cards</summary>
 
+- Angrath, Minotaur Pirate
+- Angrath, the Flame-Chained
 - Arch of Orazca
+- Azor's Gateway // Sanctum of the Sun
+- Bishop of Binding
+- Blazing Hope
 - Blood Sun
 - Brass's Bounty
 - Charging Tuskodon
 - Crafty Cutpurse
 - Curious Obsession
+- Dead Man's Chest
 - Dire Fleet Daredevil
 - Enter the Unknown
 - Flood of Recollection
@@ -177,6 +176,7 @@
 - Ghalta, Primal Hunger
 - Golden Demise
 - Gruesome Fate
+- Hadana's Climb // Winged Temple of Orazca
 - Huatli, Radiant Champion
 - Jadelight Ranger
 - Journey to Eternity // Atzal, Cave of Eternity
@@ -221,34 +221,27 @@
 | Raid | 1 | Admiral's Order | rix |
 | ascend (if you control ten or more permanents, you get the city"..."s blessing, instead each opponent sacrifices half the creatures they control of their choice | 1 | Vona's Hunger | rix |
 | ascend (if you control ten or more permanents, you get the city"..."s hand. if you have the city"..."s library instead. | 1 | Expel from Orazca | rix |
-| at the beginning of combat on your turn, put a +N/+N counter on target creature you control. then if that creature has three or more +N/+N counters on it, trans | 1 | Hadana's Climb // Winged Temple of Orazca | rix |
 | at the beginning of your upkeep, each player draws a card. if you have the city's blessing, instead only you draw a card. | 1 | Kumena's Awakening | rix |
 | attacking pirates you control get +N/+N. | 1 | Dire Fleet Neckbreaker | rix |
 | each opponent can"..."s next turn. | 1 | Sphinx's Decree | rix |
 | each player chooses any number of creatures they control with total power N or less, then sacrifices all other creatures they control. | 1 | Slaughter the Strong | rix |
 | enchanted creature gets +N/+N as long as it's a pirate. otherwise, it gets -N/-N. | 1 | Sea Legs | rix |
 | equipped creature gets +N/+N, has menace, and is a pirate in addition to its other creature types. | 1 | Captain's Hook | rix |
-| exile target creature with power greater than or equal to your life total. | 1 | Blazing Hope | rix |
 | saprolings you control get +N/+N as long as you have the city's blessing. | 1 | Tendershoot Dryad | rix |
 | when azor enters, each opponent can"..."s next turn. | 1 | Azor, the Lawbringer | rix |
-| when enchanted creature dies, exile cards equal to its power from the top of its owner's library. you may cast spells from among those cards for as long as they | 1 | Dead Man's Chest | rix |
 | when tetzimoc enters, destroy each creature your opponents control with a prey counter on it. | 1 | Tetzimoc, Primal Death | rix |
 | when ~ dies, you may cast dinosaur spells ~ as though they had flash, and whenever you cast a dinosaur spell ~, it gains "..." | 1 | Cherished Hatchling | rix |
 | when ~ enters, target player exiles all cards from their hand face down, then draws that many cards. | 1 | Induced Amnesia | rix |
 | when ~ enters, you lose N life unless you control another pirate. | 1 | Fathom Fleet Boarder | rix |
 | whenever etali attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana cos | 1 | Etali, Primal Storm | rix |
 | whenever ~ attacks, target creature defending player controls loses all abilities and has base power and toughness N/N until end of turn. | 1 | Warkite Marauder | rix |
-| whenever ~ attacks, target vampire gets +N/+N until end of turn, where N is the power of the exiled card. | 1 | Bishop of Binding | rix |
 | whenever ~ attacks, you may pay {M}{M}. if you do, create N N/N red elemental creature tokens that are tapped and attacking. at the beginning of the next end st | 1 | Tilonalli's Summoner | rix |
-| {M}, {M}: draw a card, then exile a card from your hand. if cards with five or more different mana values are exiled with ~, you gain N life, untap ~, and trans | 1 | Azor's Gateway // Sanctum of the Sun | rix |
 | {M}: ~ fights another target creature you control. when ~ dies ~, return it to the battlefield transformed under your control. | 1 | Golden Guardian // Gold-Forge Garrison | rix |
 | {M}{M}{M}: exile target creature. then if there are three or more cards exiled with ~, transform it. | 1 | Profane Procession // Tomb of the Dusk Rose | rix |
 | ~ gets +N/+N as long as it's attacking. | 1 | Grasping Scoundrel | rix |
 | ~ has flash as long as you control a merfolk. return target creature to its owner's hand. draw a card. | 1 | Crashing Tide | rix |
 | ~ has flying as long as it's attacking. | 1 | Kitesail Corsair | rix |
 | ~'s power and toughness are each equal to the number of differently named lands you control. | 1 | Awakened Amalgam | rix |
-| −N: destroy all creatures target opponent controls. angrath deals damage to that player equal to their total power. | 1 | Angrath, Minotaur Pirate | rix |
-| −N: gain control of target creature until end of turn. untap it. it gains haste until end of turn. sacrifice it at the beginning of the next end step if it has  | 1 | Angrath, the Flame-Chained | rix |
 
 ## Notes
 

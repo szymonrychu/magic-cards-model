@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 63 | 25.0% |
+| Tested | 67 | 26.6% |
 | Works (untested) | 125 | 49.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 64 | 25.4% |
+| Not working | 60 | 23.8% |
 
 ## Cards needing work
 
@@ -36,25 +36,21 @@
 | Capricious Hellraiser | silent | When this creature enters, exile three cards at random from your graveyard. Choose a noncreature, nonland card from among them and copy it. You may cast the cop | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Conduit of Worlds | silent | {T}: Choose target nonland permanent card in your graveyard. If you haven't cast a spell this turn, you may cast that card. If you do, you can't cast additional | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Contagious Vorrac | silent | When this creature enters, look at the top four cards of your library. You may reveal a land card from among them and put it into your hand. Put the rest on the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Expand the Sphere | silent | Look at the top six cards of your library. Put up to two land cards from among them onto the battlefield tapped and the rest on the bottom of your library in a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eye of Malcator | silent | Whenever another artifact you control enters, this artifact becomes a 4/4 Phyrexian Eye artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ezuri, Stalker of Spheres | silent | When Ezuri enters, you may pay {3}. If you do, proliferate twice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Ezuri, Stalker of Spheres | silent | Whenever you proliferate, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Feed the Infection | silent | You draw three cards and you lose 3 life. Corrupted — Each opponent who has three or more poison counters loses 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Furnace Punisher | silent | At the beginning of each player's upkeep, this creature deals 2 damage to that player unless they control two or more basic lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gitaxian Anatomist | silent | When this creature enters, you may tap it. If you do, proliferate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Goliath Hatchery | silent | Corrupted — At the beginning of your upkeep, if an opponent has three or more poison counters, choose a creature you control, then draw cards equal to its total | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Green Sun's Twilight | silent | Reveal the top X plus one cards of your library. Choose a creature card and/or a land card from among them. Put those cards into your hand and the rest on the b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hexgold Hoverwings | silent | Creatures you control that are equipped get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ichor Synthesizer | silent | As long as this creature has four or more oil counters on it, it gets +2/+0 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ichormoon Gauntlet | silent | Whenever you cast a noncreature spell, choose a counter on target permanent. Put an additional counter of that kind on that permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Indoctrination Attendant | silent | When this creature enters, you may return another permanent you control to its owner's hand. If you do, create a 1/1 colorless Phyrexian Mite artifact creature  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace, the Perfected Mind | silent | +1: Until your next turn, up to one target creature gets -3/-0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Kaito, Dancing Shadow | silent | Whenever one or more creatures you control deal combat damage to a player, you may return one of them to its owner's hand. If you do, you may activate loyalty a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kaya, Intangible Slayer | silent | 0: You draw two cards. Then each opponent may scry 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kemba, Kha Enduring | silent | Whenever Kemba or another Cat you control enters, attach up to one target Equipment you control to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kinzu of the Bleak Coven | silent | Whenever another nontoken creature you control dies, you may pay 2 life and exile it. If you do, create a token that's a copy of that creature, except it's 1/1  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lattice-Blade Mantis | silent | Whenever this creature attacks, you may remove an oil counter from it. If you do, untap it and it gets +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Lukka, Bound to Ruin | silent | −4: Lukka deals X damage divided as you choose among any number of target creatures and/or planeswalkers, where X is the greatest power among creatures you cont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Magmatic Sprinter | silent | At the beginning of your end step, return this creature to its owner's hand unless you remove two oil counters from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Monument to Perfection | silent | {3}: This artifact becomes a 9/9 Phyrexian Construct artifact creature, loses all abilities, and gains indestructible and toxic 9. Activate only if there are ni | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Myr Custodian | silent | When this creature enters, scry 2. Then each opponent may scry 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -219,7 +215,7 @@
 ## Fully supported
 
 <details>
-<summary>63 cards</summary>
+<summary>67 cards</summary>
 
 - Ambulatory Edifice
 - Annihilating Glare
@@ -239,17 +235,21 @@
 - Drivnod, Carnage Dominus
 - Elesh Norn, Mother of Machines
 - Evolving Adaptive
+- Expand the Sphere
 - Exuberant Fuseling
 - Font of Progress
 - Geth, Thane of Contracts
+- Goliath Hatchery
 - Graaz, Unstoppable Juggernaut
 - Hazardous Blast
 - Hexgold Slash
 - Infectious Bite
 - Infectious Inquiry
 - Jor Kadeen, First Goldwarden
+- Kaito, Dancing Shadow
 - Koth, Fire of Resistance
 - Kuldotha Cackler
+- Lukka, Bound to Ruin
 - Malcator, Purity Overseer
 - Melira, the Living Cure
 - Mercurial Spelldancer
@@ -291,7 +291,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Corrupted | 6 | Apostle of Invasion, Bonepicker Skirge, Goliath Hatchery, Phyrexian Atlas, The Seedcore | one |
+| Corrupted | 5 | Apostle of Invasion, Bonepicker Skirge, Phyrexian Atlas, The Seedcore, Zealot's Conviction | one |
 | +N: until your next turn, up to one target creature gets -N/-N. | 1 | Jace, the Perfected Mind | one |
 | N: you draw two cards. then each opponent may scry N. | 1 | Kaya, Intangible Slayer | one |
 | as long as ~ has four or more oil counters on it, it gets +N/+N and can't be blocked. | 1 | Ichor Synthesizer | one |
@@ -315,12 +315,10 @@
 | exile target creature if it has mana value N or less. corrupted — exile that creature instead if its controller has three or more poison counters. | 1 | Anoint with Affliction | one |
 | gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. if it's equipped, you may destroy all equipment attach | 1 | Awaken the Sleeper | one |
 | gain control of target creature with mana value N or less. if N is N or more, create a token that's a copy of that creature. | 1 | Blue Sun's Twilight | one |
-| look at the top six cards of your library. put up to two land cards from among them onto the battlefield tapped and the rest on the bottom of your library in a  | 1 | Expand the Sphere | one |
 | return target nonland permanent to its owner's hand. if that permanent had mana value N or less, proliferate. (choose any number of permanents and/or players, t | 1 | Serum Snare | one |
 | reveal the top N plus one cards of your library. choose a creature card and/or a land card from among them. put those cards into your hand and the rest on the b | 1 | Green Sun's Twilight | one |
 | target creature gets +N/+N until end of turn. equipped creatures you control gain indestructible until end of turn. (damage and effects that say "..." don't des | 1 | Resistance Reunited | one |
 | target creature you control gets +N/+N until end of turn. if that creature has toxic, draw a card. | 1 | Compleat Devotion | one |
-| when ezuri enters, you may pay {M}. if you do, proliferate twice. | 1 | Ezuri, Stalker of Spheres | one |
 | when you proliferate, return ~ from your graveyard to your hand. | 1 | Voidwing Hybrid | one |
 | when ~ enters, exile three cards at random from your graveyard. choose a noncreature, nonland card from among them and copy it. you may cast the copy without pa | 1 | Capricious Hellraiser | one |
 | when ~ enters, look at the top four cards of your library. you may reveal a land card from among them and put it into your hand. put the rest on the bottom of y | 1 | Contagious Vorrac | one |
@@ -334,9 +332,9 @@
 | whenever another artifact you control enters, ~ becomes a N/N phyrexian eye artifact creature until end of turn. | 1 | Eye of Malcator | one |
 | whenever another nontoken creature you control dies, you may pay N life and exile it. if you do, create a token that"..."s N/N and has toxic N. | 1 | Kinzu of the Bleak Coven | one |
 | whenever kemba or another cat you control enters, attach up to one target equipment you control to that creature. | 1 | Kemba, Kha Enduring | one |
-| whenever one or more creatures you control deal combat damage to a player, you may return one of them to its owner's hand. if you do, you may activate loyalty a | 1 | Kaito, Dancing Shadow | one |
 | whenever you cast a noncreature spell, choose a counter on target permanent. put an additional counter of that kind on that permanent. | 1 | Ichormoon Gauntlet | one |
 | whenever you proliferate, choose one — • if you don't control a creature named the hollow sentinel, create the hollow sentinel, a legendary N/N colorless phyrex | 1 | Venser, Corpse Puppet | one |
+| whenever you proliferate, draw a card. | 1 | Ezuri, Stalker of Spheres | one |
 | whenever you proliferate, each opponent loses N life and you gain N life. | 1 | Scheming Aspirant | one |
 | whenever you put one or more counters on a permanent or player, ~ deals that much damage to target opponent, creature an opponent controls, or planeswalker an o | 1 | All Will Be One | one |
 | whenever ~ attacks, you may remove an oil counter from it. if you do, untap it and it gets +N/+N until end of turn. | 1 | Lattice-Blade Mantis | one |
@@ -348,7 +346,6 @@
 | {M}: ~ becomes a N/N phyrexian construct artifact creature, loses all abilities, and gains indestructible and toxic N. activate only if there are nine or more l | 1 | Monument to Perfection | one |
 | ~ costs {M} more to cast if it targets a creature. exile target nonland permanent. | 1 | Vanish into Eternity | one |
 | ~ has trample as long as it has two or fewer oil counters on it. otherwise, it has hexproof. | 1 | Evolved Spinoderm | one |
-| −N: lukka deals N damage divided as you choose among any number of target creatures and/or planeswalkers, where N is the greatest power among creatures you cont | 1 | Lukka, Bound to Ruin | one |
 | −N: target creature becomes a treasure artifact with "..." and loses all other card types and abilities. | 1 | Vraska, Betrayal's Sting | one |
 
 ## Notes

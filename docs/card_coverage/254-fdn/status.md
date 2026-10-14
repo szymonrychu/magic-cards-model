@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 20.1% |
+| Tested | 32 | 22.2% |
 | Works (untested) | 92 | 63.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 23 | 16.0% |
+| Not working | 20 | 13.9% |
 
 ## Cards needing work
 
@@ -35,10 +35,7 @@
 | Fishing Pole | silent | Whenever equipped creature becomes untapped, remove a bait counter from this Equipment. If you do, create a 1/1 blue Fish creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Infernal Vessel | silent | When this creature dies, if it wasn't a Demon, return it to the battlefield under its owner's control with two +1/+1 counters on it. It's a Demon in addition to | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kellan, Planar Trailblazer | silent | {1}{R}: If Kellan is a Scout, it becomes a Human Faerie Detective and gains "Whenever Kellan deals combat damage to a player, exile the top card of your library | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Loot, Exuberant Explorer | silent | {4}{G}{G}, {T}: Look at the top six cards of your library. You may reveal a creature card with mana value less than or equal to the number of lands you control  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Lunar Insight | silent | Draw a card for each different mana value among nonland permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Skyknight Squire | silent | As long as this creature has three or more +1/+1 counters on it, it has flying and is a Knight in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Sphinx of Forgotten Lore | silent | Whenever this creature attacks, target instant or sorcery card in your graveyard gains flashback until end of turn. The flashback cost is equal to that card's m | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spinner of Souls | silent | Whenever another nontoken creature you control dies, you may reveal cards from the top of your library until you reveal a creature card. Put that card into your | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Squad Rallier | silent | {2}{W}: Look at the top four cards of your library. You may reveal a creature card with power 2 or less from among them and put it into your hand. Put the rest  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Valkyrie's Call | silent | Whenever a nontoken, non-Angel creature you control dies, return that card to the battlefield under its owner's control with a +1/+1 counter on it. It has flyin | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
@@ -145,7 +142,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>32 cards</summary>
 
 - Arbiter of Woe
 - Banner of Kinship
@@ -163,6 +160,8 @@
 - Hinterland Sanctifier
 - Inspiration from Beyond
 - Leyline Axe
+- Loot, Exuberant Explorer
+- Lunar Insight
 - Midnight Snack
 - Mossborn Hydra
 - Nine-Lives Familiar
@@ -174,6 +173,7 @@
 - Sire of Seven Deaths
 - Soul-Shackled Zombie
 - Soulstone Sanctuary
+- Sphinx of Forgotten Lore
 - Tinybones, Bauble Burglar
 - Twinflame Tyrant
 
@@ -189,7 +189,6 @@
 | as long as ~ has three or more +N/+N counters on it, it has flying and is a knight in addition to its other types. | 1 | Skyknight Squire | fdn |
 | create two N/N blue faerie creature tokens with flying. when you do, tap target creature an opponent controls. | 1 | Faebloom Trick | fdn |
 | double target creature's power until end of turn. flashback {M}{M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Bulk Up | fdn |
-| draw a card for each different mana value among nonland permanents you control. | 1 | Lunar Insight | fdn |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) target creature you control gains indestructible until end of turn. if ~ was kicked, instead any | 1 | Divine Resilience | fdn |
 | when ~ dies, if it wasn"..."s control with two +N/+N counters on it. it's a demon in addition to its other types. | 1 | Infernal Vessel | fdn |
 | whenever a nontoken, non-angel creature you control dies, return that card to the battlefield under its owner's control with a +N/+N counter on it. it has flyin | 1 | Valkyrie's Call | fdn |
@@ -197,7 +196,6 @@
 | whenever another nontoken creature you control dies, you may reveal cards from the top of your library until you reveal a creature card. put that card into your | 1 | Spinner of Souls | fdn |
 | whenever equipped creature becomes untapped, remove a bait counter from ~. if you do, create a N/N blue fish creature token. | 1 | Fishing Pole | fdn |
 | whenever you put one or more +N/+N counters on ~, draw a card. ~ triggers only once each turn. | 1 | Exemplar of Light | fdn |
-| whenever ~ attacks, target instant or sorcery card in your graveyard gains flashback until end of turn. the flashback cost is equal to that card's mana cost. | 1 | Sphinx of Forgotten Lore | fdn |
 | whenever ~ attacks, you may sacrifice another creature. if you do, draw a card and ~ can't be blocked ~. | 1 | Vampire Gourmand | fdn |
 | you may pay {M} rather than pay ~ mana cost if there are thirteen or more creatures on the battlefield. each player sacrifices thirteen creatures of their choic | 1 | Blasphemous Edict | fdn |
 | {M}: exile target creature card from a graveyard that was put there ~. create a token that"..."s a nightmare in addition to its other types. then exile all othe | 1 | Abyssal Harvester | fdn |
@@ -205,7 +203,6 @@
 | {M}{M}, {M}: double the number of each kind of counter on up to two target creatures and/or artifacts you control. | 1 | Zimone, Paradox Sculptor | fdn |
 | {M}{M}: if kellan is a scout, it becomes a human faerie detective and gains "..." | 1 | Kellan, Planar Trailblazer | fdn |
 | {M}{M}: look at the top four cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put the rest  | 1 | Squad Rallier | fdn |
-| {M}{M}{M}, {M}: look at the top six cards of your library. you may reveal a creature card with mana value less than or equal to the number of lands you control  | 1 | Loot, Exuberant Explorer | fdn |
 
 ## Notes
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 44 | 20.9% |
-| Works (untested) | 138 | 65.4% |
+| Tested | 45 | 21.3% |
+| Works (untested) | 139 | 65.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 29 | 13.7% |
+| Not working | 27 | 12.8% |
 
 ## Cards needing work
 
@@ -44,13 +44,11 @@
 | Psychic Intrusion | silent | Target opponent reveals their hand. You choose a nonland card from that player's graveyard or hand and exile it. You may cast that card for as long as it remain | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Returned Phalanx | silent | {1}{U}: This creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Satyr Piper | silent | {3}{G}: Target creature must be blocked this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Steam Augury | silent | Reveal the top five cards of your library and separate them into two piles. An opponent chooses one of those piles. Put that pile into your hand and the other i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stoneshock Giant | silent | When this creature becomes monstrous, creatures without flying your opponents control can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Triton Tactics | silent | Up to two target creatures each get +0/+3 until end of turn. Untap those creatures. At this turn's next end of combat, tap each creature that was blocked by one | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Viper's Kiss | silent | Enchanted creature gets -1/-1, and its activated abilities can't be activated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Anthousa, Setessan Hero | notice | Heroic — Whenever you cast a spell that targets Anthousa, up to three target lands you control each become 2/2 Warrior creatures until end of turn. They're stil | unparsed remainder: They're still lands. | Y/Y/- | not_working |
 | Boon of Erebos | notice | Target creature gets +2/+0 until end of turn. Regenerate it. You lose 2 life. | unparsed remainder: Regenerate it. You lose 2 life. | Y/Y/- | not_working |
-| Daxos of Meletis | notice | Whenever Daxos deals combat damage to a player, exile the top card of that player's library. You gain life equal to that card's mana value. Until end of turn, y | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Erebos's Emissary | notice | Discard a creature card: This creature gets +2/+2 until end of turn. If this permanent is an Aura, enchanted creature gets +2/+2 until end of turn instead. | unparsed remainder: If this permanent is an Aura, enchanted creature gets +2/+2 until end of turn instead. | Y/Y/- | not_working |
 | Gift of Immortality | notice | When enchanted creature dies, return that card to the battlefield under its owner's control. Return this card to the battlefield attached to that creature at th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rage of Purphoros | notice | Rage of Purphoros deals 4 damage to target creature. It can't be regenerated this turn. Scry 1. (Look at the top card of your library. You may put that card on  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -165,6 +163,7 @@
 | Spear of Heliod | handled | Creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spearpoint Oread | handled | Enchanted creature gets +2/+2 and has first strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Staunch-Hearted Warrior | handled | Heroic — Whenever you cast a spell that targets this creature, put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Steam Augury | handled | Reveal the top five cards of your library and separate them into two piles. An opponent chooses one of those piles. Put that pile into your hand and the other i | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stymied Hopes | handled | Counter target spell unless its controller pays {1}. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sylvan Caryatid | handled | Hexproof | machines/casting.py (target legality) | Y/Y/- | not_tested |
 | Temple of Abandon | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -197,7 +196,7 @@
 ## Fully supported
 
 <details>
-<summary>44 cards</summary>
+<summary>45 cards</summary>
 
 - Abhorrent Overlord
 - Akroan Hoplite
@@ -206,6 +205,7 @@
 - Commune with the Gods
 - Curse of the Swine
 - Dauntless Onslaught
+- Daxos of Meletis
 - Defend the Hearth
 - Elspeth, Sun's Champion
 - Evangel of Heliod
@@ -257,7 +257,6 @@
 | discard a creature card: ~ gets +N/+N until end of turn. if ~ is an aura, enchanted creature gets +N/+N until end of turn instead. | 1 | Erebos's Emissary | ths |
 | enchanted creature gets -N/-N, and its activated abilities can't be activated. | 1 | Viper's Kiss | ths |
 | enchanted land is every basic land type in addition to its other types. | 1 | Nylea's Presence | ths |
-| reveal the top five cards of your library and separate them into two piles. an opponent chooses one of those piles. put that pile into your hand and the other i | 1 | Steam Augury | ths |
 | target creature gets +N/+N until end of turn. regenerate it. you lose N life. | 1 | Boon of Erebos | ths |
 | target opponent reveals their hand. you choose a nonland card from that player's graveyard or hand and exile it. you may cast that card for as long as it remain | 1 | Psychic Intrusion | ths |
 | up to two target creatures each get +N/+N until end of turn. untap those creatures. at ~ next end of combat, tap each creature that was blocked by one of those  | 1 | Triton Tactics | ths |
@@ -267,7 +266,6 @@
 | when ~ becomes monstrous, creatures without flying your opponents control can't block ~. | 1 | Stoneshock Giant | ths |
 | when ~ enters, an opponent gains control of it. | 1 | Akroan Horse | ths |
 | whenever another creature dies, tap ~. | 1 | Fleshmad Steed | ths |
-| whenever daxos deals combat damage to a player, exile the top card of that player"..."s mana value. until end of turn, you may cast that card and you may spend  | 1 | Daxos of Meletis | ths |
 | {M}{M}, {M}, sacrifice a land: create a N/N colorless golem enchantment artifact creature token. | 1 | Hammer of Purphoros | ths |
 | {M}{M}, {M}: creatures your opponents control attack ~ if able. | 1 | Bident of Thassa | ths |
 | {M}{M}, {M}: the controller of target instant or sorcery spell copies it. that player may choose new targets for the copy. | 1 | Meletis Charlatan | ths |

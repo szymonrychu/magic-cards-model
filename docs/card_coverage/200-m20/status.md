@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 40 | 22.7% |
-| Works (untested) | 95 | 54.0% |
+| Tested | 42 | 23.9% |
+| Works (untested) | 96 | 54.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 41 | 23.3% |
+| Not working | 38 | 21.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Angelic Guardian | silent | Whenever one or more creatures you control attack, they gain indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Atemsis, All-Seeing | silent | Whenever Atemsis deals damage to an opponent, you may reveal your hand. If cards with at least six different mana values are revealed this way, that player lose | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bag of Holding | silent | Whenever you discard a card, exile that card from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Battalion Foot Soldier | silent | When this creature enters, you may search your library for any number of cards named Battalion Foot Soldier, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -45,7 +44,6 @@
 | Goldmane Griffin | silent | When this creature enters, you may search your library and/or graveyard for a card named Ajani, Inspiring Leader, reveal it, and put it into your hand. If you s | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Golos, Tireless Pilgrim | silent | {2}{W}{U}{B}{R}{G}: Exile the top three cards of your library. You may play them this turn without paying their mana costs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Icon of Ancestry | silent | {3}, {T}: Look at the top three cards of your library. You may reveal a creature card of the chosen type from among them and put it into your hand. Put the rest | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Loxodon Lifechanter | silent | When this creature enters, you may have your life total become the total toughness of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Marauding Raptor | silent | Whenever another creature you control enters, this creature deals 2 damage to it. If a Dinosaur is dealt damage this way, this creature gets +2/+0 until end of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mu Yanling, Celestial Wind | silent | +1: Until your next turn, up to one target creature gets -5/-0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mu Yanling, Sky Dancer | silent | +2: Until your next turn, up to one target creature gets -2/-0 and loses flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -53,7 +51,6 @@
 | Pattern Matcher | silent | When this creature enters, you may search your library for a card with the same name as another creature you control, reveal it, put it into your hand, then shu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Portal of Sanctuary | silent | {1}, {T}: Return target creature you control and each Aura attached to it to their owners' hands. Activate only during your turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Repeated Reverberation | silent | When you next cast an instant spell, cast a sorcery spell, or activate a loyalty ability this turn, copy that spell or ability twice. You may choose new targets | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rienne, Angel of Rebirth | silent | Other multicolored creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scheming Symmetry | silent | Choose two target players. Each of them searches their library for a card, then shuffles and puts that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sorin's Guide | silent | When this creature enters, you may search your library and/or graveyard for a card named Sorin, Vampire Lord, reveal it, and put it into your hand. If you searc | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tale's End | silent | Counter target activated ability, triggered ability, or legendary spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -135,6 +132,7 @@
 | Rapacious Dragon | handled | When this creature enters, create two Treasure tokens. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Reckless Air Strike | handled | Choose one — • Reckless Air Strike deals 3 damage to target creature with flying. • Destroy target artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Retributive Wand | handled | {3}, {T}: This artifact deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Rienne, Angel of Rebirth | handled | Other multicolored creatures you control get +1/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rotting Regisaur | handled | At the beginning of your upkeep, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Salvager of Ruin | handled | Sacrifice this creature: Choose target permanent card in your graveyard that was put there from the battlefield this turn. Return it to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Savage Gorger | handled | At the beginning of your end step, if an opponent lost life this turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -166,12 +164,13 @@
 ## Fully supported
 
 <details>
-<summary>40 cards</summary>
+<summary>42 cards</summary>
 
 - Aether Gust
 - Agent of Treachery
 - Ajani, Strength of the Pride
 - Angel of Vitality
+- Angelic Guardian
 - Apostle of Purifying Light
 - Blightbeetle
 - Blood Burglar
@@ -191,6 +190,7 @@
 - Knight of the Ebon Legion
 - Leyline of Abundance
 - Lotus Field
+- Loxodon Lifechanter
 - Mystic Forge
 - Nightpack Ambusher
 - Omnath, Locus of the Roil
@@ -225,7 +225,6 @@
 | counter target activated ability, triggered ability, or legendary spell. | 1 | Tale's End | m20 |
 | enchanted creature gets +N/+N and assigns combat damage equal to its toughness rather than its power. | 1 | Gauntlets of Light | m20 |
 | exile target creature an opponent controls with mana value N or less and all other creatures that player controls with the same name as that creature. then that | 1 | Legion's End | m20 |
-| other multicolored creatures you control get +N/+N. | 1 | Rienne, Angel of Rebirth | m20 |
 | put target creature with power N or greater on the bottom of its owner's library. | 1 | Eternal Isolation | m20 |
 | return all nonland permanents to their owners' hands. if you return four or more nontoken permanents you control ~, you may put a permanent card from your hand  | 1 | Flood of Tears | m20 |
 | when you next cast an instant spell, cast a sorcery spell, or activate a loyalty ability ~, copy that spell or ability twice. you may choose new targets for the | 1 | Repeated Reverberation | m20 |
@@ -233,7 +232,6 @@
 | when ~ enters, each opponent exiles a card from their hand. | 1 | Yarok's Fenlurker | m20 |
 | when ~ enters, return another creature you control to its owner's hand. | 1 | Yarok's Wavecrasher | m20 |
 | when ~ enters, reveal the top five cards of your library. put a land card from among them onto the battlefield and the rest into your graveyard. | 1 | Cavalier of Thorns | m20 |
-| when ~ enters, you may have your life total become the total toughness of creatures you control. | 1 | Loxodon Lifechanter | m20 |
 | when ~ enters, you may search your library and/or graveyard for a card named ajani, inspiring leader, reveal it, and put it into your hand. if you search your l | 1 | Goldmane Griffin | m20 |
 | when ~ enters, you may search your library and/or graveyard for a card named mu yanling, celestial wind, reveal it, and put it into your hand. if you search you | 1 | Yanling's Harbinger | m20 |
 | when ~ enters, you may search your library and/or graveyard for a card named sorin, vampire lord, reveal it, and put it into your hand. if you search your libra | 1 | Sorin's Guide | m20 |
@@ -242,7 +240,6 @@
 | when ~ enters, you may search your library for any number of cards named ~, reveal them, put them into your hand, then shuffle. | 1 | Battalion Foot Soldier | m20 |
 | whenever another creature you control enters, ~ deals N damage to it. if a dinosaur is dealt damage ~, ~ gets +N/+N until end of turn. | 1 | Marauding Raptor | m20 |
 | whenever atemsis deals damage to an opponent, you may reveal your hand. if cards with at least six different mana values are revealed ~, that player loses the g | 1 | Atemsis, All-Seeing | m20 |
-| whenever one or more creatures you control attack, they gain indestructible until end of turn. | 1 | Angelic Guardian | m20 |
 | whenever you activate a loyalty ability of a chandra planeswalker, you may pay {M}. if you do, copy that ability. you may choose new targets for the copy. | 1 | Chandra's Regulator | m20 |
 | whenever you discard a card, exile that card from your graveyard. | 1 | Bag of Holding | m20 |
 | whenever ~ attacks, choose target elemental creature card in your graveyard with toughness less than ~ toughness. return that card to the battlefield tapped and | 1 | Thunderkin Awakener | m20 |

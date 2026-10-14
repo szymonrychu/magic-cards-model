@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 47 | 27.8% |
+| Tested | 53 | 31.4% |
 | Works (untested) | 77 | 45.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 45 | 26.6% |
+| Not working | 39 | 23.1% |
 
 ## Cards needing work
 
@@ -28,20 +28,16 @@
 |---|---|---|---|---|---|
 | Aethermage's Touch | silent | Reveal the top four cards of your library. You may put a creature card from among them onto the battlefield. It gains "At the beginning of your end step, return | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Avatar of Discord | silent | When this creature enters, sacrifice it unless you discard two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Biomantic Mastery | silent | Draw a card for each creature target player controls, then draw a card for each creature another target player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Blessing of the Nephilim | silent | Enchanted creature gets +1/+1 for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brain Pry | silent | Choose a nonland card name. Target player reveals their hand. That player discards a card with that name. If they can't, you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bronze Bombshell | silent | When a player other than this creature's owner controls it, that player sacrifices it. If the player does, this creature deals 7 damage to the player. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Crypt Champion | silent | When this creature enters, each player puts a creature card with mana value 3 or less from their graveyard onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cytoplast Root-Kin | silent | When this creature enters, put a +1/+1 counter on each other creature you control with a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cytoshape | silent | Choose a nonlegendary creature on the battlefield. Target creature becomes a copy of that creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drekavac | silent | When this creature enters, sacrifice it unless you discard a noncreature card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Elemental Resonance | silent | At the beginning of your first main phase, add mana equal to enchanted permanent's mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Evolution Vat | silent | {3}, {T}: Tap target creature and put a +1/+1 counter on it. Until end of turn, that creature gains "{2}{G}{U}: Double the number of +1/+1 counters on this crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flaring Flame-Kin | silent | As long as this creature is enchanted, it gets +2/+2, has trample, and has "{R}: This creature gets +1/+0 until end of turn." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flash Foliage | silent | Cast this spell only during combat after blockers are declared. Create a 1/1 green Saproling creature token that's blocking target creature attacking you. Draw  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Govern the Guildless | silent | Gain control of target monocolored creature. Forecast — {1}{U}, Reveal this card from your hand: Target creature becomes the color or colors of your choice unti | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hide // Seek | silent | Put target artifact or enchantment on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Isperia the Inscrutable | silent | Whenever Isperia deals combat damage to a player, choose a card name. That player reveals their hand. If a card with the chosen name is revealed this way, searc | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kill-Suit Cultist | silent | {B}, Sacrifice this creature: The next time damage would be dealt to target creature this turn, destroy that creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Loaming Shaman | silent | When this creature enters, target player shuffles any number of target cards from their graveyard into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -52,11 +48,9 @@
 | Odds // Ends | silent | Flip a coin. If it comes up heads, counter target instant or sorcery spell. If it comes up tails, copy that spell and you may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pain Magnification | silent | Whenever an opponent is dealt 3 or more damage by a single source, that player discards a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Paladin of Prahv | silent | Whenever this creature deals damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Protean Hulk | silent | When this creature dies, search your library for any number of creature cards with total mana value 6 or less, put them onto the battlefield, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pure // Simple | silent | Destroy all Auras and Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rakdos Augermage | silent | {T}: Reveal your hand and discard a card of target opponent's choice. Then that player reveals their hand and discards a card of your choice. Activate only as a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Rakdos Riteknife | silent | Equipped creature gets +1/+0 for each blood counter on this Equipment and has "{T}, Sacrifice a creature: Put a blood counter on Rakdos Riteknife." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Rakdos the Defiler | silent | Whenever Rakdos attacks, sacrifice half the non-Demon permanents you control, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Rakdos Riteknife | silent | {B}{R}, Sacrifice this Equipment: Target player sacrifices a permanent of their choice for each blood counter on this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Research // Development | silent | Shuffle up to four cards you own from outside the game into your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rise // Fall | silent | Return target creature card from a graveyard and target creature on the battlefield to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Simic Basilisk | silent | {1}{G}: Until end of turn, target creature with a +1/+1 counter on it gains "Whenever this creature deals combat damage to a creature, destroy that creature at  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -152,12 +146,14 @@
 ## Fully supported
 
 <details>
-<summary>47 cards</summary>
+<summary>53 cards</summary>
 
 - Anthem of Rakdos
 - Azorius Aethermage
 - Azorius Guildmage
 - Azorius Ploy
+- Biomantic Mastery
+- Blessing of the Nephilim
 - Blood Crypt
 - Bound // Determined
 - Brace for Impact
@@ -168,6 +164,7 @@
 - Demonfire
 - Dovescape
 - Dread Slag
+- Elemental Resonance
 - Enemy of the Guildpact
 - Flame-Kin War Scout
 - Ghost Quarter
@@ -175,6 +172,7 @@
 - Guardian of the Guildpact
 - Hallowed Fountain
 - Hellhole Rats
+- Hide // Seek
 - Hit // Run
 - Jagged Poppet
 - Kindle the Carnage
@@ -183,11 +181,13 @@
 - Palliation Accord
 - Prahv, Spires of Order
 - Pride of the Clouds
+- Protean Hulk
 - Psychic Possession
 - Psychotic Fury
 - Ragamuffyn
 - Rain of Gore
 - Rakdos Signet
+- Rakdos the Defiler
 - Shielding Plax
 - Simic Growth Chamber
 - Simic Initiate
@@ -210,19 +210,14 @@
 |---|---|---|---|
 | Hellbent | 1 | Slithering Shade | dis |
 | as long as ~ is enchanted, it gets +N/+N, has trample, and has "..." | 1 | Flaring Flame-Kin | dis |
-| at the beginning of your first main phase, add mana equal to enchanted permanent's mana cost. | 1 | Elemental Resonance | dis |
 | cast ~ only during combat after blockers are declared. create a N/N green saproling creature token that's blocking target creature attacking you. draw a card. | 1 | Flash Foliage | dis |
 | choose a nonland card name. target player reveals their hand. that player discards a card with that name. if they can't, you draw a card. | 1 | Brain Pry | dis |
 | choose a nonlegendary creature on the battlefield. target creature becomes a copy of that creature until end of turn. | 1 | Cytoshape | dis |
 | destroy all auras and equipment. | 1 | Pure // Simple | dis |
-| draw a card for each creature target player controls, then draw a card for each creature another target player controls. | 1 | Biomantic Mastery | dis |
 | enchanted creature gets +N/+N and can block creatures with landwalk abilities as though they didn't have those abilities. | 1 | Street Savvy | dis |
-| enchanted creature gets +N/+N for each of its colors. | 1 | Blessing of the Nephilim | dis |
-| equipped creature gets +N/+N for each blood counter on ~ and has "..." | 1 | Rakdos Riteknife | dis |
 | exile all cards from your hand face down. at the beginning of the next end step, return those cards to your hand, then draw a card. | 1 | Ignorant Bliss | dis |
 | flip a coin. if it comes up heads, counter target instant or sorcery spell. if it comes up tails, copy that spell and you may choose new targets for the copy. | 1 | Odds // Ends | dis |
 | gain control of target monocolored creature. forecast — {M}{M}, reveal ~ from your hand: target creature becomes the color or colors of your choice until end of | 1 | Govern the Guildless | dis |
-| put target artifact or enchantment on the bottom of its owner's library. | 1 | Hide // Seek | dis |
 | return all creatures blocking or blocked by target creature to their owner's hand. | 1 | Trial // Error | dis |
 | return target creature card from a graveyard and target creature on the battlefield to their owners' hands. | 1 | Rise // Fall | dis |
 | reveal a card from your hand. search your library for a card with the same name as that card, reveal it, put it into your hand, then shuffle. hellbent — if you  | 1 | Infernal Tutor | dis |
@@ -231,7 +226,6 @@
 | target creature can block any number of creatures ~. | 1 | Valor Made Real | dis |
 | until end of turn, all creatures become black and all lands become swamps. | 1 | Nightcreep | dis |
 | when a player other than ~ owner controls it, that player sacrifices it. if the player does, ~ deals N damage to the player. | 1 | Bronze Bombshell | dis |
-| when ~ dies, search your library for any number of creature cards with total mana value N or less, put them onto the battlefield, then shuffle. | 1 | Protean Hulk | dis |
 | when ~ enters, each player puts a creature card with mana value N or less from their graveyard onto the battlefield. | 1 | Crypt Champion | dis |
 | when ~ enters, put a +N/+N counter on each other creature you control with a +N/+N counter on it. | 1 | Cytoplast Root-Kin | dis |
 | when ~ enters, sacrifice it unless you discard a noncreature card. | 1 | Drekavac | dis |
@@ -239,7 +233,6 @@
 | when ~ enters, target player shuffles any number of target cards from their graveyard into their library. | 1 | Loaming Shaman | dis |
 | whenever an opponent is dealt N or more damage by a single source, that player discards a card. | 1 | Pain Magnification | dis |
 | whenever isperia deals combat damage to a player, choose a card name. that player reveals their hand. if a card with the chosen name is revealed ~, search your  | 1 | Isperia the Inscrutable | dis |
-| whenever rakdos attacks, sacrifice half the non-demon permanents you control, rounded up. | 1 | Rakdos the Defiler | dis |
 | whenever you cast a blue creature spell, reveal the top card of your library. if it's a creature card, put that card into your hand. | 1 | Momir Vig, Simic Visionary | dis |
 | whenever ~ deals damage, you gain that much life. | 1 | Paladin of Prahv | dis |
 | {M}, sacrifice ~: the next time damage would be dealt to target creature ~, destroy that creature instead. | 1 | Kill-Suit Cultist | dis |
@@ -247,6 +240,7 @@
 | {M}, {M}: target player exiles a card from their hand. activate only as a sorcery. | 1 | Muse Vessel | dis |
 | {M}: reveal your hand and discard a card of target opponent's choice. then that player reveals their hand and discards a card of your choice. activate only as a | 1 | Rakdos Augermage | dis |
 | {M}: switch ~ power and toughness until end of turn. | 1 | Windreaver | dis |
+| {M}{M}, sacrifice ~: target player sacrifices a permanent of their choice for each blood counter on ~. | 1 | Rakdos Riteknife | dis |
 | {M}{M}, {M}: put a +N/+N counter on each creature that entered ~. | 1 | Novijen, Heart of Progress | dis |
 | {M}{M}: creatures you control with defender can attack ~ as though they didn't have defender. | 1 | Wakestone Gargoyle | dis |
 | {M}{M}: move a +N/+N counter from target creature onto another target creature with the same controller. | 1 | Simic Guildmage | dis |

@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 50 | 22.7% |
-| Works (untested) | 132 | 60.0% |
+| Tested | 53 | 24.1% |
+| Works (untested) | 134 | 60.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 38 | 17.3% |
+| Not working | 33 | 15.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Armament Master | silent | Other Kor creatures you control get +2/+2 for each Equipment attached to this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloodchief Ascension | silent | Whenever a card is put into an opponent's graveyard from anywhere, if this enchantment has three or more quest counters on it, you may have that player lose 2 l | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Brave the Elements | silent | Choose a color. White creatures you control gain protection from the chosen color until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Celestial Mantle | silent | Whenever enchanted creature deals combat damage to a player, double its controller's life total. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -34,8 +33,6 @@
 | Cosi's Trickster | silent | Whenever an opponent shuffles their library, you may put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Gomazoa | silent | {T}: Put this creature and each creature it's blocking on top of their owners' libraries, then those players shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grappling Hook | silent | Whenever equipped creature attacks, you may have target creature block it this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Highland Berserker | silent | Whenever this creature or another Ally you control enters, you may have Ally creatures you control gain first strike until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Joraga Bard | silent | Whenever this creature or another Ally you control enters, you may have Ally creatures you control gain vigilance until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kabira Evangel | silent | Whenever this creature or another Ally you control enters, you may choose a color. If you do, Allies you control gain protection from the chosen color until end | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kazuul Warlord | silent | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on each Ally creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Living Tsunami | silent | At the beginning of your upkeep, sacrifice this creature unless you return a land you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -53,7 +50,6 @@
 | Roil Elemental | silent | Landfall — Whenever a land you control enters, you may gain control of target creature for as long as you control this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sadistic Sacrament | silent | Kicker {7} (You may pay an additional {7} as you cast this spell.) Search target player's library for up to three cards, exile them, then that player shuffles.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scythe Tiger | silent | When this creature enters, sacrifice it unless you sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Seascape Aerialist | silent | Whenever this creature or another Ally you control enters, you may have Ally creatures you control gain flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Trapfinder's Trick | silent | Target player reveals their hand and discards all Trap cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Turntimber Basilisk | silent | Landfall — Whenever a land you control enters, you may have target creature block this creature this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vampire Lacerator | silent | At the beginning of your upkeep, you lose 1 life unless an opponent has 10 or less life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -62,7 +58,6 @@
 | Desecrated Earth | notice | Destroy target land. Its controller discards a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Elemental Appeal | notice | Kicker {5} (You may pay an additional {5} as you cast this spell.) Create a 7/1 red Elemental creature token with trample and haste. Exile it at the beginning o | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Guul Draz Specter | notice | This creature gets +3/+3 as long as an opponent has no cards in hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Kalitas, Bloodchief of Ghet | notice | {B}{B}{B}, {T}: Destroy target creature. If that creature dies this way, create a black Vampire creature token. Its power is equal to that creature's power and  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Obsidian Fireheart | notice | {1}{R}{R}: Put a blaze counter on target land without a blaze counter on it. For as long as that land has a blaze counter on it, it has "At the beginning of you | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Adventuring Gear | handled | Landfall — Whenever a land you control enters, equipped creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Akoum Refuge | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -105,10 +100,11 @@
 | Hedron Crab | handled | Landfall — Whenever a land you control enters, target player mills three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hedron Scrabbler | handled | Landfall — Whenever a land you control enters, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hellfire Mongrel | handled | At the beginning of each opponent's upkeep, if that player has two or fewer cards in hand, this creature deals 2 damage to that player. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Highland Berserker | handled | Whenever this creature or another Ally you control enters, you may have Ally creatures you control gain first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inferno Trap | handled | If you've been dealt damage by two or more creatures this turn, you may pay {R} rather than pay this spell's mana cost. Inferno Trap deals 4 damage to target cr | the engine reads this text and performs it | Y/-/- | not_tested |
 | Into the Roil | handled | Kicker {1}{U} (You may pay an additional {1}{U} as you cast this spell.) Return target nonland permanent to its owner's hand. If this spell was kicked, draw a c | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ior Ruin Expedition | handled | Landfall — Whenever a land you control enters, you may put a quest counter on this enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Journey to Nowhere | handled | When this enchantment enters, exile target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Joraga Bard | handled | Whenever this creature or another Ally you control enters, you may have Ally creatures you control gain vigilance until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jwar Isle Refuge | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kabira Crossroads | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kazandu Blademaster | handled | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -157,6 +153,7 @@
 | Runeflare Trap | handled | If an opponent drew three or more cards this turn, you may pay {R} rather than pay this spell's mana cost. Runeflare Trap deals damage to target player equal to | the engine reads this text and performs it | Y/-/- | not_tested |
 | Savage Silhouette | handled | Enchanted creature gets +2/+2 and has "{1}{G}: Regenerate this creature." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scute Mob | handled | At the beginning of your upkeep, if you control five or more lands, put four +1/+1 counters on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Seascape Aerialist | handled | Whenever this creature or another Ally you control enters, you may have Ally creatures you control gain flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Seismic Shudder | handled | Seismic Shudder deals 1 damage to each creature without flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sejiri Refuge | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shatterskull Giant | handled |  |  | Y/-/- | not_tested |
@@ -200,12 +197,13 @@
 ## Fully supported
 
 <details>
-<summary>50 cards</summary>
+<summary>53 cards</summary>
 
 - Aether Figment
 - Archive Trap
 - Archmage Ascension
 - Arid Mesa
+- Armament Master
 - Bala Ged Thief
 - Blade of the Bloodchief
 - Bladetusk Boar
@@ -225,6 +223,8 @@
 - Hagra Diabolist
 - Hellkite Charger
 - Iona, Shield of Emeria
+- Journey to Nowhere
+- Kalitas, Bloodchief of Ghet
 - Khalni Gem
 - Kor Outfitter
 - Lotus Cobra
@@ -271,7 +271,6 @@
 | kicker {M} (you may pay an additional {M} as you cast ~.) creatures target player controls get -N/-N until end of turn. if ~ was kicked, those creatures get -N/ | 1 | Marsh Casualties | zen |
 | kicker {M} (you may pay an additional {M} as you cast ~.) search target player"..."s library for up to fifteen cards, exile them, then that player shuffles. | 1 | Sadistic Sacrament | zen |
 | kicker {M} (you may pay an additional {M} as you cast ~.) target creature can't be the target of spells or abilities your opponents control ~. if ~ was kicked,  | 1 | Vines of Vastwood | zen |
-| other kor creatures you control get +N/+N for each equipment attached to ~. | 1 | Armament Master | zen |
 | remove five quest counters from ~ and sacrifice it: search your library for an equipment card, put it onto the battlefield, attach it to a creature you control, | 1 | Quest for the Holy Relic | zen |
 | remove four quest counters from ~ and sacrifice it: if any source you control would deal damage to a permanent or player ~, it deals double that damage to that  | 1 | Quest for Pure Flame | zen |
 | target player reveals their hand and discards all trap cards. | 1 | Trapfinder's Trick | zen |
@@ -284,14 +283,10 @@
 | whenever equipped creature attacks, you may have target creature block it ~ if able. | 1 | Grappling Hook | zen |
 | whenever lorthos attacks, you may pay {M}. if you do, tap up to eight target permanents. those permanents don"..." next untap steps. | 1 | Lorthos, the Tidemaker | zen |
 | whenever ~ or another ally you control enters, you may choose a color. if you do, allies you control gain protection from the chosen color until end of turn. | 1 | Kabira Evangel | zen |
-| whenever ~ or another ally you control enters, you may have ally creatures you control gain first strike until end of turn. | 1 | Highland Berserker | zen |
-| whenever ~ or another ally you control enters, you may have ally creatures you control gain flying until end of turn. | 1 | Seascape Aerialist | zen |
-| whenever ~ or another ally you control enters, you may have ally creatures you control gain vigilance until end of turn. | 1 | Joraga Bard | zen |
 | whenever ~ or another ally you control enters, you may put a +N/+N counter on each ally creature you control. | 1 | Kazuul Warlord | zen |
 | {M}, {M}: put an eon counter on ~. skip your next turn. | 1 | Magosi, the Waterveil | zen |
 | {M}: put a +N/+N counter on each green creature that entered ~. | 1 | Oran-Rief, the Vastwood | zen |
 | {M}: put ~ and each creature it"..." libraries, then those players shuffle. | 1 | Gomazoa | zen |
-| {M}{M}{M}, {M}: destroy target creature. if that creature dies ~, create a black vampire creature token. its power is equal to that creature"..."s toughness. | 1 | Kalitas, Bloodchief of Ghet | zen |
 | {M}{M}{M}: put a blaze counter on target land without a blaze counter on it. for as long as that land has a blaze counter on it, it has "..." | 1 | Obsidian Fireheart | zen |
 | ~ gets +N/+N as long as an opponent has no cards in hand. | 1 | Guul Draz Specter | zen |
 | −N: cast any number of red instant and/or sorcery cards from your graveyard without paying their mana costs. | 1 | Chandra Ablaze | zen |

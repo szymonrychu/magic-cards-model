@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 25.5% |
+| Tested | 14 | 27.5% |
 | Works (untested) | 32 | 62.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 6 | 11.8% |
+| Not working | 5 | 9.8% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Chance Encounter | silent | Whenever you win a coin flip, put a luck counter on this enchantment. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Deluge | silent | Tap all creatures without flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Time Stretch | silent | Target player takes two extra turns after this one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Squirrel Mob | notice | This creature gets +1/+1 for each other Squirrel on the battlefield. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Afflict | handled | Target creature gets -1/-1 until end of turn. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Auramancer | handled | When this creature enters, you may return target enchantment card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aven Cloudchaser | handled | When this creature enters, destroy target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -68,7 +67,7 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Barbarian Ring
 - Battle of Wits
@@ -81,6 +80,7 @@
 - Mindslicer
 - Mirari
 - Peek
+- Squirrel Mob
 - Syncopate
 - Traumatize
 
@@ -95,7 +95,6 @@
 | target player takes two extra turns after ~. | 1 | Time Stretch | ody |
 | whenever you win a coin flip, put a luck counter on ~. | 1 | Chance Encounter | ody |
 | {M}{M}: target player reveals the top card of their library. | 1 | Aven Windreader | ody |
-| ~ gets +N/+N for each other squirrel on the battlefield. | 1 | Squirrel Mob | ody |
 
 ## Notes
 

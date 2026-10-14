@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 87 | 31.4% |
+| Tested | 88 | 31.8% |
 | Works (untested) | 133 | 48.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 57 | 20.6% |
+| Not working | 56 | 20.2% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Buzzard-Wasp Colony | silent | Whenever another creature you control dies, if it had counters on it, put its counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Crashing Wave | silent | As an additional cost to cast this spell, waterbend {X}. (While paying a waterbend cost, you can tap your artifacts and creatures to help. Each one pays for {1} | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Destined Confrontation | silent | Each player chooses any number of creatures they control with total power 4 or less, then sacrifices all other creatures they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Diligent Zookeeper | silent | Each non-Human creature you control gets +1/+1 for each of its creature types, to a maximum of 10. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Earth King's Lieutenant | silent | When this creature enters, put a +1/+1 counter on each other Ally creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Earth Kingdom General | silent | Whenever you put one or more +1/+1 counters on a creature, you may gain that much life. Do this only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Earth Rumble | silent | Earthbend 2. When you do, up to one target creature you control fights target creature an opponent controls. (To earthbend 2, target land you control becomes a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -220,7 +219,7 @@
 ## Fully supported
 
 <details>
-<summary>87 cards</summary>
+<summary>88 cards</summary>
 
 - Aang's Iceberg
 - Aang, Swift Savior // Aang and La, Ocean's Fury
@@ -247,6 +246,7 @@
 - Dai Li Agents
 - Day of Black Sun
 - Deadly Precision
+- Diligent Zookeeper
 - Dragonfly Swarm
 - Earthbender Ascension
 - Earthen Ally
@@ -329,7 +329,6 @@
 | choose up to one target creature, then airbend all other creatures. (exile them. while each one is exiled, its owner may cast it for {M} rather than its mana co | 1 | Avatar's Wrath | tla |
 | draw a card if there's a creature or lesson card in your graveyard. | 1 | Leaves from the Vine | tla |
 | draw three cards. then discard a card unless you waterbend {M}. (while paying a waterbend cost, you can tap your artifacts and creatures to help. each one pays  | 1 | Waterbending Lesson | tla |
-| each non-human creature you control gets +N/+N for each of its creature types, to a maximum of N. | 1 | Diligent Zookeeper | tla |
 | each player chooses any number of creatures they control with total power N or less, then sacrifices all other creatures they control. | 1 | Destined Confrontation | tla |
 | earthbend N, where N is the number of cards in your hand. that land becomes an island in addition to its other types. | 1 | The Legend of Kyoshi // Avatar Kyoshi | tla |
 | earthbend N. when you do, up to one target creature you control fights target creature an opponent controls. (to earthbend N, target land you control becomes a  | 1 | Earth Rumble | tla |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 56 | 21.1% |
-| Works (untested) | 149 | 56.0% |
+| Tested | 64 | 24.1% |
+| Works (untested) | 150 | 56.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 61 | 22.9% |
+| Not working | 52 | 19.5% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | A Tale for the Ages | silent | Enchanted creatures you control get +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Archon of the Wild Rose | silent | Other creatures you control that are enchanted by Auras you control have base power and toughness 4/4 and have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Armory Mice | silent | Celebration — This creature gets +0/+2 as long as two or more nonland permanents entered the battlefield under your control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Asinine Antics | silent | You may cast this spell as though it had flash if you pay {2} more to cast it. For each creature your opponents control, create a Cursed Role token attached to  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bellowing Bruiser // Beat a Path | silent | Up to two target creatures can't block this turn. (Then exile this card. You may cast the creature later from exile.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Beseech the Mirror | silent | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Search your library for a card, exile it face down, then shuffle. If this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Brave the Wilds | silent | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) If this spell was bargained, target land you control becomes a 3/3 Elemen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -38,7 +37,6 @@
 | Charmed Clothier | silent | When this creature enters, create a Royal Role token attached to another target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Devouring Sugarmaw // Have for Dinner | silent | At the beginning of your upkeep, you may sacrifice an artifact, enchantment, or token. If you don't, tap this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Discerning Financier | silent | {2}{W}: Choose another player. That player gains control of target Treasure you control. You draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Ego Drain | silent | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. If you don't control a Faerie, exile a card from your han | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Embereth Veteran | silent | {1}, Sacrifice this creature: Create a Young Hero Role token attached to another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Expel the Interlopers | silent | Choose a number between 0 and 10. Destroy all creatures with power greater than or equal to the chosen number. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Farsight Ritual | silent | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Look at the top four cards of your library. If this spell was bargained,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -55,7 +53,6 @@
 | Questing Druid // Seek the Beast | silent | Whenever you cast a spell that's white, blue, black, or red, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Redtooth Genealogist | silent | When this creature enters, create a Royal Role token attached to another target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rowan's Grim Search | silent | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) If this spell was bargained, look at the top four cards of your library,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Rowan, Scion of War | silent | {T}: Spells you cast this turn that are black and/or red cost {X} less to cast, where X is the amount of life you lost this turn. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sharae of Numbing Depths | silent | Whenever you tap one or more untapped creatures your opponents control, draw a card. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Solitary Sanctuary | silent | Whenever you tap an untapped creature an opponent controls, put a +1/+1 counter on target creature you control. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Spell Stutter | silent | Counter target spell unless its controller pays {2} plus an additional {1} for each Faerie you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -63,22 +60,16 @@
 | Tattered Ratter | silent | Whenever a Rat you control becomes blocked, it gets +2/+0 until end of turn. | this trigger's condition can never be satisfied - it never triggers | Y/Y/Y | not_working |
 | Territorial Witchstalker | silent | At the beginning of combat on your turn, if you control a creature with power 4 or greater, this creature gets +1/+0 until end of turn and can attack this turn  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Apprentice's Folly | silent | III — Sacrifice all Reflections you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| The End | silent | This spell costs {2} less to cast if your life total is 5 or less. Exile target creature or planeswalker. Search its controller's graveyard, hand, and library f | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| The Goose Mother | silent | When The Goose Mother enters, create half X Food tokens, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Irencrag | silent | Whenever a legendary creature you control enters, you may have The Irencrag become a legendary Equipment artifact named Everflame, Heroes' Legacy. If you do, it | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Thunderous Debut | silent | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Look at the top twenty cards of your library. You may reveal up to two cr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tuinvale Guide | silent | Celebration — This creature gets +1/+0 and has lifelink as long as two or more nonland permanents entered the battlefield under your control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Twisted Sewer-Witch | silent | When this creature enters, create a 1/1 black Rat creature token with "This creature can't block." Then for each Rat you control, create a Wicked Role token att | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Verdant Outrider | silent | {1}{G}: This creature can't be blocked by creatures with power 2 or less this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Virtue of Knowledge // Vantress Visions | silent | Copy target activated or triggered ability you control. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Virtue of Loyalty // Ardenvale Fealty | silent | At the beginning of your end step, put a +1/+1 counter on each creature you control. Untap those creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Will, Scion of Peace | silent | {T}: Spells you cast this turn that are white and/or blue cost {X} less to cast, where X is the amount of life you gained this turn. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Yenna, Redtooth Regent | silent | {2}, {T}: Choose target enchantment you control that doesn't have the same name as another permanent you control. Create a token that's a copy of it, except it  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Back for Seconds | notice | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Return up to two target creature cards from your graveyard to your hand.  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Become Brutes | notice | One or two target creatures each gain haste until end of turn. For each of those creatures, create a Monster Role token attached to it. (If you control another  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Cheeky House-Mouse // Squeak By | notice | Target creature you control gets +1/+1 until end of turn. It can't be blocked by creatures with power 3 or greater this turn. | unparsed remainder: It can't be blocked by creatures with power 3 or greater this turn. | Y/Y/Y | not_working |
+| Ego Drain | notice | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. If you don't control a Faerie, exile a card from your han | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Howling Galefang | notice | This creature has haste as long as you own a card in exile that has an Adventure. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Kellan, the Fae-Blooded // Birthright Boon | notice | Other creatures you control get +1/+0 for each Aura and Equipment attached to Kellan. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Lord Skitter's Butcher | notice | When this creature enters, choose one — • Create a 1/1 black Rat creature token with "This token can't block." • You may sacrifice another creature. If you do,  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Not Dead After All | notice | Until end of turn, target creature you control gains "When this creature dies, return it to the battlefield tapped under its owner's control, then create a Wick | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Rotisserie Elemental | notice | Whenever this creature deals combat damage to a player, put a skewer counter on this creature. Then you may sacrifice it. If you do, exile the top X cards of yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -236,17 +227,20 @@
 | Witch's Mark | handled | You may discard a card. If you do, draw two cards. Create a Wicked Role token attached to up to one target creature you control. (If you control another Role on | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Witchstalker Frenzy | handled | This spell costs {1} less to cast for each creature that attacked this turn. Witchstalker Frenzy deals 5 damage to target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Woodland Acolyte // Mend the Wilds | handled | Put target permanent card from your graveyard on top of your library. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Yenna, Redtooth Regent | handled | {2}, {T}: Choose target enchantment you control that doesn't have the same name as another permanent you control. Create a token that's a copy of it, except it  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>56 cards</summary>
+<summary>64 cards</summary>
 
 - Agatha of the Vile Cauldron
 - Agatha's Champion
 - Agatha's Soul Cauldron
 - Archive Dragon
 - Ashiok, Wicked Manipulator
+- Asinine Antics
+- Become Brutes
 - Beluna Grandsquall // Seek Thrills
 - Boundary Lands Ranger
 - Bramble Familiar // Fetch Quest
@@ -273,6 +267,7 @@
 - Imodane, the Pyrohammer
 - Into the Fae Court
 - Johann, Apprentice Sorcerer
+- Kellan, the Fae-Blooded // Birthright Boon
 - Korvold and the Noble Thief
 - Lady of Laughter
 - Lich-Knights' Conquest
@@ -286,6 +281,7 @@
 - Protective Parents
 - Raging Battle Mouse
 - Restless Cottage
+- Rowan, Scion of War
 - Ruby, Daring Tracker
 - Shatter the Oath
 - Sleep-Cursed Faerie
@@ -295,9 +291,13 @@
 - Stonesplitter Bolt
 - Talion, the Kindly Lord
 - Tangled Colony
+- The End
+- The Goose Mother
 - Torch the Tower
 - Troublemaker Ouphe
 - Troyan, Gutsy Explorer
+- Twisted Sewer-Witch
+- Will, Scion of Peace
 
 </details>
 
@@ -323,8 +323,6 @@
 | enchanted creatures you control get +N/+N. | 1 | A Tale for the Ages | woe |
 | instant and sorcery spells you control have lifelink. | 1 | Heartflame Duelist // Heartflame Slash | woe |
 | look at the top five cards of your library. you may exile a creature card from among them. put the rest on the bottom of your library in a random order. you may | 1 | Feral Encounter | woe |
-| one or two target creatures each gain haste until end of turn. for each of those creatures, create a monster role token attached to it. (if you control another  | 1 | Become Brutes | woe |
-| other creatures you control get +N/+N for each aura and equipment attached to kellan. | 1 | Kellan, the Fae-Blooded // Birthright Boon | woe |
 | other creatures you control that are enchanted by auras you control have base power and toughness N/N and have flying. | 1 | Archon of the Wild Rose | woe |
 | sacrifice all reflections you control. | 1 | The Apprentice's Folly | woe |
 | target creature you control gets +N/+N until end of turn. it can't be blocked by creatures with power N or greater ~. | 1 | Cheeky House-Mouse // Squeak By | woe |
@@ -336,8 +334,6 @@
 | when ~ dies, you may cast it from your graveyard as an adventure until the end of your next turn. | 1 | Mosswood Dreadknight // Dread Whispers | woe |
 | when ~ enters, choose one or more — • return target card you own in exile that has an adventure to your hand. • put target card you don"..."s library. • exile t | 1 | Sentinel of Lost Lore | woe |
 | when ~ enters, choose one — • create a N/N black rat creature token with "..." • you may sacrifice another creature. if you do, scry N, then draw a card. • crea | 1 | Lord Skitter's Butcher | woe |
-| when ~ enters, create a N/N black rat creature token with "..." then for each rat you control, create a wicked role token attached to that rat. | 1 | Twisted Sewer-Witch | woe |
-| when ~ enters, create half N food tokens, rounded up. | 1 | The Goose Mother | woe |
 | when ~ enters, you may exile one or more creature cards from your graveyard. when you do, each other creature gets -N/-N until end of turn, where N is the numbe | 1 | Specter of Mortality | woe |
 | whenever a legendary creature you control enters, you may have ~ become a legendary equipment artifact named everflame, heroes' legacy. if you do, it gains equi | 1 | The Irencrag | woe |
 | whenever a rat you control becomes blocked, it gets +N/+N until end of turn. | 1 | Tattered Ratter | woe |
@@ -349,17 +345,12 @@
 | whenever you tap one or more untapped creatures your opponents control, draw a card. ~ triggers only once each turn. | 1 | Sharae of Numbing Depths | woe |
 | whenever ~ attacks, it gets +N/+N until end of turn for each attacking creature. if a rat is attacking, ~ gains trample until end of turn. | 1 | Charging Hooligan | woe |
 | whenever ~ deals combat damage to a player, put a skewer counter on ~. then you may sacrifice it. if you do, exile the top N cards of your library, where N is t | 1 | Rotisserie Elemental | woe |
-| you may cast ~ as though it had flash if you pay {M} more to cast it. for each creature your opponents control, create a cursed role token attached to that crea | 1 | Asinine Antics | woe |
 | you may sacrifice a creature. if you do, search your library for a creature or basic land card, reveal it, put it into your hand, then shuffle. | 1 | The Huntsman's Redemption | woe |
 | {M}, sacrifice an aura attached to ~: ~ fights target creature you don't control. if that creature would die ~, exile it instead. activate only as a sorcery. | 1 | Faunsbane Troll | woe |
 | {M}, sacrifice ~: create a young hero role token attached to another target creature. | 1 | Embereth Veteran | woe |
-| {M}, {M}: choose target enchantment you control that doesn"..."s a copy of it, except it isn't legendary. if the token is an aura, untap yenna, then scry N. act | 1 | Yenna, Redtooth Regent | woe |
 | {M}, {M}: tap target creature. ~ costs {M} less to activate during your turn. | 1 | Hylda's Crown of Winter | woe |
-| {M}: spells you cast ~ that are black and/or red cost {M} less to cast, where N is the amount of life you lost ~. activate only as a sorcery. | 1 | Rowan, Scion of War | woe |
-| {M}: spells you cast ~ that are white and/or blue cost {M} less to cast, where N is the amount of life you gained ~. activate only as a sorcery. | 1 | Will, Scion of Peace | woe |
 | {M}{M}: choose another player. that player gains control of target treasure you control. you draw a card. | 1 | Discerning Financier | woe |
 | {M}{M}: ~ can't be blocked by creatures with power N or less ~. | 1 | Verdant Outrider | woe |
-| ~ costs {M} less to cast if your life total is N or less. exile target creature or planeswalker. search its controller's graveyard, hand, and library for any nu | 1 | The End | woe |
 | ~ has haste as long as you own a card in exile that has an adventure. | 1 | Howling Galefang | woe |
 
 ## Notes

@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 70 | 26.1% |
-| Works (untested) | 141 | 52.6% |
+| Tested | 71 | 26.5% |
+| Works (untested) | 140 | 52.2% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 57 | 21.3% |
 
@@ -205,7 +205,6 @@
 | Telekinetic Sliver | handled | All Slivers have "{T}: Tap target permanent." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Temporal Eddy | handled | Put target creature or land on top of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tendrils of Corruption | handled | Tendrils of Corruption deals X damage to target creature and you gain X life, where X is the number of Swamps you control. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Think Twice | handled | Draw a card. Flashback {2}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Thrill of the Hunt | handled | Target creature gets +1/+2 until end of turn. Flashback {W} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thunder Totem | handled | {1}{W}{W}: This artifact becomes a 2/2 white Spirit artifact creature with flying and first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tivadar of Thorn | handled | When Tivadar enters, destroy target Goblin. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -228,7 +227,7 @@
 ## Fully supported
 
 <details>
-<summary>70 cards</summary>
+<summary>71 cards</summary>
 
 - Amrou Seekers
 - Ancestral Vision
@@ -293,6 +292,7 @@
 - Temporal Isolation
 - Thelon of Havenwood
 - Thick-Skinned Goblin
+- Think Twice
 - Tromp the Domains
 - Urborg Syphon-Mage
 - Urza's Factory

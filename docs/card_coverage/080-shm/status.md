@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 62 | 22.6% |
-| Works (untested) | 150 | 54.7% |
+| Tested | 63 | 23.0% |
+| Works (untested) | 151 | 55.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 62 | 22.6% |
+| Not working | 60 | 21.9% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Deus of Calamity | silent | Whenever this creature deals 6 or more damage to an opponent, destroy target land that player controls. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Din of the Fireherd | silent | Create a 5/5 black and red Elemental creature token. Target opponent sacrifices a creature of their choice for each black creature you control, then sacrifices  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dire Undercurrents | silent | Whenever a black creature you control enters, you may have target player discard a card. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
-| Dream Salvage | silent | Draw cards equal to the number of cards target opponent discarded this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drove of Elves | silent | Drove of Elves's power and toughness are each equal to the number of green permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elsewhere Flask | silent | Sacrifice this artifact: Choose a basic land type. Each land you control becomes that type until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Faerie Swarm | silent | Faerie Swarm's power and toughness are each equal to the number of blue permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -86,7 +85,6 @@
 | Gloomwidow's Feast | notice | Destroy target creature with flying. If that creature was blue or black, create a 1/2 green Spider creature token with reach. (It can block creatures with flyin | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Impromptu Raid | notice | {2}{R/G}: Reveal the top card of your library. If it isn't a creature card, put it into your graveyard. Otherwise, put that card onto the battlefield. That crea | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Isleback Spawn | notice | This creature gets +4/+8 as long as a library has twenty or fewer cards in it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Puppeteer Clique | notice | When this creature enters, put target creature card from an opponent's graveyard onto the battlefield under your control. It gains haste. At the beginning of yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | River's Grasp | notice | If {U} was spent to cast this spell, return up to one target creature to its owner's hand. If {B} was spent to cast this spell, target player reveals their hand | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Aethertow | handled | Put target attacking or blocking creature on top of its owner's library. Conspire (As you cast this spell, you may tap two untapped creatures you control that s | the engine reads this text and performs it | Y/-/- | not_tested |
 | Apothecary Initiate | handled | Whenever a player casts a white spell, you may pay {1}. If you do, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -183,6 +181,7 @@
 | Presence of Gond | handled | Enchanted creature has "{T}: Create a 1/1 green Elf Warrior creature token." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Prismatic Omen | handled | Lands you control are every basic land type in addition to their other types. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Puncture Bolt | handled | Puncture Bolt deals 1 damage to target creature. Put a -1/-1 counter on that creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Puppeteer Clique | handled | When this creature enters, put target creature card from an opponent's graveyard onto the battlefield under your control. It gains haste. At the beginning of yo | the engine reads this text and performs it | Y/-/- | not_tested |
 | Put Away | handled | Counter target spell. You may shuffle up to one target card from your graveyard into your library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pyre Charger | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rage Reflection | handled | Creatures you control have double strike. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -242,7 +241,7 @@
 ## Fully supported
 
 <details>
-<summary>62 cards</summary>
+<summary>63 cards</summary>
 
 - Augury Adept
 - Beseech the Queen
@@ -258,6 +257,7 @@
 - Deepchannel Mentor
 - Demigod of Revenge
 - Devoted Druid
+- Dream Salvage
 - Ember Gale
 - Everlasting Torment
 - Faerie Macabre
@@ -327,7 +327,6 @@
 | destroy all auras and equipment attached to target creature. | 1 | Strip Bare | shm |
 | destroy target creature with flying. if that creature was blue or black, create a N/N green spider creature token with reach. (it can block creatures with flyin | 1 | Gloomwidow's Feast | shm |
 | destroy target creature. if that creature was green or white, its controller discards a card. | 1 | Gloomlance | shm |
-| draw cards equal to the number of cards target opponent discarded ~. | 1 | Dream Salvage | shm |
 | if {M} was spent to cast ~, return up to one target creature to its owner's hand. if {M} was spent to cast ~, target player reveals their hand, you choose a non | 1 | River's Grasp | shm |
 | move all counters from target creature onto another target creature. | 1 | Fate Transfer | shm |
 | prevent all damage target attacking or blocking creature would deal ~. if that creature is black or red, destroy it. | 1 | Inquisitor's Snare | shm |
@@ -344,7 +343,6 @@
 | target player discards their hand unless they pay N life. | 1 | Tyrannize | shm |
 | when ~ dies, put a -N/-N counter on each creature with a -N/-N counter on it. | 1 | Lockjaw Snapper | shm |
 | when ~ enters, attach all auras enchanting target permanent to another permanent with the same controller. | 1 | Glamer Spinners | shm |
-| when ~ enters, put target creature card from an opponent's graveyard onto the battlefield under your control. it gains haste. at the beginning of your next end  | 1 | Puppeteer Clique | shm |
 | when ~ enters, return to your hand all cards in your graveyard that were put there from the battlefield ~. | 1 | Twilight Shepherd | shm |
 | when ~ enters, target permanent becomes the color or colors of your choice until end of turn. | 1 | Prismwake Merrow | shm |
 | when ~ enters, you may remove a counter from target permanent. | 1 | Medicine Runner | shm |

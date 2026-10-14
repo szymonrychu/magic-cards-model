@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 34 | 19.3% |
-| Works (untested) | 118 | 67.0% |
+| Tested | 35 | 19.9% |
+| Works (untested) | 119 | 67.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 24 | 13.6% |
+| Not working | 22 | 12.5% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Deceiver of Form | silent | At the beginning of combat on your turn, reveal the top card of your library. If a creature card is revealed this way, you may have creatures you control other  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Embodiment of Fury | silent | Landfall — Whenever a land you control enters, you may have target land you control become a 3/3 Elemental creature with haste until end of turn. It's still a l | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Embodiment of Insight | silent | Landfall — Whenever a land you control enters, you may have target land you control become a 3/3 Elemental creature with haste until end of turn. It's still a l | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Goblin Dark-Dwellers | silent | When this creature enters, you may cast target instant or sorcery card with mana value 3 or less from your graveyard without paying its mana cost. If that spell | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hedron Alignment | silent | At the beginning of your upkeep, you may reveal your hand. If you do, you win the game if you own a card named Hedron Alignment in exile, in your hand, in your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Immobilizer Eldrazi | silent | {2}{C}: Each creature with toughness greater than its power can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inverter of Truth | silent | When this creature enters, exile all cards from your library face down, then shuffle all cards from your graveyard into your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -41,7 +40,6 @@
 | Ruin in Their Wake | silent | Devoid (This card has no color.) Search your library for a basic land card and reveal it. You may put that card onto the battlefield tapped if you control a lan | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Steppe Glider | silent | {1}{W}: Target creature with a +1/+1 counter on it gains flying and vigilance until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stone Haven Outfitter | silent | Equipped creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Stoneforge Masterwork | silent | Equipped creature gets +1/+1 for each other creature you control that shares a creature type with it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sylvan Advocate | silent | As long as you control six or more lands, this creature and land creatures you control get +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unity of Purpose | silent | Support 2. (Put a +1/+1 counter on each of up to two target creatures.) Untap each creature you control with a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eldrazi Aggressor | notice | This creature has haste as long as you control another colorless creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -91,6 +89,7 @@
 | Flayer Drone | handled | Whenever another colorless creature you control enters, target opponent loses 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gift of Tusks | handled | Until end of turn, target creature loses all abilities and becomes a green Elephant with base power and toughness 3/3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gladehart Cavalry | handled | When this creature enters, support 6. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Goblin Dark-Dwellers | handled | When this creature enters, you may cast target instant or sorcery card with mana value 3 or less from your graveyard without paying its mana cost. If that spell | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Freerunner | handled | Menace | machines/combat.py | Y/Y/- | not_tested |
 | Gravity Negator | handled | Whenever this creature attacks, you may pay {C}. If you do, another target creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grip of the Roil | handled | Surge {1}{U} (You may cast this spell for its surge cost if you or a teammate has cast another spell this turn.) Tap target creature. It doesn't untap during it | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -172,7 +171,7 @@
 ## Fully supported
 
 <details>
-<summary>34 cards</summary>
+<summary>35 cards</summary>
 
 - Ayli, Eternal Pilgrim
 - Crumbling Vestige
@@ -198,6 +197,7 @@
 - Shoulder to Shoulder
 - Sparkmage's Gambit
 - Spatial Contortion
+- Stoneforge Masterwork
 - Thought-Knot Seer
 - Tyrant of Valakut
 - Vile Redeemer
@@ -224,7 +224,6 @@
 | devoid (~ has no color.) target creature gets +N/+N until end of turn. regenerate it. | 1 | Unnatural Endurance | ogw |
 | devoid (~ has no color.) ~ deals N damage to each creature. whenever you cast an eldrazi creature spell with mana value N or greater, you may exile ~ from your  | 1 | Kozilek's Return | ogw |
 | enchanted creature gets +N/+N, has vigilance, and can block an additional creature each combat. | 1 | Iona's Blessing | ogw |
-| equipped creature gets +N/+N for each other creature you control that shares a creature type with it. | 1 | Stoneforge Masterwork | ogw |
 | equipped creatures you control get +N/+N. | 1 | Stone Haven Outfitter | ogw |
 | return target creature to its owner"..."s library instead. | 1 | Sweep Away | ogw |
 | support N. (put a +N/+N counter on each of up to two target creatures.) untap each creature you control with a +N/+N counter on it. | 1 | Unity of Purpose | ogw |
@@ -232,7 +231,6 @@
 | target opponent loses N life unless that player discards two cards or sacrifices a creature or planeswalker of their choice. repeat ~ once. | 1 | Remorseless Punishment | ogw |
 | when ~ enters, exile all cards from your library face down, then shuffle all cards from your graveyard into your library. | 1 | Inverter of Truth | ogw |
 | when ~ enters, return target creature an opponent controls to its owner"..."s owner can't cast spells with the same name as that creature until your next turn. | 1 | Reflector Mage | ogw |
-| when ~ enters, you may cast target instant or sorcery card with mana value N or less from your graveyard without paying its mana cost. if that spell would be pu | 1 | Goblin Dark-Dwellers | ogw |
 | {M}: target creature can't block ~ ~. | 1 | Kozilek's Pathfinder | ogw |
 | {M}{M}: each creature with toughness greater than its power can't block ~. | 1 | Immobilizer Eldrazi | ogw |
 | {M}{M}: target creature with a +N/+N counter on it gains flying and vigilance until end of turn. | 1 | Steppe Glider | ogw |

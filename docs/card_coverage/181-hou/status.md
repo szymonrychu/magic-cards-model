@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 16.4% |
-| Works (untested) | 104 | 56.8% |
+| Tested | 33 | 18.0% |
+| Works (untested) | 103 | 56.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 49 | 26.8% |
+| Not working | 47 | 25.7% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Dagger of the Worthy | silent | Equipped creature gets +2/+0 and has afflict 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dreamstealer | silent | Whenever this creature deals combat damage to a player, that player discards that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eternal of Harsh Truths | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Fraying Sanity | silent | At the beginning of each end step, enchanted player mills X cards, where X is the number of cards put into their graveyard from anywhere this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Frontline Devastator | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Graven Abomination | silent | Whenever this creature attacks, exile target card from defending player's graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hazoret's Undying Fury | silent | Shuffle your library, then exile the top four cards. You may cast any number of spells with mana value 5 or less from among them without paying their mana costs | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -52,7 +51,6 @@
 | Nissa's Encouragement | silent | Search your library and graveyard for a card named Forest, a card named Brambleweft Behemoth, and a card named Nissa, Genesis Mage. Reveal those cards, put them | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa, Genesis Mage | silent | +2: Untap up to two target creatures and up to two target lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reason // Believe | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Look at the top card of your library. You may put it onto the battlefield if it's a creatur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Resilient Khenra | silent | When this creature enters, you may have target creature get +X/+X until end of turn, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rhonas's Stalwart | silent | You may exert this creature as it attacks. When you do, it gets +1/+1 until end of turn and can't be blocked by creatures with power 2 or less this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Riddleform | silent | Whenever you cast a noncreature spell, you may have this enchantment become a 3/3 Sphinx creature with flying in addition to its other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sidewinder Naga | silent | As long as you control a Desert or there is a Desert card in your graveyard, this creature gets +1/+0 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -111,7 +109,6 @@
 | Dune Diviner | handled | {1}, Tap an untapped Desert you control: You gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dunes of the Dead | handled | When this land is put into a graveyard from the battlefield, create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dutiful Servants | handled |  |  | Y/Y/- | not_tested |
-| Earthshaker Khenra | handled | When this creature enters, target creature with power less than or equal to this creature's power can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Farm // Market | handled | Destroy target attacking or blocking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Feral Prowler | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fervent Paincaster | handled | {T}: This creature deals 1 damage to target player or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -183,7 +180,7 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>33 cards</summary>
 
 - Abandoned Sarcophagus
 - Abrade
@@ -195,7 +192,9 @@
 - Desert's Hold
 - Djeru, With Eyes Open
 - Driven // Despair
+- Earthshaker Khenra
 - Endless Sands
+- Fraying Sanity
 - Hollow One
 - Hour of Devastation
 - Liliana's Defeat
@@ -205,6 +204,7 @@
 - Overwhelming Splendor
 - Pride Sovereign
 - Refuse // Cooperate
+- Resilient Khenra
 - Resolute Survivors
 - Sand Strangler
 - Saving Grace
@@ -229,7 +229,6 @@
 | aftermath (cast ~ only from your graveyard. then exile it.) look at the top card of your library. you may put it onto the battlefield if it"..."t, put it into y | 1 | Reason // Believe | hou |
 | as long as a creature has a -N/-N counter on it, ~ has vigilance and deathtouch. | 1 | Tenacious Hunter | hou |
 | as long as you control a desert or there is a desert card in your graveyard, ~ gets +N/+N and has trample. | 1 | Sidewinder Naga | hou |
-| at the beginning of each end step, enchanted player mills N cards, where N is the number of cards put into their graveyard from anywhere ~. | 1 | Fraying Sanity | hou |
 | at the beginning of enchanted player's upkeep, that player loses N life unless they sacrifice a nonland permanent of their choice or discard a card. | 1 | Torment of Scarabs | hou |
 | at the beginning of your upkeep, tap ~ unless you sacrifice another creature. | 1 | Apocalypse Demon | hou |
 | counter target blue spell. if it was a jace planeswalker spell, scry N. | 1 | Jace's Defeat | hou |
@@ -248,7 +247,6 @@
 | shuffle your library, then exile the top four cards. you may cast any number of spells with mana value N or less from among them without paying their mana costs | 1 | Hazoret's Undying Fury | hou |
 | untap target creature. it gets +N/+N until end of turn and can block an additional creature ~. | 1 | Act of Heroism | hou |
 | when you cycle ~, counter target activated or triggered ability you don't control. | 1 | Nimble Obstructionist | hou |
-| when ~ enters, you may have target creature get +N/+N until end of turn, where N is ~ power. | 1 | Resilient Khenra | hou |
 | when ~ enters, you may search your library and/or graveyard for a card named nicol bolas, the deceiver, reveal it, and put it into your hand. if you search your | 1 | Visage of Bolas | hou |
 | whenever you activate an eternalize or embalm ability, draw a card. | 1 | Vizier of the Anointed | hou |
 | whenever you cast a noncreature spell, you may have ~ become a N/N sphinx creature with flying in addition to its other types until end of turn. | 1 | Riddleform | hou |

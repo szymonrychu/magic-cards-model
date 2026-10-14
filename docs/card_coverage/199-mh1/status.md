@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 51 | 24.3% |
-| Works (untested) | 116 | 55.2% |
+| Works (untested) | 117 | 55.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 43 | 20.5% |
+| Not working | 42 | 20.0% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Amorphous Axe | silent | Equipped creature gets +3/+0 and is every creature type. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Answered Prayers | silent | Whenever a creature you control enters, you gain 1 life. If this enchantment isn't a creature, it becomes a 3/3 Angel creature with flying in addition to its ot | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Aria of Flame | silent | When this enchantment enters, each opponent gains 10 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Astral Drift | silent | Whenever you cycle this card or cycle another card while this enchantment is on the battlefield, you may exile target creature. If you do, return that card to t | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Bellowing Elk | silent | As long as you had another creature enter the battlefield under your control this turn, this creature has trample and indestructible. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Collected Conjuring | silent | Exile the top six cards of your library. You may cast up to two sorcery spells with mana value 3 or less from among them without paying their mana costs. Put th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -72,6 +71,7 @@
 | Abominable Treefolk | handled | Abominable Treefolk's power and toughness are each equal to the number of snow permanents you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Alpine Guide | handled | When this creature enters, you may search your library for a Mountain card, put that card onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Arcum's Astrolabe | handled | When this artifact enters, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Aria of Flame | handled | When this enchantment enters, each opponent gains 10 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ayula's Influence | handled | Discard a land card: Create a 2/2 green Bear creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ayula, Queen Among Bears | handled | Whenever another Bear you control enters, choose one — • Put two +1/+1 counters on target Bear. • Target Bear you control fights target creature you don't contr | the engine reads this text and performs it | Y/-/- | not_tested |
 | Azra Smokeshaper | handled | When this creature enters, target creature you control gains indestructible until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -273,7 +273,6 @@
 | until end of turn, creatures you control get +N/+N and gain all creature types. | 1 | Volatile Claws | mh1 |
 | until end of turn, up to two target creatures each have base power and toughness N/N, gain flying, and become blue illusions in addition to their other colors a | 1 | Phantasmal Form | mh1 |
 | when a ninja you control enters, you may return ~ from your graveyard to the battlefield attached to that creature. | 1 | Smoke Shroud | mh1 |
-| when ~ enters, each opponent gains N life. | 1 | Aria of Flame | mh1 |
 | when ~ enters, up to two target creatures can't block ~. | 1 | Quakefoot Cyclops | mh1 |
 | when ~ enters, you may search your library for an artifact card with mana value N, reveal that card, put it into your hand, then shuffle. | 1 | Tribute Mage | mh1 |
 | whenever a creature you control becomes blocked, you may return it to its owner's hand. | 1 | Cunning Evasion | mh1 |

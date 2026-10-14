@@ -17,19 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 86 | 31.3% |
-| Works (untested) | 140 | 50.9% |
+| Tested | 97 | 35.3% |
+| Works (untested) | 141 | 51.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 49 | 17.8% |
+| Not working | 37 | 13.5% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Another Chance | silent | You may mill two cards. Then return up to two creature cards from your graveyard to your hand. (To mill two cards, put the top two cards of your library into yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Armored Kincaller | silent | When this creature enters, you may reveal a Dinosaur card from your hand. If you do or if you control another Dinosaur, you gain 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Bat Colony | silent | When this enchantment enters, create a 1/1 black Bat creature token with flying for each mana from a Cave spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Belligerent Yearling | silent | Whenever another Dinosaur you control enters, you may have this creature's base power become equal to that creature's power until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Brass's Tunnel-Grinder // Tecutlan, the Searing Rift | silent | Whenever you cast a permanent spell using mana produced by Tecutlan, discover X, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cavern Stomper | silent | {3}{G}: This creature can't be blocked by creatures with power 2 or less this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Compass Gnome | silent | When this creature enters, you may search your library for a basic land card or Cave card, reveal it, then shuffle and put that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -39,13 +36,10 @@
 | Deepfathom Echo | silent | Explore | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Defossilize | silent | Explore | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Glowcap Lantern | silent | Explore | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Hit the Mother Lode | silent | Discover 10. If the discovered card's mana value is less than 10, create a number of tapped Treasure tokens equal to the difference. (To discover 10, exile card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hunter's Blowgun | silent | Equipped creature has deathtouch during your turn. Otherwise, it has reach. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hurl into History | silent | Counter target artifact or creature spell. Discover X, where X is that spell's mana value. (Exile cards from the top of your library until you exile a nonland c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Jade Seedstones // Jadeheart Attendant | silent | When this creature enters, you gain life equal to the mana value of the exiled card used to craft it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Jadelight Spelunker | silent | When this creature enters, it explores X times. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kaslem's Stonetree // Kaslem's Strider | silent | When this artifact enters, look at the top six cards of your library. You may put a land card from among them onto the battlefield tapped. Put the rest on the b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Kellan, Daring Traveler // Journey On | silent | Create X Map tokens, where X is one plus the number of opponents who control an artifact. (Then exile this card. You may cast the creature later from exile.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kitesail Larcenist | silent | When this creature enters, for each player, choose up to one other target artifact or creature that player controls. For as long as this creature remains on the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Magmatic Galleon | silent | Whenever one or more creatures your opponents control are dealt excess noncombat damage, create a Treasure token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Malcolm, Alluring Scoundrel | silent | Whenever Malcolm deals combat damage to a player, put a chorus counter on it. Draw a card, then discard a card. If there are four or more chorus counters on Mal | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -55,24 +49,18 @@
 | Pit of Offerings | silent | {T}: Add one mana of any of the exiled cards' colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Relic's Roar | silent | Until end of turn, target artifact or creature becomes a Dinosaur artifact creature with base power and toughness 4/3 in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Shipwreck Sentry | silent | As long as an artifact entered the battlefield under your control this turn, this creature can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Sovereign Okinec Ahau | silent | Whenever Sovereign Okinec Ahau attacks, for each creature you control with power greater than that creature's base power, put a number of +1/+1 counters on that | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Squirming Emergence | silent | Fathomless descent — Return to the battlefield target nonland permanent card in your graveyard with mana value less than or equal to the number of permanent car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Subterranean Schooner | silent | Whenever this Vehicle attacks, target creature that crewed it this turn explores. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Sunbird Standard // Sunbird Effigy | silent | Sunbird Effigy's power and toughness are each equal to the number of colors among the exiled cards used to craft it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tarrian's Journal // The Tomb of Aclazotz | silent | {T}: You may cast a creature spell from your graveyard this turn. If you do, it enters with a finality counter on it and is a Vampire in addition to its other t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Belligerent | silent | Whenever The Belligerent attacks, create a Treasure token. Until end of turn, you may look at the top card of your library any time, and you may play lands and  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Everflowing Well // The Myriad Pools | silent | Whenever you cast a permanent spell using mana produced by The Myriad Pools, up to one other target permanent you control becomes a copy of that spell until end | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| The Skullspore Nexus | silent | Whenever one or more nontoken creatures you control die, create a green Fungus Dinosaur creature token with base power and toughness each equal to the total pow | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Throne of the Grim Captain // The Grim Captain | silent | Whenever The Grim Captain attacks, each opponent sacrifices a nonland permanent of their choice. Then you may put an exiled creature card used to craft The Grim | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wail of the Forgotten | silent | Descend 8 — Choose one. If there are eight or more permanent cards in your graveyard as you cast this spell, choose one or more instead. • Return target nonland | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Warden of the Inner Sky | silent | As long as this creature has three or more counters on it, it has flying and vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Zoyowa Lava-Tongue | silent | At the beginning of your end step, if you descended this turn, each opponent may discard a card or sacrifice a permanent of their choice. Zoyowa deals 3 damage  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Zoyowa's Justice | silent | The owner of target artifact or creature with mana value 1 or greater shuffles it into their library. Then that player discovers X, where X is its mana value. ( | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bonehoard Dracosaur | notice | At the beginning of your upkeep, exile the top two cards of your library. You may play them this turn. If you exiled a land card this way, create a 3/1 red Dino | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Brackish Blunder | notice | Return target creature to its owner's hand. If it was tapped, create a Map token. (It's an artifact with "{1}, {T}, Sacrifice this token: Target creature you co | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Disturbed Slumber | notice | Until end of turn, target land you control becomes a 4/4 Dinosaur creature with reach and haste. It's still a land. It must be blocked this turn if able. | unparsed remainder: It must be blocked this turn if able. | Y/Y/Y | not_working |
 | Grasping Shadows // Shadows' Lair | notice | Whenever a creature you control attacks alone, it gains deathtouch and lifelink until end of turn. Put a dread counter on this enchantment. Then if there are th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Kutzil's Flanker | notice | When this creature enters, choose one — • Put a +1/+1 counter on this creature for each creature that left the battlefield under your control this turn. • You g | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Scampering Surveyor | notice | When this creature enters, search your library for a basic land card or Cave card, put it onto the battlefield tapped, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | The Enigma Jewel // Locus of Enlightenment | notice | Locus of Enlightenment has each activated ability of the exiled cards used to craft it. You may activate each of those abilities only once each turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Abuelo, Ancestral Echo | handled | {1}{W}{U}: Exile another target creature or artifact you control. Return it to the battlefield under its owner's control at the beginning of the next end step. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -84,6 +72,7 @@
 | Akal Pakal, First Among Equals | handled | At the beginning of each player's end step, if an artifact entered the battlefield under your control this turn, look at the top two cards of your library. Put  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ancestors' Aid | handled | Target creature gets +2/+0 and gains first strike until end of turn. Create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ancestral Reminiscence | handled | Draw three cards, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Another Chance | handled | You may mill two cards. Then return up to two creature cards from your graveyard to your hand. (To mill two cards, put the top two cards of your library into yo | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Attentive Sunscribe | handled | Whenever this creature becomes tapped, scry 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bartolomé del Presidio | handled | Sacrifice another creature or artifact: Put a +1/+1 counter on Bartolomé del Presidio. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bloodthorn Flail | handled | Equipped creature gets +2/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -219,14 +208,16 @@
 ## Fully supported
 
 <details>
-<summary>86 cards</summary>
+<summary>97 cards</summary>
 
 - Abuelo's Awakening
 - Akawalli, the Seething Tower
 - Amalia Benavides Aguirre
 - Anim Pakal, Thousandth Moon
 - Basking Capybara
+- Bat Colony
 - Bedrock Tortoise
+- Belligerent Yearling
 - Bitter Triumph
 - Bloodletter of Aclazotz
 - Braided Net // Braided Quipu
@@ -256,8 +247,12 @@
 - Glimpse the Core
 - Greedy Freebooter
 - Guardian of the Great Door
+- Hit the Mother Lode
 - Intrepid Paleontologist
 - Itzquinth, Firstborn of Gishath
+- Jade Seedstones // Jadeheart Attendant
+- Kellan, Daring Traveler // Journey On
+- Kutzil's Flanker
 - Malamet Battle Glyph
 - Malicious Eclipse
 - Market Gnome
@@ -284,16 +279,20 @@
 - Sentinel of the Nameless City
 - Song of Stupefaction
 - Souls of the Lost
+- Sovereign Okinec Ahau
 - Spelunking
 - Spring-Loaded Sawblades // Bladewheel Chariot
 - Spyglass Siren
+- Squirming Emergence
 - Starving Revenant
+- Sunbird Standard // Sunbird Effigy
 - Sunken Citadel
 - Tendril of the Mycotyrant
 - Terror Tide
 - The Ancient One
 - The Millennium Calendar
 - The Mycotyrant
+- The Skullspore Nexus
 - Thousand Moons Infantry
 - Threefold Thunderhulk
 - Tishana's Tidebinder
@@ -307,6 +306,7 @@
 - Vito, Fanatic of Aclazotz
 - Waterlogged Hulk // Watertight Gondola
 - Zoetic Glyph
+- Zoyowa's Justice
 
 </details>
 
@@ -315,49 +315,37 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | explore | 3 | Deepfathom Echo, Defossilize, Glowcap Lantern | lci |
-| Fathomless descent | 1 | Squirming Emergence | lci |
 | as long as an artifact entered the battlefield under your control ~, ~ can attack as though it didn't have defender. | 1 | Shipwreck Sentry | lci |
 | as long as ~ has three or more counters on it, it has flying and vigilance. | 1 | Warden of the Inner Sky | lci |
 | at the beginning of your end step, if you descended ~, each opponent may discard a card or sacrifice a permanent of their choice. zoyowa deals N damage to each  | 1 | Zoyowa Lava-Tongue | lci |
 | at the beginning of your upkeep, exile the top two cards of your library. you may play them ~. if you exiled a land card ~, create a N/N red dinosaur creature t | 1 | Bonehoard Dracosaur | lci |
 | counter target artifact or creature spell. discover N, where N is that spell's mana value. (exile cards from the top of your library until you exile a nonland c | 1 | Hurl into History | lci |
-| create N map tokens, where N is one plus the number of opponents who control an artifact. (then exile ~. you may cast the creature later from exile.) | 1 | Kellan, Daring Traveler // Journey On | lci |
 | descend N — choose one. if there are eight or more permanent cards in your graveyard as you cast ~, choose one or more instead. • return target nonland permanen | 1 | Wail of the Forgotten | lci |
-| discover N. if the discovered card's mana value is less than N, create a number of tapped treasure tokens equal to the difference. (to discover N, exile cards f | 1 | Hit the Mother Lode | lci |
 | equipped creature has deathtouch during your turn. otherwise, it has reach. | 1 | Hunter's Blowgun | lci |
 | locus of enlightenment has each activated ability of the exiled cards used to craft it. you may activate each of those abilities only once each turn. | 1 | The Enigma Jewel // Locus of Enlightenment | lci |
 | return target creature to its owner"..."s an artifact with "...") | 1 | Brackish Blunder | lci |
-| sunbird effigy's power and toughness are each equal to the number of colors among the exiled cards used to craft it. | 1 | Sunbird Standard // Sunbird Effigy | lci |
-| the owner of target artifact or creature with mana value N or greater shuffles it into their library. then that player discovers N, where N is its mana value. ( | 1 | Zoyowa's Justice | lci |
 | until end of turn, target artifact or creature becomes a dinosaur artifact creature with base power and toughness N/N in addition to its other types. | 1 | Relic's Roar | lci |
 | until end of turn, target land you control becomes a N/N dinosaur creature with reach and haste. it's still a land. it must be blocked ~ if able. | 1 | Disturbed Slumber | lci |
 | up to three target creatures can't block ~. discover N. (exile cards from the top of your library until you exile a nonland card with mana value N or less. cast | 1 | Daring Discovery | lci |
-| when ~ enters, choose one — • put a +N/+N counter on ~ for each creature that left the battlefield under your control ~. • you gain N life and scry N. • exile t | 1 | Kutzil's Flanker | lci |
-| when ~ enters, create a N/N black bat creature token with flying for each mana from a cave spent to cast it. | 1 | Bat Colony | lci |
 | when ~ enters, for each player, choose up to one other target artifact or creature that player controls. for as long as ~ remains on the battlefield, the chosen | 1 | Kitesail Larcenist | lci |
 | when ~ enters, it explores N times. | 1 | Jadelight Spelunker | lci |
 | when ~ enters, look at the top six cards of your library. you may put a land card from among them onto the battlefield tapped. put the rest on the bottom in a r | 1 | Kaslem's Stonetree // Kaslem's Strider | lci |
 | when ~ enters, search your library for a basic land card or cave card, put it onto the battlefield tapped, then shuffle. | 1 | Scampering Surveyor | lci |
-| when ~ enters, you gain life equal to the mana value of the exiled card used to craft it. | 1 | Jade Seedstones // Jadeheart Attendant | lci |
 | when ~ enters, you may reveal a dinosaur card from your hand. if you do or if you control another dinosaur, you gain N life. | 1 | Armored Kincaller | lci |
 | when ~ enters, you may search your library for a basic land card or cave card, reveal it, then shuffle and put that card on top. | 1 | Compass Gnome | lci |
 | whenever a creature you control attacks alone, it gains deathtouch and lifelink until end of turn. put a dread counter on ~. then if there are three or more dre | 1 | Grasping Shadows // Shadows' Lair | lci |
 | whenever a creature you control explores a land card, you may put a land card from your hand onto the battlefield tapped. | 1 | Nicanzil, Current Conductor | lci |
 | whenever a creature you control explores, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Merfolk Cave-Diver | lci |
-| whenever another dinosaur you control enters, you may have ~ base power become equal to that creature's power until end of turn. | 1 | Belligerent Yearling | lci |
 | whenever malcolm deals combat damage to a player, put a chorus counter on it. draw a card, then discard a card. if there are four or more chorus counters on mal | 1 | Malcolm, Alluring Scoundrel | lci |
 | whenever ojer kaslem deals combat damage to a player, reveal that many cards from the top of your library. you may put a creature card and/or a land card from a | 1 | Ojer Kaslem, Deepest Growth // Temple of Cultivation | lci |
 | whenever one or more creatures your opponents control are dealt excess noncombat damage, create a treasure token. | 1 | Magmatic Galleon | lci |
-| whenever one or more nontoken creatures you control die, create a green fungus dinosaur creature token with base power and toughness each equal to the total pow | 1 | The Skullspore Nexus | lci |
 | whenever the grim captain attacks, each opponent sacrifices a nonland permanent of their choice. then you may put an exiled creature card used to craft the grim | 1 | Throne of the Grim Captain // The Grim Captain | lci |
 | whenever you cast a permanent spell using mana produced by tecutlan, discover N, where N is that spell's mana value. | 1 | Brass's Tunnel-Grinder // Tecutlan, the Searing Rift | lci |
 | whenever you cast a permanent spell using mana produced by the myriad pools, up to one other target permanent you control becomes a copy of that spell until end | 1 | The Everflowing Well // The Myriad Pools | lci |
 | whenever you discover, discover again for the same value. ~ triggers only once each turn. | 1 | Curator of Sun's Creation | lci |
 | whenever you're dealt combat damage, the attacking player gains control of ~ and untaps it. | 1 | Contested Game Ball | lci |
 | whenever ~ attacks, create a treasure token. until end of turn, you may look at the top card of your library any time, and you may play lands and cast spells fr | 1 | The Belligerent | lci |
-| whenever ~ attacks, for each creature you control with power greater than that creature's base power, put a number of +N/+N counters on that creature equal to t | 1 | Sovereign Okinec Ahau | lci |
 | whenever ~ attacks, target creature that crewed it ~ explores. | 1 | Subterranean Schooner | lci |
-| you may mill two cards. then return up to two creature cards from your graveyard to your hand. (to mill two cards, put the top two cards of your library into yo | 1 | Another Chance | lci |
 | {M}: add one mana of any of the exiled cards' colors. | 1 | Pit of Offerings | lci |
 | {M}: you may cast a creature spell from your graveyard ~. if you do, it enters with a finality counter on it and is a vampire in addition to its other types. | 1 | Tarrian's Journal // The Tomb of Aclazotz | lci |
 | {M}{M}: ~ can't be blocked by creatures with power N or less ~. | 1 | Cavern Stomper | lci |

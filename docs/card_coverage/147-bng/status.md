@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 22.5% |
+| Tested | 37 | 23.1% |
 | Works (untested) | 93 | 58.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 31 | 19.4% |
+| Not working | 30 | 18.8% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Archetype of Finality | silent | Creatures your opponents control lose deathtouch and can't have or gain deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archetype of Imagination | silent | Creatures your opponents control lose flying and can't have or gain flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brimaz, King of Oreskos | silent | Whenever Brimaz attacks, create a 1/1 white Cat Soldier creature token with vigilance that's attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Eidolon of Countless Battles | silent | This creature and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fated Intervention | silent | Create two 3/3 green Centaur enchantment creature tokens. If it's your turn, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fated Retribution | silent | Destroy all creatures and planeswalkers. If it's your turn, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flame-Wreathed Phoenix | silent | When this creature enters, if tribute wasn't paid, it gains haste and "When this creature dies, return it to its owner's hand." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -154,13 +153,14 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>37 cards</summary>
 
 - Acolyte's Reward
 - Archetype of Endurance
 - Aspect of Hydra
 - Courser of Kruphix
 - Deepwater Hypnotist
+- Eidolon of Countless Battles
 - Ephara's Enlightenment
 - Ephara, God of the Polis
 - Fall of the Hammer
@@ -224,7 +224,6 @@
 | whenever brimaz attacks, create a N/N white cat soldier creature token with vigilance that's attacking. | 1 | Brimaz, King of Oreskos | bng |
 | {M}: put ~ and each creature blocking or blocked by it on top of their owners' libraries, then those players shuffle. | 1 | Vortex Elemental | bng |
 | {M}: ~ gets +N/+N until end of turn. if it's an aura, enchanted creature gets +N/+N until end of turn instead. | 1 | Everflame Eidolon | bng |
-| ~ and enchanted creature each get +N/+N for each creature you control and +N/+N for each aura you control. | 1 | Eidolon of Countless Battles | bng |
 
 ## Notes
 

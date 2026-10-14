@@ -17,28 +17,25 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 46 | 18.9% |
+| Tested | 50 | 20.5% |
 | Works (untested) | 150 | 61.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 48 | 19.7% |
+| Not working | 44 | 18.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Ajani, the Greathearted | silent | −2: Put a +1/+1 counter on each creature you control and a loyalty counter on each other planeswalker you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Bond of Insight | silent | Each player mills four cards. Return up to two instant and/or sorcery cards from your graveyard to your hand. Exile Bond of Insight. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deliver Unto Evil | silent | Choose up to four target cards in your graveyard. If you control a Bolas planeswalker, return those cards to your hand. Otherwise, an opponent chooses two of th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Domri, Anarch of Bolas | silent | +1: Add {R} or {G}. Creature spells you cast this turn can't be countered. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dovin, Hand of Control | silent | −1: Until your next turn, prevent all damage that would be dealt to and dealt by target permanent an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dreadhorde Arcanist | silent | Whenever this creature attacks, you may cast target instant or sorcery card with mana value less than or equal to this creature's power from your graveyard with | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Emergence Zone | silent | {1}, {T}, Sacrifice this land: You may cast spells this turn as though they had flash. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fblthp, the Lost | silent | When Fblthp enters, draw a card. If it entered from your library or was cast from your library, draw two cards instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Finale of Devastation | silent | Search your library and/or graveyard for a creature card with mana value X or less and put it onto the battlefield. If you search your library this way, shuffle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Finale of Promise | silent | You may cast up to one target instant card and/or up to one target sorcery card from your graveyard each with mana value X or less without paying their mana cos | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Finale of Revelation | silent | Draw X cards. If X is 10 or more, instead shuffle your graveyard into your library, draw X cards, untap up to five lands, and you have no maximum hand size for  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Firemind Vessel | silent | {T}: Add two mana of different colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Forced Landing | silent | Put target creature with flying on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gideon's Sacrifice | silent | Choose a creature or planeswalker you control. All damage that would be dealt this turn to you and permanents you control is dealt to the chosen permanent inste | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gideon's Triumph | silent | Target opponent sacrifices a creature of their choice that attacked or blocked this turn. If you control a Gideon planeswalker, that player sacrifices two of th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gideon, the Oathsworn | silent | Whenever you attack with two or more non-Gideon creatures, put a +1/+1 counter on each of those creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -56,7 +53,6 @@
 | Narset's Reversal | silent | Copy target instant or sorcery spell, then return it to its owner's hand. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Neheb, Dreadhorde Champion | silent | Whenever Neheb deals combat damage to a player or planeswalker, you may discard any number of cards. If you do, draw that many cards and add that much {R}. Unti | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa's Triumph | silent | Search your library for up to two basic Forest cards. If you control a Nissa planeswalker, instead search your library for up to three land cards. Reveal those  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Niv-Mizzet Reborn | silent | When Niv-Mizzet enters, reveal the top ten cards of your library. For each color pair, choose a card that's exactly those colors from among them. Put the chosen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Price of Betrayal | silent | Remove up to five counters from target artifact, creature, planeswalker, or opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ravnica at War | silent | Exile all multicolored permanents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Roalesk, Apex Hybrid | silent | When Roalesk dies, proliferate, then proliferate again. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -128,6 +124,7 @@
 | Evolution Sage | handled | Landfall — Whenever a land you control enters, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Finale of Glory | handled | Create X 2/2 white Soldier creature tokens with vigilance. If X is 10 or more, also create X 4/4 white Angel creature tokens with flying and vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flux Channeler | handled | Whenever you cast a noncreature spell, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Forced Landing | handled | Put target creature with flying on the bottom of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gideon's Battle Cry | handled | Put a +1/+1 counter on each creature you control. You may search your library and/or graveyard for a card named Gideon, the Oathsworn, reveal it, and put it int | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gideon's Company | handled | Whenever you gain life, put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Assailant | handled |  |  | Y/Y/- | not_tested |
@@ -185,7 +182,6 @@
 | Return to Nature | handled | Choose one — • Destroy target artifact. • Destroy target enchantment. • Exile target card from a graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rising Populace | handled | Whenever another creature or planeswalker you control dies, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Role Reversal | handled | Exchange control of two target permanents that share a permanent type. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Rubblebelt Rioters | handled | Whenever this creature attacks, it gets +X/+0 until end of turn, where X is the greatest power among creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Samut's Sprint | handled | Target creature gets +2/+1 and gains haste until end of turn. Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Samut, Tyrant Smasher | handled | Creatures you control have haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sarkhan's Catharsis | handled | Sarkhan's Catharsis deals 5 damage to target player or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -228,7 +224,7 @@
 ## Fully supported
 
 <details>
-<summary>46 cards</summary>
+<summary>50 cards</summary>
 
 - Arboreal Grazer
 - Arlinn, Voice of the Pack
@@ -237,9 +233,11 @@
 - Bioessence Hydra
 - Bolas's Citadel
 - Bolt Bend
+- Bond of Insight
 - Command the Dreadhorde
 - Commence the Endgame
 - Devouring Hellion
+- Dreadhorde Arcanist
 - Enter the God-Eternals
 - Feather, the Redeemed
 - Finale of Eternity
@@ -261,10 +259,12 @@
 - Narset, Parter of Veils
 - Neoform
 - Nissa, Who Shakes the World
+- Niv-Mizzet Reborn
 - Oath of Kaya
 - Parhelion II
 - Raging Kronch
 - Rescuer Sphinx
+- Rubblebelt Rioters
 - Saheeli, Sublime Artificer
 - Solar Blaze
 - Sorin, Vengeful Bloodlord
@@ -294,11 +294,9 @@
 | during your turn, creatures you control have first strike and equip abilities you activate cost {M} less to activate. | 1 | Nahiri, Storm of Stone | war |
 | each opponent sacrifices a creature of their choice. if you control a liliana planeswalker, each opponent also discards a card. | 1 | Liliana's Triumph | war |
 | each player chooses a creature or planeswalker they control, then sacrifices the rest. players can't cast creature or planeswalker spells until the end of your  | 1 | Single Combat | war |
-| each player mills four cards. return up to two instant and/or sorcery cards from your graveyard to your hand. exile ~. | 1 | Bond of Insight | war |
 | exile all multicolored permanents. | 1 | Ravnica at War | war |
 | exile target permanent you control. return that card to the battlefield under its owner's control at the beginning of the next end step. if it enters as a creat | 1 | Teferi's Time Twist | war |
 | put nine +N/+N counters on target land you control. it becomes a legendary N/N elemental creature with haste named vitu-ghazi. it's still a land. | 1 | Awakening of Vitu-Ghazi | war |
-| put target creature with flying on the bottom of its owner's library. | 1 | Forced Landing | war |
 | remove up to five counters from target artifact, creature, planeswalker, or opponent. | 1 | Price of Betrayal | war |
 | return a creature you control to its owner's hand, then destroy all creatures. | 1 | Time Wipe | war |
 | return up to two target creatures to their owner's hand. you may search your library and/or graveyard for a card named jace, arcane strategist, reveal it, and p | 1 | Jace's Ruse | war |
@@ -307,7 +305,6 @@
 | tap target permanent. if it's an artifact, destroy it. draw a card. | 1 | Topple the Statue | war |
 | target opponent sacrifices a creature of their choice that attacked or blocked ~. if you control a gideon planeswalker, that player sacrifices two of those crea | 1 | Gideon's Triumph | war |
 | when fblthp enters, draw a card. if it entered from your library or was cast from your library, draw two cards instead. | 1 | Fblthp, the Lost | war |
-| when niv-mizzet enters, reveal the top ten cards of your library. for each color pair, choose a card that's exactly those colors from among them. put the chosen | 1 | Niv-Mizzet Reborn | war |
 | when roalesk dies, proliferate, then proliferate again. | 1 | Roalesk, Apex Hybrid | war |
 | when tolsimir enters, create voja, friend to elves, a legendary N/N green and white wolf creature token. | 1 | Tolsimir, Friend to Wolves | war |
 | when ~ enters, double the power of each other creature you control until end of turn. those creatures gain vigilance until end of turn. | 1 | God-Eternal Rhonas | war |
@@ -318,7 +315,6 @@
 | whenever storrev deals combat damage to a player or planeswalker, return to your hand target creature or planeswalker card in your graveyard that wasn't put the | 1 | Storrev, Devkarin Lich | war |
 | whenever you attack with two or more non-gideon creatures, put a +N/+N counter on each of those creatures. | 1 | Gideon, the Oathsworn | war |
 | whenever you cast a noncreature spell, ~ becomes an artifact creature and gets +N/+N until end of turn. | 1 | Mizzium Tank | war |
-| whenever ~ attacks, you may cast target instant or sorcery card with mana value less than or equal to ~ power from your graveyard without paying its mana cost.  | 1 | Dreadhorde Arcanist | war |
 | you may cast up to one target instant card and/or up to one target sorcery card from your graveyard each with mana value N or less without paying their mana cos | 1 | Finale of Promise | war |
 | you may have ~ enter as a copy of a creature or planeswalker you control, except it enters with an additional +N/+N counter on it if it"..."s a planeswalker, an | 1 | Spark Double | war |
 | {M}, {M}, sacrifice ~: add two mana of different colors. | 1 | Guild Globe | war |

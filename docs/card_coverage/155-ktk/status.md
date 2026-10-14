@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 16.4% |
+| Tested | 38 | 16.9% |
 | Works (untested) | 164 | 72.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 24 | 10.7% |
+| Not working | 23 | 10.2% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Herald of Anafenza | silent | Whenever you activate this creature's outlast ability, create a 1/1 white Warrior creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Howl of the Horde | silent | When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy. Raid — If you attacked this turn, when you n | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Icy Blast | silent | Tap X target creatures. Ferocious — If you control a creature with power 4 or greater, those creatures don't untap during their controllers' next untap steps. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Kheru Lich Lord | silent | At the beginning of your upkeep, you may pay {2}{B}. If you do, return a creature card at random from your graveyard to the battlefield. It gains flying, trampl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Meandering Towershell | silent | Whenever this creature attacks, exile it. Return it to the battlefield under your control tapped and attacking at the beginning of the declare attackers step on | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mindswipe | silent | Counter target spell unless its controller pays {X}. Mindswipe deals X damage to that spell's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Narset, Enlightened Master | silent | Whenever Narset attacks, exile the top four cards of your library. Until end of turn, you may cast noncreature spells from among those cards without paying thei | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -218,7 +217,7 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>38 cards</summary>
 
 - Abzan Charm
 - Abzan Falconer
@@ -246,6 +245,7 @@
 - Jeering Instigator
 - Jeskai Ascendancy
 - Kheru Dreadmaw
+- Kheru Lich Lord
 - Kheru Spellsnatcher
 - Lens of Clarity
 - Monastery Swiftspear
@@ -269,7 +269,6 @@
 | +N: until end of turn, sarkhan becomes a legendary N/N red dragon creature with flying, indestructible, and haste. | 1 | Sarkhan, the Dragonspeaker | ktk |
 | +N: until your next turn, creatures you control get +N/+N and gain lifelink. | 1 | Sorin, Solemn Visitor | ktk |
 | all creatures able to block target creature ~ do so. ferocious — that creature gains indestructible until end of turn if you control a creature with power N or  | 1 | Roar of Challenge | ktk |
-| at the beginning of your upkeep, you may pay {M}{M}. if you do, return a creature card at random from your graveyard to the battlefield. it gains flying, trampl | 1 | Kheru Lich Lord | ktk |
 | choose up to one creature. destroy the rest. | 1 | Duneblast | ktk |
 | counter target spell unless its controller pays {M}. ~ deals N damage to that spell's controller. | 1 | Mindswipe | ktk |
 | destroy all creatures and all permanents attached to creatures. | 1 | End Hostilities | ktk |

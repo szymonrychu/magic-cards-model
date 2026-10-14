@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 83 | 30.5% |
+| Tested | 87 | 32.0% |
 | Works (untested) | 113 | 41.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 76 | 27.9% |
+| Not working | 72 | 26.5% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Baral and Kari Zev | silent | Whenever you cast your first instant or sorcery spell each turn, you may cast a spell with lesser mana value that shares a card type with it from your hand with | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blighted Burgeoning | silent | When this Aura enters, incubate 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bloated Processor | silent | When this creature dies, incubate X, where X is its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Breach the Multiverse | silent | Each player mills ten cards. For each player, choose a creature or planeswalker card in that player's graveyard. Put those cards onto the battlefield under your | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra, Hope's Beacon | silent | +1: Exile the top five cards of your library. Until the end of your next turn, you may cast an instant or sorcery spell from among those exiled cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chrome Host Seedshark | silent | Whenever you cast a noncreature spell, incubate X, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | City on Fire | silent | Triple | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -56,7 +55,6 @@
 | Infected Defector | silent | When this creature dies, incubate 3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Injector Crocodile | silent | When this creature dies, incubate 3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Karsus Depthguard | silent | As long as this creature's power is 5 or greater, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Knight-Errant of Eos | silent | When this creature enters, look at the top six cards of your library. You may reveal up to two creature cards with mana value X or less from among them, where X | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kogla and Yidaro | silent | {2}{R}{G}, Discard this card: Destroy up to one target artifact or enchantment. Shuffle this card into your library from your graveyard, then draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Marauding Dreadship | silent | When this Vehicle enters, incubate 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Merciless Repurposing | silent | Exile target creature. Incubate 3. (Create an Incubator token with three +1/+1 counters on it and "{2}: Transform this token." It transforms into a 0/0 Phyrexia | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -78,7 +76,7 @@
 | Sword of Once and Future | silent | Whenever equipped creature deals combat damage to a player, surveil 2. Then you may cast an instant or sorcery spell with mana value 2 or less from your graveya | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tangled Skyline | silent | When this enchantment enters, you gain 5 life and incubate 5. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tiller of Flesh | silent | Whenever you cast a spell that targets one or more permanents, incubate 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Traumatic Revelation | silent | Target opponent reveals their hand. You may choose a creature or battle card from it. If you do, that player discards that card. If you don't, incubate 3. (Crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Traumatic Revelation | silent | Incubate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Unseal the Necropolis | silent | Each player mills three cards. Then you return up to two creature cards from your graveyard to your hand. (To mill three cards, a player puts the top three card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vengeant Earth | silent | Target creature or land you control becomes a 4/4 Elemental creature with haste in addition to its other types until end of turn. It must be blocked this turn i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | War-Trained Slasher | silent | Whenever this creature attacks a battle, double its power until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -88,13 +86,11 @@
 | Zurgo and Ojutai | silent | Whenever one or more Dragons you control deal combat damage to a player or battle, look at the top three cards of your library. Put one of them into your hand a | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Etched Host Doombringer | notice | When this creature enters, choose one — • Target opponent loses 2 life and you gain 2 life. • Choose target battle. If an opponent protects it, remove three def | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Flitting Guerrilla | notice | When this creature dies, each player mills two cards. Then you may exile this card. When you do, put target creature or battle card from your graveyard on top o | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Ghalta and Mavren | notice | Whenever you attack, choose one — • Create a tapped and attacking X/X green Dinosaur creature token with trample, where X is the greatest power among other atta | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Halo Forager | notice | When this creature enters, you may pay {X}. When you do, you may cast target instant or sorcery card with mana value X from a graveyard without paying its mana  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Heliod, the Radiant Dawn // Heliod, the Warped Eclipse | notice | Spells you cast cost {1} less to cast for each card your opponents have drawn this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Into the Fire | notice | Choose one — • Into the Fire deals 2 damage to each creature, planeswalker, and battle. • Put any number of cards from your hand on the bottom of your library,  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Joyful Stormsculptor | notice | Whenever you cast a spell that has convoke, this creature deals 1 damage to each opponent and each battle they protect. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kroxa and Kunoros | notice | Whenever Kroxa and Kunoros enters or attacks, you may exile five cards from your graveyard. When you do, return target creature card from your graveyard to the  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Mutagen Connoisseur | notice | This creature gets +1/+0 for each transformed permanent you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Oracle of Tragedy | notice | When this creature enters or dies, choose one — • Draw a card, then discard a card. • Shuffle up to four target cards with mana value 3 or greater from your gra | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Seedpod Caretaker | notice | When this creature enters, choose one — • Put a +1/+1 counter on target artifact or creature you control. • Transform target Incubator token you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sun-Blessed Guardian // Furnace-Blessed Conqueror | notice | Whenever this creature attacks, create a tapped and attacking token that's a copy of it. Put a +1/+1 counter on that token for each +1/+1 counter on this creatu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -219,7 +215,7 @@
 ## Fully supported
 
 <details>
-<summary>83 cards</summary>
+<summary>87 cards</summary>
 
 - Ancient Imperiosaur
 - Angelic Intervention
@@ -227,6 +223,7 @@
 - Ayara, Widow of the Realm // Ayara, Furnace Queen
 - Borborygmos and Fblthp
 - Botanical Brawler
+- Breach the Multiverse
 - Cosmic Hunger
 - Cragsmasher Yeti
 - Disturbing Conversion
@@ -236,6 +233,7 @@
 - Faerie Mastermind
 - Flywheel Racer
 - Furnace Reins
+- Ghalta and Mavren
 - Glistening Deluge
 - Hidetsugu and Kairi
 - Hoarding Broodlord
@@ -280,7 +278,9 @@
 - Jin-Gitaxias // The Great Synthesis
 - Kami of Whispered Hopes
 - Kithkin Billyrider
+- Knight-Errant of Eos
 - Lithomantic Barrage
+- Mutagen Connoisseur
 - Nahiri's Warcrafting
 - Oculus Whelp
 - Omnath, Locus of All
@@ -312,7 +312,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | when ~ enters, incubate N. | 9 | Blighted Burgeoning, Converter Beast, Corruption of Towashi, Elvish Vatkeeper, Gift of Compleation | mom |
-| incubate | 4 | Assimilate Essence, Glissa, Herald of Predation, Searing Barb, Sunder the Gateway | mom |
+| incubate | 5 | Assimilate Essence, Glissa, Herald of Predation, Searing Barb, Sunder the Gateway, Traumatic Revelation | mom |
 | when ~ dies, incubate N, where N is its power. | 2 | Bloated Processor, Furnace Gremlin | mom |
 | when ~ dies, incubate N. | 2 | Infected Defector, Injector Crocodile | mom |
 | Choose one | 1 | Into the Fire | mom |
@@ -323,7 +323,6 @@
 | as long as ~ power is N or greater, it can attack as though it didn't have defender. | 1 | Karsus Depthguard | mom |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) tap up to two target creature | 1 | Wicked Slumber | mom |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) you may cast sorcery spells ~ | 1 | Complete the Circuit | mom |
-| each player mills ten cards. for each player, choose a creature or planeswalker card in that player's graveyard. put those cards onto the battlefield under your | 1 | Breach the Multiverse | mom |
 | each player mills three cards. then you return up to two creature cards from your graveyard to your hand. (to mill three cards, a player puts the top three card | 1 | Unseal the Necropolis | mom |
 | enchanted creature has base power and toughness N/N, has defender, and loses all other abilities. | 1 | Stasis Field | mom |
 | exile all creatures. incubate N, where N is the number of creatures exiled ~. (create an incubator token with N +N/+N counters on it and "..." it transforms int | 1 | Sunfall | mom |
@@ -334,7 +333,6 @@
 | put all creature cards from all graveyards onto the battlefield under your control. exile ~, then return it to the battlefield . | 1 | Sheoldred // The True Scriptures | mom |
 | spells you cast cost {M} less to cast for each card your opponents have drawn ~. | 1 | Heliod, the Radiant Dawn // Heliod, the Warped Eclipse | mom |
 | target creature or land you control becomes a N/N elemental creature with haste in addition to its other types until end of turn. it must be blocked ~ if able. | 1 | Vengeant Earth | mom |
-| target opponent reveals their hand. you may choose a creature or battle card from it. if you do, that player discards that card. if you don't, incubate N. (crea | 1 | Traumatic Revelation | mom |
 | target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffles. put two +N/+N counters on up to one target artif | 1 | Fertilid's Favor | mom |
 | triple | 1 | City on Fire | mom |
 | when ~ dies, each player mills two cards. then you may exile ~. when you do, put target creature or battle card from your graveyard on top of your library. | 1 | Flitting Guerrilla | mom |
@@ -343,7 +341,6 @@
 | when ~ enters, choose one — • target opponent loses N life and you gain N life. • choose target battle. if an opponent protects it, remove three defense counter | 1 | Etched Host Doombringer | mom |
 | when ~ enters, each player mills two cards. then you may put an instant, sorcery, or battle card from your graveyard on top of your library. | 1 | Halo-Charged Skaab | mom |
 | when ~ enters, incubate N N times. | 1 | Progenitor Exarch | mom |
-| when ~ enters, look at the top six cards of your library. you may reveal up to two creature cards with mana value N or less from among them, where N is the numb | 1 | Knight-Errant of Eos | mom |
 | when ~ enters, put a flying counter on each creature that convoked it. | 1 | Zephyr Singer | mom |
 | when ~ enters, you gain N life and incubate N. | 1 | Tangled Skyline | mom |
 | when ~ enters, you may pay {M}. when you do, you may cast target instant or sorcery card with mana value N from a graveyard without paying its mana cost. if tha | 1 | Halo Forager | mom |
@@ -352,7 +349,6 @@
 | whenever a source deals damage to rona, that source"..."s a land card, you may put it onto the battlefield under your control. otherwise, you may cast it withou | 1 | Rona, Herald of Invasion // Rona, Tolarian Obliterator | mom |
 | whenever equipped creature deals combat damage to a player, surveil N. then you may cast an instant or sorcery spell with mana value N or less from your graveya | 1 | Sword of Once and Future | mom |
 | whenever one or more dragons you control deal combat damage to a player or battle, look at the top three cards of your library. put one of them into your hand a | 1 | Zurgo and Ojutai | mom |
-| whenever you attack, choose one — • create a tapped and attacking N/N green dinosaur creature token with trample, where N is the greatest power among other atta | 1 | Ghalta and Mavren | mom |
 | whenever you cast a noncreature spell, incubate N, where N is that spell's mana value. | 1 | Chrome Host Seedshark | mom |
 | whenever you cast a spell that has convoke, ~ deals N damage to each opponent and each battle they protect. | 1 | Joyful Stormsculptor | mom |
 | whenever you cast a spell that targets one or more permanents, incubate N. | 1 | Tiller of Flesh | mom |
@@ -371,7 +367,6 @@
 | {M}: choose target battle. if an opponent protects it, remove a defense counter from it. otherwise, put a defense counter on it. activate only as a sorcery. | 1 | Portent Tracker | mom |
 | {M}{M}{M}, discard ~: destroy up to one target artifact or enchantment. shuffle ~ into your library from your graveyard, then draw a card. | 1 | Kogla and Yidaro | mom |
 | {M}{M}{M}, {M}, sacrifice a spirit: choose target card exiled with quintorius. you may cast that card ~ without paying its mana cost. if that spell would be put | 1 | Quintorius, Loremaster | mom |
-| ~ gets +N/+N for each transformed permanent you control. | 1 | Mutagen Connoisseur | mom |
 | ~ has first strike as long as another knight entered the battlefield under your control ~. | 1 | Swordsworn Cavalier | mom |
 | ~ has indestructible as long as it attacked a battle ~. | 1 | War Historian | mom |
 

@@ -17,31 +17,27 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 78 | 31.3% |
+| Tested | 82 | 32.9% |
 | Works (untested) | 131 | 52.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 40 | 16.1% |
+| Not working | 36 | 14.5% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Abandon the Post | silent | Up to two target creatures can't block this turn. Flashback {3}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Adeline, Resplendent Cathar | silent | Whenever you attack, for each opponent, create a 1/1 white Human creature token that's tapped and attacking that player or a planeswalker they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Arlinn, the Pack's Hope // Arlinn, the Moon's Fury | silent | +1: Until your next turn, you may cast creature spells as though they had flash, and each creature you control enters with an additional +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Baneblade Scoundrel // Baneclaw Marauder | silent | Whenever this creature becomes blocked, each creature blocking it gets -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bereaved Survivor // Dauntless Avenger | silent | Whenever this creature attacks, return target creature card with mana value 2 or less from your graveyard to the battlefield tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blessed Defiance | silent | Target creature you control gets +2/+0 and gains lifelink until end of turn. When that creature dies this turn, create a 1/1 white Spirit creature token with fl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Curse of Surveillance | silent | At the beginning of enchanted player's upkeep, any number of target players other than that player each draw cards equal to the number of Curses attached to tha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deathbonnet Sprout // Deathbonnet Hulk | silent | At the beginning of your upkeep, you may exile a card from a graveyard. If a creature card was exiled this way, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fading Hope | silent | Return target creature to its owner's hand. If its mana value was 3 or less, scry 1. (Look at the top card of your library. You may put that card on the bottom. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gisa, Glorious Resurrector | silent | At the beginning of your upkeep, put all creature cards exiled with Gisa onto the battlefield under your control. They gain decayed. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harvesttide Sentry | silent | Coven — At the beginning of combat on your turn, if you control three or more creatures with different powers, this creature can't be blocked by creatures with  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hostile Hostel // Creeping Inn | silent | Whenever this creature attacks, you may exile a creature card from your graveyard. If you do, each opponent loses X life and you gain X life, where X is the num | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Howl of the Hunt | silent | When this Aura enters, if enchanted creature is a Wolf or Werewolf, untap that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kessig Naturalist // Lord of the Ulvenwald | silent | Whenever this creature attacks, add {R} or {G}. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Loyal Gryff | silent | When this creature enters, you may return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ludevic, Necrogenius // Olag, Ludevic's Hubris | silent | As this creature transforms into Olag, Ludevic's Hubris, it becomes a copy of a creature card exiled with it, except its name is Olag, Ludevic's Hubris, it's 4/ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mask of Griselbrand | silent | Whenever equipped creature dies, you may pay X life, where X is its power. If you do, draw X cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Path to the Festival | silent | Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. Then if there are three or more basic land types among lands | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siphon Insight | silent | Look at the top two cards of target opponent's library. Exile one of them face down and put the other on the bottom of that library. You may play the exiled car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -201,8 +197,9 @@
 ## Fully supported
 
 <details>
-<summary>78 cards</summary>
+<summary>82 cards</summary>
 
+- Adeline, Resplendent Cathar
 - Augur of Autumn
 - Baithook Angler // Hook-Haunt Drifter
 - Beloved Beggar // Generous Soul
@@ -222,6 +219,7 @@
 - Croaking Counterpart
 - Curse of Leeches // Leeching Lurker
 - Curse of Silence
+- Curse of Surveillance
 - Dawnhart Wardens
 - Dennick, Pious Apprentice // Dennick, Pious Apparition
 - Deserted Beach
@@ -240,11 +238,13 @@
 - Grizzly Ghoul
 - Haunted Ridge
 - Hedgewitch's Mask
+- Hostile Hostel // Creeping Inn
 - Hungry for More
 - Intrepid Adversary
 - Jadar, Ghoulcaller of Nephalia
 - Katilda, Dawnhart Prime
 - Lier, Disciple of the Drowned
+- Ludevic, Necrogenius // Olag, Ludevic's Hubris
 - Lunarch Veteran // Luminous Phantom
 - Malevolent Hermit // Benevolent Geist
 - Moonrager's Slash
@@ -292,9 +292,7 @@
 | Choose one | 1 | Bloodline Culling | mid |
 | +N: choose up to one target artifact, up to one target creature, and up to one target land. untap the chosen permanents you control. tap the chosen permanents y | 1 | Teferi, Who Slows the Sunset | mid |
 | +N: until your next turn, you may cast creature spells as though they had flash, and each creature you control enters with an additional +N/+N counter on it. | 1 | Arlinn, the Pack's Hope // Arlinn, the Moon's Fury | mid |
-| as ~ transforms into olag, ludevic"..."s hubris, it"..."s a legendary blue and black zombie in addition to its other colors and types. put a number of +N/+N cou | 1 | Ludevic, Necrogenius // Olag, Ludevic's Hubris | mid |
 | at the beginning of each combat, double the power and toughness of each creature you control until end of turn. | 1 | Unnatural Growth | mid |
-| at the beginning of enchanted player's upkeep, any number of target players other than that player each draw cards equal to the number of curses attached to tha | 1 | Curse of Surveillance | mid |
 | at the beginning of your upkeep, if you control three or more wolves and/or werewolves, it becomes night. then transform any number of human werewolves you cont | 1 | Tovolar, Dire Overlord // Tovolar, the Midnight Scourge | mid |
 | at the beginning of your upkeep, put all creature cards exiled with gisa onto the battlefield under your control. they gain decayed. | 1 | Gisa, Glorious Resurrector | mid |
 | at the beginning of your upkeep, you may exile a card from a graveyard. if a creature card was exiled ~, put a +N/+N counter on ~. | 1 | Deathbonnet Sprout // Deathbonnet Hulk | mid |
@@ -317,10 +315,8 @@
 | when ~ enters, if enchanted creature is a wolf or werewolf, untap that creature. | 1 | Howl of the Hunt | mid |
 | when ~ enters, you may return another creature you control to its owner's hand. | 1 | Loyal Gryff | mid |
 | whenever equipped creature dies, you may pay N life, where N is its power. if you do, draw N cards. | 1 | Mask of Griselbrand | mid |
-| whenever you attack, for each opponent, create a N/N white human creature token that's tapped and attacking that player or a planeswalker they control. | 1 | Adeline, Resplendent Cathar | mid |
 | whenever ~ attacks, add {M} or {M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Kessig Naturalist // Lord of the Ulvenwald | mid |
 | whenever ~ attacks, return target creature card with mana value N or less from your graveyard to the battlefield tapped and attacking. | 1 | Bereaved Survivor // Dauntless Avenger | mid |
-| whenever ~ attacks, you may exile a creature card from your graveyard. if you do, each opponent loses N life and you gain N life, where N is the number of creat | 1 | Hostile Hostel // Creeping Inn | mid |
 | whenever ~ becomes blocked, each creature blocking it gets -N/-N until end of turn. | 1 | Baneblade Scoundrel // Baneclaw Marauder | mid |
 | wolves and werewolves you control have haste. | 1 | Village Watch // Village Reavers | mid |
 | {M}, {M}, pay N life, discard a card: draw a card, mill a card, then put a ritual counter on ~. then if it has three or more ritual counters on it, remove them  | 1 | Heirloom Mirror // Inherited Fiend | mid |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 19.6% |
+| Tested | 30 | 20.3% |
 | Works (untested) | 67 | 45.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 52 | 35.1% |
+| Not working | 51 | 34.5% |
 
 ## Cards needing work
 
@@ -61,7 +61,6 @@
 | Roar of the Crowd | silent | Choose a creature type. Roar of the Crowd deals damage to any target equal to the number of permanents you control of the chosen type. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rustic Clachan | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Sensation Gorger | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shared Animosity | silent | Whenever a creature you control attacks, it gets +1/+0 until end of turn for each other attacking creature that shares a creature type with it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Slithermuse | silent | When this creature leaves the battlefield, choose an opponent. If that player has more cards in hand than you, draw cards equal to the difference. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Squeaking Pie Grubfellows | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stomping Slabs | silent | Reveal the top seven cards of your library, then put those cards on the bottom of your library in any order. If a card named Stomping Slabs was revealed this wa | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -149,7 +148,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>30 cards</summary>
 
 - Battletide Alchemist
 - Bramblewood Paragon
@@ -176,6 +175,7 @@
 - Orchard Warden
 - Sage of Fables
 - Scapeshift
+- Shared Animosity
 - Stenchskipper
 - Sunflare Shaman
 - Thieves' Fortune
@@ -213,7 +213,6 @@
 | when ~ enters, look at target player's hand. you may choose a nonland card from it. if you do, that player reveals the chosen card, puts it on the bottom of the | 1 | Vendilion Clique | mor |
 | when ~ enters, put a +N/+N counter on each other shaman creature you control. | 1 | Rage Forger | mor |
 | when ~ leaves the battlefield, choose an opponent. if that player has more cards in hand than you, draw cards equal to the difference. | 1 | Slithermuse | mor |
-| whenever a creature you control attacks, it gets +N/+N until end of turn for each other attacking creature that shares a creature type with it. | 1 | Shared Animosity | mor |
 | whenever a creature you control becomes blocked, it gets +N/+N until end of turn. | 1 | Unstoppable Ash | mor |
 | whenever a goblin or rogue you control deals combat damage to a player, if ~ is in your graveyard, you may return ~ to your hand. | 1 | Auntie's Snitch | mor |
 | whenever ~ attacks, you may put a soldier creature card from your hand onto the battlefield tapped and attacking. | 1 | Preeminent Captain | mor |

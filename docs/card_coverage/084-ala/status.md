@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 39 | 17.5% |
-| Works (untested) | 149 | 66.8% |
+| Tested | 40 | 17.9% |
+| Works (untested) | 151 | 67.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 35 | 15.7% |
+| Not working | 32 | 14.3% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Battlegrace Angel | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Brilliant Ultimatum | silent | Exile the top five cards of your library. An opponent separates those cards into two piles. You may play lands and cast spells from one of those piles. If you c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Call to Heel | silent | Return target creature to its owner's hand. Its controller draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Clarion Ultimatum | silent | Choose five permanents you control. For each of those permanents, you may search your library for a card with the same name as that permanent. Put those cards o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Court Archers | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Covenant of Minds | silent | Reveal the top three cards of your library. Target opponent may choose to put those cards into your hand. If they don't, put those cards into your graveyard and | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cruel Ultimatum | silent | Target opponent sacrifices a creature of their choice, discards three cards, then loses 5 life. You return a creature card from your graveyard to your hand, dra | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -54,11 +53,9 @@
 | Rhox Charger | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Scourglass | silent | {T}, Sacrifice this artifact: Destroy all permanents except for artifacts and lands. Activate only during your upkeep. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sighted-Caste Sorcerer | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Sigil of Distinction | silent | Equipped creature gets +1/+1 for each charge counter on this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sigiled Paladin | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Thoughtcutter Agent | silent | {U}{B}, {T}: Target player loses 1 life and reveals their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Waveskimmer Aven | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Bant Charm | notice | Choose one — • Destroy target artifact. • Put target creature on the bottom of its owner's library. • Counter target instant spell. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sigil Blessing | notice | Until end of turn, target creature you control gets +3/+3 and other creatures you control get +1/+1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Windwright Mage | notice | This creature has flying as long as an artifact card is in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Agony Warp | handled | Target creature gets -3/-0 until end of turn. Target creature gets -0/-3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -67,6 +64,7 @@
 | Arcane Sanctum | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Archdemon of Unx | handled | At the beginning of your upkeep, sacrifice a non-Zombie creature, then create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bant Battlemage | handled | {G}, {T}: Target creature gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bant Charm | handled | Choose one — • Destroy target artifact. • Put target creature on the bottom of its owner's library. • Counter target instant spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bant Panorama | handled | {1}, {T}, Sacrifice this land: Search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Behemoth's Herald | handled | {2}{G}, {T}, Sacrifice a red creature, a green creature, and a white creature: Search your library for a card named Godsire, put it onto the battlefield, then s | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blister Beetle | handled | When this creature enters, target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -180,6 +178,7 @@
 | Sharding Sphinx | handled | Whenever an artifact creature you control deals combat damage to a player, you may create a 1/1 blue Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sharuum the Hegemon | handled | When Sharuum enters, you may return target artifact card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shore Snapper | handled | {U}: This creature gains islandwalk until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sigil of Distinction | handled | This Equipment enters with X charge counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Skeletal Kathari | handled | {B}, Sacrifice a creature: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spearbreaker Behemoth | handled | {1}: Target creature with power 5 or greater gains indestructible until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spell Snip | handled | Counter target spell unless its controller pays {1}. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -214,13 +213,14 @@
 ## Fully supported
 
 <details>
-<summary>39 cards</summary>
+<summary>40 cards</summary>
 
 - Ad Nauseam
 - Angelsong
 - Banewasp Affliction
 - Blightning
 - Bone Splinters
+- Clarion Ultimatum
 - Cradle of Vitality
 - Deft Duelist
 - Empyrial Archangel
@@ -263,12 +263,9 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | exalted | 12 | Akrasan Squire, Angelic Benediction, Battlegrace Angel, Court Archers, Dawnray Archer | ala |
-| Choose one | 1 | Bant Charm | ala |
 | +N: target permanent doesn"..."s next untap step. | 1 | Ajani Vengeant | ala |
-| choose five permanents you control. for each of those permanents, you may search your library for a card with the same name as that permanent. put those cards o | 1 | Clarion Ultimatum | ala |
 | counter target spell that targets you or a permanent you control. draw a card. | 1 | Hindering Light | ala |
 | enchanted land is a mountain, forest, and plains. | 1 | Lush Growth | ala |
-| equipped creature gets +N/+N for each charge counter on ~. | 1 | Sigil of Distinction | ala |
 | exile the top five cards of your library. an opponent separates those cards into two piles. you may play lands and cast spells from one of those piles. if you c | 1 | Brilliant Ultimatum | ala |
 | return target creature to its owner's hand. its controller draws a card. | 1 | Call to Heel | ala |
 | reveal the top three cards of your library. target opponent may choose to put those cards into your hand. if they don't, put those cards into your graveyard and | 1 | Covenant of Minds | ala |

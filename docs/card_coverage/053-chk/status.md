@@ -17,25 +17,22 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 58 | 20.5% |
+| Tested | 64 | 22.6% |
 | Works (untested) | 159 | 56.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 66 | 23.3% |
+| Not working | 60 | 21.2% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Ashen-Skin Zubera | silent | When this creature dies, target opponent discards a card for each Zubera that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brutal Deceiver | silent | {2}: Reveal the top card of your library. If it's a land card, this creature gets +1/+0 and gains first strike until end of turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Budoka Gardener // Dokai, Weaver of Life | silent | {T}: You may put a land card from your hand onto the battlefield. If you control ten or more lands, flip this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Burr Grafter | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Callous Deceiver | silent | {2}: Reveal the top card of your library. If it's a land card, this creature gets +1/+0 and gains flying until end of turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cut the Tethers | silent | For each Spirit, return it to its owner's hand unless that player pays {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Devouring Greed | silent | As an additional cost to cast this spell, you may sacrifice any number of Spirits. Target player loses 2 life plus 2 life for each Spirit sacrificed this way. Y | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dripping-Tongue Zubera | silent | When this creature dies, create a 1/1 colorless Spirit creature token for each Zubera that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Feral Deceiver | silent | {2}: Reveal the top card of your library. If it's a land card, this creature gets +2/+2 and gains trample until end of turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Floating-Dream Zubera | silent | When this creature dies, draw a card for each Zubera that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gibbering Kami | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Gifts Ungiven | silent | Search your library for up to four cards with different names and reveal them. Target opponent chooses two of those cards. Put the chosen cards into your gravey | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Godo, Bandit Warlord | silent | Whenever Godo attacks for the first time each turn, untap it and all Samurai you control. After this phase, there is an additional combat phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -44,7 +41,6 @@
 | He Who Hungers | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hisoka, Minamo Sensei | silent | {2}{U}, Discard a card: Counter target spell if it has the same mana value as the discarded card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hundred-Talon Kami | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Jushi Apprentice // Tomoya the Revealer | silent | {2}{U}, {T}: Draw a card. If you have nine or more cards in hand, flip this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kami of Lunacy | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Kami of the Painted Road | silent | Whenever you cast a Spirit or Arcane spell, this creature gains protection from the color of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kami of the Palace Fields | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -68,11 +64,9 @@
 | Serpent Skin | silent | {G}: Regenerate enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shisato, Whispering Hunter | silent | Whenever Shisato deals combat damage to a player, that player skips their next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sift Through Sands | silent | Draw two cards, then discard a card. If you've cast a spell named Peer Through Depths and a spell named Reach Through Mists this turn, you may search your libra | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Silent-Chant Zubera | silent | When this creature dies, you gain 2 life for each Zubera that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Strange Inversion | silent | Switch target creature's power and toughness until end of turn. Splice onto Arcane {1}{R} (As you cast an Arcane spell, you may reveal this card from your hand  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Struggle for Sanity | silent | Target opponent reveals their hand. That player exiles a card from it, then you exile a card from it. Repeat this process until all cards in that hand have been | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Student of Elements // Tobita, Master of Winds | silent | When this creature has flying, flip it. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Takeno, Samurai General | silent | Each other Samurai creature you control gets +1/+1 for each point of bushido it has. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tatsumasa, the Dragon's Fang | silent | {6}, Exile Tatsumasa: Create a 5/5 blue Dragon Spirit creature token with flying. Return Tatsumasa to the battlefield under its owner's control when that token  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thief of Hope | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Thousand-legged Kami | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -255,9 +249,10 @@
 ## Fully supported
 
 <details>
-<summary>58 cards</summary>
+<summary>64 cards</summary>
 
 - Akki Lavarunner // Tok-Tok, Volcano Born
+- Ashen-Skin Zubera
 - Azusa, Lost but Seeking
 - Ben-Ben, Akki Hermit
 - Brothers Yamazaki
@@ -268,9 +263,11 @@
 - Devoted Retainer
 - Distress
 - Dosan the Falling Leaf
+- Dripping-Tongue Zubera
 - Ember-Fist Zubera
 - Ethereal Haze
 - Field of Reality
+- Floating-Dream Zubera
 - Frostwielder
 - Ghostly Prison
 - Glacial Ray
@@ -286,6 +283,7 @@
 - Initiate of Blood // Goka the Unjust
 - Isamaru, Hound of Konda
 - Junkyo Bell
+- Jushi Apprentice // Tomoya the Revealer
 - Kashi-Tribe Warriors
 - Keiga, the Tide Star
 - Kiki-Jiki, Mirror Breaker
@@ -307,9 +305,11 @@
 - Sachi, Daughter of Seshiro
 - Samurai of the Pale Curtain
 - Shimatsu the Bloodcloaked
+- Silent-Chant Zubera
 - Soratami Seer
 - Soulblast
 - Swirl the Mists
+- Takeno, Samurai General
 - Through the Breach
 - Time Stop
 - Uba Mask
@@ -331,7 +331,6 @@
 | counter target spell. if that spell is countered ~, put that card on your choice of the top or bottom of its owner"..."s graveyard. | 1 | Hinder | chk |
 | destroy target land. if that land was legendary, its controller sacrifices another land of their choice. | 1 | Feast of Worms | chk |
 | draw two cards, then discard a card. if you've cast a spell named peer through depths and a spell named reach through mists ~, you may search your library for a | 1 | Sift Through Sands | chk |
-| each other samurai creature you control gets +N/+N for each point of bushido it has. | 1 | Takeno, Samurai General | chk |
 | exile target creature. at the beginning of the next end step, return that card to the battlefield under its owner's control with a +N/+N counter on it. | 1 | Otherworldly Journey | chk |
 | for each spirit, return it to its owner's hand unless that player pays {M}. | 1 | Cut the Tethers | chk |
 | look at the top three cards of your library. you may put those cards on the bottom of your library in any order. if you do, return ~ to its owner's hand. otherw | 1 | Petals of Insight | chk |
@@ -345,10 +344,6 @@
 | untap target nonlegendary creature and gain control of it until end of turn. that creature gains haste until end of turn. | 1 | Blind with Anger | chk |
 | up to three target creatures can't block ~. | 1 | Unearthly Blizzard | chk |
 | when yosei dies, target player skips their next untap step. tap up to five target permanents that player controls. | 1 | Yosei, the Morning Star | chk |
-| when ~ dies, create a N/N colorless spirit creature token for each zubera that died ~. | 1 | Dripping-Tongue Zubera | chk |
-| when ~ dies, draw a card for each zubera that died ~. | 1 | Floating-Dream Zubera | chk |
-| when ~ dies, target opponent discards a card for each zubera that died ~. | 1 | Ashen-Skin Zubera | chk |
-| when ~ dies, you gain N life for each zubera that died ~. | 1 | Silent-Chant Zubera | chk |
 | when ~ has flying, flip it. | 1 | Student of Elements // Tobita, Master of Winds | chk |
 | whenever a land enters, zo-zu deals N damage to that land's controller. | 1 | Zo-Zu the Punisher | chk |
 | whenever a warrior you control deals combat damage to a creature, destroy that creature at end of combat. | 1 | Sosuke, Son of Seshiro | chk |
@@ -371,7 +366,6 @@
 | {M}: you may put a land card from your hand onto the battlefield. if you control ten or more lands, flip ~. | 1 | Budoka Gardener // Dokai, Weaver of Life | chk |
 | {M}{M}, discard a card: counter target spell if it has the same mana value as the discarded card. | 1 | Hisoka, Minamo Sensei | chk |
 | {M}{M}, {M}: create a N/N green snake creature token. if you control ten or more creatures, flip ~. | 1 | Orochi Eggwatcher // Shidako, Broodmistress | chk |
-| {M}{M}, {M}: draw a card. if you have nine or more cards in hand, flip ~. | 1 | Jushi Apprentice // Tomoya the Revealer | chk |
 | {M}{M}, {M}: put a training counter on target creature. that creature gains bushido N and becomes a samurai in addition to its other creature types. activate on | 1 | Sensei Golden-Tail | chk |
 | {M}{M}, {M}: target opponent discards a card. then if that player has no cards in hand, flip ~. | 1 | Nezumi Shortfang // Stabwhisker the Odious | chk |
 | {M}{M}: exile target card from an opponent's graveyard. if no cards are in that graveyard, flip ~. | 1 | Nezumi Graverobber // Nighteyes the Desecrator | chk |

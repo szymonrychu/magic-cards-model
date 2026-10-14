@@ -8,10 +8,10 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 5898 | 25.9% |
-| Works (untested) | 12691 | 55.7% |
+| Tested | 6180 | 27.1% |
+| Works (untested) | 12787 | 56.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 4181 | 18.4% |
+| Not working | 3803 | 16.7% |
 
 ## Campaign order
 
@@ -24,144 +24,144 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
 | 273 | [sos](273-sos/status.md) - Secrets of Strixhaven | 2026-04-24 | 255 | 121 | 134 | done |
 | 271 | [tmt](271-tmt/status.md) - Teenage Mutant Ninja Turtles | 2026-03-06 | 187 | 91 | 96 | done |
 | 270 | [ecl](270-ecl/status.md) - Lorwyn Eclipsed | 2026-01-23 | 252 | 146 | 106 | done |
-| 268 | [tla](268-tla/status.md) - Avatar: The Last Airbender | 2025-11-21 | 277 | 87 | 133 | todo |
-| 265 | [spm](265-spm/status.md) - Marvel's Spider-Man | 2025-09-26 | 187 | 49 | 102 | todo |
-| 263 | [eoe](263-eoe/status.md) - Edge of Eternities | 2025-08-01 | 252 | 64 | 144 | todo |
-| 261 | [fin](261-fin/status.md) - Final Fantasy | 2025-06-13 | 304 | 84 | 145 | todo |
-| 259 | [tdm](259-tdm/status.md) - Tarkir: Dragonstorm | 2025-04-11 | 252 | 79 | 134 | todo |
-| 257 | [dft](257-dft/status.md) - Aetherdrift | 2025-02-14 | 256 | 59 | 145 | todo |
-| 254 | [fdn](254-fdn/status.md) - Foundations | 2024-11-15 | 144 | 29 | 92 | todo |
-| 253 | [dsk](253-dsk/status.md) - Duskmourn: House of Horror | 2024-09-27 | 265 | 65 | 117 | todo |
-| 252 | [blb](252-blb/status.md) - Bloomburrow | 2024-08-02 | 258 | 61 | 134 | todo |
-| 251 | [acr](251-acr/status.md) - Assassin's Creed | 2024-07-05 | 106 | 22 | 47 | todo |
-| 250 | [mh3](250-mh3/status.md) - Modern Horizons 3 | 2024-06-14 | 262 | 106 | 100 | todo |
-| 249 | [otj](249-otj/status.md) - Outlaws of Thunder Junction | 2024-04-19 | 259 | 54 | 137 | todo |
-| 248 | [big](248-big/status.md) - The Big Score | 2024-04-19 | 27 | 9 | 7 | todo |
-| 246 | [mkm](246-mkm/status.md) - Murders at Karlov Manor | 2024-02-09 | 268 | 74 | 113 | todo |
-| 245 | [lci](245-lci/status.md) - The Lost Caverns of Ixalan | 2023-11-17 | 275 | 86 | 140 | todo |
-| 243 | [woe](243-woe/status.md) - Wilds of Eldraine | 2023-09-08 | 266 | 56 | 149 | todo |
-| 240 | [ltr](240-ltr/status.md) - The Lord of the Rings: Tales of Middle-earth | 2023-06-23 | 281 | 73 | 146 | todo |
-| 239 | [mat](239-mat/status.md) - March of the Machine: The Aftermath | 2023-05-12 | 49 | 18 | 13 | todo |
+| 268 | [tla](268-tla/status.md) - Avatar: The Last Airbender | 2025-11-21 | 277 | 88 | 133 | todo |
+| 265 | [spm](265-spm/status.md) - Marvel's Spider-Man | 2025-09-26 | 187 | 52 | 102 | todo |
+| 263 | [eoe](263-eoe/status.md) - Edge of Eternities | 2025-08-01 | 252 | 70 | 145 | todo |
+| 261 | [fin](261-fin/status.md) - Final Fantasy | 2025-06-13 | 304 | 88 | 148 | todo |
+| 259 | [tdm](259-tdm/status.md) - Tarkir: Dragonstorm | 2025-04-11 | 252 | 82 | 134 | todo |
+| 257 | [dft](257-dft/status.md) - Aetherdrift | 2025-02-14 | 256 | 68 | 149 | todo |
+| 254 | [fdn](254-fdn/status.md) - Foundations | 2024-11-15 | 144 | 32 | 92 | todo |
+| 253 | [dsk](253-dsk/status.md) - Duskmourn: House of Horror | 2024-09-27 | 265 | 69 | 118 | todo |
+| 252 | [blb](252-blb/status.md) - Bloomburrow | 2024-08-02 | 258 | 65 | 135 | todo |
+| 251 | [acr](251-acr/status.md) - Assassin's Creed | 2024-07-05 | 106 | 25 | 47 | todo |
+| 250 | [mh3](250-mh3/status.md) - Modern Horizons 3 | 2024-06-14 | 262 | 109 | 104 | todo |
+| 249 | [otj](249-otj/status.md) - Outlaws of Thunder Junction | 2024-04-19 | 259 | 62 | 138 | todo |
+| 248 | [big](248-big/status.md) - The Big Score | 2024-04-19 | 27 | 10 | 7 | todo |
+| 246 | [mkm](246-mkm/status.md) - Murders at Karlov Manor | 2024-02-09 | 268 | 80 | 113 | todo |
+| 245 | [lci](245-lci/status.md) - The Lost Caverns of Ixalan | 2023-11-17 | 275 | 97 | 141 | todo |
+| 243 | [woe](243-woe/status.md) - Wilds of Eldraine | 2023-09-08 | 266 | 64 | 150 | todo |
+| 240 | [ltr](240-ltr/status.md) - The Lord of the Rings: Tales of Middle-earth | 2023-06-23 | 281 | 75 | 147 | todo |
+| 239 | [mat](239-mat/status.md) - March of the Machine: The Aftermath | 2023-05-12 | 49 | 18 | 14 | todo |
 | 282 | [mul](282-mul/status.md) - Multiverse Legends | 2023-04-21 | 1 | 0 | 0 | todo |
-| 238 | [mom](238-mom/status.md) - March of the Machine | 2023-04-21 | 272 | 83 | 113 | todo |
-| 237 | [one](237-one/status.md) - Phyrexia: All Will Be One | 2023-02-03 | 252 | 63 | 125 | todo |
+| 238 | [mom](238-mom/status.md) - March of the Machine | 2023-04-21 | 272 | 87 | 113 | todo |
+| 237 | [one](237-one/status.md) - Phyrexia: All Will Be One | 2023-02-03 | 252 | 67 | 125 | todo |
 | 296 | [dmr](296-dmr/status.md) - Dominaria Remastered | 2023-01-13 | 1 | 0 | 0 | todo |
 | 236 | [j22](236-j22/status.md) - Jumpstart 2022 | 2022-12-02 | 6 | 1 | 5 | todo |
 | 295 | [brr](295-brr/status.md) - The Brothers' War Retro Artifacts | 2022-11-18 | 1 | 1 | 0 | todo |
-| 235 | [bro](235-bro/status.md) - The Brothers' War | 2022-11-18 | 256 | 54 | 154 | todo |
+| 235 | [bro](235-bro/status.md) - The Brothers' War | 2022-11-18 | 256 | 58 | 153 | todo |
 | 294 | [gn3](294-gn3/status.md) - Game Night: Free-for-All | 2022-10-14 | 1 | 1 | 0 | todo |
-| 234 | [dmu](234-dmu/status.md) - Dominaria United | 2022-09-09 | 244 | 70 | 124 | todo |
+| 234 | [dmu](234-dmu/status.md) - Dominaria United | 2022-09-09 | 244 | 74 | 124 | todo |
 | 280 | [2x2](280-2x2/status.md) - Double Masters 2022 | 2022-07-08 | 3 | 0 | 2 | todo |
-| 231 | [snc](231-snc/status.md) - Streets of New Capenna | 2022-04-29 | 253 | 59 | 139 | todo |
-| 227 | [neo](227-neo/status.md) - Kamigawa: Neon Dynasty | 2022-02-18 | 267 | 60 | 140 | todo |
-| 225 | [vow](225-vow/status.md) - Innistrad: Crimson Vow | 2021-11-19 | 253 | 76 | 111 | todo |
-| 222 | [mid](222-mid/status.md) - Innistrad: Midnight Hunt | 2021-09-24 | 249 | 78 | 131 | todo |
-| 221 | [afr](221-afr/status.md) - Adventures in the Forgotten Realms | 2021-07-23 | 257 | 67 | 138 | todo |
-| 219 | [mh2](219-mh2/status.md) - Modern Horizons 2 | 2021-06-18 | 258 | 78 | 143 | todo |
-| 217 | [stx](217-stx/status.md) - Strixhaven: School of Mages | 2021-04-23 | 274 | 57 | 157 | todo |
+| 231 | [snc](231-snc/status.md) - Streets of New Capenna | 2022-04-29 | 253 | 64 | 139 | todo |
+| 227 | [neo](227-neo/status.md) - Kamigawa: Neon Dynasty | 2022-02-18 | 267 | 70 | 142 | todo |
+| 225 | [vow](225-vow/status.md) - Innistrad: Crimson Vow | 2021-11-19 | 253 | 79 | 112 | todo |
+| 222 | [mid](222-mid/status.md) - Innistrad: Midnight Hunt | 2021-09-24 | 249 | 82 | 131 | todo |
+| 221 | [afr](221-afr/status.md) - Adventures in the Forgotten Realms | 2021-07-23 | 257 | 69 | 139 | todo |
+| 219 | [mh2](219-mh2/status.md) - Modern Horizons 2 | 2021-06-18 | 258 | 79 | 145 | todo |
+| 217 | [stx](217-stx/status.md) - Strixhaven: School of Mages | 2021-04-23 | 274 | 62 | 157 | todo |
 | 216 | [sta](216-sta/status.md) - Strixhaven Mystical Archive | 2021-04-23 | 1 | 0 | 0 | todo |
-| 213 | [khm](213-khm/status.md) - Kaldheim | 2021-02-05 | 287 | 67 | 152 | todo |
-| 210 | [znr](210-znr/status.md) - Zendikar Rising | 2020-09-25 | 255 | 78 | 138 | todo |
+| 213 | [khm](213-khm/status.md) - Kaldheim | 2021-02-05 | 287 | 75 | 154 | todo |
+| 210 | [znr](210-znr/status.md) - Zendikar Rising | 2020-09-25 | 255 | 80 | 140 | todo |
 | 291 | [2xm](291-2xm/status.md) - Double Masters | 2020-08-07 | 2 | 0 | 1 | todo |
 | 208 | [jmp](208-jmp/status.md) - Jumpstart | 2020-07-17 | 4 | 2 | 2 | todo |
-| 207 | [m21](207-m21/status.md) - Core Set 2021 | 2020-07-03 | 182 | 39 | 110 | todo |
-| 206 | [iko](206-iko/status.md) - Ikoria: Lair of Behemoths | 2020-04-24 | 228 | 51 | 129 | todo |
-| 204 | [thb](204-thb/status.md) - Theros Beyond Death | 2020-01-24 | 246 | 59 | 144 | todo |
+| 207 | [m21](207-m21/status.md) - Core Set 2021 | 2020-07-03 | 182 | 45 | 110 | todo |
+| 206 | [iko](206-iko/status.md) - Ikoria: Lair of Behemoths | 2020-04-24 | 228 | 56 | 132 | todo |
+| 204 | [thb](204-thb/status.md) - Theros Beyond Death | 2020-01-24 | 246 | 62 | 145 | todo |
 | 279 | [sld](279-sld/status.md) - Secret Lair Drop | 2019-12-08 | 6 | 2 | 3 | todo |
 | 284 | [plst](284-plst/status.md) - The List | 2019-11-07 | 4 | 1 | 1 | todo |
-| 202 | [eld](202-eld/status.md) - Throne of Eldraine | 2019-10-04 | 269 | 77 | 146 | todo |
-| 200 | [m20](200-m20/status.md) - Core Set 2020 | 2019-07-12 | 176 | 40 | 95 | todo |
-| 199 | [mh1](199-mh1/status.md) - Modern Horizons | 2019-06-14 | 210 | 51 | 116 | todo |
-| 198 | [war](198-war/status.md) - War of the Spark | 2019-05-03 | 244 | 46 | 150 | todo |
-| 196 | [rna](196-rna/status.md) - Ravnica Allegiance | 2019-01-25 | 239 | 53 | 157 | todo |
+| 202 | [eld](202-eld/status.md) - Throne of Eldraine | 2019-10-04 | 269 | 80 | 148 | todo |
+| 200 | [m20](200-m20/status.md) - Core Set 2020 | 2019-07-12 | 176 | 42 | 96 | todo |
+| 199 | [mh1](199-mh1/status.md) - Modern Horizons | 2019-06-14 | 210 | 51 | 117 | todo |
+| 198 | [war](198-war/status.md) - War of the Spark | 2019-05-03 | 244 | 50 | 150 | todo |
+| 196 | [rna](196-rna/status.md) - Ravnica Allegiance | 2019-01-25 | 239 | 54 | 158 | todo |
 | 194 | [med](194-med/status.md) - Mythic Edition | 2019-01-25 | 4 | 2 | 0 | todo |
 | 193 | [g18](193-g18/status.md) - M19 Gift Pack | 2018-11-16 | 1 | 0 | 1 | todo |
-| 192 | [grn](192-grn/status.md) - Guilds of Ravnica | 2018-10-05 | 233 | 43 | 146 | todo |
-| 190 | [m19](190-m19/status.md) - Core Set 2019 | 2018-07-13 | 180 | 22 | 135 | todo |
-| 188 | [gs1](188-gs1/status.md) - Global Series Jiang Yanggu & Mu Yanling | 2018-06-22 | 1 | 0 | 1 | todo |
-| 187 | [dom](187-dom/status.md) - Dominaria | 2018-04-27 | 230 | 55 | 133 | todo |
+| 192 | [grn](192-grn/status.md) - Guilds of Ravnica | 2018-10-05 | 233 | 46 | 154 | todo |
+| 190 | [m19](190-m19/status.md) - Core Set 2019 | 2018-07-13 | 180 | 23 | 135 | todo |
+| 188 | [gs1](188-gs1/status.md) - Global Series Jiang Yanggu & Mu Yanling | 2018-06-22 | 1 | 1 | 0 | todo |
+| 187 | [dom](187-dom/status.md) - Dominaria | 2018-04-27 | 230 | 60 | 133 | todo |
 | 290 | [a25](290-a25/status.md) - Masters 25 | 2018-03-16 | 1 | 0 | 1 | todo |
-| 186 | [rix](186-rix/status.md) - Rivals of Ixalan | 2018-01-19 | 178 | 46 | 98 | todo |
+| 186 | [rix](186-rix/status.md) - Rivals of Ixalan | 2018-01-19 | 178 | 53 | 98 | todo |
 | 289 | [ima](289-ima/status.md) - Iconic Masters | 2017-11-17 | 1 | 1 | 0 | todo |
-| 184 | [xln](184-xln/status.md) - Ixalan | 2017-09-29 | 245 | 48 | 161 | todo |
-| 181 | [hou](181-hou/status.md) - Hour of Devastation | 2017-07-14 | 183 | 30 | 104 | todo |
+| 184 | [xln](184-xln/status.md) - Ixalan | 2017-09-29 | 245 | 50 | 160 | todo |
+| 181 | [hou](181-hou/status.md) - Hour of Devastation | 2017-07-14 | 183 | 33 | 103 | todo |
 | 180 | [mp2](180-mp2/status.md) - Amonkhet Invocations | 2017-04-28 | 4 | 2 | 2 | todo |
 | 179 | [akh](179-akh/status.md) - Amonkhet | 2017-04-28 | 241 | 48 | 158 | todo |
-| 178 | [aer](178-aer/status.md) - Aether Revolt | 2017-01-20 | 185 | 47 | 114 | todo |
+| 178 | [aer](178-aer/status.md) - Aether Revolt | 2017-01-20 | 185 | 47 | 115 | todo |
 | 175 | [mps](175-mps/status.md) - Kaladesh Inventions | 2016-09-30 | 2 | 0 | 2 | todo |
-| 174 | [kld](174-kld/status.md) - Kaladesh | 2016-09-30 | 246 | 47 | 156 | todo |
+| 174 | [kld](174-kld/status.md) - Kaladesh | 2016-09-30 | 246 | 52 | 166 | todo |
 | 173 | [cn2](173-cn2/status.md) - Conspiracy: Take the Crown | 2016-08-26 | 2 | 1 | 0 | todo |
-| 172 | [emn](172-emn/status.md) - Eldritch Moon | 2016-07-22 | 199 | 48 | 121 | todo |
+| 172 | [emn](172-emn/status.md) - Eldritch Moon | 2016-07-22 | 199 | 50 | 122 | todo |
 | 288 | [ema](288-ema/status.md) - Eternal Masters | 2016-06-10 | 1 | 1 | 0 | todo |
-| 171 | [soi](171-soi/status.md) - Shadows over Innistrad | 2016-04-08 | 261 | 42 | 188 | todo |
+| 171 | [soi](171-soi/status.md) - Shadows over Innistrad | 2016-04-08 | 261 | 43 | 189 | todo |
 | 169 | [ddq](169-ddq/status.md) - Duel Decks: Blessed vs. Cursed | 2016-02-26 | 6 | 1 | 2 | todo |
-| 168 | [ogw](168-ogw/status.md) - Oath of the Gatewatch | 2016-01-22 | 176 | 34 | 118 | todo |
-| 165 | [bfz](165-bfz/status.md) - Battle for Zendikar | 2015-10-02 | 226 | 38 | 171 | todo |
+| 168 | [ogw](168-ogw/status.md) - Oath of the Gatewatch | 2016-01-22 | 176 | 35 | 119 | todo |
+| 165 | [bfz](165-bfz/status.md) - Battle for Zendikar | 2015-10-02 | 226 | 39 | 171 | todo |
 | 164 | [ddp](164-ddp/status.md) - Duel Decks: Zendikar vs. Eldrazi | 2015-08-28 | 6 | 2 | 4 | todo |
-| 163 | [ori](163-ori/status.md) - Magic Origins | 2015-07-17 | 181 | 36 | 108 | todo |
+| 163 | [ori](163-ori/status.md) - Magic Origins | 2015-07-17 | 181 | 37 | 108 | todo |
 | 160 | [dtk](160-dtk/status.md) - Dragons of Tarkir | 2015-03-27 | 233 | 42 | 141 | todo |
-| 159 | [frf](159-frf/status.md) - Fate Reforged | 2015-01-23 | 161 | 35 | 81 | todo |
-| 155 | [ktk](155-ktk/status.md) - Khans of Tarkir | 2014-09-26 | 225 | 37 | 164 | todo |
+| 159 | [frf](159-frf/status.md) - Fate Reforged | 2015-01-23 | 161 | 37 | 81 | todo |
+| 155 | [ktk](155-ktk/status.md) - Khans of Tarkir | 2014-09-26 | 225 | 38 | 164 | todo |
 | 154 | [ddn](154-ddn/status.md) - Duel Decks: Speed vs. Cunning | 2014-09-05 | 6 | 0 | 5 | todo |
-| 153 | [m15](153-m15/status.md) - Magic 2015 | 2014-07-18 | 143 | 22 | 95 | todo |
-| 149 | [jou](149-jou/status.md) - Journey into Nyx | 2014-05-02 | 161 | 29 | 103 | todo |
-| 147 | [bng](147-bng/status.md) - Born of the Gods | 2014-02-07 | 160 | 36 | 93 | todo |
-| 143 | [ths](143-ths/status.md) - Theros | 2013-09-27 | 211 | 44 | 138 | todo |
+| 153 | [m15](153-m15/status.md) - Magic 2015 | 2014-07-18 | 143 | 24 | 95 | todo |
+| 149 | [jou](149-jou/status.md) - Journey into Nyx | 2014-05-02 | 161 | 32 | 103 | todo |
+| 147 | [bng](147-bng/status.md) - Born of the Gods | 2014-02-07 | 160 | 37 | 93 | todo |
+| 143 | [ths](143-ths/status.md) - Theros | 2013-09-27 | 211 | 45 | 139 | todo |
 | 141 | [ddl](141-ddl/status.md) - Duel Decks: Heroes vs. Monsters | 2013-09-06 | 6 | 2 | 3 | todo |
 | 140 | [m14](140-m14/status.md) - Magic 2014 | 2013-07-19 | 113 | 22 | 71 | todo |
-| 137 | [dgm](137-dgm/status.md) - Dragon's Maze | 2013-05-03 | 143 | 33 | 79 | todo |
-| 135 | [gtc](135-gtc/status.md) - Gatecrash | 2013-02-01 | 232 | 42 | 134 | todo |
-| 131 | [rtr](131-rtr/status.md) - Return to Ravnica | 2012-10-05 | 224 | 49 | 115 | todo |
+| 137 | [dgm](137-dgm/status.md) - Dragon's Maze | 2013-05-03 | 143 | 34 | 86 | todo |
+| 135 | [gtc](135-gtc/status.md) - Gatecrash | 2013-02-01 | 232 | 47 | 142 | todo |
+| 131 | [rtr](131-rtr/status.md) - Return to Ravnica | 2012-10-05 | 224 | 53 | 125 | todo |
 | 129 | [ddj](129-ddj/status.md) - Duel Decks: Izzet vs. Golgari | 2012-09-07 | 6 | 2 | 4 | todo |
-| 128 | [m13](128-m13/status.md) - Magic 2013 | 2012-07-13 | 107 | 17 | 69 | todo |
+| 128 | [m13](128-m13/status.md) - Magic 2013 | 2012-07-13 | 107 | 18 | 68 | todo |
 | 126 | [pc2](126-pc2/status.md) - Planechase 2012 | 2012-06-01 | 2 | 2 | 0 | todo |
-| 125 | [avr](125-avr/status.md) - Avacyn Restored | 2012-05-04 | 217 | 54 | 131 | todo |
-| 122 | [dka](122-dka/status.md) - Dark Ascension | 2012-02-03 | 154 | 41 | 89 | todo |
-| 118 | [isd](118-isd/status.md) - Innistrad | 2011-09-30 | 239 | 54 | 155 | todo |
+| 125 | [avr](125-avr/status.md) - Avacyn Restored | 2012-05-04 | 217 | 55 | 131 | todo |
+| 122 | [dka](122-dka/status.md) - Dark Ascension | 2012-02-03 | 154 | 43 | 89 | todo |
+| 118 | [isd](118-isd/status.md) - Innistrad | 2011-09-30 | 239 | 57 | 154 | todo |
 | 116 | [v11](116-v11/status.md) - From the Vault: Legends | 2011-08-26 | 1 | 0 | 1 | todo |
-| 115 | [m12](115-m12/status.md) - Magic 2012 | 2011-07-15 | 98 | 20 | 62 | todo |
-| 112 | [nph](112-nph/status.md) - New Phyrexia | 2011-05-13 | 162 | 45 | 89 | todo |
+| 115 | [m12](115-m12/status.md) - Magic 2012 | 2011-07-15 | 98 | 21 | 62 | todo |
+| 112 | [nph](112-nph/status.md) - New Phyrexia | 2011-05-13 | 162 | 45 | 90 | todo |
 | 110 | [mbs](110-mbs/status.md) - Mirrodin Besieged | 2011-02-04 | 142 | 25 | 101 | todo |
-| 107 | [som](107-som/status.md) - Scars of Mirrodin | 2010-10-01 | 215 | 45 | 137 | todo |
+| 107 | [som](107-som/status.md) - Scars of Mirrodin | 2010-10-01 | 215 | 47 | 139 | todo |
 | 105 | [ddf](105-ddf/status.md) - Duel Decks: Elspeth vs. Tezzeret | 2010-09-03 | 2 | 0 | 2 | todo |
 | 104 | [v10](104-v10/status.md) - From the Vault: Relics | 2010-08-27 | 1 | 0 | 1 | todo |
-| 103 | [m11](103-m11/status.md) - Magic 2011 | 2010-07-16 | 105 | 26 | 66 | todo |
+| 103 | [m11](103-m11/status.md) - Magic 2011 | 2010-07-16 | 105 | 27 | 66 | todo |
 | 101 | [arc](101-arc/status.md) - Archenemy | 2010-06-18 | 4 | 0 | 3 | todo |
-| 100 | [roe](100-roe/status.md) - Rise of the Eldrazi | 2010-04-23 | 220 | 56 | 132 | todo |
-| 98 | [wwk](098-wwk/status.md) - Worldwake | 2010-02-05 | 142 | 48 | 67 | todo |
-| 95 | [zen](095-zen/status.md) - Zendikar | 2009-10-02 | 220 | 50 | 132 | todo |
+| 100 | [roe](100-roe/status.md) - Rise of the Eldrazi | 2010-04-23 | 220 | 57 | 132 | todo |
+| 98 | [wwk](098-wwk/status.md) - Worldwake | 2010-02-05 | 142 | 56 | 69 | todo |
+| 95 | [zen](095-zen/status.md) - Zendikar | 2009-10-02 | 220 | 53 | 134 | todo |
 | 91 | [hop](091-hop/status.md) - Planechase | 2009-09-04 | 4 | 0 | 4 | todo |
 | 90 | [m10](090-m10/status.md) - Magic 2010 | 2009-07-17 | 111 | 31 | 71 | todo |
-| 88 | [arb](088-arb/status.md) - Alara Reborn | 2009-04-30 | 143 | 29 | 83 | todo |
-| 86 | [con](086-con/status.md) - Conflux | 2009-02-06 | 141 | 31 | 87 | todo |
-| 84 | [ala](084-ala/status.md) - Shards of Alara | 2008-10-03 | 223 | 39 | 149 | todo |
+| 88 | [arb](088-arb/status.md) - Alara Reborn | 2009-04-30 | 143 | 30 | 83 | todo |
+| 86 | [con](086-con/status.md) - Conflux | 2009-02-06 | 141 | 31 | 88 | todo |
+| 84 | [ala](084-ala/status.md) - Shards of Alara | 2008-10-03 | 223 | 40 | 151 | todo |
 | 83 | [drb](083-drb/status.md) - From the Vault: Dragons | 2008-08-29 | 1 | 0 | 1 | todo |
-| 82 | [eve](082-eve/status.md) - Eventide | 2008-07-25 | 179 | 27 | 120 | todo |
-| 80 | [shm](080-shm/status.md) - Shadowmoor | 2008-05-02 | 274 | 62 | 150 | todo |
-| 78 | [mor](078-mor/status.md) - Morningtide | 2008-02-01 | 148 | 29 | 67 | todo |
+| 82 | [eve](082-eve/status.md) - Eventide | 2008-07-25 | 179 | 32 | 120 | todo |
+| 80 | [shm](080-shm/status.md) - Shadowmoor | 2008-05-02 | 274 | 63 | 151 | todo |
+| 78 | [mor](078-mor/status.md) - Morningtide | 2008-02-01 | 148 | 30 | 67 | todo |
 | 76 | [lrw](076-lrw/status.md) - Lorwyn | 2007-10-12 | 280 | 65 | 163 | todo |
-| 74 | [fut](074-fut/status.md) - Future Sight | 2007-05-04 | 178 | 59 | 82 | todo |
-| 72 | [plc](072-plc/status.md) - Planar Chaos | 2007-02-02 | 162 | 38 | 88 | todo |
+| 74 | [fut](074-fut/status.md) - Future Sight | 2007-05-04 | 178 | 60 | 82 | todo |
+| 72 | [plc](072-plc/status.md) - Planar Chaos | 2007-02-02 | 162 | 41 | 88 | todo |
 | 278 | [tsb](278-tsb/status.md) - Time Spiral Timeshifted | 2006-10-06 | 1 | 0 | 0 | todo |
-| 70 | [tsp](070-tsp/status.md) - Time Spiral | 2006-10-06 | 268 | 70 | 141 | todo |
-| 68 | [csp](068-csp/status.md) - Coldsnap | 2006-07-21 | 143 | 37 | 68 | todo |
-| 66 | [dis](066-dis/status.md) - Dissension | 2006-05-05 | 169 | 47 | 77 | todo |
-| 64 | [gpt](064-gpt/status.md) - Guildpact | 2006-02-03 | 149 | 26 | 86 | todo |
+| 70 | [tsp](070-tsp/status.md) - Time Spiral | 2006-10-06 | 268 | 71 | 140 | todo |
+| 68 | [csp](068-csp/status.md) - Coldsnap | 2006-07-21 | 143 | 38 | 69 | todo |
+| 66 | [dis](066-dis/status.md) - Dissension | 2006-05-05 | 169 | 53 | 77 | todo |
+| 64 | [gpt](064-gpt/status.md) - Guildpact | 2006-02-03 | 149 | 30 | 93 | todo |
 | 61 | [rav](061-rav/status.md) - Ravnica: City of Guilds | 2005-10-07 | 247 | 60 | 130 | todo |
-| 59 | [psal](059-psal/status.md) - Salvat 2005 | 2005-08-22 | 79 | 8 | 59 | todo |
-| 58 | [sok](058-sok/status.md) - Saviors of Kamigawa | 2005-06-03 | 165 | 43 | 82 | todo |
+| 59 | [psal](059-psal/status.md) - Salvat 2005 | 2005-08-22 | 79 | 8 | 60 | todo |
+| 58 | [sok](058-sok/status.md) - Saviors of Kamigawa | 2005-06-03 | 165 | 45 | 82 | todo |
 | 56 | [bok](056-bok/status.md) - Betrayers of Kamigawa | 2005-02-04 | 159 | 26 | 85 | todo |
-| 53 | [chk](053-chk/status.md) - Champions of Kamigawa | 2004-10-01 | 283 | 58 | 159 | todo |
-| 51 | [5dn](051-5dn/status.md) - Fifth Dawn | 2004-06-04 | 162 | 30 | 104 | todo |
-| 49 | [dst](049-dst/status.md) - Darksteel | 2004-02-06 | 162 | 29 | 96 | todo |
-| 46 | [mrd](046-mrd/status.md) - Mirrodin | 2003-10-02 | 269 | 46 | 169 | todo |
+| 53 | [chk](053-chk/status.md) - Champions of Kamigawa | 2004-10-01 | 283 | 64 | 159 | todo |
+| 51 | [5dn](051-5dn/status.md) - Fifth Dawn | 2004-06-04 | 162 | 31 | 104 | todo |
+| 49 | [dst](049-dst/status.md) - Darksteel | 2004-02-06 | 162 | 31 | 96 | todo |
+| 46 | [mrd](046-mrd/status.md) - Mirrodin | 2003-10-02 | 269 | 52 | 168 | todo |
 | 277 | [8ed](277-8ed/status.md) - Eighth Edition | 2003-07-28 | 1 | 0 | 1 | todo |
 | 44 | [scg](044-scg/status.md) - Scourge | 2003-05-26 | 24 | 11 | 11 | todo |
 | 42 | [lgn](042-lgn/status.md) - Legions | 2003-02-03 | 17 | 6 | 10 | todo |
 | 39 | [ons](039-ons/status.md) - Onslaught | 2002-10-07 | 58 | 20 | 35 | todo |
 | 38 | [jud](038-jud/status.md) - Judgment | 2002-05-27 | 20 | 5 | 11 | todo |
 | 37 | [tor](037-tor/status.md) - Torment | 2002-02-04 | 14 | 5 | 8 | todo |
-| 36 | [ody](036-ody/status.md) - Odyssey | 2001-10-01 | 51 | 13 | 32 | todo |
+| 36 | [ody](036-ody/status.md) - Odyssey | 2001-10-01 | 51 | 14 | 32 | todo |
 | 35 | [apc](035-apc/status.md) - Apocalypse | 2001-06-04 | 22 | 7 | 14 | todo |
 | 34 | [pls](034-pls/status.md) - Planeshift | 2001-02-05 | 21 | 5 | 12 | todo |
 | 33 | [inv](033-inv/status.md) - Invasion | 2000-10-02 | 44 | 7 | 34 | todo |
@@ -174,79 +174,79 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
 | 25 | [ulg](025-ulg/status.md) - Urza's Legacy | 1999-02-15 | 28 | 3 | 24 | todo |
 | 23 | [usg](023-usg/status.md) - Urza's Saga | 1998-10-12 | 66 | 23 | 36 | todo |
 | 22 | [p02](022-p02/status.md) - Portal Second Age | 1998-06-24 | 26 | 3 | 21 | todo |
-| 21 | [exo](021-exo/status.md) - Exodus | 1998-06-15 | 23 | 6 | 14 | todo |
+| 21 | [exo](021-exo/status.md) - Exodus | 1998-06-15 | 23 | 7 | 14 | todo |
 | 20 | [sth](020-sth/status.md) - Stronghold | 1998-03-02 | 31 | 13 | 11 | todo |
 | 18 | [tmp](018-tmp/status.md) - Tempest | 1997-10-14 | 57 | 16 | 33 | todo |
 | 17 | [wth](017-wth/status.md) - Weatherlight | 1997-06-09 | 25 | 3 | 16 | todo |
-| 16 | [por](016-por/status.md) - Portal | 1997-05-01 | 39 | 7 | 25 | todo |
+| 16 | [por](016-por/status.md) - Portal | 1997-05-01 | 39 | 8 | 25 | todo |
 | 15 | [vis](015-vis/status.md) - Visions | 1997-02-03 | 24 | 5 | 16 | todo |
 | 13 | [mgb](013-mgb/status.md) - Multiverse Gift Box | 1996-11-01 | 3 | 0 | 2 | todo |
 | 12 | [mir](012-mir/status.md) - Mirage | 1996-10-08 | 31 | 3 | 22 | todo |
 | 11 | [all](011-all/status.md) - Alliances | 1996-06-10 | 9 | 2 | 7 | todo |
 | 10 | [hml](010-hml/status.md) - Homelands | 1995-10-01 | 8 | 2 | 5 | todo |
-| 9 | [ice](009-ice/status.md) - Ice Age | 1995-06-03 | 35 | 13 | 18 | todo |
+| 9 | [ice](009-ice/status.md) - Ice Age | 1995-06-03 | 35 | 14 | 17 | todo |
 | 7 | [fem](007-fem/status.md) - Fallen Empires | 1994-11-01 | 6 | 2 | 4 | todo |
 | 6 | [drk](006-drk/status.md) - The Dark | 1994-08-01 | 20 | 6 | 11 | todo |
 | 5 | [leg](005-leg/status.md) - Legends | 1994-06-01 | 29 | 8 | 18 | todo |
 | 4 | [atq](004-atq/status.md) - Antiquities | 1994-03-04 | 20 | 6 | 10 | todo |
 | 3 | [arn](003-arn/status.md) - Arabian Nights | 1993-12-17 | 13 | 3 | 8 | todo |
 | 2 | [leb](002-leb/status.md) - Limited Edition Beta | 1993-10-04 | 1 | 0 | 1 | todo |
-| 1 | [lea](001-lea/status.md) - Limited Edition Alpha | 1993-08-05 | 116 | 43 | 63 | todo |
+| 1 | [lea](001-lea/status.md) - Limited Edition Alpha | 1993-08-05 | 116 | 44 | 62 | todo |
 
 ## Missing mechanics
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Choose one | 50 | Open the Omenpaths, Twisted Reflection, Archmage's Charm, Shatter Assumptions, Insidious Will | 5dn, acr, aer, afr, ala, blb, csp, dft, dmu, dsk, dst, dtk, eld, fin, frf, fut, gtc, hou, khm, kld, ktk, m19, m20, m21, mh1, mid, mkm, mom, mrd, neo, plc, rtr, snc, sok, spm, stx, thb |
-| exalted | 30 | Qasali Pridemage, Sigiled Behemoth, Ardent Plea, Ethercaste Knight, Goblin Champion | ala, arb, con, m13, mh1, mh2 |
-| soulshift | 25 | Harbinger of Spring, Moonlit Strider, Body of Jukai, Pus Kami, Forked-Branch Garami | bok, chk, sok |
-| Landfall | 17 | Reckless Pyrosurfer, Springheart Nantuko, Territory Culler, Tifa Lockhart, Emeria Shepherd | bfz, fin, mh3, ogw, tla, wwk, zen, znr |
+| Choose one | 46 | What Must Be Done, Storyweave, Debt to the Kami, Crash and Burn, Doomfall | 5dn, acr, aer, afr, blb, csp, dft, dmu, dsk, dst, dtk, eld, fin, frf, fut, gtc, hou, khm, kld, ktk, m19, m20, m21, mh1, mid, mkm, mom, mrd, neo, plc, rtr, snc, sok, spm, stx, thb |
+| exalted | 30 | Waveskimmer Aven, Dawnray Archer, Akrasan Squire, Battlegrace Angel, Angelic Benediction | ala, arb, con, m13, mh1, mh2 |
+| soulshift | 25 | Elder Pine of Jukai, Nightsoil Kami, Deathknell Kami, Torii Watchward, Promised Kannushi | bok, chk, sok |
+| Landfall | 16 | Reckless Pyrosurfer, Springheart Nantuko, Territory Culler, Emeria Shepherd, Ob Nixilis, the Fallen | bfz, fin, mh3, ogw, tla, wwk, zen, znr |
 | Eerie | 14 | Optimistic Scavenger, Fear of Infinity, Scrabbling Skullcrab, Dashing Bloodsucker, Erratic Apparition | dsk |
-| fabricate | 14 | Marionette Apprentice, Visionary Augmenter, Angel of Invention, Maulfist Squad, Ambitious Aetherborn | kld, mh3 |
-| unleash | 13 | Grim Roustabout, Chaos Imps, Carnival Hellsteed, Spawn of Rix Maadi, Splatter Thug | dgm, rtr |
 | Kinship | 12 | Pyroclast Consul, Winnower Patrol, Sensation Gorger, Waterspout Weavers, Leaf-Crowned Elder | mor |
-| evolve | 12 | Gluttonous Slug, Battering Krasis, Scurry Oak, Adaptive Snapjaw, Shambleshark | dgm, gtc, mh1, mh2 |
-| cipher | 11 | Hidden Strings, Paranoid Delusions, Stolen Identity, Last Thoughts, Voidwalk | dgm, gtc |
+| evolve | 12 | Gluttonous Slug, Battering Krasis, Adaptive Snapjaw, Shambleshark, Crocanura | dgm, gtc, mh1, mh2 |
 | reinforce | 11 | Fowl Strike, Brighthearth Banneret, Burrenton Bombardier, Swell of Courage, Hunting Triad | mh2, mh3, mor |
-| buyback | 10 | Recruit the Worthy, Sprout Swarm, Mystic Speculation, Haze of Rage, Elvish Fury | fut, mh1, tmp, tsp |
-| jump | 10 | Direct Current, Maximize Altitude, Quasiduplicate, Beacon Bolt, Gravitic Punch | grn, mh2 |
-| Inspired | 9 | Pheres-Band Raiders, Satyr Nyx-Smith, Aerie Worshippers, Forlorn Pseudamma, Arbiter of the Ideal | bng, jou |
+| buyback | 10 | Elvish Fury, Whispers of the Muse, Spell Burst, Reiterate, Demonic Collusion | fut, mh1, tmp, tsp |
+| Inspired | 9 | King Macar, the Gold-Cursed, Disciple of Deceit, Daring Thief, Pheres-Band Raiders, Satyr Nyx-Smith | bng, jou |
 | when ~ enters, incubate N. | 9 | Phyrexian Awakening, Marauding Dreadship, Corruption of Towashi, Blighted Burgeoning, Converter Beast | mom |
-| Delirium | 8 | Geist of the Lonely Vigil, Mournwillow, Crop Sigil, Mindwrack Demon, Omnivorous Flytrap | ddq, dsk, emn |
 | afflict | 8 | Wildfire Eternal, Merciless Eternal, Frontline Devastator, Eternal of Harsh Truths, Spellweaver Eternal | hou |
+| Delirium | 7 | Mindwrack Demon, Omnivorous Flytrap, Fear of Burning Alive, Let's Play a Game, Geist of the Lonely Vigil | ddq, dsk, emn |
 | Radiance | 7 | Incite Hysteria, Wojek Siren, Surge of Zeal, Rally the Righteous, Bathe in Light | psal, rav |
-| Strive | 7 | Polymorphous Rush, Silence the Believers, Blinding Flare, Colossal Heroics, Twinflame | jou |
 | recover | 7 | Grim Harvest, Resize, Icefall, Sun's Bounty, Garza's Assassin | csp |
 | training | 7 | Cloaked Cadet, Hopeful Initiate, Apprentice Sharpshooter, Gryffwing Cavalry, Parish-Blade Trainee | vow |
-| Chroma | 6 | Springjack Shepherd, Light from Within, Umbra Stalker, Fiery Bombardment, Primalcrux | eve |
-| Corrupted | 6 | The Seedcore, Zealot's Conviction, Phyrexian Atlas, Bonepicker Skirge, Goliath Hatchery | one |
-| haunt | 6 | Orzhov Pontiff, Orzhov Euthanist, Blind Hunter, Absolver Thrull, Belfry Spirit | gpt |
+| Strive | 6 | Polymorphous Rush, Silence the Believers, Blinding Flare, Colossal Heroics, Harness by Force | jou |
 | Celebration | 5 | Grand Ball Guest, Goddric, Cloaked Reveler, Armory Mice, Tuinvale Guide, Gallant Pie-Wielder | woe |
-| Choose two | 5 | Kaya's Guile, Quandrix Command, Kayla's Command, Gix's Command, Urza's Command | bro, mh1, stx |
-| Exhaust | 5 | Winter, Cursed Rider, Mindspring Merfolk, Spire Mechcycle, Jeong Jeong, the Deserter, Mai, Jaded Edge | dft, tla |
+| Corrupted | 5 | The Seedcore, Zealot's Conviction, Phyrexian Atlas, Bonepicker Skirge, Apostle of Invasion | one |
 | at the beginning of the end step, if there are two or more ki counters on ~, you may flip it. | 5 | Faithful Squire // Kaiso, Memory of Loyalty, Cunning Bandit // Azamuki, Treachery Incarnate, Budoka Pupil // Ichiga, Who Topples Oaks, Callow Jushi // Jaraku the Interloper, Hired Muscle // Scarmaker | bok |
-| attacking creatures you control get +N/+N. | 5 | Goblin Oriflamme, Instigator Gang // Wildblood Pack, War Horn, Nobilis of War, Warded Battlements | eve, isd, m21, mh1, ori |
+| attacking creatures you control get +N/+N. | 5 | Instigator Gang // Wildblood Pack, Goblin Oriflamme, Warded Battlements, War Horn, Nobilis of War | eve, isd, m21, mh1, ori |
+| incubate | 5 | Sunder the Gateway, Searing Barb, Glissa, Herald of Predation, Assimilate Essence, Traumatic Revelation | mom |
 | read ahead | 5 | The Cruelty of Gix, The Elder Dragon War, The Phasing of Zhalfir, The Weatherseed Treaty, Love Song of Night and Day | dmu |
 | ripple | 5 | Surging Might, Surging Aether, Surging Sentinels, Surging Flame, Surging Dementia | csp |
 | when ~ enters, bolster N. | 5 | Sandcrafter Mage, Sandsteppe Scavenger, Aven Tactician, Sandsteppe Mastodon, Elite Scaleguard | dtk, frf |
 | when ~ is turned face up, put a +N/+N counter on each other dragon creature you control. | 5 | Stormwing Dragon, Shieldhide Dragon, Herdchaser Dragon, Belltoll Dragon, Acid-Spewer Dragon | dtk |
 | Alliance | 4 | Venom Connoisseur, Rumor Gatherer, Devilish Valet, Sizzling Soloist | snc |
-| Imprint | 4 | Summoner's Egg, Thought Prison, Clone Shell, Panoptic Mirror | 5dn, dst, mrd, som |
+| Choose two | 4 | Quandrix Command, Kaya's Guile, Kayla's Command, Gix's Command | bro, mh1, stx |
+| Exhaust | 4 | Winter, Cursed Rider, Mindspring Merfolk, Jeong Jeong, the Deserter, Mai, Jaded Edge | dft, tla |
+| Imprint | 4 | Thought Prison, Summoner's Egg, Panoptic Mirror, Clone Shell | 5dn, dst, mrd, som |
 | Survival | 4 | Reluctant Role Model, Rip, Spawn Hunter, Glimmer Seeker, Acrobatic Cheerleader | dsk |
-| explore | 4 | Deadeye Tracker, Deepfathom Echo, Glowcap Lantern, Defossilize | lci, xln |
+| explore | 4 | Deepfathom Echo, Glowcap Lantern, Defossilize, Deadeye Tracker | lci, xln |
 | forage | 4 | Curious Forager, Camellia, the Seedmiser, Thornvault Forager, Feed the Cycle | blb |
-| incubate | 4 | Sunder the Gateway, Searing Barb, Glissa, Herald of Predation, Assimilate Essence | mom |
-| until end of turn, target creature gains "..." | 4 | Feign Death, Retraction Helix, Banishing Knack, Undying Malice | afr, bng, eve, vow |
+| until end of turn, target creature gains "..." | 4 | Undying Malice, Feign Death, Retraction Helix, Banishing Knack | afr, bng, eve, vow |
 | waterbend | 4 | Benevolent River Spirit, Foggy Swamp Visions, Yue, the Moon Spirit, North Pole Patrol | tla |
 | when ~ enters, manifest dread, then attach ~ to that creature. | 4 | Dissection Tools, Conductive Machete, Cursed Windbreaker, Killer's Mask | dsk |
-| when ~ enters, sacrifice it unless you pay {M}. | 4 | Transguild Promenade, Gateway Plaza, Archway Commons, Rupture Spire | con, grn, rtr, stx |
+| when ~ enters, sacrifice it unless you pay {M}. | 4 | Archway Commons, Gateway Plaza, Rupture Spire, Transguild Promenade | con, grn, rtr, stx |
 | whenever ~ attacks or blocks, remove a +N/+N counter from it at end of combat. | 4 | Clockwork Dragon, Clockwork Condor, Clockwork Beetle, Clockwork Vorrac | mrd |
-| {M}: regenerate enchanted creature. | 4 | Regeneration, Strands of Undeath, Blessing of Leeches, Serpent Skin | bok, chk, lea, rav |
-| {M}: target creature can't block ~ ~. | 4 | Screeching Griffin, Kozilek's Pathfinder, Shrewd Hatchling, Spin Engine | eve, mbs, ogw, rav |
-| ~ has first strike as long as it's attacking. | 4 | Voldaren Stinger, Kor Scythemaster, Thorned Moloch, Blood Petal Celebrant | hou, mid, ogw, vow |
-| Boast | 3 | Eradicator Valkyrie, Arni Brokenbrow, Varragoth, Bloodsky Sire | khm |
-| Domain | 3 | Llanowar Greenwidow, Territorial Maro, Manaforce Mace | con, dmu |
-| Heroic | 3 | Hero of Leina Tower, Anthousa, Setessan Hero, Artisan of Forms | bng, ths |
+| {M}: regenerate enchanted creature. | 4 | Regeneration, Blessing of Leeches, Serpent Skin, Strands of Undeath | bok, chk, lea, rav |
+| {M}: target creature can't block ~ ~. | 4 | Spin Engine, Screeching Griffin, Kozilek's Pathfinder, Shrewd Hatchling | eve, mbs, ogw, rav |
+| ~ has first strike as long as it's attacking. | 4 | Thorned Moloch, Voldaren Stinger, Blood Petal Celebrant, Kor Scythemaster | hou, mid, ogw, vow |
+| Heroic | 3 | Anthousa, Setessan Hero, Artisan of Forms, Hero of Leina Tower | bng, ths |
+| Magecraft | 3 | Prismari Apprentice, Prismari Pledgemage, Elemental Expressionist | stx |
+| Raid | 3 | Strongbox Raider, Admiral's Order, Bellowing Saddlebrute | fdn, ktk, rix |
+| Solved | 3 | Case of the Trampled Garden, Case of the Burning Masks, Case of the Gorgon's Kiss | mkm |
+| endure | 3 | Warden of the Grove, Anafenza, Unyielding Lineage, Descendant of Storms | tdm |
+| instant and sorcery spells you control have lifelink. | 3 | Radiant Scrollwielder, Soulfire Grand Master, Heartflame Duelist // Heartflame Slash | frf, stx, woe |
+| offering | 3 | Patron of the Akki, Patron of the Moon, Patron of the Kitsune | bok |
+| triple | 3 | City on Fire, Fiery Emancipation, Tifa's Limit Break | fin, m21, mom |
+| when ~ enters, detain target creature an opponent controls. | 3 | Azorius Arrester, Isperia's Skywatch, Soulsworn Spirit | rtr |
 
 ## Notes
 

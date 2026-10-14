@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 67 | 26.1% |
-| Works (untested) | 138 | 53.7% |
+| Tested | 69 | 26.8% |
+| Works (untested) | 139 | 54.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 52 | 20.2% |
+| Not working | 49 | 19.1% |
 
 ## Cards needing work
 
@@ -28,9 +28,7 @@
 |---|---|---|---|---|---|
 | Acererak the Archlich | silent | Whenever Acererak attacks, for each opponent, you create a 2/2 black Zombie creature token unless that player sacrifices a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Barrowin of Clan Undurr | silent | Whenever Barrowin attacks, return up to one creature card with mana value 3 or less from your graveyard to the battlefield if you've completed a dungeon. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Blink Dog | silent | Teleport — {3}{W}: This creature phases out. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blue Dragon | silent | Lightning Breath — When this creature enters, until your next turn, target creature an opponent controls gets -3/-0, up to one other target creature gets -2/-0, | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Check for Traps | silent | Target opponent reveals their hand. You choose a nonland card from it. Exile that card. If an instant card or a card with flash is exiled this way, they lose 1  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cloister Gargoyle | silent | As long as you've completed a dungeon, this creature gets +3/+0 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Contact Other Plane | silent | Roll a d20. 1—9 \| Draw two cards. 10—19 \| Scry 2, then draw two cards. 20 \| Scry 3, then draw three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dancing Sword | silent | When equipped creature dies, you may have this Equipment become a 2/1 Construct artifact creature with flying and ward {1}. If you do, it isn't an Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -45,7 +43,6 @@
 | Grand Master of Flowers | silent | +1: Search your library and/or graveyard for a card named Monk of the Open Hand, reveal it, and put it into your hand. If you search your library this way, shuf | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grazilaxx, Illithid Scholar | silent | Whenever a creature you control becomes blocked, you may return it to its owner's hand. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Guardian of Faith | silent | When this creature enters, any number of other target creatures you control phase out. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hobgoblin Bandit Lord | silent | {R}, {T}: This creature deals damage equal to the number of Goblins that entered the battlefield under your control this turn to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Icingdeath, Frost Tyrant | silent | When Icingdeath, Frost Tyrant dies, create Icingdeath, Frost Tongue, a legendary white Equipment artifact token with "Equipped creature gets +2/+0," "Whenever e | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kick in the Door | silent | Put a +1/+1 counter on target creature. That creature gains haste until end of turn and can't be blocked by Walls this turn. Venture into the dungeon. (Enter th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Long Rest | silent | Return X target cards with different mana values from your graveyard to your hand. If eight or more cards were returned to your hand this way, your life total b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -62,7 +59,7 @@
 | Werewolf Pack Leader | silent | {3}{G}: Until end of turn, this creature has base power and toughness 5/3, gains trample, and isn't a Human. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wight | silent | Life Drain — Whenever a creature dealt damage by this creature this turn dies, create a tapped 2/2 black Zombie creature token and exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Xanathar, Guild Kingpin | silent | At the beginning of your upkeep, choose target opponent. Until end of turn, that player can't cast spells, you may look at the top card of their library any tim | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Bruenor Battlehammer | notice | Each creature you control gets +2/+0 for each Equipment attached to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Check for Traps | notice | Target opponent reveals their hand. You choose a nonland card from it. Exile that card. If an instant card or a card with flash is exiled this way, they lose 1  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Compelled Duel | notice | Target creature gets +3/+3 until end of turn and must be blocked this turn if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Divine Smite | notice | Target creature or planeswalker an opponent controls phases out. If that permanent is black, exile it instead. (If it phases out, treat it and anything attached | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dragon's Fire | notice | As an additional cost to cast this spell, you may reveal a Dragon card from your hand or choose a Dragon you control. Dragon's Fire deals 3 damage to target cre | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -87,6 +84,7 @@
 | Baleful Beholder | handled | When this creature enters, choose one — • Antimagic Cone — Each opponent sacrifices an enchantment of their choice. • Fear Ray — Creatures you control gain mena | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Battle Cry Goblin | handled | {1}{R}: Goblins you control get +1/+0 and gain haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Black Dragon | handled | Acid Breath — When this creature enters, target creature an opponent controls gets -3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Blink Dog | handled | Teleport — {3}{W}: This creature phases out. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Brazen Dwarf | handled | Whenever you roll one or more dice, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bulette | handled | At the beginning of your end step, if a creature died this turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bull's Strength | handled | Target creature gets +2/+2 and gains trample until end of turn. Untap it. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -220,7 +218,7 @@
 ## Fully supported
 
 <details>
-<summary>67 cards</summary>
+<summary>69 cards</summary>
 
 - Aberrant Mind Sorcerer
 - Asmodeus the Archfiend
@@ -228,6 +226,7 @@
 - Barbarian Class
 - Bard Class
 - Boots of Speed
+- Bruenor Battlehammer
 - Burning Hands
 - Chaos Channeler
 - Choose Your Weapon
@@ -250,6 +249,7 @@
 - Hand of Vecna
 - Hired Hexblade
 - Hive of the Eye Tyrant
+- Hobgoblin Bandit Lord
 - Instrument of the Bards
 - Iron Golem
 - Kalain, Reclusive Painter
@@ -304,7 +304,6 @@
 | Lightning Breath | 1 | Blue Dragon | afr |
 | Pack tactics | 1 | Minion of the Mighty | afr |
 | Rejuvenation | 1 | Flameskull | afr |
-| Teleport | 1 | Blink Dog | afr |
 | Tie Up | 1 | Fifty Feet of Rope | afr |
 | +N: search your library and/or graveyard for a card named monk of the open hand, reveal it, and put it into your hand. if you search your library ~, shuffle. | 1 | Grand Master of Flowers | afr |
 | as an additional cost to cast ~, you may reveal a dragon card from your hand or choose a dragon you control. ~ deals N damage to target creature or planeswalker | 1 | Dragon's Fire | afr |
@@ -314,7 +313,6 @@
 | choose one. until end of turn, target creature you control has that base power and toughness, becomes that creature type, and gains that ability. • N/N turtle w | 1 | Wild Shape | afr |
 | choose target creature an opponent controls, then roll a dN. N—N \| return it to its owner's hand. N—N \| its owner puts it on their choice of the top or bottom | 1 | Power of Persuasion | afr |
 | destroy target non-angel, non-demon, non-devil, non-dragon creature. | 1 | Power Word Kill | afr |
-| each creature you control gets +N/+N for each equipment attached to it. | 1 | Bruenor Battlehammer | afr |
 | each skeleton you control has trample, attacks each combat if able, and gets +N/+N, where N is the number of other skeletons you control. | 1 | Skeletal Swarming | afr |
 | other creatures you control get +N/+N as long as you've completed a dungeon. | 1 | Nadaar, Selfless Paladin | afr |
 | put a +N/+N counter on target creature. that creature gains haste until end of turn and can't be blocked by walls ~. venture into the dungeon. (enter the first  | 1 | Kick in the Door | afr |
@@ -337,7 +335,6 @@
 | whenever you complete a dungeon, create a N/N green wolf creature token. | 1 | Varis, Silverymoon Ranger | afr |
 | whenever you complete a dungeon, you may return ~ from your graveyard to your hand. | 1 | Dungeon Crawler | afr |
 | {M}, exile ~ and artifacts you control named eye of vecna and hand of vecna: create vecna, a legendary N/N black zombie god creature token with indestructible a | 1 | The Book of Vile Darkness | afr |
-| {M}, {M}: ~ deals damage equal to the number of goblins that entered the battlefield under your control ~ to any target. | 1 | Hobgoblin Bandit Lord | afr |
 | {M}{M}: until end of turn, ~ has base power and toughness N/N, gains trample, and isn't a human. | 1 | Werewolf Pack Leader | afr |
 | {M}{M}{M}, {M}, exile ~: put an enlightened counter on target angel. it gains "..." activate only as a sorcery. | 1 | The Book of Exalted Deeds | afr |
 | {M}{M}{M}: double targ nar's power and toughness until end of turn. | 1 | Targ Nar, Demon-Fang Gnoll | afr |
