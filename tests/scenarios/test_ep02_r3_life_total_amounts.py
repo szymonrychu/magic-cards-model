@@ -827,3 +827,55 @@ def test_kaito_without_the_return_keeps_the_one_activation_per_turn():
     scenario.activate(kaito, index=1)
     scenario.pass_until_resolved()
     assert scenario.game.why_cannot_activate(kaito, 1) is not None
+
+
+# --------------------------------------------------------------------------
+# "Draw a card, then exile a card from your hand. If cards with five or more different mana
+# values are exiled with Azor's Gateway, you gain 5 life, untap Azor's Gateway, and transform
+# it." - CR 607.2a, 202.3, 701.9? (exile), 712.8 (transform)
+# --------------------------------------------------------------------------
+
+
+def _azors_gateway(library):
+    scenario = _main(
+        _build(["Azor's Gateway // Sanctum of the Sun"] + ["Plains"] * 6, library=library)
+    )
+    gateway = next(c for c in scenario.game.battlefield if c.name.startswith("Azor's Gateway"))
+    return scenario, gateway
+
+
+def _activate_gateway(scenario, gateway):
+    gateway.tapped = False
+    scenario.activate(gateway, *scenario.untapped_sources("Plains")[:1], index=0)
+    scenario.pass_until_resolved()
+
+
+def test_azors_gateway_draws_then_exiles_a_card_from_hand_each_activation():
+    scenario, gateway = _azors_gateway(["Lightning Bolt", "Island"] + FOREST10)
+    _activate_gateway(scenario, gateway)
+    assert scenario.player("alice").hand == []  # drew the Bolt, exiled it
+    assert [c.name for c in scenario.game.cards_exiled_with(gateway.id, gateway.zone_change_stamp)] == [
+        "Lightning Bolt"
+    ]
+    assert not gateway.transformed
+
+
+def test_azors_gateway_with_five_different_mana_values_gains_life_untaps_and_transforms():
+    library = ["Island", "Lightning Bolt", "Grizzly Bears", "Hill Giant", "Serra Angel"] + FOREST10
+    scenario, gateway = _azors_gateway(library)
+    for _ in range(4):
+        _activate_gateway(scenario, gateway)
+    assert not gateway.transformed
+    assert _life(scenario) == 20
+    _activate_gateway(scenario, gateway)
+    assert gateway.transformed
+    assert not gateway.tapped
+    assert _life(scenario) == 25
+
+
+def test_azors_gateway_repeated_mana_values_do_not_count_twice():
+    scenario, gateway = _azors_gateway(["Island"] * 6 + FOREST10)
+    for _ in range(5):
+        _activate_gateway(scenario, gateway)
+    assert not gateway.transformed
+    assert _life(scenario) == 20

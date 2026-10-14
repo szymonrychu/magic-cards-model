@@ -788,6 +788,84 @@ def _parse_return_one_of_them_then_loyalty_twice(
 
 
 # --------------------------------------------------------------------------
+# "Draw a card, then exile a card from your hand. If cards with five or more different mana
+# values are exiled with <this>, you gain 5 life, untap <this>, and transform it." (Azor's Gateway)
+# --------------------------------------------------------------------------
+
+_DRAW_EXILE_FROM_HAND_TRANSFORM_RE = re.compile(
+    rf"^draw a card, then exile a card from your hand\. if cards with (?P<n>{COUNT}) or more "
+    r"different mana values are exiled with (?P<name>[^,]+), you gain (?P<life>"
+    rf"{COUNT}) life, untap (?P<untap>[^,]+), and transform it\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_draw_exile_from_hand_then_transform_on_different_values(
+    effect_text: str,
+) -> "Callable[..., None] | None":
+    """The draw, then a card of the controller's choice from their hand exiled *with* this
+    permanent (CR 607.2a: `ExileMarker.LINKED`, the object and its incarnation recorded); then,
+    if the cards exiled with it have N or more different mana values (CR 202.3), the controller
+    gains the life, the permanent untaps and transforms (CR 701.27a). The count is read after the
+    new card is linked, since the instruction is followed in order (CR 608.2c)."""
+    if "different mana values" not in effect_text.lower():
+        return None
+    match = _DRAW_EXILE_FROM_HAND_TRANSFORM_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+    needed = parse_count(match.group("n"))
+    life = parse_count(match.group("life"))
+    if needed is None or life is None:
+        return None
+
+    def effect(game: "Game", ability: "AbilityOnStack") -> None:
+        from ..models.card_state import ExileAnnotation, ExileMarker
+        from .decisions import Decision, DecisionKind, source_id_of
+
+        controller = game.player(game.controller_of(ability).username)
+        source = ability.source(game)
+        game.draw_cards(controller.username, 1)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        hand = list(controller.hand)
+        if hand:
+            chosen = hand[0]
+            if len(hand) > 1:
+                picked = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=controller.username,
+                        prompt="exile a card from your hand",
+                        source=ability.source_name,
+                        amount=1,
+                        exact=True,
+                        cards=tuple(card.id for card in hand),
+                        source_id=source_id_of(ability),
+                    )
+                )
+                by_id = {card.id: card for card in hand}
+                chosen = next((by_id[card_id] for card_id in picked if card_id in by_id), chosen)
+            game.exile_permanent(chosen)
+            if chosen.zone is Zone.EXILE:
+                chosen.exile_annotation = ExileAnnotation(
+                    marker=ExileMarker.LINKED,
+                    owner=chosen.owner,
+                    turn_exiled=game.turn.turns_taken if game.turn is not None else None,
+                    linked_permanent_id=source.id,
+                    linked_permanent_stamp=source.zone_change_stamp,
+                )
+        exiled = game.cards_exiled_with(source.id, source.zone_change_stamp)
+        if len({int(card.card.cmc) for card in exiled}) < needed:
+            return
+        game.gain_life(controller, life)
+        source.untap()
+        source.transform()
+
+    return effect
+
+
+# --------------------------------------------------------------------------
 # What a revealed card is worth: "you draw cards equal to its power and you gain life equal to
 # its toughness" (Nissa's Revelation)
 # --------------------------------------------------------------------------
