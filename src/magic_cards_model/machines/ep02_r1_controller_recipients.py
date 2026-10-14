@@ -26,6 +26,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.player import Player
 from ..models.zone import Zone
@@ -178,7 +180,7 @@ def event_controller_clause(clause: str) -> Callable[["Game", Any], None] | None
     the trigger's event, or `None`."""
     from .decisions import source_id_of
 
-    match = _RECIPIENT_RE.fullmatch(" ".join(clause.strip().rstrip(".").split()))
+    match = _RECIPIENT_RE.fullmatch(collapsed(clause.strip().rstrip(".")))
     if match is None:
         return None
     predicate = parse_predicate(match.group("predicate"))
@@ -222,7 +224,7 @@ def target_controller_effect(text: str, *, for_spell: bool) -> Callable[["Game",
     from .effects import parse_mixed_effect, parse_mixed_effect_for_spell
     from .effects.text import _plain_resolution_sentences, _strip_non_effect_preamble
 
-    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(" ".join(text.split())))
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(collapsed(text)))
     split = next(
         (i for i, sentence in enumerate(sentences) if _RECIPIENT_RE.match(normalize(sentence))),
         None,
@@ -335,7 +337,7 @@ def attach_may_then_rider_effect(text: str) -> Callable[["Game", Any], None] | N
     parsers about "target creature", and CR 509.1c's "must be blocked this turn
     if able" granted as the printed "must be blocked if able" line until end of
     turn (CR 611.2a)."""
-    match = _ATTACH_MAY_THEN_RIDER_RE.fullmatch(" ".join(text.strip().split()))
+    match = _ATTACH_MAY_THEN_RIDER_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     from .effects import parse_mixed_effect

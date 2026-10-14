@@ -25,6 +25,8 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..data.subtypes import subtype_vocabulary
 from ..models.card import Type
 from ..models.card_state import CardState
@@ -125,7 +127,7 @@ def parse_description(text: str) -> Description | None:
     """`text` as a `Description`, or `None` when any word of its noun is not a
     card type or a subtype (a qualifier this does not read is never guessed
     at)."""
-    match = _DESCRIPTION_RE.fullmatch(" ".join(text.split()))
+    match = _DESCRIPTION_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     words = [w for w in re.split(r",\s*(?:or\s+)?|\s+or\s+|\s+and/or\s+", match.group("noun")) if w]
@@ -169,7 +171,7 @@ _YOU_PUT_COUNTERS_CONDITION = re.compile(
 
 
 def _you_put_counters(condition: str) -> tuple[str, Description] | None:
-    match = _YOU_PUT_COUNTERS_CONDITION.fullmatch(" ".join(condition.split()))
+    match = _YOU_PUT_COUNTERS_CONDITION.fullmatch(collapsed(condition))
     if match is None:
         return None
     description = parse_description(match.group("description"))
@@ -190,7 +192,7 @@ _ONE_OR_MORE_DEAL_DAMAGE_CONDITION = re.compile(
 
 
 def _deal_damage(condition: str) -> tuple[Description, bool] | None:
-    match = _ONE_OR_MORE_DEAL_DAMAGE_CONDITION.fullmatch(" ".join(condition.split()))
+    match = _ONE_OR_MORE_DEAL_DAMAGE_CONDITION.fullmatch(collapsed(condition))
     if match is None:
         return None
     description = parse_description(match.group("description"))
@@ -405,7 +407,7 @@ def parse_static_layer_sentence(sentence: str):  # noqa: ANN201 - EffectBuilder
     """A static counter sentence as a `machines/layers` `EffectBuilder`, or
     `None`. Asked first by `machines/layers._parse_static_layer_sentence`."""
 
-    text = " ".join(sentence.split())
+    text = collapsed(sentence)
     match = _COUNTER_THRESHOLD_ANTHEM_RE.fullmatch(text)
     if match is not None:
         threshold = parse_count(match.group("q"), article=False)
@@ -520,7 +522,7 @@ def counter_history_count(phrase: str):  # noqa: ANN201 - (game, controller) -> 
     Counted off `Game.counters_put_this_turn`: every counter of that kind
     the controller put (CR 122.6a) on a permanent of that type, judged - type
     and control both - as it was when the counters landed."""
-    match = _FOR_EACH_COUNTER_PUT_THIS_TURN_RE.fullmatch(" ".join(phrase.split()))
+    match = _FOR_EACH_COUNTER_PUT_THIS_TURN_RE.fullmatch(collapsed(phrase))
     if match is None:
         return None
     kind = match.group("kind").lower()
@@ -1576,7 +1578,7 @@ _WHOLE_TEXT_READERS = (
 
 def parse_resolution_text(text: str, *, for_spell: bool = False):  # noqa: ANN201
     """One of this module's whole-text resolution shapes, or `None`."""
-    whole = " ".join(text.split())
+    whole = collapsed(text)
     for reader in _WHOLE_TEXT_READERS:
         effect = reader(whole, for_spell=for_spell)
         if effect is not None:

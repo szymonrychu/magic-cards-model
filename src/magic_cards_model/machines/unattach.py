@@ -23,6 +23,8 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.zone import Zone
 
@@ -64,7 +66,7 @@ def attached_host(game: Game, ability: AbilityOnStack) -> CardState | None:
 
 def parse_unattach_attached_clause(effect_text: str) -> AbilityEffect | None:
     """`_UNATTACH_ATTACHED_RE`'s shape, or `None`."""
-    if _UNATTACH_ATTACHED_RE.fullmatch(" ".join(effect_text.split())) is None:
+    if _UNATTACH_ATTACHED_RE.fullmatch(collapsed(effect_text)) is None:
         return None
 
     def effect(game: Game, ability: AbilityOnStack) -> None:
@@ -80,7 +82,7 @@ def parse_then_if_subtype_unattach_clause(effect_text: str) -> AbilityEffect | N
     read whole by the ordinary readers, then the enchanted permanent comes
     off what it is attached to if it has the named subtype (CR 205.3) as the
     rider resolves."""
-    match = _THEN_IF_SUBTYPE_UNATTACH_RE.fullmatch(" ".join(effect_text.split()))
+    match = _THEN_IF_SUBTYPE_UNATTACH_RE.fullmatch(collapsed(effect_text))
     if match is None:
         return None
     from .effects import parse_mixed_effect

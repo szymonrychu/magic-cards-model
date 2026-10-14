@@ -22,6 +22,8 @@ Two printed shapes, both the effect of a CAST_SPELL trigger whose "it" /
 import re
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from .decisions import source_id_of
@@ -75,7 +77,7 @@ def parse_copy_it_those_spells_gain_clause(text: str) -> Any:
     """`_COPY_IT_RE`'s shape, when it carries the "those spells gain" rider
     or a leading "you may" - the bare "copy that spell" is
     `machines/effects._COPY_THAT_SPELL_RE`'s."""
-    match = _COPY_IT_RE.fullmatch(" ".join(text.split()))
+    match = _COPY_IT_RE.fullmatch(collapsed(text))
     if match is None or (match.group("keywords") is None and match.group("may") is None):
         return None
     keywords: tuple[str, ...] = ()
@@ -114,7 +116,7 @@ def parse_copy_it_those_spells_gain_clause(text: str) -> Any:
 
 def parse_that_spell_gains_clause(text: str) -> Any:
     """`_THAT_SPELL_GAINS_RE`'s shape."""
-    match = _THAT_SPELL_GAINS_RE.fullmatch(" ".join(text.split()))
+    match = _THAT_SPELL_GAINS_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     keywords = _keywords(match.group("keywords"))
@@ -150,7 +152,7 @@ def parse_copy_it_if_control_twice_clause(text: str) -> Any:
     """`_COPY_IT_IF_CONTROL_TWICE_RE`'s shape - see the banner above."""
     from .targeting import permanent_description
 
-    match = _COPY_IT_IF_CONTROL_TWICE_RE.fullmatch(" ".join(text.split()))
+    match = _COPY_IT_IF_CONTROL_TWICE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     requirement_a = permanent_description(match.group("qualityA"))

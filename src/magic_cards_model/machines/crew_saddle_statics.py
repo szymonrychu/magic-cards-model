@@ -21,6 +21,8 @@ import re
 from functools import cache
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from .objects_as_costs import power_of
 
@@ -49,7 +51,7 @@ _STATION_RE = re.compile(
 def _read(line: str) -> tuple[frozenset[str], int, bool] | None:
     """The kinds ("crew", "saddle") a self line applies to, its power bonus and
     whether it swaps in toughness - or None for any other line."""
-    text = " ".join(line.split())
+    text = collapsed(line)
     if "though its power were" not in text.lower() and "using its toughness" not in text.lower():
         return None
     bonus = _BONUS_RE.match(text)
@@ -67,7 +69,7 @@ def _read(line: str) -> tuple[frozenset[str], int, bool] | None:
 
 def reads_crew_saddle_line(text: str) -> bool:
     """Whether `text` is a contribution line `contribution`/`station_amount` perform."""
-    text = " ".join(text.split())
+    text = collapsed(text)
     return _read(text) is not None or _STATION_RE.match(text) is not None
 
 
@@ -112,6 +114,6 @@ def station_amount(game: "Game", tapped: CardState) -> int:
         return power
     controller = game.controller_of(tapped).username
     for permanent in game.permanents_controlled_by(controller):
-        if any(_STATION_RE.match(" ".join(line.split())) for line in _abilities(game, permanent)):
+        if any(_STATION_RE.match(collapsed(line)) for line in _abilities(game, permanent)):
             return toughness
     return power

@@ -40,6 +40,8 @@ from collections.abc import Callable
 from functools import cache
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.player import Player
 from ..models.token import create_tokens
 from ..numbers import COUNT, parse_count
@@ -126,7 +128,7 @@ def _quality(raw: str | None) -> Callable[["CardState"], bool] | None:
 def graveyard_count_expression(phrase: str) -> Reader | None:
     """`phrase` as a count of cards in a graveyard, or `None` when it is not
     one of the shapes in the module docstring."""
-    text = " ".join(phrase.split()).rstrip(".")
+    text = collapsed(phrase).rstrip(".")
     lowered = text.lower()
     if "graveyard" not in lowered:
         return None
@@ -369,7 +371,7 @@ def _search_value_at_most_count(text: str, *, for_spell: bool):
 
     if "less than or equal to the" not in text.lower():
         return None
-    match = _SEARCH_VALUE_AT_MOST_COUNT_RE.fullmatch(" ".join(text.split()).rstrip("."))
+    match = _SEARCH_VALUE_AT_MOST_COUNT_RE.fullmatch(collapsed(text).rstrip("."))
     if match is None or "graveyard" not in match.group("expr").lower():
         return None
     counted = graveyard_count_expression(match.group("expr"))
@@ -422,7 +424,7 @@ def _damage_pair_where_x(text: str, *, for_spell: bool):
     from .amount_sentences import recipient_amount, split_where_x
     from .effects._common import _strip_non_effect_preamble
 
-    split = split_where_x(" ".join(_strip_non_effect_preamble(text).split()))
+    split = split_where_x(collapsed(_strip_non_effect_preamble(text)))
     match = None if split is None else _DAMAGE_PAIR_X_RE.fullmatch(split[0])
     if split is None or match is None or "." in split[1]:
         return None
@@ -479,7 +481,7 @@ def parse_tapped_attacking_tokens_for_each_ability(text: str):
     if "tapped and attacking for each" not in text.lower() or "graveyard" not in text.lower():
         return None
     match = _TAPPED_ATTACKING_TOKENS_FOR_EACH_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split()).rstrip(".")
+        collapsed(_strip_non_effect_preamble(text)).rstrip(".")
     )
     if match is None:
         return None
@@ -557,9 +559,7 @@ def _pump_then_additional_per_count(text: str, *, for_spell: bool):
         return None
     from .effects._common import _strip_non_effect_preamble
 
-    match = _PUMP_THEN_ADDITIONAL_PER_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
-    )
+    match = _PUMP_THEN_ADDITIONAL_PER_RE.fullmatch(collapsed(_strip_non_effect_preamble(text)))
     if match is None or "graveyard" not in match.group("each").lower():
         return None
     reader = _for_each_reader(match.group("each"))

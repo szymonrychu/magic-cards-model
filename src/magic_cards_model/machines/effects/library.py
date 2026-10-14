@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from magic_cards_model.phrases import with_indefinite_article
+from magic_cards_model.text_norm import collapsed
 
 from ...models.card import Color, Layout, Type
 from ...models.card_state import (
@@ -1065,7 +1066,7 @@ def _parse_reveal_until_x_kind_put_any_onto_battlefield_clause(
     effect_text: str,
 ) -> AbilityEffect | None:
     """`_REVEAL_UNTIL_X_KIND_PUT_ANY_ONTO_BATTLEFIELD_RE`'s shape, or `None`."""
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text))
     match = _REVEAL_UNTIL_X_KIND_PUT_ANY_ONTO_BATTLEFIELD_RE.fullmatch(whole)
     if match is None:
         return None
@@ -1147,7 +1148,7 @@ def _parse_reveal_until_x_nonland_exile_per_color_clause(
     effect_text: str,
 ) -> AbilityEffect | None:
     """`_REVEAL_UNTIL_X_NONLAND_EXILE_PER_COLOR_RE`'s shape, or `None`."""
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text))
     match = _REVEAL_UNTIL_X_NONLAND_EXILE_PER_COLOR_RE.fullmatch(whole)
     if match is None:
         return None
@@ -1453,7 +1454,7 @@ def _parse_mill_then_put_all_adventure_from_milled_clause(text: str) -> Effect |
     """`_MILL_THEN_PUT_ALL_ADVENTURE_RE`'s shape - Seek Thrills."""
     if "from among the milled cards" not in text:
         return None
-    match = _MILL_THEN_PUT_ALL_ADVENTURE_RE.fullmatch(" ".join(text.split()))
+    match = _MILL_THEN_PUT_ALL_ADVENTURE_RE.fullmatch(collapsed(text))
     count = parse_count(match.group("n")) if match else None
     if count is None:
         return None
@@ -1878,7 +1879,7 @@ def _parse_look_top_x_put_permanents_clause(text: str) -> AbilityEffect | None:
     current power, never a value fixed when the ability was put on the stack.
     """
     match = _LOOK_TOP_X_PUT_PERMANENTS_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).strip().split())
+        collapsed(_strip_non_effect_preamble(text).strip())
     )
     if match is None:
         return None
@@ -2318,9 +2319,7 @@ def _parse_look_top_may_reveal_clause(text: str) -> AbilityEffect | None:
     (CR 701.20e) shows the card to its controller only; the reveal, when
     taken, shows it to everyone (CR 701.20a). A card that fails the condition
     cannot be revealed, so no question is asked about it at all."""
-    match = _LOOK_TOP_MAY_REVEAL_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).strip().split())
-    )
+    match = _LOOK_TOP_MAY_REVEAL_RE.fullmatch(collapsed(_strip_non_effect_preamble(text).strip()))
     if match is None:
         return None
     condition = (
@@ -2541,7 +2540,7 @@ def _parse_mill_that_many_then_take_from_among_them(text: str) -> AbilityEffect 
     zero"), so taking none is a real answer and the third sentence's counter is
     what it leads to.
     """
-    match = _MILL_THAT_MANY_THEN_TAKE_FROM_AMONG_THEM_RE.fullmatch(" ".join(text.split()))
+    match = _MILL_THAT_MANY_THEN_TAKE_FROM_AMONG_THEM_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     quality = match.group("quality").replace(" and/or ", " or ")
@@ -2679,7 +2678,7 @@ def _parse_cast_trigger_look_top_x_take_one_clause(effect_text: str) -> AbilityE
     somehow announced none) looks at nothing, the same as any other "top N"
     reader would for N=0.
     """
-    match = _CAST_TRIGGER_LOOK_TOP_X_TAKE_ONE_RE.fullmatch(" ".join(effect_text.strip().split()))
+    match = _CAST_TRIGGER_LOOK_TOP_X_TAKE_ONE_RE.fullmatch(collapsed(effect_text.strip()))
     if match is None:
         return None
 
@@ -2760,7 +2759,7 @@ def _parse_cast_trigger_reveal_top_x_put_one_permanent_clause(
     past the tail the way the sibling "put the rest on the bottom" branch
     harmlessly could.
     """
-    whole = " ".join(_strip_non_effect_preamble(effect_text).strip().split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text).strip())
     match = _CAST_TRIGGER_REVEAL_TOP_X_PUT_ONE_PERMANENT_RE.fullmatch(whole)
     if match is None:
         return None
@@ -2850,7 +2849,7 @@ def _parse_cast_trigger_reveal_until_x_kind_to_graveyard_clause(
     with fewer than X of the named kind reveals the whole thing (CR 608.2c's
     own "looks at all of them" when an effect wants more cards than remain).
     """
-    whole = " ".join(_strip_non_effect_preamble(effect_text).strip().split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text).strip())
     match = _CAST_TRIGGER_REVEAL_UNTIL_X_KIND_TO_GRAVEYARD_RE.fullmatch(whole)
     if match is None:
         return None
@@ -3059,7 +3058,7 @@ def _parse_look_top_of_target_library_may_move_clause(text: str) -> AbilityEffec
     everything already there (`Player.move` appends), so what the controller
     learned about the other cards stays true.
     """
-    match = _LOOK_TOP_OF_TARGET_LIBRARY_MAY_MOVE_RE.fullmatch(" ".join(text.strip().split()))
+    match = _LOOK_TOP_OF_TARGET_LIBRARY_MAY_MOVE_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     to_graveyard = match.group("dest").lower().startswith("into")
@@ -3109,7 +3108,7 @@ _EXILE_ALL_CARDS_FROM_LIBRARY_RE = re.compile(
 def _parse_exile_all_cards_from_library_clause(text: str) -> AbilityEffect | None:
     """`_EXILE_ALL_CARDS_FROM_LIBRARY_RE`'s shape, or `None`. A shuffle tail
     must name the same player whose library was exiled."""
-    match = _EXILE_ALL_CARDS_FROM_LIBRARY_RE.fullmatch(" ".join(text.strip().split()))
+    match = _EXILE_ALL_CARDS_FROM_LIBRARY_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     targeted = match.group("who").lower().startswith("target")
@@ -3160,7 +3159,7 @@ def _parse_look_hand_may_exile_owner_may_play_clause(text: str) -> AbilityEffect
     the pool (Elite Spellbinder's ETB, Invasion of Gobakhan's), never a
     spell's.
     """
-    match = _LOOK_HAND_MAY_EXILE_OWNER_MAY_PLAY_RE.fullmatch(" ".join(text.strip().split()))
+    match = _LOOK_HAND_MAY_EXILE_OWNER_MAY_PLAY_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     quality = match.group("quality").strip()
@@ -3622,7 +3621,7 @@ _MANIFEST_FROM_HAND_THEN_DRAW_RE = re.compile(
 @ABILITY_TEXT.rung("s5")
 def _parse_manifest_from_hand_then_draw_clause(effect_text: str) -> AbilityEffect | None:
     """`_MANIFEST_FROM_HAND_THEN_DRAW_RE`'s shape - see the banner above."""
-    match = _MANIFEST_FROM_HAND_THEN_DRAW_RE.fullmatch(" ".join(effect_text.split()))
+    match = _MANIFEST_FROM_HAND_THEN_DRAW_RE.fullmatch(collapsed(effect_text))
     if match is None:
         return None
     if not _targets_understood(
@@ -4072,9 +4071,7 @@ def _parse_reveal_hand_choose_two_bounded_cards_then_discard_clause(
     608.2d's "the player announces their choice of an appropriate object"
     reads each instruction as choosing a *fresh* one.
     """
-    match = _REVEAL_HAND_CHOOSE_TWO_BOUNDED_CARDS_THEN_DISCARD_RE.fullmatch(
-        " ".join(effect_text.split())
-    )
+    match = _REVEAL_HAND_CHOOSE_TWO_BOUNDED_CARDS_THEN_DISCARD_RE.fullmatch(collapsed(effect_text))
     if match is None:
         return None
     if not _targets_understood("target opponent", allow_player_targets=True):
@@ -4407,7 +4404,7 @@ def _parse_look_top_split_conditional_instead_clause(effect_text: str) -> Effect
     fail-closed record `_parse_condition_instead_clause` already leaves for
     its own unreadable-at-resolution case, rather than silently false.
     """
-    whole = " ".join(effect_text.split())
+    whole = collapsed(effect_text)
     match = _LOOK_TOP_SPLIT_CONDITIONAL_INSTEAD_RE.fullmatch(whole)
     if match is None:
         return None
@@ -4506,9 +4503,7 @@ def _parse_look_top_put_some_into_zone_clause(text: str) -> AbilityEffect | None
     """`_LOOK_TOP_PUT_SOME_INTO_ZONE_RE`'s shape."""
     if "look at the top" not in text.lower():
         return None
-    match = _LOOK_TOP_PUT_SOME_INTO_ZONE_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
-    )
+    match = _LOOK_TOP_PUT_SOME_INTO_ZONE_RE.fullmatch(collapsed(_strip_non_effect_preamble(text)))
     if match is None:
         return None
     count = parse_count(match.group("n"))
@@ -4839,9 +4834,7 @@ def _parse_shuffle_self_and_targets_into_owners_libraries_clause(
     resolve_card_targets`, the ordinary CR 608.2b illegal-target recheck,
     either way.
     """
-    match = _SHUFFLE_SELF_AND_TARGETS_INTO_OWNERS_LIBRARIES_RE.fullmatch(
-        " ".join(text.strip().split())
-    )
+    match = _SHUFFLE_SELF_AND_TARGETS_INTO_OWNERS_LIBRARIES_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     if not _targets_understood(match.group("phrase"), count_agnostic=True, battlefield_only=False):
@@ -4960,9 +4953,7 @@ def _parse_name_reveal_top_n_split_text(text: str) -> AbilityEffect | None:
     the instruction says "nonland" (CR 201.4's named card must fit it)."""
     if "card name, then reveal the top" not in text:
         return None
-    match = _NAME_REVEAL_TOP_N_SPLIT_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
-    )
+    match = _NAME_REVEAL_TOP_N_SPLIT_RE.fullmatch(collapsed(_strip_non_effect_preamble(text)))
     if match is None:
         return None
     count = parse_count(match.group("n"))
@@ -5298,7 +5289,7 @@ def _parse_reveal_two_outside_opponent_chooses_clause(
     """
     if not for_spell:
         return None
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text))
     if _REVEAL_TWO_DIFFERENT_NAMES_OUTSIDE_THEN_OPPONENT_CHOOSES_RE.fullmatch(whole) is None:
         return None
 
@@ -5399,10 +5390,10 @@ def _read_reveal_from_outside_the_game(
     """`(quality, matcher, exiled name or None)` for
     `_REVEAL_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE`, or `None` when the text is
     not that shape or its quality cannot be read."""
-    match = _REVEAL_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE.fullmatch(" ".join(effect_text.split()))
+    match = _REVEAL_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE.fullmatch(collapsed(effect_text))
     if match is None:
         named_card = _REVEAL_NAMED_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE.fullmatch(
-            " ".join(effect_text.split())
+            collapsed(effect_text)
         )
         if named_card is None:
             return None
@@ -6690,7 +6681,7 @@ def _parse_may_cast_from_hand_free_clause(clause: str, *, for_spell: bool) -> Ta
     text = re.sub(
         r" from your hand( with mana value .+?) without paying",
         r"\1 from your hand without paying",
-        " ".join(clause.strip().split()),
+        collapsed(clause.strip()),
         flags=re.IGNORECASE,
     )
     match = _MAY_CAST_FROM_HAND_FREE_RE.fullmatch(text)
@@ -6926,7 +6917,7 @@ def _parse_reveal_any_number_then_x_plus_damage_clause(text: str) -> AbilityEffe
     spell's - `_source_relative_whole_text_ability_effect` is the only
     caller.
     """
-    match = _REVEAL_ANY_NUMBER_THEN_X_PLUS_DAMAGE_RE.fullmatch(" ".join(text.strip().split()))
+    match = _REVEAL_ANY_NUMBER_THEN_X_PLUS_DAMAGE_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     quality = match.group("quality").strip()
@@ -7041,10 +7032,7 @@ def _parse_reveal_until_creature_then_attacking_rest_random_clause(
     "put that card" half of the sentence is CR 101.3's impossible instruction
     to nothing at all.
     """
-    if (
-        _REVEAL_UNTIL_CREATURE_THEN_ATTACKING_REST_RANDOM_RE.fullmatch(" ".join(text.split()))
-        is None
-    ):
+    if _REVEAL_UNTIL_CREATURE_THEN_ATTACKING_REST_RANDOM_RE.fullmatch(collapsed(text)) is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:

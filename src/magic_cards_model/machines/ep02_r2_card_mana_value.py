@@ -37,6 +37,8 @@ from dataclasses import dataclass, field, replace
 from random import Random
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.player import Player
 from ..models.zone import Zone
@@ -894,9 +896,7 @@ def card_mana_value_effect(text: str, *, for_spell: bool) -> Callable[["Game", A
 
     sentences = [
         _clean(sentence)
-        for sentence in _plain_resolution_sentences(
-            _strip_non_effect_preamble(" ".join(text.split()))
-        )
+        for sentence in _plain_resolution_sentences(_strip_non_effect_preamble(collapsed(text)))
     ]
     sentences = [s for s in sentences if s and s.lower() not in _KEYWORD_ONLY]
     if not sentences or _owned_by_the_reveal_hand_lose_life_merge(sentences):

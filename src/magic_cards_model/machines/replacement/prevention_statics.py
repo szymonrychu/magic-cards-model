@@ -47,6 +47,8 @@ from dataclasses import dataclass, field
 from math import ceil
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ...models.card import Card, Supertype
 from ...models.card_state import CardState, ChoiceKind, TargetKind
 from ...models.game._continuous import _characteristic_word
@@ -97,7 +99,7 @@ def _normalise(names: Sequence[str], text: str) -> str:
     for name in sorted({name.strip(", ") for name in names}, key=len, reverse=True):
         line = re.sub(rf"(?<!\w){re.escape(name)}(?!\w)", "~", line, flags=re.IGNORECASE)
     line = _SELF_NOUN_RE.sub("~", line)
-    return " ".join(line.split())
+    return collapsed(line)
 
 
 # --------------------------------------------------------------------------
@@ -302,7 +304,7 @@ def _split_phrases(text: str) -> list[str]:
 def _phrase_test(phrase: str) -> _Test | None:
     """The test a printed object phrase puts on a damage source or recipient,
     alternatives joined by "and", "or" or "and/or" (any one matches)."""
-    lowered = " ".join(phrase.strip().lower().split()).replace("one or more ", "")
+    lowered = collapsed(phrase.strip().lower()).replace("one or more ", "")
     tests: list[_Test] = []
     for part in _split_phrases(lowered):
         test = _SPECIAL_PHRASES.get(part.strip()) or _noun_phrase_test(part)

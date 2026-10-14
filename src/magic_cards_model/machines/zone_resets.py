@@ -18,6 +18,8 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
 from .decisions import source_id_of
@@ -79,7 +81,7 @@ def parse_each_player_may_shuffle_hand_graveyard_then_draw_clause(
     effects.split_effect_clauses`'s own separators have cut the printed
     sentence into fragments first.
     """
-    match = EACH_PLAYER_MAY_SHUFFLE_HAND_GRAVEYARD_THEN_DRAW_RE.fullmatch(" ".join(text.split()))
+    match = EACH_PLAYER_MAY_SHUFFLE_HAND_GRAVEYARD_THEN_DRAW_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     count = parse_count(match.group("count"))
@@ -120,9 +122,7 @@ def merge_each_player_may_shuffle_hand_graveyard_then_draw_clauses(
     if index + 1 >= len(clauses):
         return None
     combined = f"{clauses[index].strip()}. {clauses[index + 1].strip()}"
-    match = EACH_PLAYER_MAY_SHUFFLE_HAND_GRAVEYARD_THEN_DRAW_RE.fullmatch(
-        " ".join(combined.split())
-    )
+    match = EACH_PLAYER_MAY_SHUFFLE_HAND_GRAVEYARD_THEN_DRAW_RE.fullmatch(collapsed(combined))
     if match is None:
         return None
     count = parse_count(match.group("count"))

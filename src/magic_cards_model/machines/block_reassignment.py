@@ -31,6 +31,8 @@ module load (`map_tokens.py`'s one-way rule).
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.zone import Zone
 from .combat import effect_block_candidates
 from .decisions import Decision, DecisionKind, source_id_of
@@ -52,7 +54,7 @@ _REMOVE_THEN_BLOCKS_ANOTHER_RE = re.compile(
 
 def parse_remove_blocker_then_it_blocks_another_clause(text: str) -> "TargetedClause | None":
     """`_REMOVE_THEN_BLOCKS_ANOTHER_RE`'s shape, read whole; see the module."""
-    match = _REMOVE_THEN_BLOCKS_ANOTHER_RE.fullmatch(" ".join(text.strip().split()))
+    match = _REMOVE_THEN_BLOCKS_ANOTHER_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     from .effects import _targets_understood

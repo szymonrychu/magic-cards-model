@@ -44,6 +44,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..numbers import parse_count
 from .abilities import layer_readable_sentences
@@ -109,7 +111,7 @@ def _count_word(word: str | None) -> int | None:
 @functools.lru_cache(maxsize=4096)
 def parse_block_static(sentence: str) -> BlockStatic | None:
     """`sentence` as one of the shapes in the module docstring, or None."""
-    text = " ".join(sentence.split())
+    text = collapsed(sentence)
     lowered = text.lower()
     if " can block " in lowered:
         if match := _EXTRA_RE.fullmatch(text):

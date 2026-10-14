@@ -1,3 +1,4 @@
+import functools
 import re
 from typing import TYPE_CHECKING
 
@@ -291,6 +292,7 @@ _CONDITIONAL_SPLIT_SECOND_SENTENCE_RE = re.compile(
 )
 
 
+@functools.lru_cache(maxsize=16384)
 def spell_resolution_text(card_name: str, effect_text: str) -> str:
     """A spell's printed text less every paragraph and sentence `effect_for`
     knows is not part of its own resolution: the self-shuffle a replacement

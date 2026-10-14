@@ -82,6 +82,8 @@ from uuid import UUID
 
 from pydantic import ConfigDict, Field
 
+from magic_cards_model.text_norm import collapsed
+
 from ..ids import new_id
 from ..models.card import Card, Color, Type
 from ..models.card_state import PERMANENT_TYPES, CardState, Counter
@@ -2707,7 +2709,7 @@ def chosen_object_turn_trigger_line(text: str) -> str | None:
     plain event (no intervening "if", CR 603.4) and an effect
     `trigger_effect_for` reads, directly or with the event's amount written
     in for its "that much"."""
-    match = _THAT_OBJECT_TURN_TRIGGER_RE.fullmatch(" ".join(text.strip().split()))
+    match = _THAT_OBJECT_TURN_TRIGGER_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     effect_text = match.group("effect")
@@ -3889,7 +3891,7 @@ def parse_self_flicker_at_next_end_step_clause(text: str) -> "Callable[..., None
     """`_SELF_FLICKER_AT_NEXT_END_STEP_RE`'s effect: the ability's source is
     exiled, and a delayed trigger (CR 603.7a) returns that exiled object at
     the beginning of the next end step - not if it has moved on (CR 603.7c)."""
-    match = _SELF_FLICKER_AT_NEXT_END_STEP_RE.fullmatch(" ".join(text.split()))
+    match = _SELF_FLICKER_AT_NEXT_END_STEP_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     tapped = match.group("tapped") is not None

@@ -1,6 +1,8 @@
 import re
 from typing import Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ...data.subtypes import canonical_subtype
 from ...models.card import Card, Color, Supertype, Type
 from ...models.mana import (
@@ -308,7 +310,7 @@ def targeting_this_life_cost(text: str) -> int | None:
     (CR 118.8, CR 601.2f - `Game.static_life_costs_for` applies it)."""
     if " life to cast" not in text:
         return None
-    match = _TARGETING_THIS_LIFE_COST.match(" ".join(text.split()))
+    match = _TARGETING_THIS_LIFE_COST.match(collapsed(text))
     return None if match is None else int(match.group("amount"))
 
 

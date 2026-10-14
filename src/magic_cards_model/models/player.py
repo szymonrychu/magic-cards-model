@@ -8,6 +8,8 @@ from uuid import UUID
 
 from pydantic import AfterValidator, ConfigDict, Field, model_validator
 
+from magic_cards_model.text_norm import collapsed
+
 from ..machines.layers import Duration
 from ..numbers import COUNT, parse_count
 from ..snapshot import EngineModel
@@ -171,7 +173,7 @@ _REMINDER_TEXT_RE = re.compile(r"\s*\([^)]*\)")
 
 def _hand_size_line(line: str) -> str:
     line = _REMINDER_TEXT_RE.sub("", _ABILITY_WORD_RE.sub("", line.strip()))
-    return " ".join(line.replace("’", "'").split()).rstrip(".").lower()
+    return collapsed(line.replace("’", "'")).rstrip(".").lower()
 
 
 def _hand_size_shape(line: str) -> tuple[str, re.Match[str]] | None:

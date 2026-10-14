@@ -43,6 +43,8 @@ import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Type
 from ..models.card_state import CardState
 from ..models.zone import Zone
@@ -119,7 +121,7 @@ def parse_return_linked_creature_clause(clause: str) -> AbilityEffect | None:
     return is simply nothing to return (CR 608.2c never runs half an
     instruction, but there is no second half here to skip).
     """
-    match = _RETURN_LINKED_CREATURE_RE.fullmatch(" ".join(clause.strip().split()))
+    match = _RETURN_LINKED_CREATURE_RE.fullmatch(collapsed(clause.strip()))
     if match is None:
         return None
     tapped = match.group("tapped1") is not None or match.group("tapped2") is not None
@@ -157,7 +159,7 @@ def parse_return_other_linked_cards_to_hand_clause(clause: str) -> AbilityEffect
     at all any more - it is simply gone from `Game.cards_exiled_with`'s own
     live scan, with no extra bookkeeping needed to exclude it by id.
     """
-    if _RETURN_OTHER_LINKED_CARDS_TO_HAND_RE.fullmatch(" ".join(clause.strip().split())) is None:
+    if _RETURN_OTHER_LINKED_CARDS_TO_HAND_RE.fullmatch(collapsed(clause.strip())) is None:
         return None
 
     def effect(game: Game, ability: AbilityOnStack) -> None:
@@ -185,7 +187,7 @@ _RETURN_ALL_LINKED_TO_HAND_LOSE_LIFE_RE = re.compile(
 
 def parse_return_all_linked_to_hand_lose_life_clause(clause: str) -> AbilityEffect | None:
     """`_RETURN_ALL_LINKED_TO_HAND_LOSE_LIFE_RE`'s shape, or `None`."""
-    if _RETURN_ALL_LINKED_TO_HAND_LOSE_LIFE_RE.fullmatch(" ".join(clause.strip().split())) is None:
+    if _RETURN_ALL_LINKED_TO_HAND_LOSE_LIFE_RE.fullmatch(collapsed(clause.strip())) is None:
         return None
 
     def effect(game: Game, ability: AbilityOnStack) -> None:
@@ -277,7 +279,7 @@ def parse_exile_all_until_leaves_clause(clause: str) -> AbilityEffect | None:
     artifact" finds them), and watched for the source leaving (CR 610.3) -
     returning each under its owner's control (CR 610.3c). CR 610.3b: if the
     source already left before this resolves, nothing is exiled."""
-    match = _EXILE_ALL_UNTIL_LEAVES_RE.fullmatch(" ".join(clause.split()))
+    match = _EXILE_ALL_UNTIL_LEAVES_RE.fullmatch(collapsed(clause))
     if match is None:
         return None
     predicate = _group_predicate(match.group("group"))
@@ -340,7 +342,7 @@ def parse_put_linked_into_graveyard_then_tokens_clause(clause: str) -> AbilityEf
     pile, CR 701.7a's tokens counted off what actually reached a graveyard -
     a replacement that exiled a card instead does not count - then the
     source is sacrificed, CR 701.21a)."""
-    match = _PUT_LINKED_INTO_GRAVEYARD_THEN_TOKENS_RE.fullmatch(" ".join(clause.split()))
+    match = _PUT_LINKED_INTO_GRAVEYARD_THEN_TOKENS_RE.fullmatch(collapsed(clause))
     if match is None:
         return None
 
@@ -398,7 +400,7 @@ _EXILED_CARD_OWNER_MANIFESTS_DREAD_RE = re.compile(
 
 def parse_exiled_card_owner_manifests_dread_clause(text: str) -> AbilityEffect | None:
     """`_EXILED_CARD_OWNER_MANIFESTS_DREAD_RE`'s effect, or `None`."""
-    match = _EXILED_CARD_OWNER_MANIFESTS_DREAD_RE.fullmatch(" ".join(text.split()))
+    match = _EXILED_CARD_OWNER_MANIFESTS_DREAD_RE.fullmatch(collapsed(text))
     if match is None:
         return None
 

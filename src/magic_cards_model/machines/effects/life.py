@@ -3,6 +3,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from magic_cards_model.phrases import with_indefinite_article
+from magic_cards_model.text_norm import collapsed
 
 from ...models.card import Color
 from ...models.card_state import (
@@ -706,7 +707,7 @@ def _parse_then_if_loses_the_game_clause(text: str) -> AbilityEffect | None:
     """`_THEN_IF_LOSES_THE_GAME_RE`'s shape, or `None`."""
     if "the game" not in text:
         return None
-    match = _THEN_IF_LOSES_THE_GAME_RE.fullmatch(" ".join(text.strip().split()))
+    match = _THEN_IF_LOSES_THE_GAME_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     head = _ability_effect_or_notice(match.group("head").strip() + ".")
@@ -767,7 +768,7 @@ def _parse_exile_for_each_life_lost_clause(text: str) -> AbilityEffect | None:
     """`_EXILE_FOR_EACH_LIFE_LOST_RE`'s shape - see the banner above."""
     if "life you lost" not in text:
         return None
-    match = _EXILE_FOR_EACH_LIFE_LOST_RE.fullmatch(" ".join(text.split()))
+    match = _EXILE_FOR_EACH_LIFE_LOST_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     places = match.group("places").lower()
@@ -1202,7 +1203,7 @@ _MAY_PAY_THEN_DRAIN_TOTAL_RE = re.compile(
 
 def _parse_may_pay_then_drain_total(text: str) -> AbilityEffect | None:
     """`_MAY_PAY_THEN_DRAIN_TOTAL_RE`'s shape, or `None`."""
-    match = _MAY_PAY_THEN_DRAIN_TOTAL_RE.fullmatch(" ".join(text.strip().split()))
+    match = _MAY_PAY_THEN_DRAIN_TOTAL_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     cost = ManaCost.parse(match.group("mana"))
@@ -1238,7 +1239,7 @@ _MAY_PAY_LIFE_THEN_RE = re.compile(
 
 def _parse_may_pay_life_then_rider(text: str) -> AbilityEffect | None:
     """`_MAY_PAY_LIFE_THEN_RE` over `_parse_until_eot_assigns_toughness`."""
-    match = _MAY_PAY_LIFE_THEN_RE.fullmatch(" ".join(text.strip().split()))
+    match = _MAY_PAY_LIFE_THEN_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     amount = parse_count(match.group("n"))
@@ -1288,7 +1289,7 @@ def _parse_gain_life_equal_to_event_subject_toughness_clause(text: str) -> Abili
     (an ability somehow reaching resolution with nothing to be anaphoric to),
     gains no life rather than a negative or guessed amount.
     """
-    if _GAIN_LIFE_EQUAL_TO_EVENT_SUBJECT_TOUGHNESS_RE.fullmatch(" ".join(text.split())) is None:
+    if _GAIN_LIFE_EQUAL_TO_EVENT_SUBJECT_TOUGHNESS_RE.fullmatch(collapsed(text)) is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
@@ -1353,7 +1354,7 @@ def _parse_gain_life_equal_to_target_power_text(text: str) -> Effect | None:
     the spell does nothing (CR 608.2b: its only target is gone)."""
     if not text.lower().startswith("you gain life equal to target creature's power"):
         return None
-    match = _GAIN_LIFE_EQUAL_TO_TARGET_POWER_RE.fullmatch(" ".join(text.strip().split()))
+    match = _GAIN_LIFE_EQUAL_TO_TARGET_POWER_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     shields = match.group("shield") is not None
@@ -1419,7 +1420,7 @@ def _parse_lose_life_equal_to_cast_spell_mana_value_text(text: str) -> AbilityEf
     """`_LOSE_LIFE_EQUAL_TO_CAST_SPELL_MV_RE`'s shape."""
     if "mana value" not in text:
         return None
-    stripped = " ".join(text.strip().split())
+    stripped = collapsed(text.strip())
     if _LOSE_LIFE_EQUAL_TO_CAST_SPELL_MV_RE.fullmatch(stripped) is None:
         return None
     from . import parse_mixed_effect

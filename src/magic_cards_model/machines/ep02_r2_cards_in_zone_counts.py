@@ -30,6 +30,8 @@ from collections.abc import Callable
 from functools import cache
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..numbers import COUNT
 
 if TYPE_CHECKING:
@@ -63,7 +65,7 @@ def _has_keyword(card: "CardState", keyword: str) -> bool:
 @cache
 def _parse(phrase: str):
     """`(quality, keyword, where)` for a zone-count phrase, or `None`."""
-    text = " ".join(phrase.split()).rstrip(".")
+    text = collapsed(phrase).rstrip(".")
     if " in " not in text or "card" not in text:
         return None
     match = _ZONE_COUNT_RE.fullmatch(text)
@@ -77,7 +79,7 @@ def _parse(phrase: str):
 def hand_count_expression(phrase: str) -> Reader | None:
     """`phrase` as a live count of cards in a hand (or a graveyard, keyword
     description included), or `None` when it is not that shape."""
-    return _hand_count_expression(" ".join(phrase.split()).rstrip("."))
+    return _hand_count_expression(collapsed(phrase).rstrip("."))
 
 
 @cache
@@ -120,7 +122,7 @@ def static_zone_count(phrase: str) -> "Callable[[CardState, LayerContext], Count
     """The layer-engine twin of `hand_count_expression`: a factory of the
     `Count` a static ability's pump multiplies, re-built on every board
     computation so it follows the zone as cards enter and leave it."""
-    parsed = _parse(" ".join(phrase.split()).rstrip("."))
+    parsed = _parse(collapsed(phrase).rstrip("."))
     if parsed is None:
         return None
     quality, keyword, where = parsed
@@ -387,7 +389,7 @@ def parse_hand_difference_spell(text: str):
     (CR 608.2c). Returns an `Effect` `(game, spell)`, or `None`."""
     if "equal to the difference" not in text.lower():
         return None
-    if _HAND_DIFFERENCE_SPELL_RE.fullmatch(" ".join(text.split()).rstrip(".")) is None:
+    if _HAND_DIFFERENCE_SPELL_RE.fullmatch(collapsed(text).rstrip(".")) is None:
         return None
     from ..models.player import Player
 
@@ -428,7 +430,7 @@ def parse_attached_pump_until_end_of_turn_clause(clause: str, *, for_spell: bool
     the source is a permanent. Returns an `AbilityEffect`, or `None`."""
     if for_spell:
         return None
-    match = _ATTACHED_PUMP_UNTIL_EOT_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    match = _ATTACHED_PUMP_UNTIL_EOT_RE.fullmatch(collapsed(clause).rstrip("."))
     if match is None:
         return None
     from .effects.amounts import count_expression
@@ -539,7 +541,7 @@ def parse_mill_by_stat_then_return_self_and_milled(text: str):
     Returns an `AbilityEffect`, or `None`."""
     if "milled this way" not in text.lower():
         return None
-    sentences = [part.strip() for part in re.split(r"(?<=\.)\s+", " ".join(text.split()))]
+    sentences = [part.strip() for part in re.split(r"(?<=\.)\s+", collapsed(text))]
     if len(sentences) != 2:
         return None
     from .amount_sentences import parse_mill_clause
@@ -614,7 +616,7 @@ def parse_no_maximum_hand_size_while_controlling_clause(clause: str, *, for_spel
     changes controller and does not come back (CR 400.7). Ability-only."""
     if (
         for_spell
-        or _NO_MAX_HAND_WHILE_CONTROLLING_RE.fullmatch(" ".join(clause.split()).rstrip(".")) is None
+        or _NO_MAX_HAND_WHILE_CONTROLLING_RE.fullmatch(collapsed(clause).rstrip(".")) is None
     ):
         return None
 
@@ -674,7 +676,7 @@ def parse_cast_any_number_from_hand_free_clause(clause: str, *, for_spell: bool)
     the cards that can really be cast now (CR 608.2d) until the controller
     stops or none is left. Casting one first can empty or change the hand, so
     the choice is offered again afterwards."""
-    if _CAST_ANY_NUMBER_FROM_HAND_FREE_RE.fullmatch(" ".join(clause.split()).rstrip(".")) is None:
+    if _CAST_ANY_NUMBER_FROM_HAND_FREE_RE.fullmatch(collapsed(clause).rstrip(".")) is None:
         return None
 
     def effect(game, stack_object):
@@ -744,7 +746,7 @@ def parse_search_target_library_and_exile(text: str):
     from .effects._common import _strip_non_effect_preamble
 
     match = _SEARCH_TARGET_LIBRARY_EXILE_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split()).rstrip(".")
+        collapsed(_strip_non_effect_preamble(text)).rstrip(".")
     )
     if match is None:
         return None
@@ -826,7 +828,7 @@ def parse_return_half_permanents_spell(text: str):
     from .effects._common import _strip_non_effect_preamble
 
     match = _RETURN_HALF_PERMANENTS_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split()).rstrip(".")
+        collapsed(_strip_non_effect_preamble(text)).rstrip(".")
     )
     if match is None:
         return None

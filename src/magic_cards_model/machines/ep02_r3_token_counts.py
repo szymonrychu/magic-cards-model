@@ -15,6 +15,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.token import PREDEFINED, create_tokens, token_copy_of
 from ..models.zone import Zone
@@ -97,7 +99,7 @@ _REFERENT_STAT_RE = re.compile(
 def _amount_of(expression: str) -> Amount | None:
     """`expression` as an amount read when the instruction is applied (CR 608.2h):
     a referent's last known power or toughness, or any `amount_expression`."""
-    text = " ".join(expression.strip().rstrip(".").split())
+    text = collapsed(expression.strip().rstrip("."))
     if (referent := _REFERENT_STAT_RE.fullmatch(text)) is not None:
         index = 1 if referent.group("stat").lower() == "power" else 2
 
@@ -681,7 +683,7 @@ def _look_exile_may_play(text: str, *, for_spell: bool) -> Any:
     lowered = text.lower()
     if "look at the top card" not in lowered or "face down" not in lowered:
         return None
-    match = _LOOK_EXILE_MAY_PLAY_RE.fullmatch(" ".join(text.split()))
+    match = _LOOK_EXILE_MAY_PLAY_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     whose = match.group("whose").lower()
@@ -735,7 +737,7 @@ def _grant_token_copy_keyword(text: str) -> Any:
     exiling the card are part of the keyword's own activation."""
     if "gains" not in text.lower() or "mana cost" not in text.lower():
         return None
-    match = _GRANT_TOKEN_COPY_KEYWORD_RE.fullmatch(" ".join(text.split()))
+    match = _GRANT_TOKEN_COPY_KEYWORD_RE.fullmatch(collapsed(text))
     if match is None or not _targets_understood(match.group("phrase"), battlefield_only=False):
         return None
     keyword = match.group("keyword").title()

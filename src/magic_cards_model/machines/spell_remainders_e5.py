@@ -373,6 +373,18 @@ _FAMILY_READERS: tuple[_Reader, ...] = (
 )
 
 
+def _claims_a_sentence(sentences: list[str], slot_sentences: int) -> bool:
+    """Whether `spell_sentence_sequence_effect`'s walk reaches a sentence one of
+    this module's families claims, every unclaimed sentence before it taken as
+    read (the walk's only other outcome there is `None`)."""
+    for index, sentence in enumerate(sentences):
+        if slot_sentences >= 2 and _SLOT_SENTENCE_RE.match(sentence.strip()):
+            return True
+        if any(reader(sentences, index) is not None for reader in _FAMILY_READERS):
+            return True
+    return False
+
+
 def spell_sentence_sequence_effect(whole: str) -> Effect | None:
     """A spell's resolution text, when it carries one of this module's sentence
     families and every other sentence is readable on its own - each performed
@@ -387,6 +399,11 @@ def spell_sentence_sequence_effect(whole: str) -> Effect | None:
     if len(sentences) < 2:
         return None
     slot_sentences = sum(1 for s in sentences if _SLOT_SENTENCE_RE.match(s.strip()))
+    if not _claims_a_sentence(sentences, slot_sentences):
+        # Nothing below would claim a sentence, so the walk ends unclaimed (or
+        # earlier, on an unreadable sentence) - `None` either way, without
+        # dispatching every other sentence through the whole spell ladder.
+        return None
     claimed = False
     steps: list[_Step] = []
     slot = 0

@@ -38,6 +38,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from magic_cards_model.text_norm import collapsed
+
 if TYPE_CHECKING:
     from ...models.card_state import CardState
     from ...models.game import Game
@@ -119,7 +121,7 @@ def readers() -> tuple[ConditionReader, ...]:
 
 
 def _normalized(text: str) -> str:
-    return " ".join(text.strip().rstrip(".").strip().split()).lower()
+    return collapsed(text.strip().rstrip(".").strip()).lower()
 
 
 def _claiming(text: str) -> tuple[ConditionReader, re.Match[str]] | None:

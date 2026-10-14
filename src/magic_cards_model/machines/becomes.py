@@ -31,6 +31,8 @@ import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from ..numbers import parse_count
@@ -98,7 +100,7 @@ def counter_list_on_anaphor(text: str) -> StackEffect | None:
     sentence it refers back to: "that creature" is the resolving spell's or
     ability's own target, rechecked for legality now (CR 608.2b) - an
     illegal or gone target gets nothing."""
-    match = _PUT_COUNTER_LIST_ON_ANAPHOR_RE.fullmatch(" ".join(text.split()))
+    match = _PUT_COUNTER_LIST_ON_ANAPHOR_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     items = _counter_items(match.group("items"))
@@ -132,7 +134,7 @@ _PUT_COUNTERS_ON_EACH_BECAME_THIS_WAY_RE = re.compile(
 def counters_on_what_became_this_way(text: str) -> StackEffect | None:
     """`_PUT_COUNTERS_ON_EACH_BECAME_THIS_WAY_RE`'s shape, as a clause run after
     the layer sentence that made the object what it names."""
-    match = _PUT_COUNTERS_ON_EACH_BECAME_THIS_WAY_RE.fullmatch(" ".join(text.split()))
+    match = _PUT_COUNTERS_ON_EACH_BECAME_THIS_WAY_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     items = _counter_items(match.group("items"))
@@ -203,7 +205,7 @@ _CHOOSE_TARGET_THEN_THAT_RE = re.compile(
 
 
 def _choose_target_then_that(text: str) -> StackEffect | None:
-    match = _CHOOSE_TARGET_THEN_THAT_RE.fullmatch(" ".join(text.split()))
+    match = _CHOOSE_TARGET_THEN_THAT_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     rewritten = re.sub(
@@ -238,7 +240,7 @@ _IF_SELF_IS_A_TYPE_THEN_BECOMES_RE = re.compile(
 
 
 def _if_self_is_a_type_then_becomes(text: str) -> StackEffect | None:
-    match = _IF_SELF_IS_A_TYPE_THEN_BECOMES_RE.fullmatch(" ".join(text.split()))
+    match = _IF_SELF_IS_A_TYPE_THEN_BECOMES_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     rewritten = f"This creature {match.group('rest')}"
@@ -278,7 +280,7 @@ _THEN_CHOOSE_A_COLOR_RE = re.compile(
 
 
 def _then_choose_a_color(text: str) -> StackEffect | None:
-    match = _THEN_CHOOSE_A_COLOR_RE.fullmatch(" ".join(text.split()))
+    match = _THEN_CHOOSE_A_COLOR_RE.fullmatch(collapsed(text))
     if match is None:
         return None
 
@@ -315,13 +317,13 @@ def _mass_lose_all_abilities_whole(text: str) -> StackEffect | None:
     clause splitter would cut."""
     from .effects import _parse_mass_lose_all_abilities_clause
 
-    return _parse_mass_lose_all_abilities_clause(" ".join(text.split()), for_spell=False)
+    return _parse_mass_lose_all_abilities_clause(collapsed(text), for_spell=False)
 
 
 def _mass_lose_all_abilities_whole_spell(text: str) -> StackEffect | None:
     from .effects import _parse_mass_lose_all_abilities_clause
 
-    return _parse_mass_lose_all_abilities_clause(" ".join(text.split()), for_spell=True)
+    return _parse_mass_lose_all_abilities_clause(collapsed(text), for_spell=True)
 
 
 _ABILITY_READERS: tuple[Callable[[str], StackEffect | None], ...] = (

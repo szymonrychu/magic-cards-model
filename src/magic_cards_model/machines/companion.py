@@ -31,6 +31,8 @@ Every CR number here was looked up with `mise run rules:find` against the
 import re
 from dataclasses import dataclass
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import (
     Card,
     Type,
@@ -216,7 +218,7 @@ def companion_condition_satisfied(
         return CompanionConditionResult(
             satisfied=None, reason=f"{card.name} has no readable Companion condition"
         )
-    normalized = " ".join(condition.split())
+    normalized = collapsed(condition)
 
     match = _TYPE_DISJUNCTION_RE.match(normalized)
     if match is not None:

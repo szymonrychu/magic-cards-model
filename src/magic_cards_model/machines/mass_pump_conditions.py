@@ -38,6 +38,8 @@ import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 if TYPE_CHECKING:
     from ..models.card_state import CardState
     from ..models.game import Game
@@ -218,7 +220,7 @@ def _keyword_list(first: str, rest: str) -> list[str] | None:
 
 def same_is_true_effect(effect_text: str) -> Callable[["Game", "AbilityOnStack"], None] | None:
     """The ability effect for the "same is true for" family, or None."""
-    match = _SAME_IS_TRUE_RE.match(" ".join(effect_text.split()))
+    match = _SAME_IS_TRUE_RE.match(collapsed(effect_text))
     if match is None:
         return None
 

@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from uuid import UUID
 
 from magic_cards_model.phrases import with_indefinite_article
+from magic_cards_model.text_norm import collapsed
 
 from ...data.subtypes import canonical_subtype
 from ...models.card import Color, Type
@@ -441,7 +442,7 @@ def _parse_exile_graveyard_then_creature_rider_clause(
     card" is read off the card itself before it moves (`Type.CREATURE in
     target.types`), the same instant `exile_ability_targets` reads it.
     """
-    match = _EXILE_GRAVEYARD_THEN_CREATURE_RIDER_RE.fullmatch(" ".join(text.strip().split()))
+    match = _EXILE_GRAVEYARD_THEN_CREATURE_RIDER_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     if not _targets_understood(match.group("phrase"), count_agnostic=True, battlefield_only=False):
@@ -822,7 +823,7 @@ def _sacrificed_mana_value_search(text: str) -> _SacrificedManaValueSearch | Non
     tell the difference - CR 704.3 checks state-based actions only when a
     player would receive priority, never mid-resolution.
     """
-    match = _SEARCH_MV_EQUAL_TO_SACRIFICED_RE.fullmatch(" ".join(text.strip().split()))
+    match = _SEARCH_MV_EQUAL_TO_SACRIFICED_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         # Venom's "draw X cards, then you may put a permanent card with mana
         # value X or less from your hand onto the battlefield": the same
@@ -1150,7 +1151,7 @@ def _parse_play_a_card_exiled_with_clause(clause: str, *, for_spell: bool) -> Ta
     card's type"). Ability-only: a spell has no linked pile."""
     if for_spell:
         return None
-    match = _PLAY_A_CARD_EXILED_WITH_RE.fullmatch(" ".join(clause.strip().split()))
+    match = _PLAY_A_CARD_EXILED_WITH_RE.fullmatch(collapsed(clause.strip()))
     if match is None:
         return None
     one_of = match.group("one").lower() == "a card"
@@ -1254,7 +1255,7 @@ def _parse_linked_exile_clause(text: str) -> AbilityEffect | None:
     """`_CAST_FROM_LINKED_EXILE_RE`, `_TURN_LINKED_FACE_UP_THEN_PUT_
     PERMANENTS_RE` or `_SEARCH_UP_TO_AND_EXILE_RE`, read off the whole
     ability text."""
-    stripped = " ".join(text.split())
+    stripped = collapsed(text)
     match = _CAST_FROM_LINKED_EXILE_RE.fullmatch(stripped)
     if match is not None:
         return _cast_from_linked_exile_effect(match)
@@ -1666,7 +1667,7 @@ def _parse_cast_from_hand_then_exile_clause(text: str) -> AbilityEffect | None:
     half-applied "exiled it but nothing else happened" is a wrong board that
     looks like a legal one.
     """
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     match = _CAST_FROM_HAND_THEN_EXILE_RE.match(whole)
     if match is None:
         return None
@@ -1802,7 +1803,7 @@ def _parse_destroy_target_then_rider_if_type_destroyed_clause(
     that clause runs - CR 400.7: once destroyed it is a new object in the
     graveyard with no memory of what it was.
     """
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     match = _DESTROY_TARGET_THEN_RIDER_IF_TYPE_DESTROYED_RE.fullmatch(whole)
     if match is None:
         return None
@@ -2239,7 +2240,7 @@ def _parse_regenerate_each_you_control_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
     """`_REGENERATE_EACH_YOU_CONTROL_RE`'s shape; see the banner above."""
-    stripped = " ".join(clause.split())
+    stripped = collapsed(clause)
     if not stripped.lower().startswith("regenerate each "):
         return None
     match = _REGENERATE_EACH_YOU_CONTROL_RE.fullmatch(stripped)
@@ -2556,7 +2557,7 @@ _EXILE_TOP_N_PUT_FROM_AMONG_RE = re.compile(
 def _parse_exile_top_n_put_from_among_clause(text: str) -> AbilityEffect | None:
     """`_EXILE_TOP_N_PUT_FROM_AMONG_RE`'s shape - see the banner above."""
     match = _EXILE_TOP_N_PUT_FROM_AMONG_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).strip().split())
+        collapsed(_strip_non_effect_preamble(text).strip())
     )
     if match is None:
         return None
@@ -2915,7 +2916,7 @@ def _parse_target_opponent_exile_top_then_put_lands_clause(
     """`_TARGET_OPPONENT_EXILE_TOP_THEN_PUT_LANDS_RE`'s shape - see the
     banner above. No land among the exiled cards (or nothing exiled at all,
     an illegal or gone target - CR 608.2b) asks nothing and puts nothing."""
-    whole = " ".join(_strip_non_effect_preamble(effect_text).strip().split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text).strip())
     match = _TARGET_OPPONENT_EXILE_TOP_THEN_PUT_LANDS_RE.fullmatch(whole)
     if match is None:
         return None
@@ -4690,7 +4691,7 @@ def _parse_destroy_all_but_chosen_per_player_text(text: str) -> AbilityEffect | 
     no creature meeting the quality is skipped as a chooser (CR 608.2d)."""
     if not text.lower().startswith("for each player, ") or "destroy all" not in text.lower():
         return None
-    match = _FOR_EACH_PLAYER_CHOOSE_THEN_DESTROY_REST_RE.fullmatch(" ".join(text.strip().split()))
+    match = _FOR_EACH_PLAYER_CHOOSE_THEN_DESTROY_REST_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     stat = (match.group("stat") or "").lower()
@@ -4980,7 +4981,7 @@ def _parse_mandatory_sacrifice_then_return_to_hand_clause(
     if not for_spell:
         return None
     match = _MANDATORY_SACRIFICE_THEN_RETURN_TO_HAND_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
+        collapsed(_strip_non_effect_preamble(text))
     )
     if match is None:
         return None
@@ -5415,7 +5416,7 @@ def _parse_exile_target_card_copy_it_cast_clause(text: str) -> AbilityEffect | N
     machine with the copy's own targets and costs.
     """
     match = _EXILE_TARGET_CARD_COPY_IT_CAST_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
+        collapsed(_strip_non_effect_preamble(text))
     )
     if match is None:
         return None
@@ -5771,7 +5772,7 @@ _AURA_CONTROLLER_SACRIFICES_IT_AND_DRAWS_RE = re.compile(
 @ABILITY_TEXT.rung("s36")
 def _parse_granting_aura_sacrificed_and_draws(text: str) -> AbilityEffect | None:
     """`_AURA_CONTROLLER_SACRIFICES_IT_AND_DRAWS_RE`'s shape."""
-    stripped = " ".join(text.split())
+    stripped = collapsed(text)
     if _AURA_CONTROLLER_SACRIFICES_IT_AND_DRAWS_RE.fullmatch(stripped) is None:
         return None
 
@@ -6571,7 +6572,7 @@ def _each_player_exile_until(clause: str) -> "ExileAntecedent | None":
     in APNAP order - or None when the clause is not that shape."""
     from ..keywords import exile_until
 
-    match = _EACH_PLAYER_EXILES_UNTIL_QUALITY_RE.fullmatch(" ".join(clause.strip().split()))
+    match = _EACH_PLAYER_EXILES_UNTIL_QUALITY_RE.fullmatch(collapsed(clause.strip()))
     if match is None:
         return None
     quality = match.group("quality")
@@ -7260,7 +7261,7 @@ def _read_sacrifice_choice(text: str) -> tuple[str, bool] | None:
     """`_SACRIFICE_ONE_OF_CHOICE_RE`'s `(description, excludes_source)`, or None
     when `text` is not that shape or names something `permanent_description`
     cannot read."""
-    match = _SACRIFICE_ONE_OF_CHOICE_RE.fullmatch(" ".join(text.split()))
+    match = _SACRIFICE_ONE_OF_CHOICE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     description = match.group("description").strip()
@@ -7277,7 +7278,7 @@ def _read_sacrifice_choice(text: str) -> tuple[str, bool] | None:
 @MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
 def _parse_sacrifice_one_of_choice_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_SACRIFICE_ONE_OF_CHOICE_RE`'s shape; see the banner above."""
-    stripped = " ".join(clause.split())
+    stripped = collapsed(clause)
     if not stripped.lower().startswith("sacrifice "):
         return None
     choice = _read_sacrifice_choice(stripped)
@@ -7338,7 +7339,7 @@ def _parse_exile_self(text: str) -> AbilityEffect | None:
     """`_EXILE_SELF_RE`'s shape."""
     if not text.startswith(("Exile this ", "exile this ")):
         return None
-    match = _EXILE_SELF_RE.fullmatch(" ".join(text.split()))
+    match = _EXILE_SELF_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     if match.group("noun").lower() not in _SACRIFICE_SELF_NOUNS | {"token"}:
@@ -7370,7 +7371,7 @@ _SELF_SUBJECT_TAIL_RE = re.compile(r"^(?:it|this [a-z]+) (?P<verb>.+)$", re.IGNO
 def _tap_self_rider_effect(text: str) -> AbilityEffect | None:
     """`_TAP_SELF_RIDER_RE`'s shape: tap the ability's own source if it is
     still the permanent that triggered, then run the tail."""
-    match = _TAP_SELF_RIDER_RE.fullmatch(" ".join(text.split()))
+    match = _TAP_SELF_RIDER_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     noun = match.group("noun").lower()
@@ -7413,7 +7414,7 @@ def _event_creature_damage_effect(text: str) -> AbilityEffect | None:
     """`_SELF_DEALS_DAMAGE_TO_THAT_CREATURE_RE`'s shape. A blocks event names
     its other half instead of its subject, so that event is left to the
     general reader."""
-    match = _SELF_DEALS_DAMAGE_TO_THAT_CREATURE_RE.fullmatch(" ".join(text.split()))
+    match = _SELF_DEALS_DAMAGE_TO_THAT_CREATURE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     amount = parse_count(match.group("n"))
@@ -7455,7 +7456,7 @@ def _sacrifice_then_if_you_effect(
 ) -> TargetedClause | None:
     """`_SACRIFICE_THEN_IF_YOU_RE`'s shape; see the banner above. `optional`
     reads only the "you may sacrifice" form, otherwise only the bare one."""
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     if not whole.lower().startswith("you may sacrifice " if optional else "sacrifice "):
         return None
     match = _SACRIFICE_THEN_IF_YOU_RE.fullmatch(whole)
@@ -7555,7 +7556,7 @@ _SACRIFICE_SELF_THEN_IF_YOU_DO_RE = re.compile(
 @ABILITY_TEXT.rung("s40", before=["dispatch.parse_mixed_effect"])
 def _parse_sacrifice_self_then_if_you_do_ability_text(text: str) -> AbilityEffect | None:
     """`_SACRIFICE_SELF_THEN_IF_YOU_DO_RE`'s shape; see the banner above."""
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     if not whole.lower().startswith("sacrifice "):
         return None
     match = _SACRIFICE_SELF_THEN_IF_YOU_DO_RE.fullmatch(whole)
@@ -8224,9 +8225,7 @@ def _parse_exile_several_up_to_one_targets_then_return_clause(text: str) -> Abil
     "them"/"their owners'" branch, already built for Gone Fishing and
     Displace's own multi-target blinks.
     """
-    match = _EXILE_SEVERAL_UP_TO_ONE_TARGETS_THEN_RETURN_RE.fullmatch(
-        " ".join(text.strip().split())
-    )
+    match = _EXILE_SEVERAL_UP_TO_ONE_TARGETS_THEN_RETURN_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     profile = profile_for_text(match.group("phrase"))
@@ -8322,9 +8321,7 @@ def _parse_exile_target_then_return_tapped_and_attacking_clause(
     source (`AbilityOnStack.source`), which only an ability - never a
     resolving spell - carries; nothing in the pool prints this on a spell.
     """
-    match = _EXILE_TARGET_THEN_RETURN_TAPPED_AND_ATTACKING_RE.fullmatch(
-        " ".join(text.strip().split())
-    )
+    match = _EXILE_TARGET_THEN_RETURN_TAPPED_AND_ATTACKING_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     if not _targets_understood(match.group("phrase"), count_agnostic=True):
@@ -8391,7 +8388,7 @@ def _parse_exile_then_pay_or_else_return_clause(text: str) -> AbilityEffect | No
     control (CR 610.3c's default, which is also all this printing ever
     names).
     """
-    match = _EXILE_THEN_PAY_OR_ELSE_RETURN_RE.fullmatch(" ".join(text.strip().split()))
+    match = _EXILE_THEN_PAY_OR_ELSE_RETURN_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     if not _targets_understood(match.group("phrase"), count_agnostic=True):
@@ -9591,7 +9588,7 @@ def _parse_exile_card_then_token_copy_clause(
     is illegal, the ability does nothing, and no copy is made - the copy is
     made only of a card this resolution actually exiled.
     """
-    match = _EXILE_CARD_THEN_TOKEN_COPY_RE.fullmatch(" ".join(text.split()))
+    match = _EXILE_CARD_THEN_TOKEN_COPY_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     phrase = f"{match.group('phrase')} from {match.group('zone')}"
@@ -9653,7 +9650,7 @@ _MAY_EXILE_THAT_CARD_RETURN_OTHERS_RE = re.compile(
 @ABILITY_TEXT.rung("s14")
 def _parse_may_exile_that_card_return_others_clause(text: str) -> AbilityEffect | None:
     """`_MAY_EXILE_THAT_CARD_RETURN_OTHERS_RE`'s shape, or `None`."""
-    if _MAY_EXILE_THAT_CARD_RETURN_OTHERS_RE.fullmatch(" ".join(text.strip().split())) is None:
+    if _MAY_EXILE_THAT_CARD_RETURN_OTHERS_RE.fullmatch(collapsed(text.strip())) is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
@@ -9707,7 +9704,7 @@ def _parse_put_card_exiled_with_self_clause(text: str) -> AbilityEffect | None:
     arrives, the way `_parse_return_cards_from_your_graveyard_clause`
     already places Scavenger's Talent's finality counter (CR 122.1h).
     """
-    match = _PUT_CARD_EXILED_WITH_SELF_RE.fullmatch(" ".join(text.split()))
+    match = _PUT_CARD_EXILED_WITH_SELF_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     matches = _quality_matcher(match.group("quality"))
@@ -9907,7 +9904,7 @@ def _parse_face_down_exile_play_clause(effect_text: str) -> TargetedClause | Non
     unread rather than silently dropped.
     """
 
-    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    whole = collapsed(_strip_non_effect_preamble(effect_text))
     match = _FACE_DOWN_EXILE_PLAY_RE.fullmatch(whole)
     if match is None:
         return None
@@ -9987,7 +9984,7 @@ def _parse_for_each_opponent_exile_clause(text: str, *, for_spell: bool) -> Abil
     rider's "that player" is the exiled permanent's controller as it left,
     and "its power" its last known power (CR 608.2h).
     """
-    match = _FOR_EACH_OPPONENT_EXILE_RE.fullmatch(" ".join(text.split()))
+    match = _FOR_EACH_OPPONENT_EXILE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     until = match.group("until") is not None
@@ -10065,9 +10062,7 @@ def _parse_multi_part_sacrifice_gain_draw_discard_damage_counters_clause(
     the same positional reading trades away as the one part of CR 601.2c's
     declared order it cannot fully recover once that has happened.
     """
-    match = _MULTI_PART_SACRIFICE_GAIN_DRAW_DISCARD_DAMAGE_COUNTERS_RE.fullmatch(
-        " ".join(text.split())
-    )
+    match = _MULTI_PART_SACRIFICE_GAIN_DRAW_DISCARD_DAMAGE_COUNTERS_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     life = parse_count(match.group("life"))
@@ -10141,7 +10136,7 @@ def _parse_destroy_all_dealt_damage_this_turn_text(text: str) -> AbilityEffect |
     """`_DESTROY_ALL_DEALT_DAMAGE_RE`'s shape."""
     if "dealt damage this turn" not in text:
         return None
-    match = _DESTROY_ALL_DEALT_DAMAGE_RE.fullmatch(" ".join(text.strip().split()))
+    match = _DESTROY_ALL_DEALT_DAMAGE_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     from ..conditions.history import object_dealt_damage_clause_test
@@ -10214,7 +10209,7 @@ def _parse_destroy_it_cant_regenerate_event_text(text: str) -> AbilityEffect | N
     """ "Destroy it. It can't be regenerated." (Death Pits of Rath): the
     object the trigger's event names, destroyed with CR 701.19c's prohibition
     on regeneration, only while it is still on the battlefield (CR 608.2b)."""
-    if _DESTROY_IT_NO_REGENERATION_RE.fullmatch(" ".join(text.split())) is None:
+    if _DESTROY_IT_NO_REGENERATION_RE.fullmatch(collapsed(text)) is None:
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -10277,7 +10272,7 @@ def _parse_destroy_random_attacked_creature_text(text: str) -> TargetedClause | 
     is nothing to choose (CR 609.3: do as much as possible)."""
     if "at random that attacked this turn" not in text.lower():
         return None
-    if _DESTROY_RANDOM_ATTACKED_RE.fullmatch(" ".join(text.strip().rstrip(".").split())) is None:
+    if _DESTROY_RANDOM_ATTACKED_RE.fullmatch(collapsed(text.strip().rstrip("."))) is None:
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:

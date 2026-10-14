@@ -25,6 +25,8 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 
 if TYPE_CHECKING:
@@ -46,7 +48,7 @@ _ATTACKED_FACT = "attacked_player_or_planeswalker_of"
 
 
 def _norm(text: str) -> str:
-    return " ".join(text.split())
+    return collapsed(text)
 
 
 def reads_opponent_attack_restriction_line(text: str) -> bool:

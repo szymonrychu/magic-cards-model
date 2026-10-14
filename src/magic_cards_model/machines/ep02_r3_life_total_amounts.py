@@ -13,6 +13,8 @@ import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count, parse_multiplier
 from .amount_sentences import apply_life, life_clause_amount, parse_life_clause
@@ -98,7 +100,7 @@ def _parse_announced_x_life_spell(effect_text: str) -> "Callable[..., None] | No
         return None
     from .effects import _strip_non_effect_preamble
 
-    text = " ".join(_strip_non_effect_preamble(effect_text).split())
+    text = collapsed(_strip_non_effect_preamble(effect_text))
     if "where x" in text.lower():
         return None
     life = parse_life_clause(text)
@@ -295,7 +297,7 @@ def _parse_scaled_bite_spell(effect_text: str) -> "Callable[..., None] | None":
     from .effects import _strip_non_effect_preamble
     from .effects.damage import _parse_bite_damage_clause
 
-    match = _BITE_SCALED_RE.fullmatch(" ".join(_strip_non_effect_preamble(effect_text).split()))
+    match = _BITE_SCALED_RE.fullmatch(collapsed(_strip_non_effect_preamble(effect_text)))
     if match is None:
         return None
 
@@ -348,7 +350,7 @@ def _parse_add_that_much_mana_clause(
     event for "that much" to point back at (CR 608.2c)."""
     if for_spell or "that much" not in clause.lower():
         return None
-    match = _ADD_THAT_MUCH_MANA_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    match = _ADD_THAT_MUCH_MANA_RE.fullmatch(collapsed(clause).rstrip("."))
     if match is None:
         return None
     factor = parse_multiplier((match.group("factor") or "").strip()) or 1
@@ -393,7 +395,7 @@ def _parse_until_end_of_turn_top_of_library_permission(
     payment and land-play check reads the one reader."""
     if "top card of your library any time" not in effect_text.lower():
         return None
-    match = _UNTIL_EOT_TOP_OF_LIBRARY_RE.fullmatch(" ".join(effect_text.split()))
+    match = _UNTIL_EOT_TOP_OF_LIBRARY_RE.fullmatch(collapsed(effect_text))
     if match is None:
         return None
     from .casting.permissions import static_zone_cast_permission
@@ -460,7 +462,7 @@ def _parse_two_players_reveal_and_cross_lose_life(
     the other player loses nothing for it."""
     if "revealed by the other player" not in effect_text.lower():
         return None
-    match = _REVEAL_AND_CROSS_LOSE_RE.fullmatch(" ".join(effect_text.split()))
+    match = _REVEAL_AND_CROSS_LOSE_RE.fullmatch(collapsed(effect_text))
     if match is None:
         return None
     from .effects import _targets_understood
@@ -614,7 +616,7 @@ def _parse_return_one_of_them_then_loyalty_twice(
     "Them" is the batch the trigger counted (`batched_combat_damage_sources`)."""
     if "loyalty abilities of" not in effect_text.lower():
         return None
-    match = _RETURN_ONE_THEN_LOYALTY_TWICE_RE.fullmatch(" ".join(effect_text.split()))
+    match = _RETURN_ONE_THEN_LOYALTY_TWICE_RE.fullmatch(collapsed(effect_text))
     if match is None:
         return None
 
@@ -693,7 +695,7 @@ def _parse_draw_exile_from_hand_then_transform_on_different_values(
     new card is linked, since the instruction is followed in order (CR 608.2c)."""
     if "different mana values" not in effect_text.lower():
         return None
-    match = _DRAW_EXILE_FROM_HAND_TRANSFORM_RE.fullmatch(" ".join(effect_text.split()))
+    match = _DRAW_EXILE_FROM_HAND_TRANSFORM_RE.fullmatch(collapsed(effect_text))
     if match is None:
         return None
     needed = parse_count(match.group("n"))
@@ -769,7 +771,7 @@ def revealed_card_consequence(
     read off that card once, as the instruction begins (CR 608.2h), before any part is
     followed (CR 608.2c, in order)."""
     parts = []
-    for piece in re.split(r" and (?=you )", " ".join(text.split()).rstrip(".")):
+    for piece in re.split(r" and (?=you )", collapsed(text).rstrip(".")):
         match = _REVEALED_CARD_PART_RE.fullmatch(piece.strip())
         if match is None:
             return None

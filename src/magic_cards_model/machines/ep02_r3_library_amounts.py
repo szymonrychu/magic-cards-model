@@ -32,6 +32,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Color, Type
 from ..models.card_state import CardState
 from ..models.player import Player
@@ -218,7 +220,7 @@ class _Plan:
 
 
 def _sentences(text: str) -> list[str]:
-    return [part for part in re.split(r"(?<=\.)\s+", " ".join(text.strip().split())) if part]
+    return [part for part in re.split(r"(?<=\.)\s+", collapsed(text.strip())) if part]
 
 
 def _description(desc: str | None) -> tuple[Callable[[CardState], bool], str] | None:
@@ -820,7 +822,7 @@ class _SearchPlan:
 
 @functools.lru_cache(maxsize=2048)
 def _search_plan(text: str) -> _SearchPlan | None:
-    joined = _SEARCH_JOIN_RE.sub(r", \1", _REMINDER_RE.sub("", " ".join(text.strip().split())))
+    joined = _SEARCH_JOIN_RE.sub(r", \1", _REMINDER_RE.sub("", collapsed(text.strip())))
     match = _SEARCH_PUT_RE.fullmatch(joined)
     if match is None:
         return None
@@ -920,7 +922,7 @@ _CONVERGE_EXILE_RE = re.compile(
 
 @functools.lru_cache(maxsize=1024)
 def _converge_plan(text: str) -> _Crit | None:
-    match = _CONVERGE_EXILE_RE.fullmatch(" ".join(text.strip().split()))
+    match = _CONVERGE_EXILE_RE.fullmatch(collapsed(text.strip()))
     return None if match is None else _criteria(match.group("crit").strip())
 
 
@@ -964,7 +966,7 @@ _SEARCH_OPPONENT_EXILE_RE = re.compile(
 
 
 def _search_opponent_exile(text: str, *, for_spell: bool) -> Any:
-    if _SEARCH_OPPONENT_EXILE_RE.fullmatch(" ".join(text.strip().split())) is None:
+    if _SEARCH_OPPONENT_EXILE_RE.fullmatch(collapsed(text.strip())) is None:
         return None
     if not _targets_understood("target opponent", allow_player_targets=True):
         return None
@@ -1028,7 +1030,7 @@ def _is_basic_land_name(name: str) -> bool:
 
 
 def _choose_name_exile(text: str, *, for_spell: bool) -> Any:
-    match = _CHOOSE_NAME_EXILE_RE.fullmatch(" ".join(text.strip().split()))
+    match = _CHOOSE_NAME_EXILE_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     if not _targets_understood("target opponent", allow_player_targets=True):
@@ -1071,7 +1073,7 @@ def _choose_name_exile(text: str, *, for_spell: bool) -> Any:
 
 
 def _exile_then_name_exile(text: str, *, for_spell: bool) -> Any:
-    match = _EXILE_TARGET_THEN_NAME_RE.fullmatch(" ".join(text.strip().split()))
+    match = _EXILE_TARGET_THEN_NAME_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     if not _targets_understood(f"target {match.group('what')}", battlefield_only=True):
@@ -1119,7 +1121,7 @@ _CHOSEN_SAME_NAME_RE = re.compile(
 
 
 def _same_name_group(text: str, *, for_spell: bool) -> Any:
-    whole = " ".join(text.strip().split())
+    whole = collapsed(text.strip())
     each = _FOR_EACH_SAME_NAME_RE.fullmatch(whole)
     chosen = None if each is not None else _CHOSEN_SAME_NAME_RE.fullmatch(whole)
     if each is None and chosen is None:
@@ -1271,7 +1273,7 @@ _WHERE_X_OTHER_ATTACKERS_RE = re.compile(
 
 @ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
 def _parse_pump_where_x_other_attackers(text: str) -> Any:
-    match = _WHERE_X_OTHER_ATTACKERS_RE.fullmatch(" ".join(text.strip().split()))
+    match = _WHERE_X_OTHER_ATTACKERS_RE.fullmatch(collapsed(text.strip()))
     if match is None or (match.group("p") == "+0" and match.group("t") == "+0"):
         return None
 
@@ -1307,7 +1309,7 @@ def _return_with_auras(text: str) -> Any:
     attached to it to their owner's hand" - the Auras are those attached as the
     instruction starts, all moved together with the permanent so
     none falls off first (CR 704.5m)."""
-    match = _RETURN_WITH_AURAS_RE.fullmatch(" ".join(text.strip().split()))
+    match = _RETURN_WITH_AURAS_RE.fullmatch(collapsed(text.strip()))
     if match is None or not _targets_understood(match.group("phrase"), count_agnostic=True):
         return None
     mine_only = match.group("mine") is not None
@@ -1335,7 +1337,7 @@ def _return_with_auras(text: str) -> Any:
 def _and_life_clause(text: str, *, for_spell: bool) -> Any:
     """ "Destroy target creature and you lose life equal to its toughness" is
     the two-sentence form (CR 608.2c: in order) the ordinary readers hold."""
-    match = _AND_LIFE_RE.fullmatch(" ".join(text.strip().split()))
+    match = _AND_LIFE_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     who = match.group("who").capitalize()
@@ -1421,7 +1423,7 @@ def _parse_per_color_graveyard_return(clause: str, *, for_spell: bool) -> Any:
     holds them), every chosen card returned to its owner's hand."""
     if "for each color" not in clause.lower():
         return None
-    if _PER_COLOR_RETURN_RE.fullmatch(" ".join(clause.strip().split())) is None:
+    if _PER_COLOR_RETURN_RE.fullmatch(collapsed(clause.strip())) is None:
         return None
     if not profile_for_text(clause).understood:
         return None
@@ -1433,7 +1435,7 @@ def _pair_graveyard_return(clause: str) -> Any:
     """ "Return target creature card and up to one target Cleric ... card from
     your graveyard to the battlefield" - two targets from one instruction
     (CR 601.2c), both returned together (CR 603.6a)."""
-    match = _PAIR_RETURN_RE.fullmatch(" ".join(clause.strip().split()))
+    match = _PAIR_RETURN_RE.fullmatch(collapsed(clause.strip()))
     if match is None:
         return None
     profile = profile_for_text(clause)
@@ -1474,7 +1476,7 @@ def sacrificed_value_draw_and_put(text: str) -> Callable[..., None] | None:
     existed, CR 608.2h), then optionally put one qualifying card of mana value
     X or less from the hand (including the cards just drawn) onto the
     battlefield - a put, not a cast (CR 110.2a)."""
-    match = _DRAW_X_THEN_PUT_RE.fullmatch(" ".join(text.strip().split()))
+    match = _DRAW_X_THEN_PUT_RE.fullmatch(collapsed(text.strip()))
     if match is None or not _card_description_is_readable(match.group("quality")):
         return None
     matches_quality = _quality_matcher(match.group("quality"))
@@ -1531,7 +1533,7 @@ def _parse_surveil_then_exile_from_graveyard(text: str) -> Any:
     """CR 608.2c: the lead instruction (CR 701.25 surveil / CR 701.22 scry)
     runs, then the controller exiles a card of their choice from any
     graveyard (the reader that holds the bare sentence)."""
-    match = _THEN_EXILE_GRAVEYARD_RE.fullmatch(" ".join(text.strip().split()))
+    match = _THEN_EXILE_GRAVEYARD_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     from .exiled_with_peek import parse_exile_a_card_from_a_graveyard
@@ -1562,7 +1564,7 @@ def _parse_choose_exiled_card_then_become_copy(text: str) -> Any:
     of the exiled cards (never a token, CR 108.2) and make the targeted
     permanent a copy of it until end of turn, with the stated exception
     written into the copy (CR 707.9b)."""
-    match = _CHOOSE_FROM_AMONG_THEM_COPY_RE.fullmatch(" ".join(text.strip().split()))
+    match = _CHOOSE_FROM_AMONG_THEM_COPY_RE.fullmatch(collapsed(text.strip()))
     if match is None or not _card_description_is_readable(match.group("quality")):
         return None
     from .copy_effects import _become_a_copy, _copiable_values_of, _parse_become_copy_exceptions

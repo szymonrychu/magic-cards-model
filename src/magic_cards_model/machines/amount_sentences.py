@@ -28,6 +28,8 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState, TargetKind
 from ..models.player import Player
 from ..models.zone import Zone
@@ -44,7 +46,7 @@ Amount = Callable[["Game", Any, Player], int]
 def clean(sentence: str) -> str:
     """`sentence` with straight apostrophes, single spaces and no closing full
     stop - case kept."""
-    return " ".join(sentence.replace("’", "'").split()).rstrip(".").strip()
+    return collapsed(sentence.replace("’", "'")).rstrip(".").strip()
 
 
 # --------------------------------------------------------------------------

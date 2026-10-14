@@ -12,6 +12,8 @@ import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Type
 from ..models.card_state import CardState
 from ..models.zone import Zone
@@ -76,7 +78,7 @@ def _parse_create_tokens_equal_to_source_stat_clause(text: str, *, for_spell: bo
     known information when it has left the battlefield (CR 603.10a)."""
     if for_spell or "tokens equal to this" not in text:
         return None
-    match = _TOKENS_EQUAL_TO_SOURCE_STAT_RE.fullmatch(" ".join(text.strip().split()))
+    match = _TOKENS_EQUAL_TO_SOURCE_STAT_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     create = _token_creator_for_count(match.group("desc"))
@@ -385,7 +387,7 @@ def removal_then_rest_effect(text: str):
     lowered = text.lower()
     if "remove" not in lowered or _MENTIONS_REMOVED_RE.search(text) is None:
         return None
-    text = " ".join(text.strip().split())
+    text = collapsed(text.strip())
     first_end = text.find(". ")
     if first_end < 0:
         return None
@@ -441,7 +443,7 @@ def _singular_word(word: str) -> str | None:
 def owned_cards_that_are(phrase: str):
     """The `(game, controller) -> int` reader of "cards you own in exile and in
     your graveyard that are Oozes or are named N", or `None`."""
-    match = _OWNED_THAT_ARE_RE.fullmatch(" ".join(phrase.split()).rstrip("."))
+    match = _OWNED_THAT_ARE_RE.fullmatch(collapsed(phrase).rstrip("."))
     if match is None:
         return None
     from .ep02_r1_graveyard_counts import _quality
@@ -492,7 +494,7 @@ def _parse_opponents_power_bound_cant_block_clause(clause: str, *, for_spell: bo
     of creatures it applies to."""
     if "with power" not in clause:
         return None
-    match = _POWER_BOUND_CANT_BLOCK_RE.fullmatch(" ".join(clause.split()))
+    match = _POWER_BOUND_CANT_BLOCK_RE.fullmatch(collapsed(clause))
     if match is None:
         return None
     threshold = int(match.group("n") or match.group("n2"))
@@ -534,7 +536,7 @@ def _parse_count_the_number_then_rest(text: str):
     """ "Count the number of <expr>. <Sentence using that number>" (CR 608.2c)."""
     if not text.lower().startswith("count the number of"):
         return None
-    match = _COUNT_THE_NUMBER_RE.fullmatch(" ".join(text.strip().split()))
+    match = _COUNT_THE_NUMBER_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     reader = amount_expression("the number of " + match.group("expr"))
@@ -576,7 +578,7 @@ def _parse_counters_for_each_card_in_hand_clause(clause: str, *, for_spell: bool
     only counters that are there can come off."""
     if for_spell or " for each card in " not in clause:
         return None
-    match = _COUNTERS_FOR_EACH_CARD_IN_HAND_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    match = _COUNTERS_FOR_EACH_CARD_IN_HAND_RE.fullmatch(collapsed(clause).rstrip("."))
     if match is None:
         return None
     unit = parse_count(match.group("n"))
@@ -637,7 +639,7 @@ def _types_of(words: str):
 def exile_group_list_effect(text: str):
     """ "Exile <this permanent>, all <types> [with mana value <bound>], and all
     <types> cards in graveyards [with mana value <bound>]" as one effect, or None."""
-    body = " ".join(text.split()).rstrip(".")
+    body = collapsed(text).rstrip(".")
     if not body.lower().startswith("exile ") or " all " not in body.lower():
         return None
     items = [
@@ -719,7 +721,7 @@ _THAT_PLAYER_MAY_PUT_THEN_ADD_RE = re.compile(
 def _parse_that_player_may_put_counter_then_add_mana(text: str):
     if not text.lower().startswith("that player may put"):
         return None
-    match = _THAT_PLAYER_MAY_PUT_THEN_ADD_RE.fullmatch(" ".join(text.split()))
+    match = _THAT_PLAYER_MAY_PUT_THEN_ADD_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     unit = parse_count(match.group("n"))
@@ -799,7 +801,7 @@ def _parse_kind_put_or_remove(text: str):
     """One more or one fewer counter of each kind on the target (CR 122.1)."""
     if not text.lower().startswith("for each kind of counter on target"):
         return None
-    if _KIND_PUT_OR_REMOVE_RE.fullmatch(" ".join(text.split())) is None:
+    if _KIND_PUT_OR_REMOVE_RE.fullmatch(collapsed(text)) is None:
         return None
 
     def effect(game: "Game", ability) -> None:
@@ -833,7 +835,7 @@ def _parse_double_counters(text: str):
     """Double the counters of one kind on an object (CR 701.10e)."""
     if not text.lower().startswith("double the number of"):
         return None
-    match = _DOUBLE_COUNTERS_RE.fullmatch(" ".join(text.split()))
+    match = _DOUBLE_COUNTERS_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     kind = _counter_kind(match.group("kind").lower())
@@ -875,7 +877,7 @@ def _new_permanents(game: "Game", controller: str, run) -> list:
 @SPELL_TEXT.rung("s23", before=("parse_mixed_effect_for_spell",))
 def _parse_tokens_then_kinds_among(text: str):
     """Create tokens, then one counter of each kind among a group on any of them."""
-    flat = " ".join(text.split())
+    flat = collapsed(text)
     if " then for each kind of counter among " not in flat.lower():
         return None
     match = _THEN_EACH_KIND_AMONG_RE.search(flat)
@@ -940,7 +942,7 @@ _GROUP_BASE_PT_RE = re.compile(
 @functools.cache
 def group_base_pt_effect(text: str):
     """The group base-P/T set as an effect, or `None` when `text` is not it."""
-    match = _GROUP_BASE_PT_RE.fullmatch(" ".join(text.split()))
+    match = _GROUP_BASE_PT_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     optional = match.group("may") is not None
@@ -1001,7 +1003,7 @@ def _parse_effect_then_group_base_pt(text: str):
     """ "<Instruction>. Then you may have the base power and toughness of ..." -
     the instruction first, then the set (CR 608.2c), so the set reads a power the
     instruction has already changed (Sita Varma's counters)."""
-    flat = " ".join(text.split())
+    flat = collapsed(text)
     head, found, tail = flat.partition(". Then ")
     if not found or "base power and toughness of" not in tail.lower():
         return None
@@ -1023,7 +1025,7 @@ def _parse_remove_x_counters_where_x(text: str, *, for_spell: bool):
     whose count is a computed amount (CR 107.3), with no instruction after it."""
     if for_spell:
         return None
-    flat = " ".join(text.split())
+    flat = collapsed(text)
     if not flat.lower().startswith("remove ") or ", where x is" not in flat.lower():
         return None
     head = _removal_head(flat.rstrip("."))
@@ -1049,7 +1051,7 @@ def _parse_twice_n_counters_clause(text: str, *, for_spell: bool):
     zero is nothing to remove or put, so it is a clause that does nothing (CR 122.1)."""
     if " twice " not in f" {text.lower()}":
         return None
-    match = _TWICE_N_COUNTERS_RE.fullmatch(" ".join(text.split()))
+    match = _TWICE_N_COUNTERS_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     count = 2 * int(match.group("n"))
@@ -1090,7 +1092,7 @@ def parse_counter_static_sentence(sentence: str):
     """The layer builder for one of the shapes above, or `None`."""
     from .layers.parse import _source_line_for
 
-    flat = " ".join(sentence.split())
+    flat = collapsed(sentence)
     pump = _COUNTER_PUMP_STATIC_RE.fullmatch(flat)
     walkers = _PLANESWALKER_CREATURES_RE.fullmatch(flat)
     if pump is None and walkers is None:
@@ -1181,7 +1183,7 @@ _BECOMES_CREATURE_BY_COUNTERS_RE = re.compile(
 
 @ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
 def _parse_becomes_creature_sized_by_counters(text: str):
-    flat = " ".join(text.split())
+    flat = collapsed(text)
     if "creature with power and toughness each equal to the number of" not in flat.lower():
         return None
     match = _BECOMES_CREATURE_BY_COUNTERS_RE.fullmatch(flat)
@@ -1249,7 +1251,7 @@ _COUNTERS_EQUAL_TO_POWER_BECOMES_RE = re.compile(
 
 @ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
 def _parse_counters_equal_to_power_then_becomes(text: str):
-    flat = " ".join(text.split())
+    flat = collapsed(text)
     if not flat.lower().startswith("put a number of "):
         return None
     match = _COUNTERS_EQUAL_TO_POWER_BECOMES_RE.fullmatch(flat)
@@ -1302,7 +1304,7 @@ _TAP_EACH_OPPONENT_STUN_RE = re.compile(
 
 @ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
 def _parse_tap_each_opponents_then_counters_and_life(text: str):
-    flat = " ".join(text.split())
+    flat = collapsed(text)
     if not flat.lower().startswith("for each opponent, tap up to one target"):
         return None
     match = _TAP_EACH_OPPONENT_STUN_RE.fullmatch(flat)
@@ -1349,7 +1351,7 @@ def _parse_counter_then_each_player_exiles_x(text: str):
     """The text arrives either whole ("exiles X ..., where X is the number of despair
     counters ...") or with that count already read as a number (`ep02_r1_counter_amounts.
     counters_counted_text`, which counts the counter this ability is about to put)."""
-    flat = " ".join(text.split())
+    flat = collapsed(text)
     if not flat.lower().startswith("put a") or " each player exiles " not in flat.lower():
         return None
     match = _COUNTER_THEN_EACH_PLAYER_EXILES_RE.fullmatch(flat)
@@ -1411,7 +1413,7 @@ _COUNTER_EACH_SUBTYPE_ON_BATTLEFIELD_RE = re.compile(
 
 @ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
 def _parse_counter_on_each_subtype_on_battlefield(text: str):
-    flat = " ".join(text.split())
+    flat = collapsed(text)
     if " on the battlefield" not in flat.lower() or not flat.lower().startswith("put "):
         return None
     match = _COUNTER_EACH_SUBTYPE_ON_BATTLEFIELD_RE.fullmatch(flat)
@@ -1452,7 +1454,7 @@ _DISTRIBUTE_SNOW_RE = re.compile(
 
 @SPELL_TEXT.rung("s23", before=("parse_mixed_effect_for_spell",))
 def _parse_distribute_snow_counters_then_draw(text: str):
-    flat = " ".join(text.split())
+    flat = collapsed(text)
     if not flat.lower().startswith("distribute x "):
         return None
     match = _DISTRIBUTE_SNOW_RE.fullmatch(flat)
@@ -1522,7 +1524,7 @@ _COUNTERS_ON_SPELL_THEN_NEW_TARGET_RE = re.compile(
 
 @ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
 def _parse_counters_on_spell_then_new_target(text: str):
-    flat = " ".join(text.split())
+    flat = collapsed(text)
     if not flat.lower().startswith("put ") or "choose a new target for it" not in flat.lower():
         return None
     match = _COUNTERS_ON_SPELL_THEN_NEW_TARGET_RE.fullmatch(flat)
@@ -1566,7 +1568,7 @@ def _spell_with_x(base: str, n: int):
 
 @SPELL_TEXT.rung("s23", before=("parse_mixed_effect_for_spell",))
 def _parse_spell_x_from_its_own_counters(text: str):
-    flat = " ".join(text.split())
+    flat = collapsed(text)
     lowered = flat.lower()
     if ", where x is" not in lowered or " deals x damage" not in lowered:
         return None

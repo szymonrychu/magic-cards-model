@@ -15,6 +15,8 @@
 import re
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.player import Player
 from ..models.zone import Zone
@@ -38,7 +40,7 @@ _RETURN_GREATEST_THEN_DISCARD_RE = re.compile(
 
 
 def _destroy_all_then_power_damage(text: str, *, for_spell: bool) -> Any:
-    if _DESTROY_ALL_THEN_POWER_RE.fullmatch(" ".join(text.strip().split())) is None:
+    if _DESTROY_ALL_THEN_POWER_RE.fullmatch(collapsed(text.strip())) is None:
         return None
     if not _targets_understood("target opponent", allow_player_targets=True):
         return None
@@ -79,7 +81,7 @@ def _greatest_value_candidates(game: "Game", player: Player) -> list[CardState]:
 
 
 def _return_greatest_then_discard(text: str, *, for_spell: bool) -> Any:
-    if _RETURN_GREATEST_THEN_DISCARD_RE.fullmatch(" ".join(text.strip().split())) is None:
+    if _RETURN_GREATEST_THEN_DISCARD_RE.fullmatch(collapsed(text.strip())) is None:
         return None
 
     def effect(game: "Game", obj: Any) -> None:

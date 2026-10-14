@@ -49,6 +49,8 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
@@ -118,7 +120,7 @@ def parse_destroy_target_and_same_name_permanents_clause(
 ) -> TargetedClause | None:
     """`_DESTROY_TARGET_AND_SAME_NAME_RE`'s shape, or `None` - Maelstrom
     Pulse's whole text."""
-    whole = " ".join(text.strip().split())
+    whole = collapsed(text.strip())
     match = _DESTROY_TARGET_AND_SAME_NAME_RE.fullmatch(whole)
     if match is None:
         return None
@@ -150,7 +152,7 @@ def parse_return_target_and_same_name_permanents_to_hands_clause(
     """`_RETURN_TARGET_AND_SAME_NAME_TO_OWNERS_HANDS_RE`'s shape, or `None` -
     Echoing Truth's whole text, the generalisation proof for the shared
     `_same_name_battlefield_group` selector above."""
-    whole = " ".join(text.strip().split())
+    whole = collapsed(text.strip())
     match = _RETURN_TARGET_AND_SAME_NAME_TO_OWNERS_HANDS_RE.fullmatch(whole)
     if match is None:
         return None
@@ -205,7 +207,7 @@ def parse_target_blocks_if_able_then_may_gain_keyword_clause(
     Dispute's own first two sentences, with its trailing "Learn." (or any
     other rider a future printing of this shape carries) composed after
     through the ordinary per-clause dispatcher rather than read here."""
-    whole = " ".join(text.strip().split())
+    whole = collapsed(text.strip())
     match = _TARGET_BLOCKS_THIS_TURN_IF_ABLE_RE.fullmatch(whole)
     if match is None:
         return None
@@ -304,7 +306,7 @@ def parse_token_with_quoted_ability_then_rest_clause(
     from .effects import parse_mixed_effect, parse_mixed_effect_for_spell
 
     parser = parse_mixed_effect_for_spell if for_spell else parse_mixed_effect
-    whole = " ".join(text.strip().split())
+    whole = collapsed(text.strip())
     match = _TOKEN_WITH_QUOTED_ABILITY_THEN_REST_RE.fullmatch(whole)
     if match is None:
         return None
@@ -367,7 +369,7 @@ def parse_look_top_reveal_conditional_battlefield_clause(
     text: str, *, for_spell: bool
 ) -> TargetedClause | None:
     """`_LOOK_TOP_REVEAL_CONDITIONAL_BATTLEFIELD_RE`'s shape, or `None`."""
-    whole = " ".join(text.strip().split())
+    whole = collapsed(text.strip())
     match = _LOOK_TOP_REVEAL_CONDITIONAL_BATTLEFIELD_RE.fullmatch(whole)
     if match is None:
         return None
@@ -481,7 +483,7 @@ def parse_return_from_graveyard_to_battlefield_distinct_clause(
     it, the same trust every other targeted clause in this file already
     places in `TargetingProfile.check` having already run.
     """
-    whole = " ".join(text.strip().split())
+    whole = collapsed(text.strip())
     match = _RETURN_FROM_GRAVEYARD_TO_BATTLEFIELD_DISTINCT_RE.fullmatch(whole)
     if match is None:
         return None
@@ -537,7 +539,7 @@ def parse_target_player_exiles_creature_and_graveyard_clause(
 ) -> TargetedClause | None:
     """`_TARGET_OPPONENT_EXILES_CREATURE_AND_GRAVEYARD_RE`'s shape, or
     `None` - Strategic Betrayal's whole text."""
-    whole = " ".join(text.strip().split())
+    whole = collapsed(text.strip())
     match = _TARGET_OPPONENT_EXILES_CREATURE_AND_GRAVEYARD_RE.fullmatch(whole)
     if match is None:
         return None

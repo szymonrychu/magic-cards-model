@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from magic_cards_model.phrases import with_indefinite_article
+from magic_cards_model.text_norm import collapsed
 
 from ...data.subtypes import creature_type_vocabulary, subtype_vocabulary
 from ...models.card import Color, Type
@@ -1524,9 +1525,7 @@ def _parse_if_quality_dealt_damage_this_way_spell(effect_text: str) -> Effect | 
     """`_IF_QUALITY_DEALT_DAMAGE_THIS_WAY_RE`'s shape; see the banner above."""
     if "dealt damage this way" not in effect_text.lower():  # cheap literal gate
         return None
-    sentences = _plain_resolution_sentences(
-        " ".join(_strip_non_effect_preamble(effect_text).split())
-    )
+    sentences = _plain_resolution_sentences(collapsed(_strip_non_effect_preamble(effect_text)))
     index = next(
         (
             position
@@ -2143,7 +2142,7 @@ _SHUFFLE_OWN_HAND_GRAVEYARD_THEN_DRAW_RE = re.compile(
 @ABILITY_TEXT.rung("s1")
 def _parse_shuffle_own_hand_graveyard_then_draw_text(text: str) -> "AbilityEffect | None":
     """`_SHUFFLE_OWN_HAND_GRAVEYARD_THEN_DRAW_RE`'s shape, or `None`."""
-    match = _SHUFFLE_OWN_HAND_GRAVEYARD_THEN_DRAW_RE.fullmatch(" ".join(text.split()))
+    match = _SHUFFLE_OWN_HAND_GRAVEYARD_THEN_DRAW_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     count = parse_count(match.group("count"))
@@ -6399,7 +6398,7 @@ def _merge_self_clause_and_prevent_to_it_clauses(
     clause that also names a target is refused: "it" could be that target."""
     if for_spell or "would be dealt to it this turn" not in text.lower():
         return None
-    match = _SELF_CLAUSE_AND_PREVENT_TO_IT_RE.fullmatch(" ".join(text.strip().split()))
+    match = _SELF_CLAUSE_AND_PREVENT_TO_IT_RE.fullmatch(collapsed(text.strip()))
     if match is None or "target" in match.group("first").lower():
         return None
     first = _parse_mixed_clause(match.group("first"), for_spell=False)

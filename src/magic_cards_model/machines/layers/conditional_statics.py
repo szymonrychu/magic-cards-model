@@ -36,6 +36,8 @@ from collections.abc import Callable, Sequence
 from typing import NamedTuple
 from uuid import UUID
 
+from magic_cards_model.text_norm import collapsed
+
 from ...data.subtypes import canonical_subtype
 from ...models.card import Color, Type
 from ...models.card_state import CardState
@@ -296,7 +298,7 @@ def _count_of(raw: str | None, *, default: int = 1) -> int | None:
 
 def _parse_condition(text: str) -> _Condition | None:
     """One condition clause, or None for a clause not read. "A and B" is both."""
-    clause = " ".join(text.strip().rstrip(".").split())
+    clause = collapsed(text.strip().rstrip("."))
     lowered = clause.lower()
     if match := _YOUR_TURN_RE.fullmatch(clause):
         return _Condition(gates=(_your_turn_gate,))
@@ -473,7 +475,7 @@ def _group_quality(noun: str) -> QualityTest | None:
 def _parse_subject(text: str, condition: _Condition) -> tuple[_Subject, _Condition] | None:
     """The subject of a predicate, plus the condition it contributes (a group
     that "shares a color with that card" adds the top card's colours)."""
-    phrase = " ".join(text.strip().split())
+    phrase = collapsed(text.strip())
     if _SELF_SUBJECT_RE.fullmatch(phrase):
         if phrase.lower() in {"it", "he", "she", "they"} and condition.refers_to == "attached":
             return _attached_subject(), condition

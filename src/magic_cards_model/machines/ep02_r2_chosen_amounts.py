@@ -45,6 +45,8 @@ import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.player import Player
 from ..models.zone import Zone
@@ -483,7 +485,7 @@ def any_number_of_times_effect(text: str) -> Any:
     (CR 603.12) carries the payoff with "that many" read as that number."""
     if "any number of times" not in text.lower():
         return None
-    match = _ANY_NUMBER_OF_TIMES_RE.fullmatch(" ".join(text.strip().split()))
+    match = _ANY_NUMBER_OF_TIMES_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     cost_text, payoff = match.group("cost"), match.group("payoff")
@@ -545,7 +547,7 @@ def _then_that_many_plan(text: str, for_spell: bool) -> tuple[Any, str] | None:
     from .effects.text import _strip_non_effect_preamble
     from .effects.tokens import _is_notice_only
 
-    whole = " ".join(_strip_non_effect_preamble(text).strip().split())
+    whole = collapsed(_strip_non_effect_preamble(text).strip())
     match = _FIRST_SENTENCE_RE.fullmatch(whole)
     if match is None or "that many" not in match.group("rest").lower():
         return None
@@ -747,7 +749,7 @@ def amount_written_effect(text: str, for_spell: bool) -> Any:
 
     if (counted := parse_where_x_whole_text(text, for_spell=for_spell)) is not None:
         return counted  # a counted group is that reader's; the rest is measured here
-    whole = " ".join(_strip_non_effect_preamble(text).strip().split())
+    whole = collapsed(_strip_non_effect_preamble(text).strip())
     prefix, body = "", whole
     sentences = re.split(r"(?<=\.)\s+", whole)
     where_at = next(
@@ -827,7 +829,7 @@ def pay_x_capped_effect(text: str, for_spell: bool) -> Any:
         return None
     from .amount_sentences import write_x
 
-    match = _PAY_X_CAPPED_RE.fullmatch(" ".join(text.strip().split()))
+    match = _PAY_X_CAPPED_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     cap = amount_measure(match.group("cap"))
@@ -887,7 +889,7 @@ def _parse_look_top_play_or_cast_else_hand(text: str) -> Any:
     legal; a card not played or cast goes to its owner's hand."""
     if "if you don't, put that card into your hand" not in text.lower():
         return None
-    match = _LOOK_TOP_PLAY_OR_CAST_ELSE_HAND_RE.fullmatch(" ".join(text.strip().split()))
+    match = _LOOK_TOP_PLAY_OR_CAST_ELSE_HAND_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     most = int(match.group("most")) if match.group("most") else None
@@ -937,7 +939,7 @@ def _parse_look_top_exile_one_play_this_turn(text: str) -> Any:
     N of zero looks at nothing."""
     if "may play the exiled card this turn" not in text.lower():
         return None
-    match = _LOOK_TOP_EXILE_ONE_PLAY_RE.fullmatch(" ".join(text.strip().split()))
+    match = _LOOK_TOP_EXILE_ONE_PLAY_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     count = int(match.group("n"))
@@ -1012,7 +1014,7 @@ def colored_symbols_in_costs(cards: list[CardState], color: str) -> int:
 def _reveal_then_symbols_plan(text: str, for_spell: bool) -> tuple[str, str, str] | None:
     from .effects.text import _strip_non_effect_preamble
 
-    whole = " ".join(_strip_non_effect_preamble(text).strip().split())
+    whole = collapsed(_strip_non_effect_preamble(text).strip())
     match = _FIRST_SENTENCE_RE.fullmatch(whole)
     if match is None:
         return None
@@ -1091,7 +1093,7 @@ def repeated_pay_life_effect(text: str) -> Any:
 
     if "repeat this process until no one pays life" not in text.lower():
         return None
-    match = _REPEATED_PAY_LIFE_RE.fullmatch(" ".join(text.strip().split()))
+    match = _REPEATED_PAY_LIFE_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     make = token_maker(match.group("rest"))
@@ -1139,7 +1141,7 @@ def look_top_one_to_hand_exile_rest(clause: str) -> Any:
     exiled (CR 406.1). N of zero looks at nothing."""
     if "exile the rest" not in clause.lower():
         return None
-    match = _LOOK_TOP_ONE_TO_HAND_EXILE_REST_RE.fullmatch(" ".join(clause.strip().split()))
+    match = _LOOK_TOP_ONE_TO_HAND_EXILE_REST_RE.fullmatch(collapsed(clause.strip()))
     if match is None:
         return None
     count = int(match.group("n"))
@@ -1228,7 +1230,7 @@ def _parse_enters_tapped_this_turn_clause(clause: str, *, for_spell: bool) -> An
     spec = created_replacement_spec(clause)
     if not isinstance(spec, EntersTappedThisTurn):
         return None
-    label = " ".join(clause.split())
+    label = collapsed(clause)
 
     def effect(game: "Game", stack_object: Any) -> None:
         source_id = getattr(stack_object, "source_id", None) or getattr(stack_object, "id", None)
@@ -1257,7 +1259,7 @@ def _parse_leading_for_each_clause(clause: str, *, for_spell: bool) -> Any:
         return None
     from .effects.dispatch import _parse_mixed_clause
 
-    match = _LEADING_FOR_EACH_RE.fullmatch(" ".join(clause.strip().split()))
+    match = _LEADING_FOR_EACH_RE.fullmatch(collapsed(clause.strip()))
     if match is None or "this way" not in match.group("each").lower():
         return None
     return _parse_mixed_clause(
@@ -1302,7 +1304,7 @@ def reveal_choose_put_effect(text: str) -> Any:
     random order."""
     if "cards chosen this way onto the battlefield" not in text.lower():
         return None
-    match = _REVEAL_CHOOSE_PUT_RE.fullmatch(" ".join(text.strip().split()))
+    match = _REVEAL_CHOOSE_PUT_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     types = _type_list(match.group("types"))
@@ -1361,7 +1363,7 @@ _PLAY_THOSE_THIS_TURN_RE = re.compile(
 def _play_exiled_plan(text: str, for_spell: bool) -> tuple[str, str] | None:
     from .effects.text import _strip_non_effect_preamble
 
-    whole = " ".join(_strip_non_effect_preamble(text).strip().split())
+    whole = collapsed(_strip_non_effect_preamble(text).strip())
     match = _PLAY_THOSE_THIS_TURN_RE.fullmatch(whole)
     if match is None:
         return None
@@ -1449,7 +1451,7 @@ def reveal_n_choose_exile_effect(text: str, for_spell: bool) -> Any:
     the choice made as the effect resolves (CR 608.2d)."""
     if " reveals " not in text.lower() or "of them and exile it" not in text.lower():
         return None
-    match = _REVEAL_N_CHOOSE_EXILE_RE.fullmatch(" ".join(text.strip().split()))
+    match = _REVEAL_N_CHOOSE_EXILE_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     wanted = int(match.group("n"))
@@ -1584,7 +1586,7 @@ def _exile_hand_plan(text: str) -> tuple[Any, int | None] | None:
     from .effects.text import _strip_non_effect_preamble
     from .effects.tokens import _is_notice_only
 
-    whole = " ".join(_strip_non_effect_preamble(text).strip().split())
+    whole = collapsed(_strip_non_effect_preamble(text).strip())
     match = _EXILE_HAND_AND_DRAW_PAID_RE.fullmatch(whole)
     if match is None:
         return None
@@ -1678,7 +1680,7 @@ def lead_then_exile_copy_cast_effect(text: str) -> Any:
     the copy" (`removal._parse_exile_target_card_copy_it_cast_clause`)."""
     if ", then exile up to" not in text.lower():
         return None
-    match = _LEAD_THEN_EXILE_COPY_RE.fullmatch(" ".join(text.strip().split()))
+    match = _LEAD_THEN_EXILE_COPY_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     from .effects.dispatch import _ability_effect_or_notice

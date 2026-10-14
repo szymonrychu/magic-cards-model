@@ -15,6 +15,8 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from .decisions import Decision, DecisionKind
 
@@ -33,7 +35,7 @@ _UNTAP_CHOICE_RE = re.compile(
 def untap_choice_types(line: str) -> tuple[str, ...] | None:
     """The types an untap-step choice line offers ("artifact, creature, or
     land"), or None when `line` is not that line."""
-    match = _UNTAP_CHOICE_RE.fullmatch(" ".join(line.split()))
+    match = _UNTAP_CHOICE_RE.fullmatch(collapsed(line))
     if match is None:
         return None
     types = tuple(

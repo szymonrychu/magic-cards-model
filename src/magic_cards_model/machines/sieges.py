@@ -20,6 +20,8 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Card, Type, subtypes_of, types_of
 from ..models.zone import Zone
 from .abilities import TriggeredAbility, TriggerWord
@@ -86,7 +88,7 @@ def exile_then_cast_transformed_effect(effect_text: str) -> AbilityEffect | None
     exiled, and then there is no "it" to cast. The cast is made while the
     ability resolves (CR 608.2g), by its controller, back face up (CR
     712.11a), without paying its mana cost (CR 118.9)."""
-    if _EXILE_THEN_CAST_TRANSFORMED_RE.fullmatch(" ".join(effect_text.split())) is None:
+    if _EXILE_THEN_CAST_TRANSFORMED_RE.fullmatch(collapsed(effect_text)) is None:
         return None
 
     def effect(game: Game, ability: AbilityOnStack) -> None:

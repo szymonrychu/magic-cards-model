@@ -46,6 +46,8 @@ from typing import Any
 
 from pydantic import ConfigDict
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.mana import ManaCost
 from ..models.zone import Zone
@@ -729,7 +731,7 @@ def parse_choose_exiled_with_counter_play_clause(text: str) -> Any:
     card in exile carrying the counter (and owned as printed), and gets a
     this-turn play permission for it (CR 601.3), free where printed (CR
     118.9). Nothing to choose is nothing done."""
-    match = _CHOOSE_EXILED_WITH_COUNTER_RE.fullmatch(" ".join(text.split()))
+    match = _CHOOSE_EXILED_WITH_COUNTER_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     owner = (match.group("owner") or "").lower()
@@ -806,7 +808,7 @@ def parse_graveyard_cards_gain_cast_clause(text: str) -> Any:
     """`_GRAVEYARD_CARDS_GAIN_QUOTED_RE`'s effect: a this-turn permission
     (CR 601.3) for every card of that quality in the controller's graveyard,
     or a fail-closed notice for a payload this does not perform."""
-    normalized = " ".join(text.split()).replace("\u201c", '"').replace("\u201d", '"')
+    normalized = collapsed(text).replace("\u201c", '"').replace("\u201d", '"')
     match = _GRAVEYARD_CARDS_GAIN_QUOTED_RE.fullmatch(normalized)
     if match is None or (match.group("lead") is None) == (match.group("trail") is None):
         return None
@@ -873,7 +875,7 @@ def parse_exile_at_random_from_graveyard_play_clause(text: str) -> Any:
     it holds fewer), each gaining a this-turn play permission from exile."""
     from ..numbers import parse_count
 
-    match = _EXILE_AT_RANDOM_FROM_GRAVEYARD_PLAY_RE.fullmatch(" ".join(text.split()))
+    match = _EXILE_AT_RANDOM_FROM_GRAVEYARD_PLAY_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     count = parse_count(match.group("count"))

@@ -24,6 +24,8 @@ import functools
 import re
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Type
 from ..models.card_state import CardState
 from ..models.zone import Zone
@@ -115,7 +117,7 @@ def look_top_effect(text: str, *, for_spell: bool = False) -> "Any | None":
     from .effects.dispatch import parse_mixed_effect, parse_mixed_effect_for_spell
     from .effects.text import _strip_non_effect_preamble
 
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     opening = _SENTENCE_END_RE.split(whole)
     at = next((i for i, part in enumerate(opening) if _LOOK_OPENING_RE.match(part)), None)
     if at is None:
@@ -388,7 +390,7 @@ def counters_amount_effect(text: str) -> "Any | None":
     from .effects.counters import _counter_kind
     from .effects.text import _strip_non_effect_preamble
 
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     chosen = CHOOSE_TARGET_RE.match(whole)
     if chosen is not None and not chosen.group("rest"):
         return None
@@ -461,7 +463,7 @@ def return_if_mana_value_effect(text: str) -> "Any | None":
         return None
     from .effects.text import _strip_non_effect_preamble
 
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     chosen = CHOOSE_TARGET_RE.match(whole)
     if chosen is None or not chosen.group("rest"):
         return None
@@ -542,7 +544,7 @@ def life_per_color_effect(text: str, *, for_spell: bool) -> "Any | None":
     from .effects.dispatch import parse_mixed_effect, parse_mixed_effect_for_spell
     from .effects.text import _strip_non_effect_preamble
 
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     split = re.split(r"(?<=\.)\s+(?=you (?:may )?gain )", whole, maxsplit=1, flags=re.IGNORECASE)
     lead, last = (split[0], split[1]) if len(split) == 2 else ("", whole)
     match = _LIFE_PER_COLOR_RE.fullmatch(last.strip().rstrip("."))
@@ -598,7 +600,7 @@ def discard_hand_draw_per_color_effect(text: str) -> "Any | None":
         return None
     from .effects.text import _strip_non_effect_preamble
 
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     match = _DISCARD_HAND_DRAW_PER_COLOR_RE.fullmatch(whole.rstrip("."))
     count_colors = colors_of_reference(match.group("each")) if match is not None else None
     if count_colors is None:

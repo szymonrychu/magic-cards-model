@@ -27,6 +27,8 @@ Rules in the session that wrote this file.
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..data.printing_pool import resolve_printing
 from ..models.card import Card, Component
 from ..models.card_state import CardState
@@ -132,7 +134,7 @@ def _do_meld(game: "Game", ability: "AbilityOnStack", partner_name: str, result_
     partner = _find_partner(game, source, partner_name)
     if partner is None:
         return  # CR 701.42c: can't be melded (only one half present, say).
-    result_card = resolve_printing(" ".join(result_name.split()))
+    result_card = resolve_printing(collapsed(result_name))
     if result_card is None:
         from .effects import UnmodeledTriggerEffectNotice
 
@@ -152,7 +154,7 @@ def parse_meld_activation_clause(effect_text: str):
     or `None`. Returned as the `AbilityEffect` `activated_effect_for`'s
     fallback chain expects: `(game, ability) -> None`.
     """
-    match = _ACTIVATION_RE.match(" ".join(effect_text.split()))
+    match = _ACTIVATION_RE.match(collapsed(effect_text))
     if match is None:
         return None
     result_name = match.group("result")
@@ -182,7 +184,7 @@ def parse_meld_resolution_clause(effect_text: str):
     `intervening_if`/`condition` at call time rather than threaded through a
     second parameter no other `AbilityEffect` in this codebase carries.
     """
-    match = _MELD_RESOLUTION_RE.match(" ".join(effect_text.split()))
+    match = _MELD_RESOLUTION_RE.match(collapsed(effect_text))
     if match is None:
         return None
     result_name = match.group("result")

@@ -16,6 +16,8 @@ import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ...models.card import Type
 from ...models.card_state import CardState, ExileAnnotation, ExileMarker
 from ...models.zone import Zone
@@ -324,7 +326,7 @@ def _compile_cycling_draw(effect: ReplacementEffect) -> CardReplacement | None:
     (CR 702.29a, 614.11a) Cascade's own half-by-half process (CR 702.85a)."""
     if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD or effect.from_trigger:
         return None
-    if " ".join(strip_reminder_text(effect.raw)[0].lower().split()) != _CYCLING_DRAW_LINE:
+    if collapsed(strip_reminder_text(effect.raw)[0].lower()) != _CYCLING_DRAW_LINE:
         return None
 
     def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:

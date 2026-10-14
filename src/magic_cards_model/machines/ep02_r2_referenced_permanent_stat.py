@@ -31,6 +31,8 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Type
 from ..models.card_state import CardState
 from ..models.mana import ManaCost
@@ -83,7 +85,7 @@ def parse_ref(phrase: str) -> Phrase | None:
     """ "this creature's power" (the source itself, anchor "self") or any
     phrase `parse_moved_phrase` reads ("its power", "that creature's power",
     "that artifact's mana value", "the sacrificed permanent's mana value")."""
-    text = " ".join(phrase.replace("’", "'").split()).rstrip(".").lower()
+    text = collapsed(phrase.replace("’", "'")).rstrip(".").lower()
     if (match := _SELF_STAT_RE.fullmatch(text)) is not None:
         return Phrase("self", match.group("stat"))
     return parse_moved_phrase(text)
@@ -1512,9 +1514,7 @@ def referenced_permanent_stat_effect(
 
     sentences = [
         _clean(sentence)
-        for sentence in _plain_resolution_sentences(
-            " ".join(_strip_non_effect_preamble(text).split())
-        )
+        for sentence in _plain_resolution_sentences(collapsed(_strip_non_effect_preamble(text)))
     ]
     sentences = [s for s in sentences if s]
     if not sentences:

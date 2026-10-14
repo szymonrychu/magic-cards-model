@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import ConfigDict
 
+from magic_cards_model.text_norm import collapsed
+
 from ...models.card import Card, Color, Layout, Type, types_of
 from ...models.card_state import CardState
 from ...models.mana import ManaCost
@@ -129,7 +131,7 @@ class PrintedSelfZoneCast(EngineModel):
 
 @lru_cache(maxsize=2048)
 def printed_self_zone_cast(text: str) -> PrintedSelfZoneCast | None:
-    line, word_condition = strip_ability_word(_REMINDER_TEXT_RE.sub("", " ".join(text.split())))
+    line, word_condition = strip_ability_word(_REMINDER_TEXT_RE.sub("", collapsed(text)))
     match = _PRINTED_SELF_ZONE_CAST_RE.fullmatch(line)
     if match is None:
         return _printed_self_zone_cast_alternative(line)
@@ -174,7 +176,7 @@ def _as_cost_phrase(extra: str) -> str:
 
 
 def _printed_self_zone_cast_alternative(line: str) -> "PrintedSelfZoneCast | None":
-    match = _PRINTED_SELF_ZONE_CAST_ALTERNATIVE_RE.fullmatch(" ".join(line.split()))
+    match = _PRINTED_SELF_ZONE_CAST_ALTERNATIVE_RE.fullmatch(collapsed(line))
     if match is None:
         return None
     cost = total_cost_for_phrase(_as_cost_phrase(match.group("cost")))
@@ -200,7 +202,7 @@ _SEARCH_CAST_RE = re.compile(
 def reads_search_cast_permission_line(text: str) -> bool:
     """Panglacial Wurm's line: what `support.py` asks, and what
     `search_cast_candidates` consults while a library search is under way."""
-    return _SEARCH_CAST_RE.fullmatch(" ".join(_REMINDER_TEXT_RE.sub("", text).split())) is not None
+    return _SEARCH_CAST_RE.fullmatch(collapsed(_REMINDER_TEXT_RE.sub("", text))) is not None
 
 
 def search_cast_candidates(library: list[CardState]) -> list[CardState]:
@@ -276,7 +278,7 @@ _PRINTED_SELF_ZONE_CAST_WITH_COUNTERS_RE = re.compile(
 def _printed_self_zone_cast_with_counters(card: Card) -> list[KeywordCastOption]:
     found: list[KeywordCastOption] = []
     for line in (card.oracle_text or "").splitlines():
-        text = _REMINDER_TEXT_RE.sub("", " ".join(line.split())).strip()
+        text = _REMINDER_TEXT_RE.sub("", collapsed(line)).strip()
         match = _PRINTED_SELF_ZONE_CAST_WITH_COUNTERS_RE.fullmatch(text)
         if match is None:
             continue
@@ -303,7 +305,7 @@ def _printed_self_zone_cast_with_counters(card: Card) -> list[KeywordCastOption]
 
 def reads_printed_self_zone_cast_with_counters_line(text: str) -> bool:
     """What `support.py` asks before crediting the line."""
-    line = _REMINDER_TEXT_RE.sub("", " ".join(text.split())).strip()
+    line = _REMINDER_TEXT_RE.sub("", collapsed(text)).strip()
     return _PRINTED_SELF_ZONE_CAST_WITH_COUNTERS_RE.fullmatch(line) is not None
 
 
@@ -1704,9 +1706,7 @@ def exile_pile_permission(
     from ..abilities import self_normalized_effect_text
 
     line, word_condition = strip_ability_word(_REMINDER_TEXT_RE.sub("", text))
-    line = " ".join(
-        self_normalized_effect_text(permanent_name, line.strip(), legendary=legendary).split()
-    )
+    line = collapsed(self_normalized_effect_text(permanent_name, line.strip(), legendary=legendary))
     conditions: list[str] = [word_condition] if word_condition else []
     during = once = False
     changed = True
@@ -2009,7 +2009,7 @@ def linked_exile_static_cast(
     from ..next_spell import spell_quality_is_readable
 
     normalized = self_normalized_effect_text(permanent_name, text.strip(), legendary=legendary)
-    match = _LINKED_EXILE_STATIC_CAST_RE.fullmatch(" ".join(normalized.split()))
+    match = _LINKED_EXILE_STATIC_CAST_RE.fullmatch(collapsed(normalized))
     if match is None:
         return None
     quality = _normalized_spell_quality(match.group("quality"))
@@ -2132,7 +2132,7 @@ class OpponentsExileCounterCast(EngineModel):
 
 @lru_cache(maxsize=512)
 def opponents_exile_counter_cast(text: str) -> OpponentsExileCounterCast | None:
-    match = _OPPONENTS_EXILE_COUNTER_CAST_RE.fullmatch(" ".join(text.strip().split()))
+    match = _OPPONENTS_EXILE_COUNTER_CAST_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     return OpponentsExileCounterCast(

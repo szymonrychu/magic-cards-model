@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from magic_cards_model.phrases import with_indefinite_article
+from magic_cards_model.text_norm import collapsed
 
 from ...data.subtypes import canonical_subtype, creature_type_vocabulary
 from ...models.card import Color, Supertype, Type, types_of
@@ -202,7 +203,7 @@ def _parse_switch_power_toughness_then_draw_clause(text: str) -> Effect | None:
     """`_SWITCH_POWER_TOUGHNESS_THEN_DRAW_RE`'s shape - Twisted Image's whole
     text (CR 608.2c orders the draw after the switch, the order printed).
     """
-    match = _SWITCH_POWER_TOUGHNESS_THEN_DRAW_RE.fullmatch(" ".join(text.strip().split()))
+    match = _SWITCH_POWER_TOUGHNESS_THEN_DRAW_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     count = parse_count(match.group("n"))
@@ -227,7 +228,7 @@ def until_eot_gain_control_and_grant_text(text: str) -> str | None:
     """`text` rewritten with the grant's own duration, or `None`."""
     if "until end of turn, " not in text.lower():
         return None
-    match = _UNTIL_EOT_GAIN_CONTROL_AND_GRANT_RE.fullmatch(" ".join(text.strip().split()))
+    match = _UNTIL_EOT_GAIN_CONTROL_AND_GRANT_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     return (
@@ -622,7 +623,7 @@ def _protection_counter_rider(
 ) -> "Callable[[Game, CardState], None] | None":
     """`_PROTECTION_COUNTER_RIDER_RE`'s shape as an action on the grant's
     target, or `None`."""
-    match = _PROTECTION_COUNTER_RIDER_RE.fullmatch(" ".join(text.strip().split()))
+    match = _PROTECTION_COUNTER_RIDER_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     amount = parse_count(match.group("amount"))
@@ -650,7 +651,7 @@ def _parse_protection_from_chosen_color_spell(text: str) -> Effect | None:
     cannot name a colour chosen at resolution and recorded a `LayerNotice`."""
     if "the color of your choice" not in text.lower() or "protection from" not in text.lower():
         return None
-    sentences = _plain_resolution_sentences(" ".join(_strip_non_effect_preamble(text).split()))
+    sentences = _plain_resolution_sentences(collapsed(_strip_non_effect_preamble(text)))
     if not sentences:
         return None
     protection = _parse_protection_from_chosen_color_clause(sentences[0])
@@ -756,7 +757,7 @@ def _parse_becomes_chosen_color_clause(text: str) -> AbilityEffect | None:
     `_PUMP_AND_BECOMES_CHOSEN_COLOR_RE`): the colour is not in the printed
     text. The colour and the grant share one timestamp and last until
     cleanup (CR 514.2), each keyed to the object as it is now (CR 400.7)."""
-    match = _BECOMES_CHOSEN_COLOR_RE.fullmatch(" ".join(text.strip().split()))
+    match = _BECOMES_CHOSEN_COLOR_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     lead, trail = match.group("lead") is not None, match.group("trail") is not None
@@ -1993,7 +1994,7 @@ def _gain_control_untap_grant(effect_text: str) -> tuple[str, str] | None:
     now). "it" and "that creature" are anaphora back to the one target the
     first instruction named, and that object is already in hand at resolution.
     """
-    text = " ".join(_REMINDER_OR_ACTIVATION_RULE_RE.sub(" ", effect_text).split())
+    text = collapsed(_REMINDER_OR_ACTIVATION_RULE_RE.sub(" ", effect_text))
     for pattern in (_UNTAP_AND_GAIN_CONTROL_RE, _GAIN_CONTROL_THEN_UNTAP_RE):
         match = pattern.fullmatch(text)
         if match is not None:
@@ -2239,7 +2240,7 @@ def _parse_mass_gain_control_untap(
     (CR 514.2), applied to that fixed set exactly as it applies them to a
     chosen target.
     """
-    text = " ".join(_REMINDER_OR_ACTIVATION_RULE_RE.sub(" ", effect_text).split())
+    text = collapsed(_REMINDER_OR_ACTIVATION_RULE_RE.sub(" ", effect_text))
     match = _MASS_GAIN_CONTROL_UNTAP_RE.fullmatch(text)
     if match is None:
         return None
@@ -3517,7 +3518,7 @@ _PLAYER_LOSES_ALL_COUNTERS_RE = re.compile(
 
 def _parse_player_loses_all_counters_clause(text: str) -> TargetedClause | None:
     """`_PLAYER_LOSES_ALL_COUNTERS_RE`'s shape; see the banner above."""
-    match = _PLAYER_LOSES_ALL_COUNTERS_RE.fullmatch(" ".join(text.strip().split()))
+    match = _PLAYER_LOSES_ALL_COUNTERS_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     lasting = match.group("noun") is not None
@@ -3981,7 +3982,7 @@ def _parse_target_gains_quoted_ability_for_as_long_as_clause(
     effect_text: str,
 ) -> AbilityEffect | None:
     """`_TARGET_GAINS_QUOTED_FOR_AS_LONG_RE`'s shape - see the banner above."""
-    stripped = " ".join(effect_text.split())
+    stripped = collapsed(effect_text)
     if " gains " not in stripped or "for as long as" not in stripped:
         return None
     match = _TARGET_GAINS_QUOTED_FOR_AS_LONG_RE.fullmatch(stripped)
@@ -4054,7 +4055,7 @@ def _parse_gains_all_activated_abilities_of_target_until_eot_clause(
     effect_text: str,
 ) -> AbilityEffect | None:
     """`_GAINS_ALL_ACTIVATED_ABILITIES_UNTIL_EOT_RE`'s shape - see the banner."""
-    stripped = " ".join(effect_text.split())
+    stripped = collapsed(effect_text)
     if "all activated abilities of" not in stripped:
         return None
     match = _GAINS_ALL_ACTIVATED_ABILITIES_UNTIL_EOT_RE.fullmatch(stripped)
@@ -4186,7 +4187,7 @@ _EVENT_SUBJECT_PUMP_THEN_SELF_DEALS_RE = re.compile(
 @ABILITY_TEXT.rung("s36", before=["continuous._parse_event_subject_pump_clause"])
 def _parse_event_subject_pump_then_self_damage_clause(effect_text: str) -> AbilityEffect | None:
     """`_EVENT_SUBJECT_PUMP_THEN_SELF_DEALS_RE`'s shape - see the banner above."""
-    stripped = " ".join(effect_text.split())
+    stripped = collapsed(effect_text)
     if " deals " not in stripped or "target" in stripped.lower():
         return None
     match = _EVENT_SUBJECT_PUMP_THEN_SELF_DEALS_RE.fullmatch(stripped)
@@ -4231,7 +4232,7 @@ def _parse_target_plus_x_minus_x_clause(effect_text: str) -> AbilityEffect | Non
     mutually exclusive by construction, so a target's own controller always
     settles it correctly regardless of order.
     """
-    match = _TARGET_PLUS_X_MINUS_X_RE.fullmatch(" ".join(effect_text.strip().split()))
+    match = _TARGET_PLUS_X_MINUS_X_RE.fullmatch(collapsed(effect_text.strip()))
     if match is None:
         return None
     reader = amount_expression(match.group("expr"))
@@ -4317,7 +4318,7 @@ def _base_pt_become_object(game: "Game", ability: AbilityOnStack, word: str) -> 
 @ABILITY_TEXT.rung("s8")
 def _parse_base_pt_become_clause(effect_text: str) -> AbilityEffect | None:
     """`_BASE_PT_BECOME_RE`'s shape - see the banner above."""
-    match = _BASE_PT_BECOME_RE.fullmatch(" ".join(effect_text.strip().split()))
+    match = _BASE_PT_BECOME_RE.fullmatch(collapsed(effect_text.strip()))
     if match is None:
         return None
     optional = match.group("may") is not None
@@ -4404,7 +4405,7 @@ def _parse_self_base_pt_set_with_keywords_clause(effect_text: str) -> AbilityEff
     and toughness set in layer 7b and each keyword granted in layer 6 (CR
     613.1f), both until end of turn (CR 514.2), with one shared timestamp.
     The source must still be the object that triggered (CR 400.7)."""
-    match = _SELF_BASE_PT_SET_WITH_KEYWORDS_RE.fullmatch(" ".join(effect_text.strip().split()))
+    match = _SELF_BASE_PT_SET_WITH_KEYWORDS_RE.fullmatch(collapsed(effect_text.strip()))
     if match is None or not (match.group("lead") or match.group("trail")):
         return None
     keywords = _split_and_validate_keywords(match.group("keywords"))
@@ -4825,7 +4826,7 @@ _TARGET_KEYWORD_CHOICE_UNLESS_EQUIPPED_RE = re.compile(
 @ABILITY_TEXT.rung("s22")
 def _parse_target_keyword_choice_unless_equipped_trigger(text: str) -> AbilityEffect | None:
     """`_TARGET_KEYWORD_CHOICE_UNLESS_EQUIPPED_RE`'s shape."""
-    match = _TARGET_KEYWORD_CHOICE_UNLESS_EQUIPPED_RE.fullmatch(" ".join(text.split()))
+    match = _TARGET_KEYWORD_CHOICE_UNLESS_EQUIPPED_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     first, second = match.group("first").lower(), match.group("second").lower()
@@ -5325,7 +5326,7 @@ def _attach_self_to_target_effect(text: str) -> AbilityEffect | None:
     """`_ATTACH_SELF_TO_TARGET_RE`: the source attached to the target the
     ability announced (CR 603.3d), rechecked by `Game.resolve_targets` (CR
     608.2b)."""
-    if _ATTACH_SELF_TO_TARGET_RE.fullmatch(" ".join(text.strip().rstrip(".").split())) is None:
+    if _ATTACH_SELF_TO_TARGET_RE.fullmatch(collapsed(text.strip().rstrip("."))) is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
@@ -5372,7 +5373,7 @@ def _parse_attach_self_then_when_you_do_clause(text: str) -> AbilityEffect | Non
     """`_ATTACH_SELF_THEN_WHEN_YOU_DO_RE`'s shape, or `None`. Read only when
     the reflexive consequence is itself readable, so the pair is never half
     run."""
-    match = _ATTACH_SELF_THEN_WHEN_YOU_DO_RE.fullmatch(" ".join(text.strip().split()))
+    match = _ATTACH_SELF_THEN_WHEN_YOU_DO_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     consequence_text = _as_capitalized_sentence(match.group("consequence"))
@@ -5395,7 +5396,7 @@ def _parse_attach_self_then_when_you_do_clause(text: str) -> AbilityEffect | Non
 
 def _parse_attach_self_then_conditional_rider_clause(text: str) -> AbilityEffect | None:
     """`_ATTACH_SELF_THEN_CONDITIONAL_RIDER_RE`'s shape, or `None`."""
-    match = _ATTACH_SELF_THEN_CONDITIONAL_RIDER_RE.fullmatch(" ".join(text.strip().split()))
+    match = _ATTACH_SELF_THEN_CONDITIONAL_RIDER_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     condition_text = f"it {match.group('condition').strip()}"
@@ -5481,7 +5482,7 @@ def _optional_transform_payoff(payoff: str) -> AbilityEffect | None:
 def _parse_may_transform_self_if_you_do_clause(text: str) -> AbilityEffect | None:
     """`_MAY_TRANSFORM_SELF_IF_YOU_DO_RE`'s shape - see the section note."""
     match = _MAY_TRANSFORM_SELF_IF_YOU_DO_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).strip().split())
+        collapsed(_strip_non_effect_preamble(text).strip())
     )
     if match is None:
         return None
@@ -5740,7 +5741,7 @@ def _parse_until_your_next_turn_attack_pump_clause(text: str) -> AbilityEffect |
     describes ("that turn" bounding when the ability can still trigger, not
     how long any one firing's own effect lasts).
     """
-    whole = " ".join(text.strip().split())
+    whole = collapsed(text.strip())
     match = _UNTIL_YOUR_NEXT_TURN_ATTACK_PUMP_RE.fullmatch(whole)
     if match is None:
         return None
@@ -5812,7 +5813,7 @@ def _parse_attacks_alone_this_turn_counters_and_keywords_clause(
     text: str,
 ) -> AbilityEffect | None:
     """`_ATTACKS_ALONE_THIS_TURN_COUNTERS_AND_KEYWORDS_RE`'s shape."""
-    whole = " ".join(text.strip().split())
+    whole = collapsed(text.strip())
     match = _ATTACKS_ALONE_THIS_TURN_COUNTERS_AND_KEYWORDS_RE.fullmatch(whole)
     if match is None:
         return None
@@ -5850,7 +5851,7 @@ def _parse_until_your_next_turn_group_attack_pump_clause(text: str) -> AbilityEf
     above. The same two-tier duration split (CR 603.7b's stated-duration
     delayed watch, each firing's own separate CR 611.2a "until end of turn")
     `_parse_until_your_next_turn_attack_pump_clause` already uses."""
-    whole = " ".join(text.strip().split())
+    whole = collapsed(text.strip())
     match = _UNTIL_YOUR_NEXT_TURN_GROUP_ATTACK_PUMP_RE.fullmatch(whole)
     if match is None:
         return None
@@ -5915,7 +5916,7 @@ def _parse_batched_attack_group_pump_clause(text: str) -> AbilityEffect | None:
     condition this is not even attached to) or an empty one is not an error -
     CR 107.1a: nothing to grant.
     """
-    match = _BATCHED_ATTACK_GROUP_PUMP_RE.fullmatch(" ".join(text.strip().split()))
+    match = _BATCHED_ATTACK_GROUP_PUMP_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     power = int(match.group("power")) if match.group("power") else 0
@@ -6083,7 +6084,7 @@ _SELF_ATTACK_PUMP_FOR_EACH_DEFENDING_RE = re.compile(
 @MIXED_CLAUSE.rung("s18")
 def _parse_self_pump_for_each_defending_clause(text: str) -> AbilityEffect | None:
     """`_SELF_ATTACK_PUMP_FOR_EACH_DEFENDING_RE`'s shape; see the banner above."""
-    match = _SELF_ATTACK_PUMP_FOR_EACH_DEFENDING_RE.fullmatch(" ".join(text.split()))
+    match = _SELF_ATTACK_PUMP_FOR_EACH_DEFENDING_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     requirement = permanent_description(match.group("each"))
@@ -6228,7 +6229,7 @@ def _parse_target_gains_then_dies_this_turn_token_whole_text(
     watch on top, over whichever single object the first clause's own
     target turned out to be.
     """
-    normalized = " ".join(_strip_non_effect_preamble(text).split())
+    normalized = collapsed(_strip_non_effect_preamble(text))
     sentences = [part for part in _SIMPLE_SENTENCE_SPLIT_RE.split(normalized) if part]
     if len(sentences) < 2:
         return None
@@ -6673,7 +6674,7 @@ def _parse_tap_all_pay_energy_counter_chosen_whole_text(
     asked and no counter placed. Paying more than there are tapped permanents
     is legal and simply caps the choice.
     """
-    whole = " ".join(_strip_non_effect_preamble(text).strip().split())
+    whole = collapsed(_strip_non_effect_preamble(text).strip())
     match = _TAP_ALL_PAY_ENERGY_COUNTER_CHOSEN_RE.fullmatch(whole)
     if match is None:
         return None
@@ -8847,9 +8848,7 @@ def _parse_tapped_attacking_tokens_whole_text(
     strip - the preamble strip is a no-op in that case, exactly as it is for
     `_parse_create_tapped_attacking_tokens_then_sacrifice`.
     """
-    match = _TAPPED_ATTACKING_TOKENS_RE.fullmatch(
-        " ".join(_strip_non_effect_preamble(text).split())
-    )
+    match = _TAPPED_ATTACKING_TOKENS_RE.fullmatch(collapsed(_strip_non_effect_preamble(text)))
     if match is None:
         return None
     count = parse_count(match.group("n"))
@@ -9393,7 +9392,7 @@ def _parse_put_onto_battlefield_then_it_gains_clauses(
     lowered = text.lower()
     if '"' not in text or " gains " not in lowered or "battlefield" not in lowered:
         return None
-    match = _PUT_THEN_IT_GAINS_RE.fullmatch(" ".join(_strip_non_effect_preamble(text).split()))
+    match = _PUT_THEN_IT_GAINS_RE.fullmatch(collapsed(_strip_non_effect_preamble(text)))
     if match is None:
         return None
     grants = _split_put_then_it_gains_grants(match.group("grants"))
@@ -9636,7 +9635,7 @@ def _parse_this_turn_spell_grant_clause(clause: str, *, for_spell: bool) -> Targ
         spell_quality_is_readable,
     )
 
-    text = spells_that_are_normalised(" ".join(clause.strip().split()))
+    text = spells_that_are_normalised(collapsed(clause.strip()))
     keyword_grant = _parse_next_spell_has_keyword(text)
     if keyword_grant is not None:
         return keyword_grant
@@ -9965,7 +9964,7 @@ def _parse_target_phrase_pump_clause(clause: str, *, for_spell: bool) -> Targete
     """`_TARGET_PHRASE_PUMP_RE`'s shape, for a target phrase the layer
     parser's own subject grammar does not read (any phrase it does read stays
     with `create_continuous_effect`)."""
-    text = " ".join(clause.strip().split())
+    text = collapsed(clause.strip())
     if " gets " not in text.lower() or "until end of turn" not in text.lower():
         return None
     match = _TARGET_PHRASE_PUMP_RE.fullmatch(text)
@@ -10058,7 +10057,7 @@ def _parse_target_player_creatures_pump_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
     """`_TARGET_PLAYER_CREATURES_PUMP_RE`'s shape, on a spell or an ability."""
-    match = _TARGET_PLAYER_CREATURES_PUMP_RE.fullmatch(" ".join(clause.strip().split()))
+    match = _TARGET_PLAYER_CREATURES_PUMP_RE.fullmatch(collapsed(clause.strip()))
     if match is None:
         return None
     if bool(match.group("leading")) == bool(match.group("trailing")):
@@ -10628,7 +10627,7 @@ def _parse_double_power_and_toughness_clause(text: str) -> AbilityEffect | None:
     layer 7c modification (CR 613.4c), fixed once created (CR 611.2c) - and a
     negative value doubles to its own negative (CR 701.10c), which the same
     arithmetic gives. A creature no longer on the battlefield gets nothing."""
-    match = _DOUBLE_POWER_AND_TOUGHNESS_RE.fullmatch(" ".join(text.strip().split()))
+    match = _DOUBLE_POWER_AND_TOUGHNESS_RE.fullmatch(collapsed(text.strip()))
     if match is None or not (match.group("lead") or match.group("trail")):
         return None
     phrase = match.group("phrase")
@@ -10838,7 +10837,7 @@ def _parse_leading_duration_anaphor_whole_text(
         quoted.append(match.group(0))
         return f"\x00{len(quoted) - 1}\x00"
 
-    normalized = " ".join(_strip_non_effect_preamble(text).split())
+    normalized = collapsed(_strip_non_effect_preamble(text))
     normalized = _QUOTED_ABILITY_RE.sub(stash, normalized)
     if '"' in normalized:
         return None
@@ -10923,7 +10922,7 @@ def _parse_put_then_grant_then_delayed_whole_text(
         quoted.append(match.group(1).strip())
         return f"\x00{len(quoted) - 1}\x00"
 
-    normalized = " ".join(_strip_non_effect_preamble(text).split())
+    normalized = collapsed(_strip_non_effect_preamble(text))
     if "“" in normalized or "”" in normalized:
         return None
     normalized = _QUOTED_ABILITY_RE.sub(stash, normalized)
@@ -11062,7 +11061,7 @@ def _parse_target_blocks_self_if_able_clause(text: str) -> TargetedClause | None
     the source as it is now; a source that has already left the battlefield
     (CR 400.7) is a new object no attacker can be, so nothing is granted.
     """
-    match = _TARGET_BLOCKS_SELF_IF_ABLE_RE.fullmatch(" ".join(text.split()))
+    match = _TARGET_BLOCKS_SELF_IF_ABLE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     if not _targets_understood(match.group("phrase"), count_agnostic=True):
@@ -11137,7 +11136,7 @@ def _parse_target_attacks_if_able_clause(text: str) -> TargetedClause | None:
     requirement ending with the turn (CR 508.1d's last sentence reads a
     turn-long requirement at each declare-attackers step of that turn).
     """
-    match = _TARGET_ATTACKS_IF_ABLE_RE.fullmatch(" ".join(text.split()))
+    match = _TARGET_ATTACKS_IF_ABLE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     phrase = match.group("phrase")
@@ -11198,7 +11197,7 @@ def _parse_attached_attacks_this_turn_if_able_clause(text: str) -> AbilityEffect
     requirement granted until end of turn (CR 611.2a) as the same ability
     line `_parse_target_attacks_if_able_clause` grants. A source with nothing
     attached grants nothing (CR 303.4b names no creature)."""
-    if _ATTACHED_ATTACKS_THIS_TURN_IF_ABLE_RE.fullmatch(" ".join(text.split())) is None:
+    if _ATTACHED_ATTACKS_THIS_TURN_IF_ABLE_RE.fullmatch(collapsed(text)) is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
@@ -11257,7 +11256,7 @@ def _parse_block_requirement_grant_clause(text: str) -> TargetedClause | None:
     and `combat_statics` already enforce - on the target for a lure, on the
     ability's own source (while it is still the same object, CR 400.7) for
     "must be blocked this turn"."""
-    flat = " ".join(text.split())
+    flat = collapsed(text)
     if match := _LURE_ON_TARGET_RE.fullmatch(flat):
         if not _targets_understood(match.group("phrase"), count_agnostic=True):
             return None
@@ -11333,7 +11332,7 @@ def _parse_opponents_creatures_attack_if_able_clause(text: str) -> AbilityEffect
     selector is live and a creature that arrives under an opponent's control
     before your next turn is bound too. It is carried as the same granted
     "attacks each combat if able" line `machines/combat.py` already counts."""
-    if _OPPONENTS_ATTACK_IF_ABLE_RE.fullmatch(" ".join(text.split())) is None:
+    if _OPPONENTS_ATTACK_IF_ABLE_RE.fullmatch(collapsed(text)) is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
@@ -11388,7 +11387,7 @@ def _parse_self_layer_and_verb_clause(effect_text: str) -> AbilityEffect | None:
     reader uses the source's last known information (CR 608.2h: "it's the
     object as it exists - or as it most recently existed - that does it").
     Either half unread leaves the whole sentence unread (CR 608.2c)."""
-    match = _SELF_LAYER_AND_VERB_RE.fullmatch(" ".join(effect_text.split()))
+    match = _SELF_LAYER_AND_VERB_RE.fullmatch(collapsed(effect_text))
     if match is None:
         return None
     subject = match.group("subject")
@@ -11437,7 +11436,7 @@ def _parse_double_target_power_and_toughness_clause(
     """`_DOUBLE_TARGET_POWER_AND_TOUGHNESS_RE`'s shape, on a spell, a mode or
     an ability alike - the values are read once, as it resolves, through the
     computed characteristics (CR 613.5), and the +X/+Y never recomputes."""
-    match = _DOUBLE_TARGET_POWER_AND_TOUGHNESS_RE.fullmatch(" ".join(text.split()))
+    match = _DOUBLE_TARGET_POWER_AND_TOUGHNESS_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     phrase = match.group("possessive") or match.group("phrase")
@@ -11510,7 +11509,7 @@ _COUNTED_TARGETS_CANT_BE_BLOCKED_RE = re.compile(
 
 def _counted_targets_cant_be_blocked(text: str) -> TargetedClause | None:
     """`_COUNTED_TARGETS_CANT_BE_BLOCKED_RE`'s shape, or `None`."""
-    whole = " ".join(text.strip().split())
+    whole = collapsed(text.strip())
     if "can't be blocked this turn" not in whole.lower() and "cant be blocked" not in whole.lower():
         return None
     match = _COUNTED_TARGETS_CANT_BE_BLOCKED_RE.fullmatch(whole)
@@ -11587,7 +11586,7 @@ _TARGET_CANT_BE_BLOCKED_EXCEPT_BY_RE = re.compile(
 
 def _target_cant_be_blocked_except_by(text: str) -> TargetedClause | None:
     """`_TARGET_CANT_BE_BLOCKED_EXCEPT_BY_RE`'s shape, or `None`."""
-    match = _TARGET_CANT_BE_BLOCKED_EXCEPT_BY_RE.fullmatch(" ".join(text.strip().split()))
+    match = _TARGET_CANT_BE_BLOCKED_EXCEPT_BY_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     from ..combat_statics import parse_blocker_description
@@ -11655,7 +11654,7 @@ def _gains_and_cant_be_blocked_this_turn(
 ) -> Callable[["Game", "StackObject"], None] | None:
     """`_GAINS_AND_CANT_BE_BLOCKED_THIS_TURN_RE`'s shape, with any following
     instruction read by `rest_parser` and run after it (CR 608.2c)."""
-    match = _GAINS_AND_CANT_BE_BLOCKED_THIS_TURN_RE.fullmatch(" ".join(text.strip().split()))
+    match = _GAINS_AND_CANT_BE_BLOCKED_THIS_TURN_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     if not _targets_understood(match.group("phrase"), count_agnostic=True):
@@ -11705,7 +11704,7 @@ _EACH_OPPONENT_LOSES_X_YOU_GAIN_X_RE = re.compile(
 def _parse_each_opponent_loses_x_you_gain_x(text: str) -> AbilityEffect | None:
     """`_EACH_OPPONENT_LOSES_X_YOU_GAIN_X_RE`'s drain: each opponent loses X
     (CR 119.3) and the controller gains X (CR 119.4)."""
-    match = _EACH_OPPONENT_LOSES_X_YOU_GAIN_X_RE.fullmatch(" ".join(text.strip().split()))
+    match = _EACH_OPPONENT_LOSES_X_YOU_GAIN_X_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     reader = amount_expression(match.group("expr"))
@@ -11766,7 +11765,7 @@ _ATTACH_TARGET_EQUIPMENT_TO_SELF_RE = re.compile(
 
 def _parse_attach_target_equipment_to_self(text: str) -> AbilityEffect | None:
     """`_ATTACH_TARGET_EQUIPMENT_TO_SELF_RE`'s shape, or `None`."""
-    match = _ATTACH_TARGET_EQUIPMENT_TO_SELF_RE.fullmatch(" ".join(text.strip().split()))
+    match = _ATTACH_TARGET_EQUIPMENT_TO_SELF_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     rest_text = (match.group("rest") or "").strip()
@@ -11804,7 +11803,7 @@ _ATTACH_SELF_THEN_THAT_CREATURE_RE = re.compile(
 
 def _parse_attach_self_then_that_creature(text: str) -> AbilityEffect | None:
     """`_ATTACH_SELF_THEN_THAT_CREATURE_RE`'s shape, or `None`."""
-    match = _ATTACH_SELF_THEN_THAT_CREATURE_RE.fullmatch(" ".join(text.strip().split()))
+    match = _ATTACH_SELF_THEN_THAT_CREATURE_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     attach = _attach_self_to_target_effect(match.group("attach"))
@@ -11841,7 +11840,7 @@ _PUT_TYPE_FROM_HAND_ATTACH_IF_SUBTYPE_RE = re.compile(
 
 def _parse_put_type_from_hand_attach_if_subtype(text: str) -> AbilityEffect | None:
     """`_PUT_TYPE_FROM_HAND_ATTACH_IF_SUBTYPE_RE`'s shape, or `None`."""
-    match = _PUT_TYPE_FROM_HAND_ATTACH_IF_SUBTYPE_RE.fullmatch(" ".join(text.strip().split()))
+    match = _PUT_TYPE_FROM_HAND_ATTACH_IF_SUBTYPE_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     card_type = next((kind for kind in Type if kind.value == match.group("type").lower()), None)
@@ -11965,7 +11964,7 @@ _THOSE_CREATURES_GAIN_RE = re.compile(
 
 def _parse_cast_spell_targets_gain(text: str) -> AbilityEffect | None:
     """`_THOSE_CREATURES_GAIN_RE` for a cast trigger, or `None`."""
-    match = _THOSE_CREATURES_GAIN_RE.fullmatch(" ".join(text.strip().split()))
+    match = _THOSE_CREATURES_GAIN_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     keywords = split_and_validate_keywords(match.group("keywords"))
@@ -12067,7 +12066,7 @@ def _parse_creature_type_cant_block_this_turn_clause(clause: str) -> TargetedCla
     per player in the game."""
     if "block this turn" not in clause.lower():
         return None
-    match = _CREATURE_TYPE_CANT_BLOCK_THIS_TURN_RE.fullmatch(" ".join(clause.split()))
+    match = _CREATURE_TYPE_CANT_BLOCK_THIS_TURN_RE.fullmatch(collapsed(clause))
     if match is None:
         return None
     word = canonical_subtype(match.group("plural"))
@@ -12114,7 +12113,7 @@ def _parse_target_attacks_without_defender_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
     """`_TARGET_ATTACKS_WITHOUT_DEFENDER_RE`'s shape, or `None`."""
-    match = _TARGET_ATTACKS_WITHOUT_DEFENDER_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    match = _TARGET_ATTACKS_WITHOUT_DEFENDER_RE.fullmatch(collapsed(clause).rstrip("."))
     if match is None or not _targets_understood(match.group("phrase")):
         return None
 
@@ -12154,7 +12153,7 @@ def _parse_group_cant_block_this_turn_clause(
     creature that comes under the named player's control later in the turn
     cannot block either. A targeted player that is no longer legal names
     nobody (CR 608.2b), so nothing is restricted."""
-    match = _GROUP_CANT_BLOCK_THIS_TURN_RE.fullmatch(" ".join(clause.split()))
+    match = _GROUP_CANT_BLOCK_THIS_TURN_RE.fullmatch(collapsed(clause))
     if match is None:
         return _parse_creature_type_cant_block_this_turn_clause(clause)
     target_phrase = match.group("target")
@@ -12291,7 +12290,7 @@ _OTHER_CREATURES_CANT_RE = re.compile(
 
 def _other_creatures_cant_clause(clause: str) -> TargetedClause | None:
     """`_OTHER_CREATURES_CANT_RE`'s shape, or `None`."""
-    match = _OTHER_CREATURES_CANT_RE.fullmatch(" ".join(clause.split()))
+    match = _OTHER_CREATURES_CANT_RE.fullmatch(collapsed(clause))
     if match is None:
         return None
     whose = (match.group("whose") or "").lower()
@@ -12370,7 +12369,7 @@ _CANT_ATTACK_BLOCK_ACTIVATE_RE = re.compile(
 
 def _cant_attack_block_activate_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_CANT_ATTACK_BLOCK_ACTIVATE_RE`'s shape, or `None`."""
-    match = _CANT_ATTACK_BLOCK_ACTIVATE_RE.fullmatch(" ".join(clause.split()))
+    match = _CANT_ATTACK_BLOCK_ACTIVATE_RE.fullmatch(collapsed(clause))
     if match is None:
         return None
     lead = (match.group("lead") or "").lower()
@@ -12555,7 +12554,7 @@ _GROUP_LOSES_KEYWORD_RE = re.compile(
 def _parse_group_loses_keyword_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_GROUP_LOSES_KEYWORD_RE`'s shape, the group read by
     `_parse_mass_type_qualifier` off the computed board (CR 613.5)."""
-    match = _GROUP_LOSES_KEYWORD_RE.fullmatch(" ".join(clause.split()))
+    match = _GROUP_LOSES_KEYWORD_RE.fullmatch(collapsed(clause))
     if match is None:
         return None
     keyword = _losable_keyword(match.group("keyword"))
@@ -12592,7 +12591,7 @@ def _parse_loses_keyword_referent_rider(
 ) -> Callable[["Game", list[CardState], "StackObject"], None] | None:
     """`_RIDER_LOSES_KEYWORD_RE`'s rider: each referent still on the
     battlefield loses the keyword until end of turn (CR 613.1f, CR 611.2a)."""
-    match = _RIDER_LOSES_KEYWORD_RE.fullmatch(" ".join(rider.split()).rstrip("."))
+    match = _RIDER_LOSES_KEYWORD_RE.fullmatch(collapsed(rider).rstrip("."))
     if match is None:
         return None
     keyword = _losable_keyword(match.group("keyword"))
@@ -12643,9 +12642,9 @@ def _parse_target_gains_and_pump_for_each_spell(text: str) -> Effect | None:
     (CR 611.2, CR 613.4c, CR 613.1f), applied to the target if still legal
     (CR 608.2b)."""
     lowered = text.lower()
-    if "for each" not in " ".join(lowered.split()) or "gains" not in lowered:
+    if "for each" not in collapsed(lowered) or "gains" not in lowered:
         return None
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     sentences = _plain_resolution_sentences(whole)
     if not sentences:
         return None
@@ -12726,7 +12725,7 @@ def _target_you_control_then_fights(text: str, *, for_spell: bool) -> TargetedCl
     one") and both are still creatures on the battlefield (CR 701.14b)."""
     if "fights" not in text.lower():
         return None
-    whole = " ".join(_strip_non_effect_preamble(text).split())
+    whole = collapsed(_strip_non_effect_preamble(text))
     sentences = _plain_resolution_sentences(whole)
     if len(sentences) != 2:
         return None
@@ -12863,9 +12862,7 @@ def _target_you_control_chain(text: str, *, for_spell: bool) -> TargetedClause |
         return None
     sentences = [
         sentence.strip().rstrip(".").strip()
-        for sentence in _plain_resolution_sentences(
-            " ".join(_strip_non_effect_preamble(text).split())
-        )
+        for sentence in _plain_resolution_sentences(collapsed(_strip_non_effect_preamble(text)))
     ]
     if len(sentences) not in (2, 3):
         return None
@@ -13044,9 +13041,7 @@ def _antecedent_then_referent_rider(text: str, *, for_spell: bool) -> TargetedCl
         return None
     sentences = [
         sentence.strip().rstrip(".").strip()
-        for sentence in _plain_resolution_sentences(
-            " ".join(_strip_non_effect_preamble(text).split())
-        )
+        for sentence in _plain_resolution_sentences(collapsed(_strip_non_effect_preamble(text)))
     ]
     if len(sentences) != 2:
         return None
@@ -13334,7 +13329,7 @@ def _parse_choose_creature_then_others_get_text(text: str) -> AbilityEffect | No
     lowered = text.lower()
     if "and the chosen creature get" not in lowered or "until end of turn" not in lowered:
         return None
-    match = _CHOOSE_THEN_OTHERS_GET_RE.fullmatch(" ".join(text.strip().split()))
+    match = _CHOOSE_THEN_OTHERS_GET_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     power = int(match.group("power"))
@@ -13393,7 +13388,7 @@ def _parse_they_cant_attack_you_this_turn_text(text: str) -> AbilityEffect | Non
     """`_THEY_CANT_ATTACK_YOU_THIS_TURN_RE`'s shape."""
     if "attack you" not in text.lower():
         return None
-    if _THEY_CANT_ATTACK_YOU_THIS_TURN_RE.fullmatch(" ".join(text.strip().split())) is None:
+    if _THEY_CANT_ATTACK_YOU_THIS_TURN_RE.fullmatch(collapsed(text.strip())) is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
@@ -13424,7 +13419,7 @@ def _parse_unattach_self_then_transform_text(text: str) -> AbilityEffect | None:
     """`_UNATTACH_SELF_RE`'s shape; a source that has left the battlefield is
     a new object (CR 400.7) and nothing happens, and the transform obeys CR
     701.27f through the shared self-transform reader."""
-    stripped = " ".join(text.strip().split())
+    stripped = collapsed(text.strip())
     if not stripped.lower().startswith("unattach "):
         return None
     match = _UNATTACH_SELF_RE.fullmatch(stripped[0].lower() + stripped[1:])

@@ -31,6 +31,8 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
@@ -100,7 +102,7 @@ def parse_gains_control_of_self_clause(effect_text: str) -> AbilityEffect | None
 
     "That player" needs a trigger event naming a player; the lowest-life form
     is printed with its own tie clause, and a "that player" form never is."""
-    match = _GAINS_CONTROL_OF_SELF_RE.fullmatch(" ".join(effect_text.split()))
+    match = _GAINS_CONTROL_OF_SELF_RE.fullmatch(collapsed(effect_text))
     if match is None:
         return None
     lowest = match.group("who").lower().startswith("the player")
@@ -187,7 +189,7 @@ def parse_gain_control_then_attach_clause(effect_text: str) -> AbilityEffect | N
     attach of each stolen target that has the named subtype onto the source
     - which `attach_permanent` refuses (CR 701.3b) when it could not equip
     it or the source has left."""
-    match = _GAIN_CONTROL_THEN_ATTACH_RE.fullmatch(" ".join(effect_text.split()))
+    match = _GAIN_CONTROL_THEN_ATTACH_RE.fullmatch(collapsed(effect_text))
     if match is None:
         return None
     from .control_change import parse_gain_control_untimed_clause

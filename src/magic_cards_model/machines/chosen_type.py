@@ -38,6 +38,8 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..data.creature_types import creature_types
 from ..models.card import Type
 from ..models.card_state import CardState, Choice, ChoiceKind
@@ -169,7 +171,7 @@ def parse_choose_creature_type_then_emblem_clause(text: str) -> AbilityEffect | 
     Chronicle of Victory's static, since CR 114.4 makes an emblem's own
     abilities function in the command zone exactly like a permanent's
     function on the battlefield."""
-    match = _CHOOSE_TYPE_THEN_EMBLEM_RE.fullmatch(" ".join(text.strip().split()))
+    match = _CHOOSE_TYPE_THEN_EMBLEM_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
     quoted = match.group("text")
@@ -207,7 +209,7 @@ def parse_choose_type_hexproof_indestructible_clause(text: str) -> AbilityEffect
     `permanents_controlled_by_with_subtype`'s live selector (CR 613.5),
     excluding the source itself ("**other** permanents") and lasting until
     the coming cleanup step (CR 514.2)."""
-    match = _CHOOSE_TYPE_HEXPROOF_INDESTRUCTIBLE_RE.fullmatch(" ".join(text.strip().split()))
+    match = _CHOOSE_TYPE_HEXPROOF_INDESTRUCTIBLE_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
 
@@ -267,7 +269,7 @@ def parse_gathering_stone_look_clause(text: str) -> AbilityEffect | None:
     controller declined the first "you may" - the printed condition
     ("if you don't put the card into your hand") is the same either way, so
     this reads it as one flag rather than re-deriving why."""
-    match = _LOOK_REVEAL_HAND_OR_GRAVEYARD_RE.fullmatch(" ".join(text.strip().split()))
+    match = _LOOK_REVEAL_HAND_OR_GRAVEYARD_RE.fullmatch(collapsed(text.strip()))
     if match is None:
         return None
 

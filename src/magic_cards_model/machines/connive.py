@@ -40,6 +40,8 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card import Type
 from ..models.card_state import CardState, Counter
 from ..models.zone import Zone
@@ -170,7 +172,7 @@ def parse_connive_clause(clause: str, *, for_spell: bool):  # noqa: ANN201 - Tar
     to connive, and a resolving spell is not a permanent. A target phrase is
     trusted only when `machines/effects._targets_understood` reads it.
     """
-    match = _CONNIVE_CLAUSE_RE.fullmatch(" ".join(clause.split()))
+    match = _CONNIVE_CLAUSE_RE.fullmatch(collapsed(clause))
     if match is None:
         return None
     subject = match.group("subject").lower()

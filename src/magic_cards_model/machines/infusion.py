@@ -28,6 +28,8 @@ import re
 from random import Random
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.player import Player
 from ..models.zone import Zone
@@ -74,7 +76,7 @@ _COPY_IT_IF_CONDITION_RE = re.compile(
 
 
 def _parse_copy_it_if_condition_clause(text: str) -> AbilityEffect | None:
-    match = _COPY_IT_IF_CONDITION_RE.fullmatch(" ".join(text.split()))
+    match = _COPY_IT_IF_CONDITION_RE.fullmatch(collapsed(text))
     if match is None:
         return None
 
@@ -144,7 +146,7 @@ _CONDITIONAL_TARGET_PUMP_RE = re.compile(
 
 
 def _parse_conditional_targeted_layer_clause(text: str) -> AbilityEffect | None:
-    match = _CONDITIONAL_TARGET_PUMP_RE.fullmatch(" ".join(text.split()))
+    match = _CONDITIONAL_TARGET_PUMP_RE.fullmatch(collapsed(text))
     if match is None:
         return None
 
@@ -244,7 +246,7 @@ _SACRIFICE_UNLESS_CONDITION_RE = re.compile(
 
 
 def _parse_sacrifice_unless_condition_clause(text: str) -> AbilityEffect | None:
-    match = _SACRIFICE_UNLESS_CONDITION_RE.fullmatch(" ".join(text.split()))
+    match = _SACRIFICE_UNLESS_CONDITION_RE.fullmatch(collapsed(text))
     if match is None:
         return None
 
@@ -334,7 +336,7 @@ _QUANTIFIED_TARGET_PLAYERS_EACH_DISCARD_RE = re.compile(
 
 
 def _parse_quantified_target_players_each_discard_clause(text: str) -> AbilityEffect | None:
-    match = _QUANTIFIED_TARGET_PLAYERS_EACH_DISCARD_RE.fullmatch(" ".join(text.split()))
+    match = _QUANTIFIED_TARGET_PLAYERS_EACH_DISCARD_RE.fullmatch(collapsed(text))
     if match is None:
         return None
 
@@ -379,7 +381,7 @@ _FLIP_COINS_THEN_SKIP_TURNS_RE = re.compile(
 
 
 def _parse_flip_coins_then_skip_turns_clause(text: str) -> AbilityEffect | None:
-    match = _FLIP_COINS_THEN_SKIP_TURNS_RE.fullmatch(" ".join(text.split()))
+    match = _FLIP_COINS_THEN_SKIP_TURNS_RE.fullmatch(collapsed(text))
     if match is None:
         return None
 
@@ -511,7 +513,7 @@ _LOOK_TOP_REVEAL_CREATURE_OR_LAND_INFUSION_RE = re.compile(
 
 
 def _parse_look_top_reveal_creature_or_land_infusion_clause(text: str) -> Effect | None:
-    match = _LOOK_TOP_REVEAL_CREATURE_OR_LAND_INFUSION_RE.fullmatch(" ".join(text.split()))
+    match = _LOOK_TOP_REVEAL_CREATURE_OR_LAND_INFUSION_RE.fullmatch(collapsed(text))
     if match is None:
         return None
 
@@ -578,7 +580,7 @@ _EACH_PLAYER_HALVES_LIFE_HAND_PERMANENTS_RE = re.compile(
 
 
 def _parse_each_player_halves_life_hand_permanents_clause(text: str) -> Effect | None:
-    match = _EACH_PLAYER_HALVES_LIFE_HAND_PERMANENTS_RE.fullmatch(" ".join(text.split()))
+    match = _EACH_PLAYER_HALVES_LIFE_HAND_PERMANENTS_RE.fullmatch(collapsed(text))
     if match is None:
         return None
 
@@ -655,7 +657,7 @@ _TARGET_PLAYER_HALF_LIBRARY_DRAW_AND_HALF_LIFE_RE = re.compile(
 
 
 def _parse_target_player_half_library_draw_and_half_life_clause(text: str) -> Effect | None:
-    match = _TARGET_PLAYER_HALF_LIBRARY_DRAW_AND_HALF_LIFE_RE.fullmatch(" ".join(text.split()))
+    match = _TARGET_PLAYER_HALF_LIBRARY_DRAW_AND_HALF_LIFE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
 

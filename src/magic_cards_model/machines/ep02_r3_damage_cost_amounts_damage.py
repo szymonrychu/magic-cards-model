@@ -16,6 +16,8 @@ import functools
 import re
 from typing import TYPE_CHECKING, Any
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from .decisions import source_id_of
@@ -64,7 +66,7 @@ def _choose_then_deals_to_group(text: str, for_spell: bool) -> Any:
     ):
         return None
     effect_lines = [line for line in text.split("\n") if not line.lower().startswith("flashback")]
-    match = _STAT_DAMAGE_GROUP_RE.fullmatch(" ".join(" ".join(effect_lines).split()))
+    match = _STAT_DAMAGE_GROUP_RE.fullmatch(collapsed(" ".join(effect_lines)))
     if match is None:
         return None
     from .effects._common import _targets_understood
@@ -110,7 +112,7 @@ def _may_deal_then_takes_back(text: str) -> Any:
         or "if you do, that creature deals" not in text.lower()
     ):
         return None
-    match = _MAY_DEAL_RE.fullmatch(" ".join(text.split()))
+    match = _MAY_DEAL_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     from .effects._common import _targets_understood
@@ -150,7 +152,7 @@ def may_deal_then_takes_back(text: str) -> Any:
 def _reveal_at_random_then_damage(text: str) -> Any:
     if "reveals a card at random" not in text.lower():
         return None
-    match = _REVEAL_DAMAGE_RE.fullmatch(" ".join(text.split()))
+    match = _REVEAL_DAMAGE_RE.fullmatch(collapsed(text))
     if match is None:
         return None
     from .ep02_r2_card_mana_value import _random_pick
@@ -185,7 +187,7 @@ def _damage_then_reflexive_on_excess(text: str) -> Any:
         return None
     from .effects.text import _strip_non_effect_preamble
 
-    match = _EXCESS_REFLEXIVE_RE.fullmatch(" ".join(_strip_non_effect_preamble(text).split()))
+    match = _EXCESS_REFLEXIVE_RE.fullmatch(collapsed(_strip_non_effect_preamble(text)))
     if match is None or re.search(r"\btarget\b", match.group("subject"), re.IGNORECASE):
         return None
     from .effects._common import _targets_understood
@@ -261,7 +263,7 @@ def _ask_cards(game: "Game", player: Any, prompt: str, source: Any, cards: list[
 def _opponents_may_pay_or_take_damage(text: str) -> Any:
     if "didn't sacrifice a permanent or discard a card" not in text.lower():
         return None
-    if _MAY_PAY_OR_DAMAGE_RE.fullmatch(" ".join(text.split())) is None:
+    if _MAY_PAY_OR_DAMAGE_RE.fullmatch(collapsed(text)) is None:
         return None
 
     def effect(game: "Game", ability: Any) -> None:

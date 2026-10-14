@@ -21,6 +21,8 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from magic_cards_model.text_norm import collapsed
+
 from ..models.zone import Zone
 from .effects import _counter_kind, parse_mixed_effect_for_spell
 from .replacement import strip_reminder_text
@@ -43,7 +45,7 @@ def parse_cast_from_graveyard_transform_clause(text: str) -> Effect | None:
     text is another shape or its leading instructions are unreadable."""
 
     rules_text, _ = strip_reminder_text(text)
-    match = _CAST_FROM_GRAVEYARD_TRANSFORM_RE.fullmatch(" ".join(rules_text.split()))
+    match = _CAST_FROM_GRAVEYARD_TRANSFORM_RE.fullmatch(collapsed(rules_text))
     if match is None:
         return None
     head = parse_mixed_effect_for_spell(match.group("head").strip())
