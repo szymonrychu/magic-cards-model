@@ -19,7 +19,7 @@ from uuid import UUID
 from ..models.card_state import CardState
 from ..models.player import Player
 from ..models.zone import Zone
-from ..numbers import COUNT, parse_count
+from ..numbers import COUNT, ORDINAL, parse_count, parse_ordinal
 from .effects._chains import FORWARD, MIXED_CLAUSE, MIXED_CLAUSES
 
 if TYPE_CHECKING:
@@ -916,3 +916,153 @@ def _parse_for_each_permanent_its_owner_puts_it_top_or_bottom(
             game.put_cards_into_library([permanent], to_bottom=not top)
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# "for each opponent, put up to one target <X> that player controls into its
+# owner's library third from the top" (Riptide Gearhulk, CR 401.1, CR 115.6)
+# --------------------------------------------------------------------------
+
+_FOR_EACH_OPPONENT_TO_LIBRARY_RE = re.compile(
+    rf"^for each opponent, put up to one target (?P<desc>.+?) that player controls into its "
+    rf"owner'?s library (?P<ordinal>{ORDINAL}) from the top$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
+def _parse_for_each_opponent_put_into_library_nth_from_top(clause: str, *, for_spell: bool) -> Any:
+    """Riptide Gearhulk. One optional target per opponent (the profile is
+    `targeting._for_each_opponent_profile`'s); each permanent still on the
+    battlefield goes into its *owner's* library at the printed depth (CR 401.1;
+    CR 401.4: a library with fewer cards takes it as deep as it goes)."""
+    match = _FOR_EACH_OPPONENT_TO_LIBRARY_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    if match is None:
+        return None
+    from .effects._common import _targets_understood
+    from .effects.continuous import _for_each_opponent_target_phrase
+    from .effects.returns import _reposition_in_owners_library
+
+    depth = parse_ordinal(match.group("ordinal"))
+    phrase = _for_each_opponent_target_phrase(match.group("desc"))
+    if depth is None or not _targets_understood(phrase, count_agnostic=True):
+        return None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                moved = game.put_cards_into_library([target])
+                for card in moved:
+                    _reposition_in_owners_library(game, card, depth=depth - 1)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "for each opponent, you may put up to one target creature card from that
+# player's graveyard onto the battlefield under your control" (Sepulchral
+# Primordial, CR 110.2a, CR 608.2d)
+# --------------------------------------------------------------------------
+
+_FOR_EACH_OPPONENT_REANIMATE_RE = re.compile(
+    r"^for each opponent, you may put up to one target (?P<desc>.+?) from that player'?s "
+    r"graveyard onto the battlefield under your control$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
+def _parse_for_each_opponent_may_reanimate_from_their_graveyard(
+    clause: str, *, for_spell: bool
+) -> Any:
+    """Sepulchral Primordial. One optional target per opponent, a card in
+    that opponent's graveyard (`targeting._for_each_opponent_profile`); the
+    controller chooses, for each, whether to put it onto the battlefield under
+    their control (CR 608.2d, CR 110.2a). A card that has left the graveyard
+    is no longer a legal target (CR 608.2b)."""
+    match = _FOR_EACH_OPPONENT_REANIMATE_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    if match is None:
+        return None
+    from .effects._common import _targets_understood
+
+    if not _targets_understood(
+        f"up to one target {match.group('desc')} from an opponent's graveyard",
+        count_agnostic=True,
+        battlefield_only=False,
+    ):
+        return None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        from .decisions import source_id_of
+
+        controller = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.zone is not Zone.GRAVEYARD:
+                continue
+            if game.may(
+                controller,
+                f"put {target.name} onto the battlefield under your control",
+                source=source,
+                source_id=source_id_of(stack_object),
+                cards=[target],
+            ):
+                game.put_onto_battlefield(target, controller.username)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "Destroy up to three other target nonland permanents. For each of those
+# permanents, its controller creates a 3/3 white Angel creature token with
+# flying." (Soul of Emancipation, CR 701.8a, CR 111.2)
+# --------------------------------------------------------------------------
+
+_DESTROY_THEN_CONTROLLERS_CREATE_RE = re.compile(
+    rf"^destroy (?P<phrase>up to (?:{COUNT}) other target [^.]+?)\. "
+    r"for each of those (?:permanents|creatures), its controller creates "
+    r"(?:an?|one) (?P<desc>.+?) tokens?(?: with (?P<tail>[^.]+))?\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_destroy_targets_then_each_controller_creates_a_token(
+    text: str, *, for_spell: bool
+) -> Any:
+    """Soul of Emancipation. The destroyed permanents' controllers are read
+    before they die (CR 608.2h last-known information: the permanents are gone
+    afterwards), then each of them creates the token (CR 111.2). "Each of those
+    permanents" is every legal target, one token per permanent whether or not
+    destruction happened (an indestructible one is still one of those
+    permanents)."""
+    match = _DESTROY_THEN_CONTROLLERS_CREATE_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    from .effects._common import _targets_understood
+    from .effects.tokens import _token_definition_from_words
+
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    tail = match.group("tail")
+    definition = _token_definition_from_words(match.group("desc"), tail.strip() if tail else None)
+    if definition is None:
+        return None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        from ..models.token import create_tokens
+
+        targets = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        controllers = [game.controller_of(target).username for target in targets]
+        for target in targets:
+            if target.zone is Zone.BATTLEFIELD:
+                game.destroy(target)
+        game.announce_batched_events()  # CR 603.2c: one event per instruction
+        for username in controllers:
+            create_tokens(game, definition, username, 1)
+
+    return [effect]

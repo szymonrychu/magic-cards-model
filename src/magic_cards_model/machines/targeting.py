@@ -4239,7 +4239,8 @@ _REFLEXIVE_CLAUSE_CONSEQUENCE_RE = re.compile(
 #: asks for.
 _FOR_EACH_OPPONENT_TARGET_RE = re.compile(
     r"for each (?P<who>opponent|player),[^.]*?\b(?P<up_to>up to one )?target (?P<desc>[^.]+?) "
-    r"that (?:player|opponent) controls\b",
+    r"(?:that (?:player|opponent) controls|(?P<graveyard>from that (?:player|opponent)'s "
+    r"graveyard))\b",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -4297,11 +4298,38 @@ def _for_each_opponent_profile(text: str) -> TargetingProfile | None:
     if match is None:
         return None
     description = match.group("desc").strip()
-    base = permanent_description(description)
+    in_graveyard = match.group("graveyard") is not None
+    # Sepulchral Primordial's "target creature card from that player's
+    # graveyard": the card sits in the graveyard of the opponent whose turn of
+    # the "for each" it is, so it is read as the ordinary "from an opponent's
+    # graveyard" phrase (CR 108.3: a card in a graveyard is its owner's).
+    if in_graveyard:
+        card_profile = profile_for_text(f"target {description} from an opponent's graveyard")
+        base = (
+            card_profile.requirements[0]
+            if card_profile.understood and len(card_profile.requirements) == 1
+            else None
+        )
+    else:
+        base = permanent_description(description)
     if base is None:
         return None
     mandatory = match.group("up_to") is None
     opponents_only = match.group("who").lower() == "opponent"
+    if in_graveyard:
+        return TargetingProfile(
+            requirements=(
+                base.model_copy(
+                    update={
+                        "phrase": f"target {description} from an opponent's graveyard",
+                        "count": 0,
+                        "minimum": 1 if mandatory else 0,
+                        "unbounded": True,
+                        "distinct_controllers": True,
+                    }
+                ),
+            )
+        )
     requirement = base.model_copy(
         update={
             "phrase": f"target {description} "

@@ -879,3 +879,91 @@ def test_hateful_eidolon_draws_nothing_when_an_unenchanted_creature_dies() -> No
     scenario = _scenario(["Hateful Eidolon"], ["Grizzly Bears"], hand=["Lightning Bolt"])
     _cast_all(scenario, "Lightning Bolt", targets=[scenario.creature("Grizzly Bears", "bob")])
     assert _hand(scenario, "alice") == 0
+
+
+# ---------------------------------------------------------------------------
+# "for each opponent, ..." enter triggers: Riptide Gearhulk, Sepulchral Primordial
+# (CR 115.6 "up to one", CR 608.2d "may", CR 401.1 library placement)
+# ---------------------------------------------------------------------------
+
+
+def test_riptide_gearhulk_puts_the_opponents_permanent_third_from_the_top() -> None:
+    scenario = _scenario(
+        [], ["Serra Angel"], hand=["Riptide Gearhulk"], bob_library=["Forest", "Island", "Swamp", "Plains"]
+    )
+    scenario.choose_trigger_targets("Riptide Gearhulk", [scenario.find("Serra Angel", Zone.BATTLEFIELD)])
+    _cast_all(scenario, "Riptide Gearhulk")
+    assert [s.name for s in scenario.player("bob").library][:4] == ["Forest", "Island", "Serra Angel", "Swamp"]
+    assert "Serra Angel" not in _names(scenario, Zone.BATTLEFIELD, "bob")
+
+
+def test_riptide_gearhulk_may_choose_no_target() -> None:
+    scenario = _scenario([], ["Serra Angel"], hand=["Riptide Gearhulk"])
+    scenario.choose_trigger_targets("Riptide Gearhulk", [])
+    _cast_all(scenario, "Riptide Gearhulk")
+    assert "Serra Angel" in _names(scenario, Zone.BATTLEFIELD, "bob")
+
+
+def test_riptide_gearhulk_cannot_target_a_land() -> None:
+    scenario = _scenario([], [], hand=["Riptide Gearhulk"])
+    land = scenario.find("Island", Zone.BATTLEFIELD, "bob")
+    with pytest.raises(ValueError, match="illegal target"):
+        scenario.choose_trigger_targets("Riptide Gearhulk", [land])
+
+
+def test_sepulchral_primordial_reanimates_the_opponents_creature_card() -> None:
+    scenario = _scenario([], hand=["Sepulchral Primordial"], bob_graveyard=["Serra Angel", "Island"])
+    scenario.choose_trigger_targets(
+        "Sepulchral Primordial", [scenario.find("Serra Angel", Zone.GRAVEYARD, "bob")]
+    )
+    scenario.will_take_the_may(True)
+    _cast_all(scenario, "Sepulchral Primordial")
+    stolen = scenario.find("Serra Angel", Zone.BATTLEFIELD, "alice")
+    assert (stolen.owner, stolen.controller) == ("bob", "alice")
+
+
+def test_sepulchral_primordial_may_decline() -> None:
+    scenario = _scenario([], hand=["Sepulchral Primordial"], bob_graveyard=["Serra Angel"])
+    scenario.choose_trigger_targets(
+        "Sepulchral Primordial", [scenario.find("Serra Angel", Zone.GRAVEYARD, "bob")]
+    )
+    scenario.will_take_the_may(False)
+    _cast_all(scenario, "Sepulchral Primordial")
+    assert _names(scenario, Zone.GRAVEYARD, "bob") == ["Serra Angel"]
+
+
+def test_sepulchral_primordial_cannot_target_a_noncreature_card() -> None:
+    scenario = _scenario([], hand=["Sepulchral Primordial"], bob_graveyard=["Island"])
+    with pytest.raises(ValueError, match="illegal target"):
+        scenario.choose_trigger_targets(
+            "Sepulchral Primordial", [scenario.find("Island", Zone.GRAVEYARD, "bob")]
+        )
+
+
+# ---------------------------------------------------------------------------
+# Soul of Emancipation: "destroy up to three other target nonland permanents. For each
+# of those permanents, its controller creates a 3/3 white Angel creature token with flying."
+# ---------------------------------------------------------------------------
+
+
+def test_soul_of_emancipation_gives_each_permanents_controller_an_angel() -> None:
+    scenario = _scenario(["Grizzly Bears"], ["Serra Angel", "Hill Giant"], hand=["Soul of Emancipation"])
+    scenario.choose_trigger_targets(
+        "Soul of Emancipation",
+        [
+            scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice"),
+            scenario.find("Serra Angel", Zone.BATTLEFIELD, "bob"),
+            scenario.find("Hill Giant", Zone.BATTLEFIELD, "bob"),
+        ],
+    )
+    _cast_all(scenario, "Soul of Emancipation")
+    assert len(_named(scenario, "Angel", user="alice")) == 1
+    assert len(_named(scenario, "Angel", user="bob")) == 2
+    assert _names(scenario, Zone.GRAVEYARD, "bob") == ["Hill Giant", "Serra Angel"]
+
+
+def test_soul_of_emancipation_with_no_targets_makes_no_angels() -> None:
+    scenario = _scenario([], ["Serra Angel"], hand=["Soul of Emancipation"])
+    scenario.choose_trigger_targets("Soul of Emancipation", [])
+    _cast_all(scenario, "Soul of Emancipation")
+    assert _named(scenario, "Angel") == []
