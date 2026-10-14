@@ -298,6 +298,11 @@ class ComparisonCount(StrEnum):
     SOURCE_TOUGHNESS = "source_toughness"
     """`SOURCE_POWER`'s twin for "... less than this creature's toughness"."""
 
+    CONTROLLER_LIFE = "controller_life"
+    """"with power greater than or equal to your life total" (Blazing Hope): the bound is the
+    life total (CR 119.1) of the caster of the spell or ability being aimed, read at every `rejects` call, so a life change between casting and resolving
+    is seen by the CR 608.2b recheck."""
+
 
 class CombatState(StrEnum):
     """Being in combat, which is a game state rather than a characteristic.
@@ -1819,7 +1824,7 @@ class TargetRequirement(EngineModel):
         label = self.comparison_attribute.value.replace("_", " ")
         comparison_value = self.comparison_value
         if comparison_value is None and self.comparison_count is not None:
-            comparison_value = self._counted_bound(target, game, source_id)
+            comparison_value = self._counted_bound(target, game, source_id, caster)
         if comparison_value is None and self.comparison_x_definition is not None:
             comparison_value = self._defined_x(game, caster)
         if self.comparison_value_if_revolt is not None and caster is not None:
@@ -1863,7 +1868,11 @@ class TargetRequirement(EngineModel):
         )
 
     def _counted_bound(
-        self, target: CardState, game: Any, source_id: UUID | None = None
+        self,
+        target: CardState,
+        game: Any,
+        source_id: UUID | None = None,
+        caster: str | None = None,
     ) -> int | None:
         """The number a `comparison_count` names, right now, or None if it
         cannot be counted from what the caller supplied.
@@ -1920,6 +1929,9 @@ class TargetRequirement(EngineModel):
             ComparisonCount.SOURCE_TOUGHNESS,
         ):
             return self._source_stat(game, source_id)
+        if self.comparison_count is ComparisonCount.CONTROLLER_LIFE:
+            player_of = getattr(game, "player", None)
+            return None if caster is None or player_of is None else player_of(caster).life
         return None
 
     def _source_stat(self, game: Any, source_id: UUID | None) -> int | None:
@@ -6673,6 +6685,7 @@ _COMPARISON_CLAUSE = re.compile(
     # you control" - a count of the *caster's* board, carried on as CR
     # 107.3c's "where X is" definition (`comparison_x_definition`).
     r"|(?P<expr_dir>less|greater) than or equal to (?P<expr>the number of [^,.]+? you control)"
+    r"|(?P<life_dir>less|greater) than or equal to (?P<life_total>your life total)"
     r"|less than or equal to\s+(?P<le_num>x|\d+)\b"
     r"|greater than or equal to\s+(?P<ge_num>x|\d+)\b"
     # Vodalian Mindsinger, Unliving Psychopath: "power less than this
@@ -6754,6 +6767,19 @@ def _extract_comparison(
             if match.group(group) is not None  # noqa: B023 - `match` is not reassigned
         )
         return attribute, operator, None, count, rest[: match.start()] + rest[match.end() :]
+    if match.group("life_dir") is not None:
+        operator = (
+            ComparisonOperator.LESS_OR_EQUAL
+            if match.group("life_dir").lower() == "less"
+            else ComparisonOperator.GREATER_OR_EQUAL
+        )
+        return (
+            attribute,
+            operator,
+            None,
+            ComparisonCount.CONTROLLER_LIFE,
+            rest[: match.start()] + rest[match.end() :],
+        )
     if match.group("expr_dir") is not None:
         operator = (
             ComparisonOperator.LESS_OR_EQUAL

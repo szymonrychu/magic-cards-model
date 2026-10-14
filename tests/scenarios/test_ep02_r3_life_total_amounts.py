@@ -413,3 +413,26 @@ def test_benediction_with_no_creature_to_haunt_stays_in_the_graveyard():
     _settle(scenario)
     assert [c for c in scenario.player("alice").graveyard if c.name == "Benediction of Moons"]
     assert _life(scenario) == 22
+
+
+# --------------------------------------------------------------------------
+# "target creature with power greater than or equal to your life total" (Blazing Hope)
+# --------------------------------------------------------------------------
+
+
+def test_blazing_hope_exiles_a_creature_whose_power_reaches_your_life_total():
+    scenario = _main(
+        _build(["Plains"] * 2, ["Hill Giant", "Grizzly Bears"], hand=["Blazing Hope"], life=3)
+    )
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.cast_and_resolve("Blazing Hope", targets=[giant], auto=True, username="alice")
+    assert giant.zone is Zone.EXILE
+
+
+def test_blazing_hope_cannot_target_a_creature_with_less_power_than_your_life_total():
+    scenario = _main(
+        _build(["Plains"] * 2, ["Hill Giant", "Grizzly Bears"], hand=["Blazing Hope"], life=4)
+    )
+    bears = scenario.creature("Grizzly Bears", "bob")
+    with pytest.raises(Exception, match="power"):
+        scenario.cast("Blazing Hope", targets=[bears])
