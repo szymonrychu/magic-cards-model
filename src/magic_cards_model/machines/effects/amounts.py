@@ -998,6 +998,27 @@ def _greatest_among_reader(
     return greatest_among
 
 
+def r3_controller_amount(phrase: str):
+    """`ep02_r3_damage_cost_amounts_pumps.controller_amount`, imported on use."""
+    from ..ep02_r3_damage_cost_amounts_pumps import controller_amount
+
+    return controller_amount(phrase)
+
+
+def r3_object_amount(phrase: str):
+    """`ep02_r3_damage_cost_amounts_pumps.object_amount`, imported on use."""
+    from ..ep02_r3_damage_cost_amounts_pumps import object_amount
+
+    return object_amount(phrase)
+
+
+def r3_x_literal(sentence: str, magnitude: int) -> str:
+    """`ep02_r3_damage_cost_amounts_pumps.x_literal`, imported on use."""
+    from ..ep02_r3_damage_cost_amounts_pumps import x_literal
+
+    return x_literal(sentence, magnitude)
+
+
 def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     """Parse "the number of <type>[s] you control" or "... card(s) in your
     graveyard" into `(game, controller) -> int`, or `None` if `phrase` is not
@@ -1074,6 +1095,10 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
 
     if (history_count := counter_history_count(stripped)) is not None:
         return history_count
+    if ("greatest" in stripped or " minus " in stripped) and (
+        r3_amount := r3_controller_amount(stripped)
+    ) is not None:
+        return r3_amount
     if "counters on" in stripped.lower() and (
         counters_held := _COUNTERS_ON_YOUR_PERMANENTS_RE.fullmatch(stripped)
     ):
@@ -2578,6 +2603,7 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
         if controller_magnitude_expr is not None
         else _event_subject_characteristic_expr(match.group("expr"))
         or _source_characteristic_expr(match.group("expr"), template)
+        or r3_object_amount(match.group("expr"))
     )
     if controller_magnitude_expr is None and event_magnitude_expr is None:
         return None
@@ -2621,7 +2647,7 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
             if controller_magnitude_expr is not None
             else event_magnitude_expr(game, ability)  # type: ignore[misc]
         )
-        literal = _X_TOKEN_RE.sub(str(magnitude), pump_sentence)
+        literal = r3_x_literal(pump_sentence, magnitude)
         builder = parsed_layer_effects(literal)
         if builder is None:
             continuous_effects(game).layer_notices.append(
@@ -2705,7 +2731,8 @@ def _parse_where_x_is_continuous_effect_for_spell(effect_text: str) -> Effect | 
         return None
     template = (text[: match.start()] + text[match.end() :]).strip()
     magnitude_expr = count_expression(match.group("expr"))
-    if magnitude_expr is None:
+    object_expr = None if magnitude_expr is not None else r3_object_amount(match.group("expr"))
+    if magnitude_expr is None and object_expr is None:
         return None
     if not _X_TOKEN_RE.search(template):
         return None
@@ -2735,8 +2762,12 @@ def _parse_where_x_is_continuous_effect_for_spell(effect_text: str) -> Effect | 
 
     def run_pump(game: "Game", spell: CardState) -> None:
         controller = game.controller_of(spell)
-        magnitude = magnitude_expr(game, controller.username)
-        literal = _X_TOKEN_RE.sub(str(magnitude), pump_sentence)
+        magnitude = (
+            magnitude_expr(game, controller.username)
+            if magnitude_expr is not None
+            else object_expr(game, spell)  # type: ignore[misc]
+        )
+        literal = r3_x_literal(pump_sentence, magnitude)
         builder = parsed_layer_effects(literal)
         if builder is None:
             continuous_effects(game).layer_notices.append(

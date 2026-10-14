@@ -2460,6 +2460,11 @@ class Game(
     #: counts ("for each <type> card in your graveyard", "card types among
     #: cards in your graveyard", "that player's graveyard") now resolve where
     #: an older dump would have resolved the same text as a no-op.
+    #: 170 (EP02-R3-T8): `PlayPermission` gained `harmonize` (CR 702.180a), so a graveyard
+    #: card that "gains harmonize" (Songcrafter Mage) is cast with the tap-a-creature discount
+    #: and exiled instead of going to the graveyard; and `DelayedEffectSpec` gained the
+    #: `CipherCopyAndCast` variant (CR 702.99a, Whispering Madness), which an older decode
+    #: cannot name; an older dump could not say so.
     #: 169 (EP-02-R2-T5): `machines/layers` gained the persisted selector variants
     #: `CreaturesControlledByOpponentsOfWithPowerAtMost` and
     #: `PermanentsOfTypesWithCounter` and the modification variant

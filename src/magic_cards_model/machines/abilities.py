@@ -1969,7 +1969,17 @@ class ActivationCostReduction(EngineModel):
     #: counter (`machines/ep02_r1_graveyard_counts.py`). Exactly one of
     #: `quality`, `target_quality`, `self_counter_kind` and this is ever set.
     graveyard_quality: str | None = None
+    #: Survey Mechan's "This ability costs {X} less to activate, where X is the
+    #: number of differently named lands you control." - the printed phrase X is
+    #: defined as, read by `count_expression` (CR 107.3f, CR 601.2f) each time the
+    #: cost is determined. Exactly one of this and the fields above is ever set.
+    where_x: str | None = None
 
+
+#: "This ability costs {X} less to activate, where X is <count>." (Survey Mechan).
+_TRAILING_X_COST_REDUCTION_RE = re.compile(
+    r"^this ability costs \{x\} less to activate, where x is (?P<expr>.+?)\.?$", re.IGNORECASE
+)
 
 #: "This ability costs {N} less to activate for each <quality> you control."
 #: - matched only as the *last* sentence of an activated ability's effect, so
@@ -2054,6 +2064,12 @@ def target_cost_reduction_amount(
     return None
 
 
+def _count_is_readable(expr: str) -> bool:
+    from .effects.amounts import count_expression
+
+    return count_expression(expr) is not None
+
+
 def _split_off_trailing_cost_reduction(effect: str) -> tuple[str, ActivationCostReduction | None]:
     """Peel a trailing "This ability costs [N] less ..." sentence off an
     activated ability's effect text, if it has one (CR 601.2f via CR 602.2b).
@@ -2089,6 +2105,10 @@ def _split_off_trailing_cost_reduction(effect: str) -> tuple[str, ActivationCost
             amount=int(target_match.group("amount")),
             target_quality=target_match.group("what").strip(),
         )
+        return " ".join(sentences[:-1]).strip(), reduction
+    where_x_match = _TRAILING_X_COST_REDUCTION_RE.match(last)
+    if where_x_match is not None and _count_is_readable(where_x_match.group("expr").strip()):
+        reduction = ActivationCostReduction(amount=1, where_x=where_x_match.group("expr").strip())
         return " ".join(sentences[:-1]).strip(), reduction
     graveyard_match = _TRAILING_GRAVEYARD_COST_REDUCTION_RE.match(last)
     if graveyard_match is not None:

@@ -2010,7 +2010,10 @@ class TargetRequirement(EngineModel):
                 return None
             chars = characteristics_of(source)
             return _numeric(chars.power if power else chars.toughness)
-        return source.last_known_power if power else source.last_known_toughness
+        # The snapshot keeps only what a continuous effect contributed; the printing plus the
+        # counters it left with is the rest (`CardState.last_known_power_toughness`).
+        last_power, last_toughness = source.last_known_power_toughness()
+        return _numeric(last_power if power else last_toughness)
 
     def _defined_x(self, game: Any, caster: str | None) -> int | None:
         """`comparison_x_definition` counted for `caster` right now (CR 107.3c),
@@ -2150,6 +2153,10 @@ class Division(EngineModel):
     supplies the resolved number for one of these."""
     what: str
     """What is being divided, as the card words it: "damage", "+1/+1 counters"."""
+    amount_is_source_power: bool = False
+    """Living Inferno's "deals damage equal to its power divided as you choose among ...":
+    the total to divide is the source's own power, read when the division is announced
+    (CR 601.2d, CR 613.5), so `amount` stays `None` like an X division's."""
     doubled_if_x_at_least: int | None = None
     """Shatterskull Smashing's own second sentence: "If X is 6 or more, ...
     deals twice X damage divided as you choose among them instead." A second
@@ -3392,7 +3399,9 @@ def _read_must_target_types(text: str) -> "SortedFrozenSet[Type] | None":
 
 #: CR 601.2d's two templates, the amount and what is being divided.
 _DIVIDED = re.compile(
-    r"\b(?:deals?\s+(?P<damage>[\w]+)\s+damage\s+divided(?:\s+as\s+you\s+choose)?\s+among"
+    r"\b(?:deals?\s+(?P<power_damage>damage\s+equal\s+to\s+its\s+power)\s+divided"
+    r"(?:\s+as\s+you\s+choose)?\s+among"
+    r"|deals?\s+(?P<damage>[\w]+)\s+damage\s+divided(?:\s+as\s+you\s+choose)?\s+among"
     r"|distributes?\s+(?P<counters>[\w]+)\s+(?P<kind>\S+)\s+counters?"
     r"(?:\s+divided)?(?:\s+as\s+you\s+choose)?\s+among)\b",
     re.IGNORECASE,
@@ -5128,6 +5137,8 @@ def _read_division(text: str) -> Division | None:
     match = _DIVIDED.search(text)
     if match is None:
         return None
+    if match.group("power_damage") is not None:
+        return Division(amount=None, what="damage", amount_is_source_power=True)
     if match.group("damage") is not None:
         word = match.group("damage").lower()
         if word == "x":
@@ -6898,7 +6909,8 @@ _COMPARISON_CLAUSE = re.compile(
     r"|greater than or equal to\s+(?P<ge_num>x|\d+)\b"
     # Vodalian Mindsinger, Unliving Psychopath: "power less than this
     # creature's power" - the source's own current stat (`SOURCE_POWER`).
-    r"|(?P<stat_dir>less|greater) than (?:this (?:creature|permanent)|[A-Z][^.,']*?)'s "
+    r"|(?P<stat_dir>less|greater) than (?P<stat_or_equal>or equal to )?"
+    r"(?:this (?:creature|permanent)|[A-Z][^.,']*?)'s "
     r"(?P<source_stat>power|toughness)\b"
     r"|(?P<strict_dir>less|greater) than (?P<source_loyalty>.+?)'s loyalty\b"
     r"|equal to\s+(?P<eq_num>x|\d+)\b"
@@ -7016,13 +7028,16 @@ def _extract_comparison(
         remaining = rest[: match.start()] + rest[match.end() :]
         return attribute, operator, None, None, f"{remaining}, where X is {match.group('expr')}"
     if match.group("stat_dir") is not None:
-        # "less/greater than this creature's power" - a strict inequality
+        # "less/greater than [or equal to] this creature's power" - a strict
+        # inequality, or the inclusive one with "or equal to" (Dreadhorde Arcanist),
         # against the source's own current stat (`ComparisonCount.SOURCE_POWER`).
-        operator = (
-            ComparisonOperator.LESS_THAN
-            if match.group("stat_dir").lower() == "less"
-            else ComparisonOperator.GREATER_THAN
-        )
+        less = match.group("stat_dir").lower() == "less"
+        if match.group("stat_or_equal") is not None:
+            operator = (
+                ComparisonOperator.LESS_OR_EQUAL if less else ComparisonOperator.GREATER_OR_EQUAL
+            )
+        else:
+            operator = ComparisonOperator.LESS_THAN if less else ComparisonOperator.GREATER_THAN
         count = _SOURCE_STAT_COUNTS[match.group("source_stat").lower()]
         return attribute, operator, None, count, rest[: match.start()] + rest[match.end() :]
     if match.group("strict_dir") is not None:

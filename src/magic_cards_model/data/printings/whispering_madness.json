@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "5a62cda0-34b2-42f0-83bd-c08eecf02fa4",
+  "oracle_id": "7bbc5f3a-f8fb-47e8-837e-ce319bc489de",
+  "multiverse_ids": [
+    420846
+  ],
+  "tcgplayer_id": 124684,
+  "cardmarket_id": 293726,
+  "name": "Whispering Madness",
+  "lang": "en",
+  "released_at": "2016-11-11",
+  "uri": "https://api.scryfall.com/cards/5a62cda0-34b2-42f0-83bd-c08eecf02fa4",
+  "scryfall_uri": "https://scryfall.com/card/c16/229/whispering-madness?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:04:02Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/a/5a62cda0-34b2-42f0-83bd-c08eecf02fa4.jpg?1783937042",
+    "normal": "https://cards.scryfall.io/normal/front/5/a/5a62cda0-34b2-42f0-83bd-c08eecf02fa4.jpg?1783937042",
+    "large": "https://cards.scryfall.io/large/front/5/a/5a62cda0-34b2-42f0-83bd-c08eecf02fa4.jpg?1783937042",
+    "png": "https://cards.scryfall.io/png/front/5/a/5a62cda0-34b2-42f0-83bd-c08eecf02fa4.png?1783937042",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/a/5a62cda0-34b2-42f0-83bd-c08eecf02fa4.jpg?1783937042",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/a/5a62cda0-34b2-42f0-83bd-c08eecf02fa4.jpg?1783937042",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/a/5a62cda0-34b2-42f0-83bd-c08eecf02fa4.webp?1783937042",
+    "grid": "https://cards.scryfall.io/grid/front/5/a/5a62cda0-34b2-42f0-83bd-c08eecf02fa4.webp?1783937042",
+    "display": "https://cards.scryfall.io/display/front/5/a/5a62cda0-34b2-42f0-83bd-c08eecf02fa4.webp?1783937042",
+    "art": "https://cards.scryfall.io/art/front/5/a/5a62cda0-34b2-42f0-83bd-c08eecf02fa4.webp?1783937042",
+    "crop": "https://cards.scryfall.io/crop/front/5/a/5a62cda0-34b2-42f0-83bd-c08eecf02fa4.webp?1783937042"
+  },
+  "mana_cost": "{2}{U}{B}",
+  "cmc": 4.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Each player discards their hand, then draws cards equal to the greatest number of cards a player discarded this way.\nCipher (Then you may exile this spell card encoded on a creature you control. Whenever that creature deals combat damage to a player, its controller may cast a copy of the encoded card without paying its mana cost.)",
+  "colors": [
+    "B",
+    "U"
+  ],
+  "color_identity": [
+    "B",
+    "U"
+  ],
+  "keywords": [
+    "Cipher"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "3e0d713a-b5cb-4287-81b9-a57d4dcaf415",
+  "set": "c16",
+  "set_name": "Commander 2016",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/3e0d713a-b5cb-4287-81b9-a57d4dcaf415",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ac16&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/c16?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/5a62cda0-34b2-42f0-83bd-c08eecf02fa4/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7bbc5f3a-f8fb-47e8-837e-ce319bc489de&unique=prints",
+  "collector_number": "229",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Clint Cearley",
+  "artist_ids": [
+    "03b75350-d5a0-4e3a-b3b4-8d4a5554385b"
+  ],
+  "illustration_id": "98a14caa-2bb1-4c92-8403-1ada8cf33462",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 3190,
+  "penny_rank": 10171,
+  "prices": {
+    "usd": "3.71",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "2.83",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=420846&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWhispering%2BMadness",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWhispering%2BMadness",
+    "edhrec": "https://edhrec.com/route/?cc=Whispering+Madness"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F124684%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=293726&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Whispering+Madness&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

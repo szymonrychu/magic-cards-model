@@ -2576,6 +2576,14 @@ class PlayPermission(EngineModel):
     "Flashback"` even though no keyword was announced, which is the only
     thing `machines/replacement.py`'s exile-on-leaving-the-stack check
     (`_stack_replacements`) actually looks at."""
+    harmonize: bool = False
+    """Whether this grant *is* CR 702.180a's harmonize, handed out as a
+    `PlayPermission`: Songcrafter Mage's "target instant or sorcery card in your graveyard
+    gains harmonize until end of turn. Its harmonize cost is equal to its mana cost." It is
+    `flashback`'s twin with the keyword's second ability added - the cast may tap one
+    untapped creature to pay generic mana equal to its power (`Casting.pay_harmonize`) -
+    and `Casting.cast()` writes `CastRecord.keyword = "Harmonize"` so the exile-instead
+    replacement of CR 702.180a's third ability applies."""
     source_name: str = ""
     """The card whose ability handed this out, for the error message."""
     rule: str = "CR 601.3"

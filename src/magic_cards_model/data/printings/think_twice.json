@@ -1,0 +1,154 @@
+{
+  "object": "card",
+  "id": "85835de4-66ea-4ba1-87ca-6bcec2a8660a",
+  "oracle_id": "fa85c5a2-8e83-4624-a35a-a0bbf17ecbb4",
+  "multiverse_ids": [],
+  "resource_id": "763BECF236BDD6D6723272BA64C7184453971E8033ADCD8862A481255A2BF5A4",
+  "mtgo_id": 151999,
+  "arena_id": 105797,
+  "tcgplayer_id": 697232,
+  "cardmarket_id": 892011,
+  "name": "Think Twice",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/85835de4-66ea-4ba1-87ca-6bcec2a8660a",
+  "scryfall_uri": "https://scryfall.com/card/msc/787/think-twice?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:36:55Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/5/85835de4-66ea-4ba1-87ca-6bcec2a8660a.jpg?1783903015",
+    "normal": "https://cards.scryfall.io/normal/front/8/5/85835de4-66ea-4ba1-87ca-6bcec2a8660a.jpg?1783903015",
+    "large": "https://cards.scryfall.io/large/front/8/5/85835de4-66ea-4ba1-87ca-6bcec2a8660a.jpg?1783903015",
+    "png": "https://cards.scryfall.io/png/front/8/5/85835de4-66ea-4ba1-87ca-6bcec2a8660a.png?1783903015",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/5/85835de4-66ea-4ba1-87ca-6bcec2a8660a.jpg?1783903015",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/5/85835de4-66ea-4ba1-87ca-6bcec2a8660a.jpg?1783903015",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/5/85835de4-66ea-4ba1-87ca-6bcec2a8660a.webp?1783903015",
+    "grid": "https://cards.scryfall.io/grid/front/8/5/85835de4-66ea-4ba1-87ca-6bcec2a8660a.webp?1783903015",
+    "display": "https://cards.scryfall.io/display/front/8/5/85835de4-66ea-4ba1-87ca-6bcec2a8660a.webp?1783903015",
+    "art": "https://cards.scryfall.io/art/front/8/5/85835de4-66ea-4ba1-87ca-6bcec2a8660a.webp?1783903015",
+    "crop": "https://cards.scryfall.io/crop/front/8/5/85835de4-66ea-4ba1-87ca-6bcec2a8660a.webp?1783903015"
+  },
+  "mana_cost": "{1}{U}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Draw a card.\nFlashback {2}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Flashback"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "533b1a2c-ead1-4636-9c88-e9b582042372",
+      "component": "combo_piece",
+      "name": "Shellfish Scholar",
+      "type_line": "Creature \u2014 Rat Wizard",
+      "uri": "https://api.scryfall.com/cards/533b1a2c-ead1-4636-9c88-e9b582042372"
+    },
+    {
+      "object": "related_card",
+      "id": "85835de4-66ea-4ba1-87ca-6bcec2a8660a",
+      "component": "combo_piece",
+      "name": "Think Twice",
+      "type_line": "Instant",
+      "uri": "https://api.scryfall.com/cards/85835de4-66ea-4ba1-87ca-6bcec2a8660a"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "9d739461-c5ac-43a1-af41-3d5a585b5c8d",
+  "set": "msc",
+  "set_name": "Marvel Super Heroes Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/9d739461-c5ac-43a1-af41-3d5a585b5c8d",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/85835de4-66ea-4ba1-87ca-6bcec2a8660a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Afa85c5a2-8e83-4624-a35a-a0bbf17ecbb4&unique=prints",
+  "collector_number": "787",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"You have long tried to eliminate me from your timeline, Kang. And yet I remain. We are forever bound. We are one.\"\n\u2014Immortus",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Riccardo Federici",
+  "artist_ids": [
+    "3ce2a17a-a7c4-4a29-a1d1-43a49a7aadc2"
+  ],
+  "illustration_id": "1bf02c1d-84b0-487a-8993-e25c3d683fea",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 2203,
+  "penny_rank": 1072,
+  "prices": {
+    "usd": "0.27",
+    "usd_foil": "0.36",
+    "usd_etched": null,
+    "eur": "0.10",
+    "eur_foil": "0.15",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThink%2BTwice",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThink%2BTwice",
+    "edhrec": "https://edhrec.com/route/?cc=Think+Twice"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F697232%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=892011&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/151999?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

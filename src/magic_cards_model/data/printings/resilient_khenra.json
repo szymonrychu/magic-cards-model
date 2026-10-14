@@ -1,0 +1,154 @@
+{
+  "object": "card",
+  "id": "033a69fb-2af9-426c-b1d6-3e5b18c78c9a",
+  "oracle_id": "eb23f999-e7f9-4082-b322-5b00ba64b458",
+  "multiverse_ids": [
+    430820
+  ],
+  "mtgo_id": 64746,
+  "mtgo_foil_id": 64747,
+  "tcgplayer_id": 135082,
+  "cardmarket_id": 298732,
+  "name": "Resilient Khenra",
+  "lang": "en",
+  "released_at": "2017-07-14",
+  "uri": "https://api.scryfall.com/cards/033a69fb-2af9-426c-b1d6-3e5b18c78c9a",
+  "scryfall_uri": "https://scryfall.com/card/hou/131/resilient-khenra?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:46:54Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/3/033a69fb-2af9-426c-b1d6-3e5b18c78c9a.jpg?1783936014",
+    "normal": "https://cards.scryfall.io/normal/front/0/3/033a69fb-2af9-426c-b1d6-3e5b18c78c9a.jpg?1783936014",
+    "large": "https://cards.scryfall.io/large/front/0/3/033a69fb-2af9-426c-b1d6-3e5b18c78c9a.jpg?1783936014",
+    "png": "https://cards.scryfall.io/png/front/0/3/033a69fb-2af9-426c-b1d6-3e5b18c78c9a.png?1783936014",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/3/033a69fb-2af9-426c-b1d6-3e5b18c78c9a.jpg?1783936014",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/3/033a69fb-2af9-426c-b1d6-3e5b18c78c9a.jpg?1783936014",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/3/033a69fb-2af9-426c-b1d6-3e5b18c78c9a.webp?1783936014",
+    "grid": "https://cards.scryfall.io/grid/front/0/3/033a69fb-2af9-426c-b1d6-3e5b18c78c9a.webp?1783936014",
+    "display": "https://cards.scryfall.io/display/front/0/3/033a69fb-2af9-426c-b1d6-3e5b18c78c9a.webp?1783936014",
+    "art": "https://cards.scryfall.io/art/front/0/3/033a69fb-2af9-426c-b1d6-3e5b18c78c9a.webp?1783936014",
+    "crop": "https://cards.scryfall.io/crop/front/0/3/033a69fb-2af9-426c-b1d6-3e5b18c78c9a.webp?1783936014"
+  },
+  "mana_cost": "{1}{G}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Jackal Wizard",
+  "oracle_text": "When this creature enters, you may have target creature get +X/+X until end of turn, where X is this creature's power.\nEternalize {4}{G}{G} ({4}{G}{G}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a 4/4 black Zombie Jackal Wizard with no mana cost. Eternalize only as a sorcery.)",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Eternalize"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "c1326c5d-b5a5-4942-b15d-37830ac62c7d",
+      "component": "token",
+      "name": "Resilient Khenra",
+      "type_line": "Token Creature \u2014 Zombie Jackal Wizard",
+      "uri": "https://api.scryfall.com/cards/c1326c5d-b5a5-4942-b15d-37830ac62c7d"
+    },
+    {
+      "object": "related_card",
+      "id": "033a69fb-2af9-426c-b1d6-3e5b18c78c9a",
+      "component": "combo_piece",
+      "name": "Resilient Khenra",
+      "type_line": "Creature \u2014 Jackal Wizard",
+      "uri": "https://api.scryfall.com/cards/033a69fb-2af9-426c-b1d6-3e5b18c78c9a"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "65ff168b-bb94-47a5-a8f9-4ec6c213e768",
+  "set": "hou",
+  "set_name": "Hour of Devastation",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/65ff168b-bb94-47a5-a8f9-4ec6c213e768",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahou&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hou?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/033a69fb-2af9-426c-b1d6-3e5b18c78c9a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aeb23f999-e7f9-4082-b322-5b00ba64b458&unique=prints",
+  "collector_number": "131",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Svetlin Velinov",
+  "artist_ids": [
+    "ffd063ae-c097-4f26-b2e6-b1e2137708bc"
+  ],
+  "illustration_id": "aa3a08e2-9561-4ec8-bfb1-d5a4e0511a5e",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 28679,
+  "penny_rank": 7332,
+  "prices": {
+    "usd": "0.16",
+    "usd_foil": "0.51",
+    "usd_etched": null,
+    "eur": "0.09",
+    "eur_foil": "0.39",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=430820&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DResilient%2BKhenra",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DResilient%2BKhenra",
+    "edhrec": "https://edhrec.com/route/?cc=Resilient+Khenra"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F135082%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=298732&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/64746?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
