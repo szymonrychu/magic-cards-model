@@ -18,7 +18,7 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.combat import has_keyword
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Type
-from magic_cards_model.support import HANDLED, classify_clauses
+from magic_cards_model.support import HANDLED, card_support, classify_clauses
 from tests.cards import card
 from tests.scenarios.harness import Scenario
 
@@ -73,6 +73,10 @@ def test_every_clause_of_a_listed_card_is_handled(name: str) -> None:
     assert all(clause.category == HANDLED for clause in clauses), [
         (clause.text, clause.category) for clause in clauses if clause.category != HANDLED
     ]
+    # The campaign's own oracle also judges every printed keyword.
+    assert card_support(card(name)).status == "handled", [
+        (c.text, c.status) for c in card_support(card(name)).clauses if c.status != "handled"
+    ]
 
 
 def _scenario(
@@ -84,6 +88,7 @@ def _scenario(
     bob_hand: list[str] | None = None,
     graveyard: list[str] | None = None,
     bob_graveyard: list[str] | None = None,
+    exile: list[str] | None = None,
     step: Step = Step.PRECOMBAT_MAIN,
 ):
     scenario = (
@@ -93,6 +98,7 @@ def _scenario(
             battlefield=[*alice, *LANDS],
             hand=hand,
             graveyard=graveyard,
+            exile=exile,
             library=library or ["Island"] * 12,
         )
         .player(
@@ -592,3 +598,368 @@ def test_isildurs_fateful_strike_needs_a_legendary_creature_or_planeswalker() ->
             targets=[scenario.creature("Serra Angel", "bob")],
             auto=True,
         )
+
+
+# ---------------------------------------------------------------------------
+# Jump-start (CR 702.133a): Beacon Bolt
+# ---------------------------------------------------------------------------
+
+
+def test_beacon_bolt_counts_instants_and_sorceries_in_graveyard_and_exile() -> None:
+    scenario = _scenario(
+        [],
+        ["Hill Giant"],
+        hand=["Island"],
+        graveyard=["Beacon Bolt", "Lightning Bolt", "Grizzly Bears"],
+        exile=["Think Twice", "Divination"],
+    )
+    giant = scenario.creature("Hill Giant", "bob")
+    island = scenario.find("Island", Zone.HAND, "alice")
+    beacon = scenario.find("Beacon Bolt", Zone.GRAVEYARD, "alice")
+    casting = scenario.cast("Beacon Bolt", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Jump-start", choosing=[island])
+    casting.choose_targets([giant])
+    scenario.auto_pay(casting.begin_paying())
+    scenario.put_on_stack(casting)
+    _resolve_all(scenario)
+    assert island.zone is Zone.GRAVEYARD  # the discard
+    assert beacon.zone is Zone.EXILE  # CR 702.133a
+    assert giant.zone is Zone.GRAVEYARD  # Lightning Bolt + Think Twice + Divination = 3
+
+
+def test_beacon_bolt_does_not_count_creatures_or_the_spell_itself() -> None:
+    scenario = _scenario(
+        [],
+        ["Hill Giant"],
+        hand=["Island"],
+        graveyard=["Beacon Bolt", "Lightning Bolt", "Grizzly Bears"],
+        exile=["Think Twice"],
+    )
+    giant = scenario.creature("Hill Giant", "bob")
+    island = scenario.find("Island", Zone.HAND, "alice")
+    casting = scenario.cast("Beacon Bolt", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Jump-start", choosing=[island])
+    casting.choose_targets([giant])
+    scenario.auto_pay(casting.begin_paying())
+    scenario.put_on_stack(casting)
+    _resolve_all(scenario)
+    assert giant.zone is Zone.BATTLEFIELD  # only 2 damage on a 3/3
+
+
+# ---------------------------------------------------------------------------
+# Free casts from the graveyard: Dreadhorde Arcanist, Arcane Proxy, Invoke Calamity
+# ---------------------------------------------------------------------------
+
+
+def _life(scenario, user: str) -> int:
+    return scenario.player(user).life
+
+
+def test_dreadhorde_arcanist_casts_a_cheap_graveyard_spell_free_and_exiles_it() -> None:
+    scenario = _scenario(
+        ["Dreadhorde Arcanist"], graveyard=["Lightning Bolt"], step=Step.BEGINNING_OF_COMBAT
+    )
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    scenario.choose_trigger_targets("Dreadhorde Arcanist", [bolt])
+    scenario.will_take_the_may(True, source="Dreadhorde Arcanist")
+    scenario.will_choose_targets("bob")
+    _attack(scenario, "Dreadhorde Arcanist")
+    _resolve_all(scenario)
+    assert _life(scenario, "bob") == 17
+    assert bolt.zone is Zone.EXILE  # "exile it instead" (CR 614.1a)
+
+
+def test_dreadhorde_arcanist_may_decline() -> None:
+    scenario = _scenario(
+        ["Dreadhorde Arcanist"], graveyard=["Lightning Bolt"], step=Step.BEGINNING_OF_COMBAT
+    )
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    scenario.choose_trigger_targets("Dreadhorde Arcanist", [bolt])
+    scenario.will_take_the_may(False, source="Dreadhorde Arcanist")
+    _attack(scenario, "Dreadhorde Arcanist")
+    _resolve_all(scenario)
+    assert _life(scenario, "bob") == 20
+    assert bolt.zone is Zone.GRAVEYARD
+
+
+def test_dreadhorde_arcanist_cannot_target_a_spell_above_its_power() -> None:
+    scenario = _scenario(
+        ["Dreadhorde Arcanist"], graveyard=["Think Twice"], step=Step.BEGINNING_OF_COMBAT
+    )
+    think = scenario.find("Think Twice", Zone.GRAVEYARD, "alice")
+    hand = len(scenario.player("alice").hand)
+    _attack(scenario, "Dreadhorde Arcanist")
+    _resolve_all(scenario)
+    assert think.zone is Zone.GRAVEYARD  # mana value 2 > power 1
+    assert len(scenario.player("alice").hand) == hand
+
+
+def test_dreadhorde_arcanist_reads_its_power_as_it_attacks() -> None:
+    scenario = _scenario(
+        ["Dreadhorde Arcanist"], graveyard=["Think Twice"], step=Step.BEGINNING_OF_COMBAT
+    )
+    arcanist = scenario.creature("Dreadhorde Arcanist", "alice")
+    arcanist.add_counters("+1/+1", 1)
+    think = scenario.find("Think Twice", Zone.GRAVEYARD, "alice")
+    scenario.choose_trigger_targets("Dreadhorde Arcanist", [think])
+    scenario.will_take_the_may(True, source="Dreadhorde Arcanist")
+    hand = len(scenario.player("alice").hand)
+    _attack(scenario, "Dreadhorde Arcanist")
+    _resolve_all(scenario)
+    assert think.zone is Zone.EXILE
+    assert len(scenario.player("alice").hand) == hand + 1
+
+
+def _cast_proxy(scenario, *, prototyped: bool):
+    casting = scenario.cast("Arcane Proxy")
+    if prototyped:
+        casting.use_keyword("Prototype")
+    scenario.auto_pay(casting.begin_paying())
+    scenario.put_on_stack(casting)
+
+
+def test_arcane_proxy_copies_a_graveyard_spell_and_casts_the_copy_free() -> None:
+    scenario = _scenario([], hand=["Arcane Proxy"], graveyard=["Lightning Bolt"])
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    scenario.will_choose_targets(bolt)  # the trigger's target, asked once Proxy has entered
+    scenario.will_take_the_may(True, source="Arcane Proxy")
+    scenario.will_choose_targets("bob")
+    _cast_proxy(scenario, prototyped=True)
+    _resolve_all(scenario)
+    assert _life(scenario, "bob") == 17
+    assert bolt.zone is Zone.EXILE  # the card is exiled as the copy is made
+
+
+def test_arcane_proxy_uses_the_prototyped_power() -> None:
+    scenario = _scenario([], hand=["Arcane Proxy"], graveyard=["Divination"])
+    divination = scenario.find("Divination", Zone.GRAVEYARD, "alice")
+    _cast_proxy(scenario, prototyped=True)
+    _resolve_all(scenario)
+    assert divination.zone is Zone.GRAVEYARD  # mana value 3 > prototyped power 2
+
+
+def test_arcane_proxy_cast_for_its_full_cost_copies_a_bigger_spell() -> None:
+    scenario = _scenario([], hand=["Arcane Proxy"], graveyard=["Divination"])
+    divination = scenario.find("Divination", Zone.GRAVEYARD, "alice")
+    scenario.will_choose_targets(divination)
+    scenario.will_take_the_may(True, source="Arcane Proxy")
+    hand = len(scenario.player("alice").hand)
+    _cast_proxy(scenario, prototyped=False)
+    _resolve_all(scenario)
+    assert divination.zone is Zone.EXILE
+    assert len(scenario.player("alice").hand) == hand - 1 + 2  # the Proxy left, two drawn
+
+
+def test_arcane_proxy_does_nothing_when_not_cast() -> None:
+    scenario = _scenario([], hand=["Arcane Proxy"], graveyard=["Lightning Bolt"])
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    scenario.put_onto_battlefield("Arcane Proxy")
+    _resolve_all(scenario)
+    assert bolt.zone is Zone.GRAVEYARD  # CR 603.4: "if you cast it" was false
+
+
+def _calamity(scenario, *chosen):
+    scenario.will_choose_cards(*chosen)
+    _cast_all(scenario, "Invoke Calamity")
+
+
+def test_invoke_calamity_casts_two_spells_from_hand_and_graveyard_free() -> None:
+    scenario = _scenario(
+        [], hand=["Invoke Calamity", "Think Twice"], graveyard=["Lightning Bolt", "Divination"]
+    )
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    think = scenario.find("Think Twice", Zone.HAND, "alice")
+    scenario.will_take_the_may(True, source="Invoke Calamity")
+    scenario.will_choose_targets("bob")
+    scenario.will_choose_cards(bolt)
+    _calamity(scenario, think)
+    assert _life(scenario, "bob") == 17
+    assert bolt.zone is Zone.EXILE and think.zone is Zone.EXILE  # exiled, not the graveyard
+    calamity = scenario.find("Invoke Calamity", Zone.EXILE, "alice")
+    assert calamity.zone is Zone.EXILE
+
+
+def test_invoke_calamity_total_mana_value_is_at_most_six() -> None:
+    scenario = _scenario(
+        [], hand=["Invoke Calamity"], graveyard=["Day of Judgment", "Divination", "Think Twice"]
+    )
+    judgment = scenario.find("Day of Judgment", Zone.GRAVEYARD, "alice")
+    divination = scenario.find("Divination", Zone.GRAVEYARD, "alice")
+    think = scenario.find("Think Twice", Zone.GRAVEYARD, "alice")
+    scenario.will_take_the_may(True, source="Invoke Calamity")
+    # Day of Judgment (4) + Divination (3) is 7: the second pick may only be Think Twice.
+    scenario.will_choose_cards(judgment)
+    scenario.will_choose_cards(think)
+    _cast_all(scenario, "Invoke Calamity")
+    assert judgment.zone is Zone.EXILE and think.zone is Zone.EXILE
+    assert divination.zone is Zone.GRAVEYARD
+
+
+def test_invoke_calamity_may_cast_none() -> None:
+    scenario = _scenario([], hand=["Invoke Calamity"], graveyard=["Lightning Bolt"])
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    scenario.will_choose_cards()
+    _cast_all(scenario, "Invoke Calamity")
+    assert bolt.zone is Zone.GRAVEYARD
+    assert scenario.find("Invoke Calamity", Zone.EXILE, "alice").zone is Zone.EXILE
+
+
+# ---------------------------------------------------------------------------
+# Excess damage (CR 120.10) with a reflexive trigger (CR 603.12): Unleash the Inferno
+# ---------------------------------------------------------------------------
+
+
+def test_unleash_the_inferno_destroys_an_artifact_up_to_the_excess() -> None:
+    scenario = _scenario(
+        [], ["Hill Giant", "Chromatic Lantern", "Worship"], hand=["Unleash the Inferno"]
+    )
+    giant = scenario.creature("Hill Giant", "bob")
+    lantern = scenario.find("Chromatic Lantern", Zone.BATTLEFIELD, "bob")
+    scenario.will_choose_targets(lantern)  # the reflexive trigger's target
+    _cast_all(scenario, "Unleash the Inferno", targets=[giant])
+    assert giant.zone is Zone.GRAVEYARD
+    assert lantern.zone is Zone.GRAVEYARD  # mana value 3 <= 7 - 3 = 4 excess
+
+
+def test_unleash_the_inferno_cannot_reach_a_permanent_above_the_excess() -> None:
+    scenario = _scenario([], ["Serra Angel", "Worship"], hand=["Unleash the Inferno"])
+    angel = scenario.creature("Serra Angel", "bob")
+    worship = scenario.find("Worship", Zone.BATTLEFIELD, "bob")
+    _cast_all(scenario, "Unleash the Inferno", targets=[angel])
+    assert angel.zone is Zone.GRAVEYARD
+    assert worship.zone is Zone.BATTLEFIELD  # mana value 4 > 7 - 4 = 3 excess
+
+
+def test_unleash_the_inferno_without_excess_makes_no_trigger() -> None:
+    scenario = _scenario([], ["Darksteel Colossus", "Sol Ring"], hand=["Unleash the Inferno"])
+    colossus = scenario.creature("Darksteel Colossus", "bob")
+    ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "bob")
+    _cast_all(scenario, "Unleash the Inferno", targets=[colossus])
+    assert colossus.damage == 7
+    assert ring.zone is Zone.BATTLEFIELD  # 7 damage on an 11-toughness creature: no excess
+
+
+def test_unleash_the_inferno_counts_damage_already_marked() -> None:
+    scenario = _scenario([], ["Serra Angel", "Sol Ring"], hand=["Unleash the Inferno"])
+    angel = scenario.creature("Serra Angel", "bob")
+    angel.damage = 3  # only 1 more damage is lethal: 6 are excess
+    ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "bob")
+    scenario.will_choose_targets(ring)
+    _cast_all(scenario, "Unleash the Inferno", targets=[angel])
+    assert ring.zone is Zone.GRAVEYARD
+
+
+# ---------------------------------------------------------------------------
+# Divided damage equal to power (CR 601.2d) with a retaliation: Living Inferno
+# ---------------------------------------------------------------------------
+
+
+def _inferno(scenario):
+    inferno = scenario.creature("Living Inferno", "alice")
+    inferno.summoning_sick = False
+    return inferno
+
+
+def test_living_inferno_divides_its_power_and_each_target_hits_back() -> None:
+    scenario = _scenario(["Living Inferno"], ["Grizzly Bears", "Wall of Omens"])
+    inferno = _inferno(scenario)
+    bears, wall = (
+        scenario.creature("Grizzly Bears", "bob"),
+        scenario.creature("Wall of Omens", "bob"),
+    )
+    _activate_all(scenario, inferno, targets=[bears, wall], division=[4, 4])  # power 8
+    assert bears.zone is Zone.GRAVEYARD and wall.zone is Zone.GRAVEYARD
+    assert inferno.damage == 2  # Grizzly Bears 2 + Wall of Omens 0
+
+
+def test_living_inferno_divides_unevenly_as_announced() -> None:
+    scenario = _scenario(["Living Inferno"], ["Hill Giant", "Wall of Omens"])
+    inferno = _inferno(scenario)
+    giant, wall = scenario.creature("Hill Giant", "bob"), scenario.creature("Wall of Omens", "bob")
+    _activate_all(scenario, inferno, targets=[giant, wall], division=[2, 6])
+    assert giant.zone is Zone.BATTLEFIELD  # 2 damage on a 3/3
+    assert wall.zone is Zone.GRAVEYARD  # 6 damage on a 0/4
+    assert inferno.damage == 3  # the surviving Hill Giant hits back for its power
+
+
+def test_living_inferno_division_must_use_all_of_its_power() -> None:
+    scenario = _scenario(["Living Inferno"], ["Grizzly Bears"])
+    inferno = _inferno(scenario)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    with pytest.raises(ValueError):
+        scenario.activate(inferno, targets=[bears], division=[7], auto=True)  # power is 8
+
+
+def test_living_inferno_reads_its_power_as_the_division_is_announced() -> None:
+    scenario = _scenario(["Living Inferno"], ["Grizzly Bears"])
+    inferno = _inferno(scenario)
+    inferno.add_counters("+1/+1", 1)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _activate_all(scenario, inferno, targets=[bears], division=[9])
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def test_living_inferno_may_have_no_targets() -> None:
+    scenario = _scenario(["Living Inferno"], ["Grizzly Bears"])
+    inferno = _inferno(scenario)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _activate_all(scenario, inferno, targets=[])
+    assert bears.zone is Zone.BATTLEFIELD and inferno.damage == 0
+
+
+# ---------------------------------------------------------------------------
+# "Each opponent may sacrifice or discard. Then damage to each who did neither":
+# Osseous Sticktwister (delirium, CR 207.2c ability word)
+# ---------------------------------------------------------------------------
+
+FOUR_TYPES = ["Lightning Bolt", "Grizzly Bears", "Sol Ring", "Plains"]
+
+
+def _to_end_step(scenario) -> None:
+    while True:
+        while scenario.game.stack:
+            scenario.pass_until_resolved()
+        if scenario.step is Step.END_STEP:
+            return
+        scenario.advance()
+
+
+def test_osseous_sticktwister_damages_an_opponent_who_does_neither() -> None:
+    scenario = _scenario(["Osseous Sticktwister"], graveyard=FOUR_TYPES, bob_hand=["Island"])
+    scenario.will_choose("neither")
+    _to_end_step(scenario)
+    assert scenario.player("bob").life == 20 - 2
+    assert scenario.player("alice").life == 20 + 2  # lifelink on the damage it dealt
+
+
+def test_osseous_sticktwister_lets_an_opponent_discard_instead() -> None:
+    scenario = _scenario(["Osseous Sticktwister"], graveyard=FOUR_TYPES, bob_hand=["Island"])
+    island = scenario.find("Island", Zone.HAND, "bob")
+    scenario.will_choose("discard a card")
+    scenario.will_choose_cards(island)
+    _to_end_step(scenario)
+    assert island.zone is Zone.GRAVEYARD
+    assert scenario.player("bob").life == 20
+
+
+def test_osseous_sticktwister_lets_an_opponent_sacrifice_instead() -> None:
+    scenario = _scenario(["Osseous Sticktwister"], ["Hill Giant"], graveyard=FOUR_TYPES)
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.will_choose("sacrifice a nonland permanent")
+    scenario.will_choose_cards(giant)
+    _to_end_step(scenario)
+    assert giant.zone is Zone.GRAVEYARD
+    assert scenario.player("bob").life == 20
+
+
+def test_osseous_sticktwister_needs_four_card_types_in_the_graveyard() -> None:
+    scenario = _scenario(["Osseous Sticktwister"], graveyard=FOUR_TYPES[:3], bob_hand=["Island"])
+    _to_end_step(scenario)
+    assert scenario.player("bob").life == 20
+    assert len(scenario.player("bob").hand) == 1  # nothing was asked
+
+
+def test_osseous_sticktwister_damages_an_opponent_with_nothing_to_give() -> None:
+    scenario = _scenario(["Osseous Sticktwister"], graveyard=FOUR_TYPES)
+    _to_end_step(scenario)  # bob has only lands and no hand: no choice to offer
+    assert scenario.player("bob").life == 20 - 2

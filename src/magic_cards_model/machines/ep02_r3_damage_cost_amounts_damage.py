@@ -36,6 +36,12 @@ _MAY_DEAL_RE = re.compile(
     r"(?P<back>power|toughness) to (?:this creature|it)\.?$",
     re.IGNORECASE,
 )
+_EXCESS_REFLEXIVE_RE = re.compile(
+    r"^(?P<subject>[^.]+?) deals (?P<n>\d+) damage to (?P<target>target [^.]+?)\.\s*"
+    r"when it deals excess damage this way, (?P<consequence>[^.]*?"
+    r"mana value less than or equal to that amount of excess damage)\.?$",
+    re.IGNORECASE,
+)
 _REVEAL_DAMAGE_RE = re.compile(
     r"^target creature's controller reveals a card at random from their hand\. "
     r"(?:this spell|[^.]+?) deals damage to that creature and that player equal to the "
@@ -171,3 +177,147 @@ def _reveal_at_random_then_damage(text: str) -> Any:
 def reveal_at_random_then_damage(effect_text: str) -> Any:
     """`_reveal_at_random_then_damage` as a spell's whole text."""
     return _reveal_at_random_then_damage(effect_text.strip())
+
+
+@functools.cache
+def _damage_then_reflexive_on_excess(text: str) -> Any:
+    if "excess damage this way" not in text.lower():
+        return None
+    from .effects.text import _strip_non_effect_preamble
+
+    match = _EXCESS_REFLEXIVE_RE.fullmatch(" ".join(_strip_non_effect_preamble(text).split()))
+    if match is None or re.search(r"\btarget\b", match.group("subject"), re.IGNORECASE):
+        return None
+    from .effects._common import _targets_understood
+
+    if not _targets_understood(match.group("target")):
+        return None
+    amount = int(match.group("n"))
+    consequence = match.group("consequence")
+
+    def effect(game: "Game", spell: Any) -> None:
+        from .delayed import ReflexiveConsequence
+        from .effects.merges import _excess_threshold
+
+        for target in game.resolve_targets(spell):  # CR 608.2b
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            threshold = _excess_threshold(game, target, spell)
+            dealt = game.deal_damage(target, amount, source=spell)
+            excess = 0 if threshold is None else dealt - threshold
+            if excess <= 0:
+                continue
+            written = re.sub(
+                r"mana value less than or equal to that amount of excess damage",
+                f"mana value {excess} or less",
+                consequence,
+                flags=re.IGNORECASE,
+            )
+            game.create_reflexive_trigger(
+                text=f"{written[:1].upper()}{written[1:]}.",
+                controller=game.controller_of(spell).username,
+                source_id=spell.id,
+                source_name=spell.name,
+                callback=ReflexiveConsequence(),
+            )
+
+    return effect
+
+
+@SPELL_TEXT.rung("s23", before=("parse_mixed_effect_for_spell",))
+def damage_then_reflexive_on_excess(effect_text: str) -> Any:
+    """`_damage_then_reflexive_on_excess` as a spell's whole text."""
+    return _damage_then_reflexive_on_excess(effect_text.strip())
+
+
+_MAY_PAY_OR_DAMAGE_RE = re.compile(
+    r"^each opponent may sacrifice a nonland permanent of their choice or discard a card\.\s*"
+    r"then (?:this (?:creature|permanent)|it) deals damage equal to its power to each opponent "
+    r"who didn't sacrifice a permanent or discard a card this way\.?$",
+    re.IGNORECASE,
+)
+_SACRIFICE, _DISCARD, _NEITHER = "sacrifice a nonland permanent", "discard a card", "neither"
+
+
+def _ask_cards(game: "Game", player: Any, prompt: str, source: Any, cards: list[CardState]) -> Any:
+    from .decisions import Decision, DecisionKind
+
+    ids = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=player.username,
+            prompt=prompt,
+            source=source.source_name,
+            source_id=source_id_of(source),
+            amount=1,
+            exact=True,
+            cards=tuple(card.id for card in cards),
+        )
+    )
+    return next(card for card in cards if card.id in set(ids))
+
+
+@functools.cache
+def _opponents_may_pay_or_take_damage(text: str) -> Any:
+    if "didn't sacrifice a permanent or discard a card" not in text.lower():
+        return None
+    if _MAY_PAY_OR_DAMAGE_RE.fullmatch(" ".join(text.split())) is None:
+        return None
+
+    def effect(game: "Game", ability: Any) -> None:
+        from .decisions import Decision, DecisionKind
+        from .effects._common import _players_in_apnap_order
+
+        controller = game.controller_of(ability).username
+        source = ability.source_or_last_known(game)
+        for opponent in _players_in_apnap_order(game):
+            if opponent.username == controller:
+                continue
+            nonland = [
+                p
+                for p in game.permanents_controlled_by(opponent.username)
+                if not game.computed_board().of(p).is_land
+            ]
+            options = [
+                *([_SACRIFICE] if nonland else []),
+                *([_DISCARD] if opponent.hand else []),
+            ]
+            paid = False
+            if options:
+                choice = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_A_QUALITY,
+                        player=opponent.username,
+                        prompt="sacrifice a nonland permanent or discard a card?",
+                        source=ability.source_name,
+                        source_id=source_id_of(ability),
+                        options=(*options, _NEITHER),
+                        quality="cost",
+                    )
+                )
+                if choice == _SACRIFICE:
+                    game.sacrifice(
+                        _ask_cards(
+                            game, opponent, "sacrifice a nonland permanent", ability, nonland
+                        )
+                    )
+                    paid = True
+                elif choice == _DISCARD:
+                    card = _ask_cards(
+                        game, opponent, "discard a card", ability, list(opponent.hand)
+                    )
+                    game.discard_cards(opponent.username, [card], source=ability.source_name)
+                    paid = True
+            if not paid and source is not None:
+                power = game.power_of(source) if source.zone is Zone.BATTLEFIELD else source.power
+                amount = max(int(power or 0), 0)  # CR 120.8
+                if amount:
+                    game.deal_damage(opponent, amount, source=source)
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def opponents_may_pay_or_take_damage(text: str) -> Any:
+    """`_opponents_may_pay_or_take_damage` as an ability's whole text."""
+    return _opponents_may_pay_or_take_damage(text.strip())

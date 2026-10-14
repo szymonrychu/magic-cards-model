@@ -2955,7 +2955,8 @@ def card_types_among_spells_cast_reader(
 #: effect_for`'s own fallback already tries once the raw, still-self-named
 #: text fails every other reader.
 _DIVIDED_DAMAGE_THEN_RETALIATE_RE = re.compile(
-    r"^(?:it|this (?:creature|permanent)) deals (?P<n>\d+|x) damage divided as you choose "
+    r"^(?:it|this (?:creature|permanent)) deals "
+    r"(?:(?P<n>\d+|x) damage|(?P<power>damage equal to its power)) divided as you choose "
     r"among (?P<phrase>.+?)\.\s*"
     r"each of those creatures deals damage equal to its power to "
     r"(?:it|this (?:creature|permanent))\.?$",
@@ -3009,9 +3010,19 @@ def _parse_divided_damage_then_retaliate_clause(text: str) -> AbilityEffect | No
     if not _targets_understood(match.group("phrase"), count_agnostic=True):
         return None
     n = match.group("n")
+    own_power = match.group("power") is not None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        if n.lower() == "x":
+        if own_power:
+            # The total is what the controller announced dividing (CR 601.2d); with no
+            # announcement it is the source's power now (CR 613.5, CR 608.2h last known).
+            source = ability.source_or_last_known(game)
+            total = (
+                sum(ability.division)
+                if ability.division
+                else max((game.power_of(source) if source is not None else 0) or 0, 0)
+            )
+        elif n.lower() == "x":
             total = ability.event.amount if ability.event is not None else None
             if total is None:
                 total = ability.x_value

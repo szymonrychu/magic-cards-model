@@ -384,6 +384,7 @@ class TriggersDecisionsMixin:
         pays_mana_cost: bool = False,
         transformed: bool = False,
         cost_reduction: int = 0,
+        exile_instead_of_graveyard: bool = False,
     ) -> CardState | None:
         """A resolving "you may cast/play <card> without paying its mana cost"
         (CR 608.2d, CR 608.2g): one `MAY`, legal only when the cast or play is
@@ -436,6 +437,7 @@ class TriggersDecisionsMixin:
             pays_mana_cost=pays_mana_cost,
             transformed=transformed,
             cost_reduction=cost_reduction,
+            exile_instead_of_graveyard=exile_instead_of_graveyard,
         )
 
     def _ask_spell_modes(

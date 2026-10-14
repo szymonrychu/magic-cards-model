@@ -2644,6 +2644,8 @@ class ActivationMixin:
             raise ValueError(f"{ability.text} does not divide anything to announce (CR 601.2d)")
         shares = [int(share) for share in division]
         amount = profile.division.amount if profile.division.amount is not None else x_value
+        if profile.division.amount_is_source_power:
+            amount = max(self.power_of(permanent) or 0, 0)  # CR 601.2d, read as announced
         profile.check_division(shares, targets, amount=amount)
         return shares
 

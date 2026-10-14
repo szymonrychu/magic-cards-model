@@ -5315,7 +5315,8 @@ def _parse_for_each_opponent_destroy_clause(text: str, *, for_spell: bool) -> Ab
 #: Assassin card or card with freerunning from your graveyard. If you do,
 #: copy it. You may cast the copy.", Nashi, Moon's Legacy's "exile up to one
 #: target legendary or Rat card from your graveyard and copy it. You may cast
-#: the copy.", Demilich's and Founding the Third Path's "Copy it." form.
+#: the copy.", Demilich's and Founding the Third Path's "Copy it." form, and
+#: Arcane Proxy's "Copy that card.".
 #:
 #: CR 707.12: "An effect that instructs a player to cast a copy of an object
 #: (and not just copy a spell) follows the rules for casting spells, except
@@ -5327,7 +5328,7 @@ def _parse_for_each_opponent_destroy_clause(text: str, *, for_spell: bool) -> Ab
 #: permanent spell becomes a token as it resolves (`Game.resolve_top`).
 _EXILE_TARGET_CARD_COPY_IT_CAST_RE = re.compile(
     r"^exile (?:up to (?:one|\d+) )?target [^.]+? from (?:your|a) graveyard"
-    r"(?:\s+and copy (?:it|them)|\.\s*(?:if you do,\s*)?copy (?:it|them))\.\s*"
+    r"(?:\s+and copy (?:it|them)|\.\s*(?:if you do,\s*)?copy (?:it|them|that card))\.\s*"
     r"you may cast (?:the copy|any number of the copies)"
     r"(?P<free> without paying (?:its|their) mana costs?)?\.?$",
     re.IGNORECASE,
