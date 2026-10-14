@@ -2339,7 +2339,10 @@ class Game(
     #: `any_color_mana` (Daxos of Meletis's "you may spend mana as though it were
     #: mana of any color to cast that spell" on a CR 601.3 grant); a decoded older
     #: permission would price the cast against the printed colors, and a pending
-    #: Daxos grant would refuse a payment it should accept.
+    #: Daxos grant would refuse a payment it should accept. Also the persisted
+    #: selector variant `CreaturesControlledButNotOwnedBy` (Laughing Jasper
+    #: Flint's "creatures you control but don't own are Mercenaries"), reachable
+    #: from `Game.continuous_effects`.
     #: 169 (EP02-R2-T2): `Player` gained `cannot_cast_spells_for_rest_of_game`
     #: and `CardState` gained `epic_suppressed` (epic, CR 702.50a/b), and
     #: `DelayedEffectSpec` gained the variant `epic_copy_spell`; a pending

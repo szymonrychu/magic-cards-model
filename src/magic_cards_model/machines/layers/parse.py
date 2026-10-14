@@ -113,6 +113,7 @@ def printed_characteristics(
             # object does not have while it is face down.
             mana_value=0,
             controller=state.stored_controller,
+            owner=state.owner,
             # CR 708.2 leaves it with *no* characteristics beyond those listed,
             # so there are no supertypes and no colors to carry over either.
             supertypes=(),
@@ -164,6 +165,7 @@ def printed_characteristics(
         name=state.name,
         mana_value=state.mana_value,
         controller=state.stored_controller,
+        owner=state.owner,
         supertypes=tuple(state.supertypes),
         # `printed_types`, not `types`: CR 113.6c's off-battlefield grant is
         # not a copiable value (CR 707.2) - see `off_battlefield_characteristics_of`.
@@ -4055,6 +4057,40 @@ def _board_wide_type_grant_builder(
                 source_ability=_source_line_for(source, line),
                 selector=permanents_controlled_by(source.controller, subject, nontoken=nontoken),
                 modification=add_type(granted),
+            )
+        ]
+
+    return builder
+
+
+#: "Creatures you control but don't own are Mercenaries in addition to their
+#: other types." (Laughing Jasper Flint). Layer 4 (CR 613.1d), additive by
+#: CR 205.1b; "own" is CR 108.3's owner against CR 108.4's controller, so the
+#: set follows a control change both ways. The subtype is read through
+#: `canonical_subtype`, which refuses a word outside CR 205.3's lists.
+_CREATURES_CONTROLLED_NOT_OWNED_ARE_RE = re.compile(
+    r"^creatures you control but (?:don'?t|do not) own are (?P<subtype>[a-z]+) in addition to "
+    r"their other types\.?$",
+    re.IGNORECASE,
+)
+
+
+def _creatures_controlled_not_owned_are_builder(subtype: str, *, line: str) -> EffectBuilder:
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: creatures you control but don't own are {subtype}s",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=CreaturesControlledButNotOwnedBy(username=source.controller),
+                modification=add_subtype(subtype),
             )
         ]
 
@@ -12546,6 +12582,11 @@ def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _each_land_is_builder(subtype, sentence)
     if (self_type_grant := _self_type_grant(sentence)) is not None:
         return self_type_grant
+    if match := _CREATURES_CONTROLLED_NOT_OWNED_ARE_RE.fullmatch(sentence):
+        word = canonical_subtype(match.group("subtype"))
+        if word is None:
+            return None
+        return _creatures_controlled_not_owned_are_builder(word.title(), line=sentence)
     if match := _BOARD_WIDE_TYPE_GRANT_RE.fullmatch(sentence):
         subject = _card_type_word(match.group("subject"))
         granted = _card_type_word(match.group("granted"))
@@ -13951,6 +13992,7 @@ from .model import (  # noqa: E402
     CountPermanentsControlledByItsController,
     CountPermanentsWithSubtypeControlledBy,
     CreatureQualifiers,
+    CreaturesControlledButNotOwnedBy,
     CreaturesControlledBy,
     CreaturesControlledByQuality,
     CreaturesControlledByWithAnyQuality,

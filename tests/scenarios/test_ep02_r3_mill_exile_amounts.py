@@ -1179,10 +1179,7 @@ def test_kairi_mills_six_then_returns_up_to_two_instants_or_sorceries():
 
 def test_kairi_mill_mode_returns_none_when_no_instant_or_sorcery_is_in_the_graveyard():
     scenario = (
-        Scenario()
-        .player("alice", battlefield=[KAIRI], library=[FOREST] * 7)
-        .player("bob")
-        .build()
+        Scenario().player("alice", battlefield=[KAIRI], library=[FOREST] * 7).player("bob").build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     scenario.will_choose_mode(KAIRI_MILL, username="alice", source=KAIRI)
@@ -1215,9 +1212,7 @@ def _sanity(library, bob_library=None):
 
 
 def test_sanity_grinding_mills_one_card_per_blue_symbol_among_the_revealed_cards():
-    scenario = _sanity(
-        ["Counterspell", "Divination", LIGHTNING_BOLT, *[FOREST] * 7, SWAMP]
-    )
+    scenario = _sanity(["Counterspell", "Divination", LIGHTNING_BOLT, *[FOREST] * 7, SWAMP])
     scenario.cast_and_resolve(
         "Sanity Grinding", *scenario.untapped_sources("Island", "Island", "Island"), targets=["bob"]
     )
@@ -1249,7 +1244,11 @@ def test_sanity_grinding_puts_the_revealed_cards_on_the_bottom_in_the_chosen_ord
     scenario.cast_and_resolve(
         "Sanity Grinding", *scenario.untapped_sources("Island", "Island", "Island"), targets=["bob"]
     )
-    assert sorted(_names(scenario.player("alice").library)) == ["Counterspell", "Divination", FOREST]
+    assert sorted(_names(scenario.player("alice").library)) == [
+        "Counterspell",
+        "Divination",
+        FOREST,
+    ]
 
 
 def test_sanity_grinding_bottom_order_is_the_casters_choice():
@@ -1317,9 +1316,7 @@ def test_breach_the_multiverse_reanimates_one_card_per_graveyard_under_your_cont
 
 def test_breach_the_multiverse_phyrexian_applies_only_to_creatures_present_as_it_resolves():
     """CR 611.2c: the set is fixed when the effect begins."""
-    scenario = _breach(
-        ["Serra Angel", *[FOREST] * 11], [FOREST] * 12, alice_hand=["Grizzly Bears"]
-    )
+    scenario = _breach(["Serra Angel", *[FOREST] * 11], [FOREST] * 12, alice_hand=["Grizzly Bears"])
     serra = scenario.find("Serra Angel", Zone.LIBRARY, "alice")
     scenario.will_choose_cards(serra, username="alice", source="Breach the Multiverse")
     scenario.cast_and_resolve("Breach the Multiverse", *scenario.untapped_sources(*["Swamp"] * 7))
@@ -1329,9 +1326,7 @@ def test_breach_the_multiverse_phyrexian_applies_only_to_creatures_present_as_it
 
 
 def test_breach_the_multiverse_can_take_a_planeswalker_which_is_not_a_phyrexian():
-    scenario = _breach(
-        [*[FOREST] * 12], ["Jace, the Mind Sculptor", *[FOREST] * 11]
-    )
+    scenario = _breach([*[FOREST] * 12], ["Jace, the Mind Sculptor", *[FOREST] * 11])
     jace = scenario.find("Jace, the Mind Sculptor", Zone.LIBRARY, "bob")
     scenario.will_choose_cards(jace, username="alice", source="Breach the Multiverse")
     scenario.cast_and_resolve("Breach the Multiverse", *scenario.untapped_sources(*["Swamp"] * 7))
@@ -1588,3 +1583,45 @@ def test_kylox_uses_the_sacrificed_creatures_power_as_they_last_existed():
         decline=["Divination"],
     )
     assert len(scenario.game.exile) == 4
+
+
+# --------------------------------------------------------------------------
+# Laughing Jasper Flint's static: creatures you control but don't own are
+# Mercenaries in addition to their other types. CR 613.1d (layer 4), CR 108.3
+# (owner), CR 205.1b / CR 205.3 (types retained, subtypes added).
+# --------------------------------------------------------------------------
+
+
+def _jasper_board():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Laughing Jasper Flint", "Kitchen Finks"])
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_jasper_makes_creatures_you_control_but_dont_own_mercenaries():
+    scenario = _jasper_board()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    bears.controller = "alice"  # a control-change effect; bob still owns it
+    subtypes = _subtypes(scenario, bears)
+    assert "Mercenary" in subtypes and "Bear" in subtypes  # in addition to its other types
+
+
+def test_jasper_leaves_creatures_you_own_and_the_opponents_own_alone():
+    scenario = _jasper_board()
+    for creature in ("Kitchen Finks", "Laughing Jasper Flint"):
+        assert "Mercenary" not in _subtypes(scenario, scenario.creature(creature, "alice"))
+    assert "Mercenary" not in _subtypes(scenario, scenario.creature("Grizzly Bears", "bob"))
+
+
+def test_jasper_effect_ends_when_control_returns_to_the_owner():
+    scenario = _jasper_board()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    bears.controller = "alice"
+    assert "Mercenary" in _subtypes(scenario, bears)
+    bears.controller = "bob"
+    assert "Mercenary" not in _subtypes(scenario, bears)

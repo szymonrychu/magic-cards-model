@@ -207,6 +207,8 @@ class Characteristics(EngineModel):
     name: str
     mana_value: float = 0.0
     controller: str | None = None
+    owner: str | None = None
+    """The object's owner (CR 108.3), for "you control but don't own"."""
     supertypes: tuple[Supertype, ...] = ()
     types: tuple[Type, ...] = ()
     subtypes: tuple[str, ...] = ()
@@ -1227,6 +1229,23 @@ class OtherCreaturesControlledBy(SelectorBase):
             chars.is_creature
             and chars.controller == self.username
             and chars.card_id != self.source_id
+        )
+
+
+class CreaturesControlledButNotOwnedBy(SelectorBase):
+    """ "Creatures you control but don't own" (Laughing Jasper Flint): a
+    creature `username` controls (CR 108.4) whose owner (CR 108.3) is someone
+    else. A permanent with no recorded owner is not caught."""
+
+    kind: Literal["creatures_controlled_but_not_owned_by"] = "creatures_controlled_but_not_owned_by"
+    username: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return (
+            chars.is_creature
+            and chars.controller == self.username
+            and chars.owner is not None
+            and chars.owner != self.username
         )
 
 
@@ -2742,6 +2761,7 @@ Selector = Annotated[
     | WithChangeling
     | GrantGroup
     | OtherTransformedPermanentsControlledBy
+    | CreaturesControlledButNotOwnedBy
     | ConditionedSelector,
     Field(discriminator="kind"),
 ]
