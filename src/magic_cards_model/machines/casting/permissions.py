@@ -2594,6 +2594,13 @@ class PlayPermission(EngineModel):
     colors, so any color in the pool can pay any symbol; the spell's own
     printed mana cost is untouched everywhere else (CR 202.3b: what a card
     "would cost" is still what is printed)."""
+    any_color_mana: bool = False
+    """"... and you may spend mana as though it were mana of any color to cast
+    that spell" - Daxos of Meletis's rider on this exact grant shape
+    (CR 609.4b). Unlike `any_type_mana`, which prices the payment against the
+    mana value alone, this keeps the printed symbols and lets any mana pay a
+    colored one: `Casting._determine_cost` sets `ManaSpend.any_color` from it
+    only when this is the permission the spell is cast under."""
     exile_instead_of_graveyard: bool = False
     """"If that spell would be put into a graveyard, exile it instead." -
     Dire Fleet Daredevil's, Nita, Forum Conciliator's own rider on this exact

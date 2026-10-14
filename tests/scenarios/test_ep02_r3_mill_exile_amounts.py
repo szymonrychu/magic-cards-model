@@ -1344,3 +1344,73 @@ def test_breach_the_multiverse_with_no_creature_or_planeswalker_card_asks_nothin
     scenario.cast_and_resolve("Breach the Multiverse", *scenario.untapped_sources(*["Swamp"] * 7))
     assert _graveyard(scenario, "alice") == 11
     assert _graveyard(scenario, "bob") == 10
+
+
+# --------------------------------------------------------------------------
+# Daxos of Meletis: exile the damaged player's top card, gain life equal to
+# its mana value, cast it this turn spending mana as though any color
+# (CR 609.4b). CR 120.2a combat damage to a player, CR 202.3 mana value.
+# --------------------------------------------------------------------------
+
+
+def _daxos(bob_library, alice_extra=("Island",)):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            life=10,
+            battlefield=["Daxos of Meletis", *alice_extra],
+            library=[FOREST] * 3,
+        )
+        .player("bob", library=list(bob_library))
+        .build()
+    )
+    daxos = scenario.creature("Daxos of Meletis", "alice")
+    daxos.summoning_sick = False
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(daxos, defending="bob")
+    scenario.no_blocks()
+    scenario.combat_damage()
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    return scenario
+
+
+def test_daxos_exiles_the_top_card_and_gains_life_equal_to_its_mana_value():
+    scenario = _daxos(["Kitchen Finks", FOREST, FOREST])
+    finks = scenario.find("Kitchen Finks", Zone.EXILE)
+    assert scenario.player("alice").life == 13  # 3 from Finks
+    assert scenario.player("bob").life == 18
+    assert len(scenario.player("bob").library) == 2
+    assert finks.zone is Zone.EXILE
+
+
+def test_daxos_lets_you_cast_the_card_spending_mana_of_any_color():
+    scenario = _daxos([LIGHTNING_BOLT, FOREST, FOREST])
+    bolt = scenario.find(LIGHTNING_BOLT, Zone.EXILE)
+    permission = scenario.game.play_permission_for(bolt, "alice")
+    assert permission is not None and permission.any_color_mana
+    casting = scenario.cast(LIGHTNING_BOLT, from_zone=Zone.EXILE)
+    casting.use_permission()
+    casting.choose_targets(["bob"])
+    island = scenario.untapped_sources("Island", username="alice")
+    scenario.pay_with(casting.begin_paying(), *island)  # {R} paid with blue mana
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+    assert scenario.player("bob").life == 15  # 20 - 2 combat - 3 Bolt
+
+
+def test_daxos_permission_ends_with_the_turn():
+    scenario = _daxos([LIGHTNING_BOLT, FOREST, FOREST])
+    bolt = scenario.find(LIGHTNING_BOLT, Zone.EXILE)
+    assert scenario.game.play_permission_for(bolt, "alice") is not None
+    scenario.start_at(Step.CLEANUP)
+    scenario.turn_based_actions()
+    assert scenario.game.play_permission_for(bolt, "alice") is None
+
+
+def test_daxos_with_a_land_on_top_gains_nothing_and_exiles_it():
+    scenario = _daxos([FOREST, FOREST, FOREST])
+    assert scenario.player("alice").life == 10
+    assert len(scenario.player("bob").library) == 2

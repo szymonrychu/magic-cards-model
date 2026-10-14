@@ -1105,3 +1105,46 @@ def _parse_each_player_mills_then_takes_one_card_from_each_graveyard(
             )
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# Daxos of Meletis: exile the damaged player's top card, life, cast it
+# --------------------------------------------------------------------------
+
+_EXILE_THAT_PLAYERS_TOP_GAIN_LIFE_CAST_ANY_COLOR_RE = re.compile(
+    r"^exile the top card of (?:that player's|their) library\. you gain life equal to that "
+    r"card'?s mana value\. until end of turn, you may cast that card and you may spend mana "
+    r"as though it were mana of any color to cast that spell$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s8")
+def _parse_exile_that_players_top_gain_life_cast_with_any_color(
+    effect_text: str,
+) -> "AbilityEffect | None":
+    """CR 406.2 exile of the event player's top card (CR 120.2a: the player
+    combat damage was dealt to), CR 119.3 life equal to its mana value
+    (CR 202.3), then a cast permission until end of turn whose payment may
+    use mana of any color (CR 609.4b - `PlayPermission.any_color_mana`)."""
+    if _EXILE_THAT_PLAYERS_TOP_GAIN_LIFE_CAST_ANY_COLOR_RE.fullmatch(clean(effect_text)) is None:
+        return None
+
+    def effect(game: "Game", ability: Any) -> None:
+        from .effects.removal import _exile_top_of_event_players_library
+
+        controller = controller_of(game, ability)
+        for card in _exile_top_of_event_players_library(game, ability, 1):
+            amount = int(card.mana_value)
+            if amount > 0:
+                game.gain_life(controller, amount)
+            game.grant_play_permission(
+                card,
+                controller,
+                source_name=ability.source_name,
+                rule="CR 601.3",
+                zone=card.zone,
+                any_color_mana=True,
+            )
+
+    return effect

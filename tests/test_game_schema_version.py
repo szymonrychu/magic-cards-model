@@ -2565,3 +2565,27 @@ def test_a_snapshot_written_before_expend_and_once_grants_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP02_R2_T7_EXPEND}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before EP02-R3-T3: `PlayPermission.any_color_mana`
+#: (Daxos of Meletis's "you may spend mana as though it were mana of any color
+#: to cast that spell"). The last shape without it is 169.
+_SCHEMA_VERSION_BEFORE_EP02_R3_T3_ANY_COLOR_MANA = 169
+
+
+def test_a_snapshot_written_before_the_any_color_mana_permission_is_refused() -> None:
+    """A version-169 dump holds a play permission with no any-color rider, so a
+    decode as current would refuse the payment the exiled card was granted:
+    refused instead."""
+    from magic_cards_model.machines.casting.permissions import PlayPermission
+
+    assert "any_color_mana" in PlayPermission.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_EP02_R3_T3_ANY_COLOR_MANA
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_EP02_R3_T3_ANY_COLOR_MANA
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP02_R3_T3_ANY_COLOR_MANA}",
+    ):
+        Game.model_validate(dumped)

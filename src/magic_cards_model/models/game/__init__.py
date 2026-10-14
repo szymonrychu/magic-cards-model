@@ -1979,7 +1979,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 169
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 172
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2335,6 +2335,11 @@ class Game(
     #: hand size." are read off the battlefield, and a Crew N ability is
     #: once-per-turn; an older dump would resolve each of these as a no-op.
     #: EP-02-R2: T2, T4, T5 and T7 each reserved 164; the round lands as one version, 169.
+    #: 172 (EP02-R3-T3, reserved: 169 + task 3): `PlayPermission` gained
+    #: `any_color_mana` (Daxos of Meletis's "you may spend mana as though it were
+    #: mana of any color to cast that spell" on a CR 601.3 grant); a decoded older
+    #: permission would price the cast against the printed colors, and a pending
+    #: Daxos grant would refuse a payment it should accept.
     #: 169 (EP02-R2-T2): `Player` gained `cannot_cast_spells_for_rest_of_game`
     #: and `CardState` gained `epic_suppressed` (epic, CR 702.50a/b), and
     #: `DelayedEffectSpec` gained the variant `epic_copy_spell`; a pending
