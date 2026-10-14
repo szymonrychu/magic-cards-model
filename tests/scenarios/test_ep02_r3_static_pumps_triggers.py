@@ -630,3 +630,69 @@ def test_moraug_each_land_adds_its_own_combat():
         _resolve_stack(scenario)
         steps.append(scenario.step)
     assert steps.count(Step.BEGINNING_OF_COMBAT) == 3
+
+
+# -- Sunbird Effigy: {T}: for each color among the exiled cards used to craft this creature,
+# add one mana of that color (CR 702.167c, CR 105.1)
+
+
+def _effigy(materials_in_play=("Grizzly Bears",), graveyard=("Lightning Bolt",), bob_exile=()):
+    from magic_cards_model.machines.keywords import craft_activation
+
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Sunbird Standard", *materials_in_play, *["Plains"] * 5],
+            graveyard=list(graveyard),
+            library=["Plains"] * 4,
+        )
+        .player("bob", battlefield=[], exile=list(bob_exile), library=["Plains"] * 4)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sunbird = scenario.find("Sunbird Standard", Zone.BATTLEFIELD, "alice")
+    chosen = [
+        *(scenario.find(name, Zone.BATTLEFIELD, "alice") for name in materials_in_play),
+        *(scenario.find(name, Zone.GRAVEYARD, "alice") for name in graveyard),
+    ]
+    activation = craft_activation(scenario.game, sunbird, "alice", chosen)
+    payment = activation.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources(*["Plains"] * 5, username="alice"))
+    activation.activate()
+    _resolve_stack(scenario)
+    on_battlefield = [c for c in scenario.game.battlefield if c.id == sunbird.id]
+    return scenario, (on_battlefield[0] if on_battlefield else None)
+
+
+def _floating(scenario):
+    return {c.name: n for c, n in scenario.player("alice").mana_pool.floating.items()}
+
+
+def test_sunbird_effigy_adds_one_mana_of_each_color_among_the_exiled_cards():
+    scenario, effigy = _effigy()
+    scenario.activate(effigy)
+    assert _floating(scenario) == {"RED": 1, "GREEN": 1}
+
+
+def test_sunbird_effigy_counts_a_color_once_however_many_exiled_cards_have_it():
+    scenario, effigy = _effigy(materials_in_play=("Grizzly Bears", "Llanowar Elves"), graveyard=())
+    scenario.activate(effigy)
+    assert _floating(scenario) == {"GREEN": 1}
+    assert _pt(scenario, effigy) == (1, 1)
+
+
+def test_sunbird_effigy_made_only_from_colorless_cards_is_a_0_0_and_dies():
+    # CR 704.5f: P/T equal to the (zero) colors among colorless cards.
+    scenario, effigy = _effigy(materials_in_play=("Sol Ring",), graveyard=())
+    assert effigy is None
+    assert scenario.find("Sunbird Standard", Zone.GRAVEYARD, "alice").zone is Zone.GRAVEYARD
+
+
+def test_sunbird_effigy_ignores_exiled_cards_it_was_not_crafted_with():
+    scenario, effigy = _effigy(
+        materials_in_play=("Llanowar Elves",), graveyard=(), bob_exile=("Lightning Bolt",)
+    )
+    scenario.activate(effigy)
+    assert _floating(scenario) == {"GREEN": 1}
