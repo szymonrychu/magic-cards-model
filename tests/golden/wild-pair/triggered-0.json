@@ -9,14 +9,14 @@
     "x": 0
   },
   "board": {
-    "busy_turn": true,
+    "busy_turn": false,
     "entering": [],
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Wild Pair", "Intangible Virtue", "Serra Angel", "Mountain", "Mountain", "Mountain", "Mountain", "Mountain", "Snow-Covered Forest", "Snow-Covered Forest", "Snow-Covered Forest"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Wild Pair"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Wild Pair", "Giant Growth", "Memnite", "Opt"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "A.I.M. Scientists"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -29,7 +29,7 @@
     "step": "precombat_main",
     "tapped": [],
     "tokens": [],
-    "variant": "busy",
+    "variant": "quiet",
     "war_turn": false
   },
   "card": "Wild Pair",
@@ -44,24 +44,11 @@
         "players": [],
         "prompt": "search your library for a creature card with the same total power and toughness",
         "source": "Wild Pair"
-      },
-      {
-        "amount": 1,
-        "cards": ["Grizzly Bears@alice#3", "Grizzly Bears@alice#4", "Grizzly Bears@alice#5", "Grizzly Bears@alice#6", "Grizzly Bears@alice#7"],
-        "kind": "choose_cards",
-        "player": "alice",
-        "players": [],
-        "prompt": "choose up to 1 card(s) to find while searching your library",
-        "source": "Wild Pair"
       }
     ],
-    "fields_changed": ["continuous_effects", "shuffles_performed", "turn_counts", "turn_history"],
+    "fields_changed": ["shuffles_performed"],
     "notices": {},
-    "objects": {
-      "Grizzly Bears@alice#3": {
-        "zone": ["library", "battlefield"]
-      }
-    },
+    "objects": {},
     "players": {},
     "stack": []
   },
@@ -70,13 +57,11 @@
   "kind": "enters_the_battlefield",
   "number": 0,
   "recipe": {
-    "attempt": "put",
-    "index": 3,
+    "attempt": "cast_other",
+    "index": 12,
     "params": {
-      "owner": "alice",
-      "probe": "Wild Pair",
-      "tapped": false
+      "probe": "A.I.M. Scientists"
     },
-    "variant": "busy"
+    "variant": "quiet"
   }
 }

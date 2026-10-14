@@ -3170,7 +3170,7 @@ def _other_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
 
             yield token
 
-    if "cast" in (ability.intervening_if or "").lower():
+    if re.fullmatch(r"you cast it( from your hand)?", (ability.intervening_if or "").lower()):
         # "Whenever an Aura you control enters, if you cast it" (Light-Paws,
         # Emperor's Voice; CR 603.4): the other object is cast and resolves, so
         # it enters as a cast spell. After every put above, so each recorded
