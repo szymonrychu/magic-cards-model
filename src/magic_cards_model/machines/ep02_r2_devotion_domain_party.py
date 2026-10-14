@@ -45,7 +45,8 @@ if TYPE_CHECKING:
 
 _LOOK_RE = re.compile(
     rf"^(?P<verb>look at|reveal) the top (?P<n>x|{COUNT}) cards? of your library"
-    r"(?:, where x is (?P<expr>[^.]+))?\.\s*(?P<rest>.+)$",
+    r"(?:, where x is (?P<expr>[^.]+))?(?P<separate> and separate them into two piles)?\.\s*"
+    r"(?P<rest>.+)$",
     re.IGNORECASE | re.DOTALL,
 )
 _REST = (
@@ -70,6 +71,21 @@ _MAY_TOP_RE = re.compile(
 _PILES_RE = re.compile(
     r"^an opponent separates those cards into two piles\.\s*"
     r"put one pile into your hand and the other into your graveyard$",
+    re.IGNORECASE,
+)
+#: Intrude on the Mind: "Reveal the top five cards of your library and separate them into
+#: two piles. An opponent chooses one of those piles. Put that pile into your hand and the
+#: other into your graveyard." - the controller divides and the opponent picks (CR 700.3).
+_OPPONENT_CHOOSES_PILE_RE = re.compile(
+    r"^an opponent chooses one of those piles\.\s*"
+    r"put that pile into your hand and the other into your graveyard$",
+    re.IGNORECASE,
+)
+#: "Create a 0/0 ... token, then put a +1/+1 counter on it for each card put into your
+#: graveyard this way."
+_TOKEN_PER_GRAVEYARD_CARD_RE = re.compile(
+    r"^(?P<create>create [^,]+?), then put (?P<put>.+? counters? on (?:it|that token)) "
+    r"for each card put into your graveyard this way$",
     re.IGNORECASE,
 )
 _WIN_TAIL_RE = re.compile(
@@ -138,10 +154,21 @@ def look_top_effect(text: str, *, for_spell: bool = False) -> "Any | None":
         f"{sentences[0].rstrip('.')}. {sentences[1].rstrip('.')}"
     ):
         kept_kind, rest_to, consumed = "piles", "graveyard", 2
+    elif (
+        head.group("separate") is not None
+        and len(sentences) >= 2
+        and _OPPONENT_CHOOSES_PILE_RE.fullmatch(
+            f"{sentences[0].rstrip('.')}. {sentences[1].rstrip('.')}"
+        )
+    ):
+        kept_kind, rest_to, consumed = "opponent_picks_pile", "graveyard", 2
     else:
+        return None
+    if (head.group("separate") is not None) != (kept_kind == "opponent_picks_pile"):
         return None
     tails = [sentence.rstrip(".") for sentence in sentences[consumed:]]
     life_tails, win, draw_at = [], False, None
+    token_tails: list = []
     for tail in tails:
         if _WIN_TAIL_RE.fullmatch(tail) and expr is not None:
             win = True
@@ -149,6 +176,14 @@ def look_top_effect(text: str, *, for_spell: bool = False) -> "Any | None":
             draw_at = parse_count(draw.group("n"))
             if draw_at is None:
                 return None
+        elif (per_card := _TOKEN_PER_GRAVEYARD_CARD_RE.fullmatch(tail)) is not None:
+            from .effects.tokens import _parse_token_clause
+
+            create = _parse_token_clause(per_card.group("create"), for_spell=for_spell)
+            put = parse_put_counters(f"put {per_card.group('put')}")
+            if create is None or put is None or put.x or put.each is not None:
+                return None
+            token_tails.append((create, put))
         elif (clause := parse_life_clause(tail)) is not None and clause.who == "you":
             amount = life_clause_amount(clause, spell_x=False)
             if amount is None:
@@ -163,7 +198,9 @@ def look_top_effect(text: str, *, for_spell: bool = False) -> "Any | None":
         depth = None if fixed is None else (lambda _g, _o, _who, _n=fixed: _n)
     if depth is None:
         return None
-    look = _build(reveal, depth, kept_kind, k, rest_to, win, draw_at, tuple(life_tails))
+    look = _build(
+        reveal, depth, kept_kind, k, rest_to, win, draw_at, tuple(life_tails), tuple(token_tails)
+    )
     if lead_effect is None:
         return look
 
@@ -174,8 +211,11 @@ def look_top_effect(text: str, *, for_spell: bool = False) -> "Any | None":
     return lead_then_look
 
 
-def _build(reveal, depth, kept_kind, k, rest_to, win, draw_at, life_tails):  # noqa: ANN001, ANN202
+def _build(  # noqa: ANN202
+    reveal, depth, kept_kind, k, rest_to, win, draw_at, life_tails, token_tails=()  # noqa: ANN001
+):
     def effect(game: "Game", stack_object: Any) -> None:
+        from .effects.counters import _counter_kind
         from .effects.library import _bottom_in_random_order
 
         controller = game.controller_of(stack_object)
@@ -217,6 +257,36 @@ def _build(reveal, depth, kept_kind, k, rest_to, win, draw_at, life_tails):  # n
             )
             kept = one if takes_one else two
             rest = two if takes_one else one
+        elif looked and kept_kind == "opponent_picks_pile":
+            # CR 700.3: the controller divides, an opponent picks the pile that
+            # goes to the controller's hand; the other is put into the graveyard.
+            pile_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt="separate the revealed cards into pile one",
+                    source=name,
+                    source_id=source_id_of(stack_object),
+                    amount=len(looked),
+                    exact=False,
+                    cards=tuple(state.id for state in looked),
+                )
+            )
+            one = [state for state in looked if state.id in set(pile_ids)]
+            two = [state for state in looked if state.id not in set(pile_ids)]
+            opponents = [p for p in game.players_in_game if p.username != controller.username]
+            picks_one = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_PILE,
+                    player=(opponents[0] if opponents else controller).username,
+                    prompt="choose a pile to put into the revealing player's hand",
+                    source=name,
+                    source_id=source_id_of(stack_object),
+                    cards=tuple(state.id for state in one),
+                )
+            )
+            kept = one if picks_one else two
+            rest = two if picks_one else one
         elif looked:
             chosen_ids = game.ask(
                 Decision(
@@ -245,6 +315,12 @@ def _build(reveal, depth, kept_kind, k, rest_to, win, draw_at, life_tails):  # n
                 controller.move(state, Zone.GRAVEYARD)
         else:
             _bottom_in_random_order(game, controller, rest)
+        for create, put in token_tails:
+            before = {existing.id for existing in game.battlefield}
+            create(game, stack_object)
+            if rest:
+                for token in [c for c in game.battlefield if c.id not in before]:
+                    game.add_counters(token, _counter_kind(put.kind), put.n * len(rest))
         for clause, amount in life_tails:
             apply_life(game, stack_object, clause.who, clause.gains, amount)
         if draw_at is not None and (_domain(game, controller.username) >= draw_at):

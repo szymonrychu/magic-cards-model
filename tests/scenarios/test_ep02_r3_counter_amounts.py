@@ -1541,3 +1541,47 @@ def test_dichotomancy_finds_what_the_library_has():
     scenario = _dichotomancy(["Grizzly Bears", "Forest"])
     mine = sorted(c.name for c in scenario.game.permanents_controlled_by("alice") if c.name != "Island")
     assert mine == ["Grizzly Bears"]
+
+
+# -- Intrude on the Mind: five revealed, you split, an opponent takes a pile for
+# your hand, the rest goes to the graveyard and the Thopter grows per card there
+
+
+def _intrude(pile_one, picks_one):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Intrude on the Mind"],
+            battlefield=["Island"] * 5,
+            library=["Forest", "Mountain", "Swamp", "Plains", "Island", "Forest", "Forest"],
+        )
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    top = scenario.top_of_library(5, "alice")
+    scenario.will_choose_cards(*[top[i] for i in pile_one])
+    scenario.will_choose_pile(picks_one)
+    scenario.cast_and_resolve("Intrude on the Mind", *scenario.untapped_sources(*["Island"] * 5))
+    _settle(scenario)
+    return scenario, top
+
+
+def test_intrude_on_the_mind_puts_the_chosen_pile_in_hand_and_the_rest_in_the_graveyard():
+    scenario, top = _intrude(pile_one=[0, 1], picks_one=True)
+    assert {c.id for c in scenario.player("alice").hand} == {top[0].id, top[1].id}
+    assert {c.id for c in scenario.player("alice").graveyard} >= {top[2].id, top[3].id, top[4].id}
+
+
+def test_intrude_on_the_mind_thopter_gets_a_counter_per_card_put_into_the_graveyard():
+    scenario, _ = _intrude(pile_one=[0, 1], picks_one=True)
+    (thopter,) = [c for c in _tokens(scenario) if "Thopter" in c.name]
+    assert thopter.counter_count(Counter.PLUS_ONE) == 3
+
+
+def test_intrude_on_the_mind_opponent_may_take_the_other_pile():
+    scenario, top = _intrude(pile_one=[0, 1], picks_one=False)
+    assert {c.id for c in scenario.player("alice").hand} == {top[2].id, top[3].id, top[4].id}
+    (thopter,) = [c for c in _tokens(scenario) if "Thopter" in c.name]
+    assert thopter.counter_count(Counter.PLUS_ONE) == 2
