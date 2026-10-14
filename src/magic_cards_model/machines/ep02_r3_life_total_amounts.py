@@ -263,10 +263,12 @@ def _parse_announced_x_life_spell(effect_text: str) -> "Callable[..., None] | No
     it was cast (CR 107.3a, CR 107.3f): Sanguine Sacrament's first sentence once its own
     put-on-the-bottom sentence is a replacement. Read as the whole text so that an X defined
     by a later clause (", where X is ...") is never taken for the announced one."""
+    if " x life" not in effect_text.lower():
+        return None
     from .effects import _strip_non_effect_preamble
 
     text = " ".join(_strip_non_effect_preamble(effect_text).split())
-    if " x life" not in text.lower() or "where x" in text.lower():
+    if "where x" in text.lower():
         return None
     life = parse_life_clause(text)
     if life is None or life.kind != "x" or life.expr is not None or life.who not in _LIFE_WHO:

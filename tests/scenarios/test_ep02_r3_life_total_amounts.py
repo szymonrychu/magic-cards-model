@@ -1003,3 +1003,28 @@ def test_proof_vraska_relic_seeker_sets_the_targets_life_total_to_one():
     scenario.activate(vraska, index=2, targets=["bob"])
     scenario.pass_until_resolved()
     assert _life(scenario, "bob") == 1
+
+
+def test_haunt_on_a_permanent_expands_to_a_dies_trigger_and_on_a_spell_to_a_resolution_one():
+    """CR 702.55a, both halves, read off the printed reminder text. Benediction of Moons is the
+    only haunt card in the pool, so the permanent half is proven on its rules text."""
+    from magic_cards_model.machines.abilities import TriggerEvent, keyword_abilities_in_lines
+    from magic_cards_model.machines.keywords import _haunt_ability
+
+    permanent = keyword_abilities_in_lines(
+        [
+            "Haunt (When this creature is put into a graveyard from the battlefield, exile it "
+            "haunting target creature.)"
+        ],
+        ["haunt"],
+    )
+    spell = keyword_abilities_in_lines(
+        [
+            "Haunt (When this spell card is put into a graveyard after resolving, exile it "
+            "haunting target creature.)"
+        ],
+        ["haunt"],
+    )
+    assert _haunt_ability(permanent[0]).event is TriggerEvent.DIES
+    assert _haunt_ability(spell[0]).event is TriggerEvent.RESOLVED_INTO_GRAVEYARD
+    assert _haunt_ability(permanent[0]).effect == "exile it haunting target creature"
