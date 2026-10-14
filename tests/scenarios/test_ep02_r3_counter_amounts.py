@@ -550,7 +550,9 @@ def _flanker_after(departures):
         "Put a +1/+1 counter on this creature for each creature that left the battlefield "
         "under your control this turn."
     )
-    scenario.cast_and_resolve("Kutzil's Flanker", *scenario.untapped_sources("Plains", "Plains", "Plains"))
+    scenario.cast_and_resolve(
+        "Kutzil's Flanker", *scenario.untapped_sources("Plains", "Plains", "Plains")
+    )
     _settle(scenario)
     return scenario
 
@@ -587,13 +589,17 @@ def test_kutzils_flanker_ignores_an_opponents_creature_leaving():
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     scenario.cast_and_resolve(
-        "Shock", *scenario.untapped_sources("Mountain"), targets=[scenario.creature("Grizzly Bears", "bob")]
+        "Shock",
+        *scenario.untapped_sources("Mountain"),
+        targets=[scenario.creature("Grizzly Bears", "bob")],
     )
     scenario.will_choose_mode(
         "Put a +1/+1 counter on this creature for each creature that left the battlefield "
         "under your control this turn."
     )
-    scenario.cast_and_resolve("Kutzil's Flanker", *scenario.untapped_sources("Plains", "Plains", "Plains"))
+    scenario.cast_and_resolve(
+        "Kutzil's Flanker", *scenario.untapped_sources("Plains", "Plains", "Plains")
+    )
     _settle(scenario)
     (flanker,) = _named(scenario, "Kutzil's Flanker")
     assert flanker.counter_count(Counter.PLUS_ONE) == 0
@@ -627,7 +633,8 @@ def _fractal_land(scenario):
     found = [
         c
         for c in scenario.game.permanents_controlled_by("alice")
-        if c.counter_count(Counter.PLUS_ONE) or "Fractal" in str(scenario.game.characteristics_of(c).subtypes)
+        if c.counter_count(Counter.PLUS_ONE)
+        or "Fractal" in str(scenario.game.characteristics_of(c).subtypes)
     ]
     assert len(found) == 1
     return found[0]
@@ -813,7 +820,10 @@ def _goose(x):
     scenario.start_at(Step.PRECOMBAT_MAIN)
     spell = scenario.find("The Goose Mother", Zone.HAND, "alice")
     scenario.game.cast(
-        spell, "alice", x_value=x, mana_sources=scenario.untapped_sources(*(["Forest"] * (x + 1)), "Island"),
+        spell,
+        "alice",
+        x_value=x,
+        mana_sources=scenario.untapped_sources(*(["Forest"] * (x + 1)), "Island"),
     )
     scenario.pass_until_resolved()
     _settle(scenario)
@@ -885,7 +895,9 @@ def test_contagion_engine_proliferates_every_chosen_permanent_each_time():
 def test_contagion_engine_enters_with_minus_counters_on_a_players_creatures():
     scenario = (
         Scenario()
-        .player("alice", hand=["Contagion Engine"], battlefield=["Plains"] * 6, library=["Forest"] * 8)
+        .player(
+            "alice", hand=["Contagion Engine"], battlefield=["Plains"] * 6, library=["Forest"] * 8
+        )
         .player("bob", battlefield=["Grizzly Bears", "Savannah Lions"], library=["Forest"] * 8)
         .build()
     )
@@ -993,7 +1005,9 @@ def _giant(scenario):
 def test_lethal_exploit_with_no_modified_creature_is_just_minus_two():
     scenario = _exploit_board()
     giant = _giant(scenario)
-    scenario.cast_and_resolve("Lethal Exploit", *scenario.untapped_sources("Swamp", "Swamp"), targets=[giant])
+    scenario.cast_and_resolve(
+        "Lethal Exploit", *scenario.untapped_sources("Swamp", "Swamp"), targets=[giant]
+    )
     assert scenario.game.power_of(giant) == 1
     assert giant.zone is Zone.BATTLEFIELD
 
@@ -1001,7 +1015,9 @@ def test_lethal_exploit_with_no_modified_creature_is_just_minus_two():
 def test_lethal_exploit_one_modified_creature_adds_minus_one():
     scenario = _exploit_board(modified=1)
     giant = _giant(scenario)
-    scenario.cast_and_resolve("Lethal Exploit", *scenario.untapped_sources("Swamp", "Swamp"), targets=[giant])
+    scenario.cast_and_resolve(
+        "Lethal Exploit", *scenario.untapped_sources("Swamp", "Swamp"), targets=[giant]
+    )
     scenario.state_based_actions()
     assert giant.zone is Zone.GRAVEYARD
 
@@ -1033,7 +1049,9 @@ def test_lethal_exploit_counts_equipment_as_a_modification():
     equipment = scenario.find("Bonesplitter", Zone.BATTLEFIELD, "alice")
     equipment.attach_to(scenario.creature("Grizzly Bears", "alice"))
     giant = _giant(scenario)
-    scenario.cast_and_resolve("Lethal Exploit", *scenario.untapped_sources("Swamp", "Swamp"), targets=[giant])
+    scenario.cast_and_resolve(
+        "Lethal Exploit", *scenario.untapped_sources("Swamp", "Swamp"), targets=[giant]
+    )
     scenario.state_based_actions()
     assert giant.zone is Zone.GRAVEYARD
 
@@ -1041,7 +1059,9 @@ def test_lethal_exploit_counts_equipment_as_a_modification():
 def test_lethal_exploit_count_is_fixed_as_it_is_cast():
     scenario = _exploit_board(modified=1)
     giant = _giant(scenario)
-    scenario.cast_onto_stack("Lethal Exploit", *scenario.untapped_sources("Swamp", "Swamp"), targets=[giant])
+    scenario.cast_onto_stack(
+        "Lethal Exploit", *scenario.untapped_sources("Swamp", "Swamp"), targets=[giant]
+    )
     scenario.creature("Grizzly Bears", "alice").remove_counters(Counter.PLUS_ONE, 1)
     scenario.resolve_top()
     scenario.state_based_actions()
@@ -1067,7 +1087,9 @@ def _kick_contortion(kicks):
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    shock = scenario.cast_onto_stack("Shock", *scenario.untapped_sources("Mountain"), targets=["bob"])
+    shock = scenario.cast_onto_stack(
+        "Shock", *scenario.untapped_sources("Mountain"), targets=["bob"]
+    )
     spell = scenario.find("Spell Contortion", Zone.HAND, "alice")
     hand_before = len(scenario.player("alice").hand)
     scenario.game.cast(
@@ -1095,3 +1117,48 @@ def test_spell_contortion_kicked_twice_draws_two():
 def test_spell_contortion_kicked_once_draws_one():
     scenario, before = _kick_contortion(1)
     assert len(scenario.player("alice").hand) == before - 1 + 1
+
+
+# -- Goliath Hatchery: corrupted upkeep, "choose a creature you control, then draw
+# cards equal to its total toxic value" (CR 702.164b)
+
+
+def _hatchery_upkeep(poison, *, battlefield=("Goliath Hatchery", "Plague Nurse", "Grizzly Bears")):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=list(battlefield), library=["Forest"] * 8)
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    scenario.player("bob").add_counters(Counter.POISON, poison)
+    scenario.start_at(Step.UNTAP)
+    scenario.advance()
+    assert scenario.step is Step.UPKEEP
+    scenario.game.put_triggers_on_stack()
+    return scenario
+
+
+def test_goliath_hatchery_draws_the_chosen_creatures_total_toxic_value():
+    scenario = _hatchery_upkeep(3)
+    nurse = scenario.creature("Plague Nurse", "alice")
+    hand = len(scenario.player("alice").hand)
+    scenario.will_choose_cards(nurse)
+    _settle(scenario)
+    assert len(scenario.player("alice").hand) == hand + 2
+
+
+def test_goliath_hatchery_choosing_a_creature_without_toxic_draws_nothing():
+    scenario = _hatchery_upkeep(3)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    hand = len(scenario.player("alice").hand)
+    scenario.will_choose_cards(bears)
+    _settle(scenario)
+    assert len(scenario.player("alice").hand) == hand
+
+
+def test_goliath_hatchery_does_nothing_below_three_poison_counters():
+    scenario = _hatchery_upkeep(2)
+    hand = len(scenario.player("alice").hand)
+    _settle(scenario)
+    assert len(scenario.player("alice").hand) == hand

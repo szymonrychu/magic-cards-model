@@ -15,12 +15,12 @@ from ..numbers import COUNT, parse_count
 from .abilities import KeywordAbility, TriggeredAbility, TriggerEvent, TriggerWord
 from .amount_sentences import parse_put_counters
 from .decisions import Decision, DecisionKind, source_id_of
-from .layers import is_genuine_resolution_layer_sentence
 from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES
 from .effects._common import AbilityEffect, TargetedClause, _targets_understood
 from .effects.amounts import _for_each_multiplier
 from .effects.counters import _counter_kind
 from .effects.tokens import _parse_token_clause
+from .layers import is_genuine_resolution_layer_sentence
 
 if TYPE_CHECKING:
     from ..models.game import Game
@@ -515,9 +515,7 @@ def _parse_look_put_lands_then_proliferate_for_shortfall(
 
         controller = game.controller_of(stack_object)
         looked = list(controller.library[:top])
-        wanted = [
-            state for state in looked if kind in {t.value.lower() for t in state.card.types}
-        ]
+        wanted = [state for state in looked if kind in {t.value.lower() for t in state.card.types}]
         taken: list = []
         if wanted:
             chosen_ids = game.ask(
@@ -550,8 +548,8 @@ def _parse_look_put_lands_then_proliferate_for_shortfall(
 # spell."
 
 _ADDITIONAL_PER_AS_CAST_RE = re.compile(
-    rf"^target (?P<what>creature) gets (?P<sign>[+-])(?P<a>\d+)/(?P=sign)(?P=a) until end of turn\."
-    rf"\s+it gets an additional (?P<sign2>[+-])(?P<b>\d+)/(?P=sign2)(?P=b) until end of turn "
+    r"^target (?P<what>creature) gets (?P<sign>[+-])(?P<a>\d+)/(?P=sign)(?P=a) until end of turn\."
+    r"\s+it gets an additional (?P<sign2>[+-])(?P<b>\d+)/(?P=sign2)(?P=b) until end of turn "
     r"for each modified creature you controlled as you cast this spell\.?"
     r"(?:\s*\([^)]*\))?$",
     re.IGNORECASE,
@@ -590,3 +588,55 @@ def _parse_pump_plus_additional_per_modified_as_cast(
         )
 
     return [effect]
+
+
+# -- "choose a creature you control, then draw cards equal to its total toxic
+# value."
+
+_CHOOSE_THEN_DRAW_TOXIC_RE = re.compile(
+    r"^choose an? creature you control, then draw cards equal to its total toxic value\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_choose_creature_draw_total_toxic_value(effect_text: str) -> AbilityEffect | None:
+    """Goliath Hatchery. The chosen creature is the controller's pick as the
+    ability resolves (CR 608.2d); its total toxic value is the sum of every
+    toxic ability it has (CR 702.164b), read as it is then (CR 608.2h)."""
+    if "total toxic value" not in effect_text.lower():
+        return None
+    if _CHOOSE_THEN_DRAW_TOXIC_RE.fullmatch(" ".join(effect_text.strip().split())) is None:
+        return None
+
+    def effect(game: "Game", ability: "AbilityOnStack") -> None:
+        from .combat import total_toxic_value
+
+        board = game.computed_board()
+        creatures = [
+            permanent
+            for permanent in game.permanents_controlled_by(ability.controller)
+            if board.of(permanent).is_creature
+        ]
+        if not creatures:
+            return
+        chosen = creatures[0]
+        if len(creatures) > 1:
+            answer = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=ability.controller,
+                    prompt="choose a creature you control",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    amount=1,
+                    exact=True,
+                    cards=tuple(creature.id for creature in creatures),
+                )
+            )
+            chosen = next((c for c in creatures if answer and c.id == answer[0]), creatures[0])
+        draws = total_toxic_value(chosen, game)
+        if draws > 0:
+            game.draw_cards(game.player(ability.controller), draws)
+
+    return effect

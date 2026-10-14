@@ -3287,9 +3287,11 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
             return lambda game, controller, _source_id: sum(
                 1
                 for entry in game.turn_history
-                if entry.kind == "left_battlefield" and entry.player == controller and quality(entry)
+                if entry.kind == "left_battlefield"
+                and entry.player == controller
+                and quality(entry)
             )
-    if kicks := _TIME_KICKED_EACH_RE.fullmatch(stripped):
+    if _TIME_KICKED_EACH_RE.fullmatch(stripped):
         # Spell Contortion: "Draw a card for each time Spell Contortion was
         # kicked" - CR 702.33d's count of multikicker payments, read off the
         # cast record of the spell (or the permanent it became, CR 400.7d)
