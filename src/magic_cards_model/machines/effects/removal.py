@@ -804,6 +804,8 @@ def _sacrificed_mana_value_search(text: str) -> _SacrificedManaValueSearch | Non
         # Venom's "draw X cards, then you may put a permanent card with mana
         # value X or less from your hand onto the battlefield": the same
         # sacrificed-mana-value channel, a different payoff.
+        if "draw x cards" not in text.lower():
+            return None
         from ..ep02_r3_library_amounts import sacrificed_value_draw_and_put
 
         return sacrificed_value_draw_and_put(text)

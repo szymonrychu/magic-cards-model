@@ -1535,11 +1535,11 @@ def _parse_surveil_then_exile_from_graveyard(text: str) -> Any:
     """CR 608.2c: the lead instruction (CR 701.25 surveil / CR 701.22 scry)
     runs, then the controller exiles a card of their choice from any
     graveyard (the reader that holds the bare sentence)."""
-    from .exiled_with_peek import parse_exile_a_card_from_a_graveyard
-
     match = _THEN_EXILE_GRAVEYARD_RE.fullmatch(" ".join(text.strip().split()))
     if match is None:
         return None
+    from .exiled_with_peek import parse_exile_a_card_from_a_graveyard
+
     lead = _ability_effect_or_notice(f"{match.group('lead')}.")
     tail = parse_exile_a_card_from_a_graveyard(match.group("tail"))
     if lead is None or tail is None:
@@ -1566,12 +1566,12 @@ def _parse_choose_exiled_card_then_become_copy(text: str) -> Any:
     of the exiled cards (never a token, CR 108.2) and make the targeted
     permanent a copy of it until end of turn, with the stated exception
     written into the copy (CR 707.9b)."""
-    from .copy_effects import _become_a_copy, _copiable_values_of, _parse_become_copy_exceptions
-    from .layers import Duration
-
     match = _CHOOSE_FROM_AMONG_THEM_COPY_RE.fullmatch(" ".join(text.strip().split()))
     if match is None or not _card_description_is_readable(match.group("quality")):
         return None
+    from .copy_effects import _become_a_copy, _copiable_values_of, _parse_become_copy_exceptions
+    from .layers import Duration
+
     if not _targets_understood(f"target {match.group('subject')}", count_agnostic=True):
         return None
     exceptions = _parse_become_copy_exceptions(match.group("exception"))
