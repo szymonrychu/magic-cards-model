@@ -149,6 +149,8 @@ def object_amount(phrase: str) -> Callable[["Game", Any], int] | None:
         return lambda game, obj: base - inner(game, obj)
     if lowered.startswith("the number of cards in ") and (hand := _hand_of_target(text)):
         return hand
+    if lowered.startswith("this ") and (own := _OWN_STAT_RE.fullmatch(lowered)) is not None:
+        return _own_stat(own.group("stat"))
     if "times" in lowered and (times := _times_reader(lowered)) is not None:
         return times
     if " of the exiled card" in lowered and (match := _EXILED_STAT_RE.fullmatch(text)):
@@ -182,6 +184,26 @@ def _times_reader(lowered: str) -> Callable[["Game", Any], int] | None:
 
         return kicked
     return lambda game, obj: len(game.merged_components.get(_source_of(game, obj).id, []))
+
+
+_OWN_STAT_RE = re.compile(r"^this (?:creature|permanent)'s (?P<stat>power|toughness|mana value)$")
+
+
+def _own_stat(stat: str) -> Callable[["Game", Any], int]:
+    """"This creature's power" as the object resolves (CR 608.2h): the source's value
+    now, or its last known value once it has left the battlefield (CR 603.10a)."""
+
+    def read(game: "Game", obj: Any) -> int:
+        from .effects.draw_discard import _source_characteristic
+
+        source = _source_of(game, obj)
+        if source is None:
+            return 0
+        if stat == "mana value":
+            return int(source.mana_value)
+        return _source_characteristic(game, source, stat)
+
+    return read
 
 
 def _hand_of_target(phrase: str) -> Callable[["Game", Any], int] | None:

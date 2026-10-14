@@ -337,3 +337,90 @@ def test_walking_bulwark_grant_ends_at_end_of_turn() -> None:
     scenario.advance()
     scenario.advance()  # bob's turn passes priority; the next alice turn is later
     assert not has_keyword(bulwark, "Haste", scenario.game)
+
+
+# ---------------------------------------------------------------------------
+# Costs: "costs {X} less to cast / activate, where X is ..." (CR 601.2f)
+# ---------------------------------------------------------------------------
+
+
+def _tapped_lands(scenario, user: str = "alice") -> int:
+    return sum(
+        1
+        for state in scenario.game.battlefield
+        if state.controller == user and state.tapped and Type.LAND in state.types
+    )
+
+
+def test_survey_mechan_costs_one_less_per_differently_named_land() -> None:
+    scenario = _scenario(["Survey Mechan"])
+    mechan = scenario.find("Survey Mechan", Zone.BATTLEFIELD, "alice")
+    _activate_all(scenario, mechan, index=0, targets=["bob", "alice"])
+    # five differently named lands (Plains, Swamp, Island, Forest, Mountain): {10} - 5
+    assert _tapped_lands(scenario) == 5
+    assert scenario.player("bob").life == 20 - 3
+    assert mechan.zone is Zone.GRAVEYARD
+
+
+def test_survey_mechan_counts_names_not_lands() -> None:
+    scenario = _scenario(["Survey Mechan", "Plains", "Plains", "Plains", "Swamp"])
+    mechan = scenario.find("Survey Mechan", Zone.BATTLEFIELD, "alice")
+    _activate_all(scenario, mechan, index=0, targets=["bob", "alice"])
+    assert _tapped_lands(scenario) == 5  # extra copies of a name add nothing
+
+
+def test_survey_mechan_resolves_its_whole_effect() -> None:
+    scenario = _scenario(["Survey Mechan"], library=["Island"] * 12)
+    mechan = scenario.find("Survey Mechan", Zone.BATTLEFIELD, "alice")
+    hand_before = len(scenario.player("alice").hand)
+    _activate_all(scenario, mechan, index=0, targets=["bob", "alice"])
+    assert len(scenario.player("alice").hand) == hand_before + 3
+    assert scenario.player("alice").life == 20 + 3
+
+
+def _cast_cost_in_lands(scenario, name: str, user: str = "alice", **kwargs) -> int:
+    before = _tapped_lands(scenario, user)
+    scenario.cast_onto_stack(name, username=user, auto=True, **kwargs)
+    paid = _tapped_lands(scenario, user) - before
+    _resolve_all(scenario)
+    return paid
+
+
+def test_rowan_makes_black_and_red_spells_cheaper_by_the_life_lost() -> None:
+    scenario = _scenario(["Rowan, Scion of War"], hand=["Hill Giant", "Serra Angel"])
+    scenario.player("alice").lose_life(2)
+    rowan = scenario.find("Rowan, Scion of War", Zone.BATTLEFIELD, "alice")
+    _activate_all(scenario, rowan, index=0)
+    assert _cast_cost_in_lands(scenario, "Hill Giant") == 2  # {3}{R} - {2}
+    assert _cast_cost_in_lands(scenario, "Serra Angel") == 5  # a white spell: not reduced
+
+
+def test_rowan_reads_the_life_lost_when_the_ability_resolves() -> None:
+    scenario = _scenario(["Rowan, Scion of War"], hand=["Hill Giant"])
+    rowan = scenario.find("Rowan, Scion of War", Zone.BATTLEFIELD, "alice")
+    _activate_all(scenario, rowan, index=0)  # nothing lost yet: {0} less
+    scenario.player("alice").lose_life(3)
+    assert _cast_cost_in_lands(scenario, "Hill Giant") == 4
+
+
+def test_will_makes_white_and_blue_spells_cheaper_by_the_life_gained() -> None:
+    scenario = _scenario(["Will, Scion of Peace"], hand=["Serra Angel", "Hill Giant"])
+    scenario.player("alice").gain_life(3)
+    will = scenario.find("Will, Scion of Peace", Zone.BATTLEFIELD, "alice")
+    _activate_all(scenario, will, index=0)
+    assert _cast_cost_in_lands(scenario, "Serra Angel") == 2  # {3}{W}{W} - {3}
+    assert _cast_cost_in_lands(scenario, "Hill Giant") == 4  # red: not reduced
+
+
+def test_will_is_sorcery_speed() -> None:
+    scenario = _scenario(["Will, Scion of Peace"], step=Step.BEGINNING_OF_COMBAT)
+    will = scenario.find("Will, Scion of Peace", Zone.BATTLEFIELD, "alice")
+    assert scenario.why_cannot_activate(will, 0) is not None
+
+
+def test_maelstrom_muse_reduces_the_next_instant_or_sorcery_by_its_power() -> None:
+    scenario = _scenario(["Maelstrom Muse"], hand=["Think Twice", "Think Twice"])
+    _attack(scenario, "Maelstrom Muse")
+    _resolve_all(scenario)
+    assert _cast_cost_in_lands(scenario, "Think Twice") == 1  # {1}{U} - {2} (Muse is a 2/4)
+    assert _cast_cost_in_lands(scenario, "Think Twice") == 2  # the reduction is used up

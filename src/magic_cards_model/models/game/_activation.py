@@ -2313,6 +2313,15 @@ class ActivationMixin:
             amount = reduction.amount * permanent.counter_count(reduction.self_counter_kind)
             return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
 
+        if reduction.where_x is not None:
+            # CR 107.3a: X is defined by the sentence itself; CR 601.2f takes it as the
+            # total cost is determined.
+            from ...machines.effects.amounts import count_expression
+
+            defined = count_expression(reduction.where_x)
+            amount = 0 if defined is None else defined(self, controller)
+            return ManaCost.parse(f"{{{amount}}}") if amount > 0 else ManaCost()
+
         if reduction.graveyard_quality is not None:
             counted = graveyard_count_expression(
                 f"{reduction.graveyard_quality} cards in your graveyard"

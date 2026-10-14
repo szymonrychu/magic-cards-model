@@ -655,7 +655,9 @@ def amount_measure(expr: str) -> Measure | None:
         return _event_amount
     count = count_expression(phrase)
     if count is None:
-        return None
+        from .ep02_r3_damage_cost_amounts_pumps import object_amount
+
+        return object_amount(phrase)
 
     def measure(game: "Game", stack_object: Any) -> int:
         return count(game, game.controller_of(stack_object).username)

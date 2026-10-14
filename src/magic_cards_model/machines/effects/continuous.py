@@ -9576,7 +9576,9 @@ def _parse_this_turn_spell_grant_clause(clause: str, *, for_spell: bool) -> Targ
         spell_quality_is_readable,
     )
 
-    text = " ".join(clause.strip().split())
+    from ..ep02_r3_damage_cost_amounts_costs import spells_that_are_normalised
+
+    text = spells_that_are_normalised(" ".join(clause.strip().split()))
     keyword_grant = _parse_next_spell_has_keyword(text)
     if keyword_grant is not None:
         return keyword_grant
