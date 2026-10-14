@@ -424,3 +424,62 @@ def test_maelstrom_muse_reduces_the_next_instant_or_sorcery_by_its_power() -> No
     _resolve_all(scenario)
     assert _cast_cost_in_lands(scenario, "Think Twice") == 1  # {1}{U} - {2} (Muse is a 2/4)
     assert _cast_cost_in_lands(scenario, "Think Twice") == 2  # the reduction is used up
+
+
+# ---------------------------------------------------------------------------
+# Grants: "target instant or sorcery card in your graveyard gains flashback" (CR 702.34a)
+# ---------------------------------------------------------------------------
+
+
+def _graveyard_cast_cost(scenario, name: str, user: str = "alice") -> int:
+    card_state = scenario.find(name, Zone.GRAVEYARD, user)
+    before = _tapped_lands(scenario, user)
+    casting = scenario.cast(name, username=user, from_zone=Zone.GRAVEYARD)
+    payment = casting.begin_paying()
+    scenario.auto_pay(payment, username=user)
+    scenario.put_on_stack(casting)
+    paid = _tapped_lands(scenario, user) - before
+    _resolve_all(scenario)
+    assert card_state.zone is Zone.EXILE  # CR 702.34a: exiled, not put into the graveyard
+    return paid
+
+
+def test_sphinx_of_forgotten_lore_grants_flashback_at_the_cards_mana_cost() -> None:
+    scenario = _scenario(["Sphinx of Forgotten Lore"], graveyard=["Think Twice"])
+    think = scenario.find("Think Twice", Zone.GRAVEYARD, "alice")
+    scenario.choose_trigger_targets("Sphinx of Forgotten Lore", [think])
+    _attack(scenario, "Sphinx of Forgotten Lore")
+    _resolve_all(scenario)
+    assert _graveyard_cast_cost(scenario, "Think Twice") == 2  # {1}{U}
+
+
+def test_sphinx_of_forgotten_lore_grants_nothing_without_a_target_in_the_graveyard() -> None:
+    scenario = _scenario(["Sphinx of Forgotten Lore"], graveyard=["Grizzly Bears"])
+    _attack(scenario, "Sphinx of Forgotten Lore")
+    _resolve_all(scenario)
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    assert scenario.game.play_permission_for(bears, "alice") is None
+
+
+def test_archmages_newt_grants_flashback_at_the_mana_cost() -> None:
+    scenario = _scenario(["Archmage's Newt"], graveyard=["Think Twice"])
+    think = scenario.find("Think Twice", Zone.GRAVEYARD, "alice")
+    scenario.choose_trigger_targets("Archmage's Newt", [think])
+    _attack(scenario, "Archmage's Newt")
+    scenario.no_blocks()
+    scenario.combat_damage()
+    _resolve_all(scenario)
+    assert _graveyard_cast_cost(scenario, "Think Twice") == 2
+
+
+def test_archmages_newt_grants_flashback_zero_when_saddled() -> None:
+    scenario = _scenario(["Archmage's Newt"], graveyard=["Think Twice"])
+    newt = scenario.creature("Archmage's Newt", "alice")
+    newt.saddled = True  # CR 702.171b
+    think = scenario.find("Think Twice", Zone.GRAVEYARD, "alice")
+    scenario.choose_trigger_targets("Archmage's Newt", [think])
+    _attack(scenario, "Archmage's Newt")
+    scenario.no_blocks()
+    scenario.combat_damage()
+    _resolve_all(scenario)
+    assert _graveyard_cast_cost(scenario, "Think Twice") == 0
