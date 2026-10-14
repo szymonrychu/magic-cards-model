@@ -572,3 +572,45 @@ def test_gwenom_permission_ends_with_the_turn():
     while scenario.game.turn.active_player == "alice":
         scenario.advance()
     assert not _top_is_payable(scenario)
+
+
+# --------------------------------------------------------------------------
+# A modal spell whose modes read X: "Destroy X target artifacts and/or enchantments" /
+# "Target player gains twice X life" (Heliod's Intervention) - CR 700.2, 107.3a, 601.2c
+# --------------------------------------------------------------------------
+
+
+def _heliods_intervention(mode, x, targets):
+    scenario = _main(
+        _build(["Plains"] * 6, ["Sol Ring", "Mind Stone", "Pacifism"], hand=["Heliod's Intervention"])
+    )
+    permanents = {"Sol Ring", "Mind Stone", "Pacifism"}
+    resolved = [
+        scenario.find(t, Zone.BATTLEFIELD, "bob") if t in permanents else t for t in targets
+    ]
+    casting = scenario.cast("Heliod's Intervention")
+    casting.choose_modes([mode])
+    casting.x_value = x
+    casting.choose_targets(resolved)
+    scenario.auto_pay(casting.begin_paying())
+    scenario.put_on_stack(casting)
+    scenario.pass_until_resolved()
+    return scenario
+
+
+def test_heliods_intervention_destroys_x_artifacts_and_or_enchantments():
+    scenario = _heliods_intervention(1, 2, ["Sol Ring", "Pacifism"])
+    names = {c.name for c in scenario.game.battlefield if c.name in {"Sol Ring", "Mind Stone", "Pacifism"}}
+    assert names == {"Mind Stone"}
+    assert not scenario.game.mode_notices
+
+
+def test_heliods_intervention_refuses_a_wrong_number_of_targets_for_x():
+    with pytest.raises(ValueError, match="target"):
+        _heliods_intervention(1, 2, ["Sol Ring"])
+
+
+def test_heliods_intervention_target_player_gains_twice_x_life():
+    scenario = _heliods_intervention(2, 3, ["alice"])
+    assert _life(scenario) == 26
+    assert not scenario.game.mode_notices

@@ -223,6 +223,7 @@ _LIFE_RE = re.compile(
     r"|life equal to (?P<expr>.+)"
     r"|(?P<half>half (?:their|your)) life(?:, rounded (?P<direction>up|down))?"
     r"|(?P<mult>[a-z0-9]+ times |twice )?(?P<x>x) life"
+    rf"|(?P<fmult>[a-z0-9]+ times |twice )(?P<fn>{COUNT}) life"
     rf"|(?P<n>{COUNT}) life)$",
     re.IGNORECASE,
 )
@@ -262,6 +263,15 @@ def parse_life_clause(text: str) -> LifeClause | None:
                 return None
             multiplier = found
         return LifeClause(subject, verb, gains, "x", multiplier, where)
+    if match.group("fn") is not None:
+        # "twice 3 life": an X already written in as a number (a modal spell's mode text).
+        base, factor = (
+            parse_count(match.group("fn")),
+            parse_multiplier(match.group("fmult").strip()),
+        )
+        if base is None or factor is None:
+            return None
+        return LifeClause(subject, verb, gains, "fixed", base * factor, None)
     fixed = parse_count(match.group("n"))
     if fixed is None:
         return None
