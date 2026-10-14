@@ -1518,3 +1518,73 @@ def test_lukka_minus_seven_has_each_creature_deal_damage_equal_to_its_power_to_e
     assert scenario.player("bob").life == 15  # 2 + 3
     assert scenario.player("carol").life == 15
     assert scenario.player("alice").life == 20
+
+
+# --------------------------------------------------------------------------
+# Kylox, Visionary Inventor: CR 701.21a (sacrifice), CR 406.2 (exile),
+# CR 608.2g (cast during resolution without paying), CR 118.9 (free cast),
+# CR 608.2h (power as the creatures last existed).
+# --------------------------------------------------------------------------
+
+KYLOX = "Kylox, Visionary Inventor"
+
+
+def _kylox(library, sacrificed=("Grizzly Bears", "Llanowar Elves"), cast=(), decline=()):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=[KYLOX, *sacrificed], library=list(library))
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    kylox = scenario.creature(KYLOX, "alice")
+    kylox.summoning_sick = False
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    victims = [scenario.creature(name, "alice") for name in sacrificed]
+    scenario.will_choose_cards(*victims, username="alice", source=KYLOX)
+    for _ in cast:
+        scenario.will_take_the_may(True, source=KYLOX)
+    for _ in decline:
+        scenario.will_take_the_may(False, source=KYLOX)
+    scenario.attack_with(kylox)
+    _settle(scenario)
+    return scenario, victims
+
+
+def test_kylox_exiles_cards_equal_to_the_total_power_and_casts_a_sorcery_for_free():
+    scenario, victims = _kylox(
+        ["Divination", FOREST, FOREST, "Island", "Island", "Island"], cast=["Divination"]
+    )
+    assert all(v.zone is Zone.GRAVEYARD for v in victims)
+    assert len(scenario.game.exile) == 2  # three exiled (2 + 1 power), Divination was cast
+    assert _names(scenario.game.exile) == [FOREST, FOREST]
+    assert _names(scenario.player("alice").hand) == ["Island", "Island"]  # Divination drew two
+
+
+def test_kylox_may_decline_to_cast_and_the_cards_stay_exiled():
+    scenario, _ = _kylox(["Divination", FOREST, FOREST, "Island"], decline=["Divination"])
+    assert _names(scenario.game.exile) == ["Divination", FOREST, FOREST]
+    assert scenario.player("alice").hand == []
+
+
+def test_kylox_offers_only_instants_and_sorceries():
+    scenario, _ = _kylox(["Kitchen Finks", FOREST, "Grizzly Bears", "Island"])
+    assert len(scenario.game.exile) == 3
+    assert scenario.stack_names() == []
+    assert "Kitchen Finks" not in scenario.battlefield_names()
+
+
+def test_kylox_sacrificing_no_creature_exiles_nothing():
+    scenario, _ = _kylox(["Divination", FOREST], sacrificed=())
+    assert scenario.game.exile == []
+    assert len(scenario.player("alice").library) == 2
+
+
+def test_kylox_uses_the_sacrificed_creatures_power_as_they_last_existed():
+    """Serra Angel has power 4; exiling four cards, not three."""
+    scenario, _ = _kylox(
+        ["Divination", FOREST, FOREST, FOREST, "Island"],
+        sacrificed=("Serra Angel",),
+        decline=["Divination"],
+    )
+    assert len(scenario.game.exile) == 4

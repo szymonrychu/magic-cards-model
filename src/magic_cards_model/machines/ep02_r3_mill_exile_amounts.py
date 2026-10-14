@@ -1290,3 +1290,90 @@ def _parse_each_creature_deals_damage_equal_to_its_power_to_each_opponent(
                 game.deal_damage(opponent, power, source=creature)
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# Kylox, Visionary Inventor
+# --------------------------------------------------------------------------
+
+_SACRIFICE_ANY_NUMBER_EXILE_TOP_CAST_FREE_RE = re.compile(
+    r"^sacrifice any number of other creatures, then exile the top x cards of your library, "
+    r"where x is their total power\. you may cast any number of (?P<quality>[a-z/ ]+?) spells "
+    r"from among the exiled cards without paying their mana costs$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s8")
+def _parse_sacrifice_any_number_exile_top_total_power_cast_free(
+    effect_text: str,
+) -> "AbilityEffect | None":
+    """The controller chooses any number of other creatures they control
+    (CR 107.1c, CR 608.2d) and sacrifices them (CR 701.21a); X is their total
+    power as they last existed (CR 608.2h); the top X cards are exiled
+    (CR 406.2) and the controller may cast, one at a time and each without
+    paying its mana cost (CR 118.9, CR 608.2g), any of the exiled spells of the
+    named type - each cast is its own yes/no, legal only when a legal cast
+    exists (CR 608.2d)."""
+    from .effects._common import _quality_matcher
+
+    match = _SACRIFICE_ANY_NUMBER_EXILE_TOP_CAST_FREE_RE.fullmatch(clean(effect_text))
+    if match is None:
+        return None
+    matches = _quality_matcher(match.group("quality").replace("and/or", "or"))
+
+    def effect(game: "Game", ability: Any) -> None:
+        from ..models.card import Type
+
+        controller = controller_of(game, ability)
+        player = game.player(controller)
+        source = ability.source(game)
+        candidates = [
+            permanent
+            for permanent in game.permanents_controlled_by(controller)
+            if permanent is not source and Type.CREATURE in game.characteristics_of(permanent).types
+        ]
+        chosen: list[CardState] = []
+        if candidates:
+            picked = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller,
+                    prompt="choose any number of other creatures to sacrifice",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    amount=len(candidates),
+                    exact=False,
+                    cards=tuple(state.id for state in candidates),
+                    card_labels=tuple(state.name for state in candidates),
+                )
+            )
+            by_id = {state.id: state for state in candidates}
+            chosen = [by_id[card_id] for card_id in picked]
+        total_power = sum(max(game.power_of(permanent) or 0, 0) for permanent in chosen)
+        for permanent in chosen:
+            game.sacrifice(permanent)
+        exiled = [game.exile_permanent(state) for state in list(player.library[:total_power])]
+        for card in exiled:
+            if card.zone is not Zone.EXILE or not matches(card):
+                continue
+            castable = game.can_cast_during_resolution(card, controller)
+            wanted = game.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=controller,
+                    prompt=f"cast {card.name} without paying its mana cost",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    affirmative_is_legal=castable,
+                )
+            )
+            if wanted:
+                game.cast_during_resolution(
+                    card,
+                    controller,
+                    source_name=ability.source_name,
+                    rule="CR 608.2g",
+                )
+
+    return effect
