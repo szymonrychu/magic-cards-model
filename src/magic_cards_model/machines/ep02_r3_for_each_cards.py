@@ -20,7 +20,7 @@ from ..models.card_state import CardState
 from ..models.player import Player
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
-from .effects._chains import FORWARD, MIXED_CLAUSE
+from .effects._chains import FORWARD, MIXED_CLAUSE, MIXED_CLAUSES
 
 if TYPE_CHECKING:
     from ..models.game import Game
@@ -297,6 +297,57 @@ def _attachments_it_had_each(phrase: str) -> ForEach | None:
     return count
 
 
+# --------------------------------------------------------------------------
+# "the number of red mana symbols in the sacrificed creature's mana cost" (CR 107.4e)
+# --------------------------------------------------------------------------
+
+_SACRIFICED_SYMBOLS_RE = re.compile(
+    r"^(?:the )?number of (?P<color>white|blue|black|red|green) mana symbols? in "
+    r"the sacrificed (?:creature|permanent)'s mana cost$",
+    re.IGNORECASE,
+)
+
+
+def _mana_symbols_in_sacrificed_cost(phrase: str) -> NumberOf | None:
+    """How many mana symbols of one color the mana cost of what the resolving
+    object's cost sacrificed has (Fiery Bombardment's Chroma ability). A
+    hybrid symbol is also a symbol of each of its colors (CR 107.4e). The
+    sacrificed card is read where the cost left it (CR 608.2h); a token has no
+    mana cost to count."""
+    if (
+        "mana cost" not in phrase.lower()
+        or (match := _SACRIFICED_SYMBOLS_RE.fullmatch(phrase)) is None
+    ):
+        return None
+    from ..models.card import Color
+    from ..models.mana import ManaCost
+
+    color = {
+        "white": Color.WHITE,
+        "blue": Color.BLUE,
+        "black": Color.BLACK,
+        "red": Color.RED,
+        "green": Color.GREEN,
+    }[match.group("color").lower()]
+
+    def count(game: "Game", _controller: str) -> int:
+        resolving = game.resolving
+        ids = getattr(resolving, "cost_sacrificed_card_ids", ())
+        if not ids and isinstance(resolving, CardState):
+            record = game.cast_record_of(resolving)
+            ids = tuple(record.additional_cost_cards) if record is not None else ()
+        total = 0
+        for card_id in ids[:1]:
+            card = game.find_by_id(card_id)
+            if card is not None and card.mana_cost:
+                total += sum(
+                    1 for symbol in ManaCost.parse(card.mana_cost).symbols if color in symbol.colors
+                )
+        return total
+
+    return count
+
+
 _FOR_EACH_READERS = (
     _died_this_turn_each,
     _times_kicked_each,
@@ -308,6 +359,7 @@ _NUMBER_OF_READERS = (
     _different_mana_values_among_permanents,
     _times_that_spell_was_kicked,
     _auras_attached_to_player,
+    _mana_symbols_in_sacrificed_cost,
 )
 
 
@@ -514,3 +566,247 @@ def _parse_return_to_the_battlefield_target_in_your_graveyard(
                 game.put_onto_battlefield(target, target.owner)
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# One-shot "gets +P/+T until end of turn" over a count taken as it applies
+# --------------------------------------------------------------------------
+
+
+def _pump_until_end_of_turn(
+    game: "Game", stack_object: Any, subject: CardState, power: int, toughness: int
+) -> None:
+    """A CR 611.2 one-shot effect: `subject` (this incarnation of it only, CR
+    400.7) gets `power`/`toughness` until end of turn, in layer 7c (CR 613.4c,
+    so it adds to any other pump)."""
+    from .effects.continuous import continuous_effects
+    from .layers import (
+        ContinuousEffect,
+        Duration,
+        Layer,
+        Sublayer,
+        modify_power_toughness,
+        only_this_incarnation,
+    )
+
+    if subject.zone is not Zone.BATTLEFIELD or (power == 0 and toughness == 0):
+        return
+    store = continuous_effects(game)
+    store.add(
+        ContinuousEffect(
+            description=f"{subject.name}: gets {power:+d}/{toughness:+d} until end of turn",
+            layer=Layer.POWER_TOUGHNESS,
+            sublayer=Sublayer.MODIFY,
+            timestamp=store.tick(),
+            duration=Duration.UNTIL_END_OF_TURN,
+            source_id=getattr(stack_object, "source_id", None),
+            selector=only_this_incarnation(subject, subject.zone_change_stamp),
+            modification=modify_power_toughness(power, toughness),
+        )
+    )
+
+
+# --------------------------------------------------------------------------
+# "it gets +1/+0 until end of turn for each other attacking creature that shares
+# a creature type with it" (Shared Animosity, CR 508.1, CR 205.3m)
+# --------------------------------------------------------------------------
+
+_ATTACKER_SHARING_PUMP_RE = re.compile(
+    r"^it gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn for each other "
+    r"attacking creature that shares a creature type with it$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
+def _parse_attacker_pump_per_other_attacker_sharing_a_type(clause: str, *, for_spell: bool) -> Any:
+    """Shared Animosity: "Whenever a creature you control attacks, it gets
+    +1/+0 until end of turn for each other attacking creature that shares a
+    creature type with it." "It" is the creature the trigger's event names
+    (CR 603.2); the other attackers are counted once as the ability resolves
+    (CR 608.2h), a changeling sharing every type (CR 702.73a)."""
+    match = _ATTACKER_SHARING_PUMP_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    if match is None:
+        return None
+    power = int(match.group("power"))
+    toughness = int(match.group("toughness"))
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        from .targeting import _creature_types_overlap, _shareable_creature_types
+
+        event = getattr(stack_object, "event", None)
+        subject = None if event is None or event.subject_id is None else game.find_by_id(event.subject_id)
+        if not isinstance(subject, CardState) or subject.zone is not Zone.BATTLEFIELD:
+            return
+        own = _shareable_creature_types(subject, game)
+        if own is None:
+            return
+        count = 0
+        for other in game.attacking_creatures():
+            if other.id == subject.id:
+                continue
+            types = _shareable_creature_types(other, game)
+            if types is not None and _creature_types_overlap(own, types):
+                count += 1
+        _pump_until_end_of_turn(game, stack_object, subject, power * count, toughness * count)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "<source> deals damage to each of those creatures equal to the number of
+# attacking creatures" (Lightmine Field, CR 120.3, CR 508.1)
+# --------------------------------------------------------------------------
+
+_DAMAGE_EACH_OF_THOSE_ATTACKERS_RE = re.compile(
+    r"^(?P<source>this [a-z]+) deals damage to each of those creatures equal to "
+    r"(?P<expr>the number of attacking creatures)$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
+def _parse_damage_to_each_batched_attacker_by_attacker_count(
+    clause: str, *, for_spell: bool
+) -> Any:
+    """Lightmine Field: "Whenever one or more creatures attack, this
+    enchantment deals damage to each of those creatures equal to the number of
+    attacking creatures." "Those creatures" are the attackers the trigger's
+    own condition counts (CR 508.3d); the amount is taken once (CR 608.2h) and
+    dealt by the source to each at the same time (CR 120.1)."""
+    match = _DAMAGE_EACH_OF_THOSE_ATTACKERS_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    if match is None or for_spell:
+        return None
+    from .effects.amounts import count_expression
+
+    counted = count_expression(match.group("expr"))
+    if counted is None:
+        return None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        from .effects.damage import _deal_all, _resolving_source
+        from .triggers.collect import batched_attackers
+
+        source = _resolving_source(game, stack_object)
+        ability = getattr(stack_object, "ability", None)
+        if source is None or ability is None:
+            return
+        controller = game.controller_of(stack_object).username
+        attackers = batched_attackers(game, ability.condition, controller)
+        if not attackers:
+            return
+        amount = counted(game, controller)
+        _deal_all(game, [(source, attacker, amount) for attacker in attackers])
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "Target creature gets -2/-2 until end of turn. It gets an additional -1/-1
+# until end of turn for each Desert you control." (Desert's Due, CR 613.4c)
+# --------------------------------------------------------------------------
+
+_SENTENCE_BOUNDARY_RE = re.compile(r"(?<=\.)\s+(?=[A-Z])|\n+")
+_ADDITIONAL_PUMP_FOR_EACH_RE = re.compile(
+    r"^(?:it|that creature) gets an additional (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
+    r"until end of turn for each (?P<each>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_target_pump_then_additional_pump_for_each(text: str, *, for_spell: bool) -> Any:
+    """A pump sentence, then "It gets an additional P/T until end of turn for
+    each <thing>": "it" is the creature the first sentence pumped. The first
+    sentence is read by the ordinary clause reader; the second is a second
+    layer 7c modification (CR 613.4c, "an additional" names no new rule) whose
+    count is taken once as it applies (CR 608.2h). A target no longer legal
+    (CR 608.2b) gets neither."""
+    sentences = [part for part in _SENTENCE_BOUNDARY_RE.split(text.strip()) if part.strip()]
+    if len(sentences) != 2 or " an additional " not in sentences[1].lower():
+        return None
+    match = _ADDITIONAL_PUMP_FOR_EACH_RE.fullmatch(sentences[1].strip())
+    if match is None:
+        return None
+    from .effects.amounts import _for_each_multiplier
+    from .effects.dispatch import _parse_mixed_clauses
+
+    multiplier = _for_each_multiplier(match.group("each"))
+    first = _parse_mixed_clauses(sentences[0], for_spell=for_spell)
+    if multiplier is None or first is None:
+        return None
+    power = int(match.group("power"))
+    toughness = int(match.group("toughness"))
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        for clause in first:
+            clause(game, stack_object)
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
+        count = multiplier(game, game.controller_of(stack_object).username, None)
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, CardState):
+                _pump_until_end_of_turn(game, stack_object, target, power * count, toughness * count)
+
+    return [effect]
+
+
+# --------------------------------------------------------------------------
+# "Target player creates X 2/2 black Zombie creature tokens, then up to one
+# target creature gets -1/-1 until end of turn for each Zombie that player
+# controls." (Dark Salvation, CR 111.2, CR 608.2c)
+# --------------------------------------------------------------------------
+
+_PLAYER_TOKENS_THEN_PUMP_RE = re.compile(
+    rf"^(?P<who>target player) creates (?P<n>x|\d+|{COUNT}) (?P<desc>.+?) tokens?, "
+    r"then (?P<victim>up to one target creature) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
+    r"until end of turn for each (?P<each>[A-Za-z]+) that player controls$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_player_creates_tokens_then_pump_per_their_kind(text: str, *, for_spell: bool) -> Any:
+    """Dark Salvation. The player target creates the tokens and controls them
+    (CR 111.2); the creature target - the second target in the text's order
+    (CR 601.2c) - then gets the pump, counted once, after the tokens exist, on
+    that player's board (CR 608.2c, CR 608.2h). No creature chosen ("up to
+    one", CR 115.6) is a legal announcement that only makes the tokens."""
+    match = _PLAYER_TOKENS_THEN_PUMP_RE.fullmatch(" ".join(text.split()).rstrip("."))
+    if match is None:
+        return None
+    from .effects._common import _targets_understood
+    from .effects.amounts import count_expression
+    from .effects.tokens import _token_definition_from_words
+
+    if not _targets_understood(match.group("who"), allow_player_targets=True):
+        return None
+    if not _targets_understood(match.group("victim"), count_agnostic=True):
+        return None
+    definition = _token_definition_from_words(match.group("desc"), None)
+    counted = count_expression(f"the number of {match.group('each')}s you control")
+    if definition is None or counted is None:
+        return None
+    x_count = match.group("n").lower() == "x"
+    fixed = None if x_count else parse_count(match.group("n"))
+    if not x_count and fixed is None:
+        return None
+    power = int(match.group("power"))
+    toughness = int(match.group("toughness"))
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        from .effects.damage import _announced_x
+        from ..models.token import create_tokens
+
+        players = [t for t in game.resolve_targets(stack_object) if isinstance(t, Player)]
+        if not players:
+            return
+        player = players[0]
+        amount = _announced_x(game, stack_object) if x_count else fixed
+        if amount:
+            create_tokens(game, definition, player.username, amount)
+        count = counted(game, player.username)
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, CardState):
+                _pump_until_end_of_turn(game, stack_object, target, power * count, toughness * count)
+
+    return [effect]

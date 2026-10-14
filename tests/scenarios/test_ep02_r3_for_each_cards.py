@@ -590,3 +590,135 @@ def test_anticausal_vestige_draws_then_puts_a_permanent_within_the_land_count_on
     names = _names(scenario, Zone.BATTLEFIELD, "alice")
     # 21 lands: both permanent cards are within it; the vestige's trigger lets alice put one
     assert len([n for n in names if n in ("Serra Angel", "Wurmcoil Engine")]) == 1
+
+
+# ---------------------------------------------------------------------------
+# Per-count pumps and damage: Desert's Due, Dark Salvation, Shared Animosity,
+# Lightmine Field, Fiery Bombardment (CR 608.2h: the count is taken once as the
+# effect is applied; CR 613.4c: -N/-N effects add)
+# ---------------------------------------------------------------------------
+
+
+def _stats(scenario, name: str, user: str) -> tuple[int, int]:
+    chars = scenario.game.characteristics_of(scenario.find(name, Zone.BATTLEFIELD, user))
+    return chars.power, chars.toughness
+
+
+@pytest.mark.parametrize(("deserts", "expected"), [(0, (4, 4)), (1, (3, 3)), (2, (2, 2))])
+def test_deserts_due_shrinks_the_target_by_each_desert(deserts: int, expected) -> None:
+    scenario = _scenario(["Desert"] * deserts, ["Colossal Dreadmaw"], hand=["Desert's Due"])
+    _cast_all(scenario, "Desert's Due", targets=[scenario.find("Colossal Dreadmaw", Zone.BATTLEFIELD)])
+    assert _stats(scenario, "Colossal Dreadmaw", "bob") == expected
+
+
+def test_deserts_due_does_not_count_the_opponents_deserts() -> None:
+    scenario = _scenario([], ["Colossal Dreadmaw", "Desert"], hand=["Desert's Due"])
+    _cast_all(scenario, "Desert's Due", targets=[scenario.find("Colossal Dreadmaw", Zone.BATTLEFIELD)])
+    assert _stats(scenario, "Colossal Dreadmaw", "bob") == (4, 4)
+
+
+def test_dark_salvation_makes_zombies_for_the_player_and_shrinks_by_their_count() -> None:
+    scenario = _scenario([], ["Colossal Dreadmaw"], hand=["Dark Salvation"])
+    _cast_all(
+        scenario,
+        "Dark Salvation",
+        targets=[scenario.player("alice"), scenario.find("Colossal Dreadmaw", Zone.BATTLEFIELD)],
+        x=2,
+    )
+    assert len(_named(scenario, "Zombie", user="alice")) == 2
+    assert _stats(scenario, "Colossal Dreadmaw", "bob") == (4, 4)
+
+
+def test_dark_salvation_counts_the_zombies_of_the_targeted_player() -> None:
+    scenario = _scenario(["Colossal Dreadmaw"], hand=["Dark Salvation"])
+    _cast_all(
+        scenario,
+        "Dark Salvation",
+        targets=[scenario.player("bob"), scenario.find("Colossal Dreadmaw", Zone.BATTLEFIELD)],
+        x=3,
+    )
+    assert len(_named(scenario, "Zombie", user="bob")) == 3
+    assert _stats(scenario, "Colossal Dreadmaw", "alice") == (3, 3)
+
+
+def _attack(scenario, *creatures) -> None:
+    """Declare `creatures` as attackers and resolve what that triggers."""
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(*creatures)
+    _resolve_all(scenario)
+
+
+def test_shared_animosity_pumps_an_attacker_per_other_attacker_sharing_a_type() -> None:
+    scenario = _scenario(
+        ["Shared Animosity", "Goblin Guide", "Raging Goblin", "Grizzly Bears"], step=Step.UPKEEP
+    )
+    _attack(scenario, *scenario.creatures("Goblin Guide", "Raging Goblin", "Grizzly Bears", username="alice"))
+    assert _stats(scenario, "Goblin Guide", "alice")[0] == 2 + 1
+    assert _stats(scenario, "Raging Goblin", "alice")[0] == 1 + 1
+    assert _stats(scenario, "Grizzly Bears", "alice")[0] == 2
+
+
+def test_shared_animosity_counts_a_changeling_as_sharing_every_type() -> None:
+    scenario = _scenario(["Shared Animosity", "Goblin Guide", "Changeling Outcast", "Grizzly Bears"], step=Step.UPKEEP)
+    _attack(scenario, *scenario.creatures("Goblin Guide", "Changeling Outcast", "Grizzly Bears", username="alice"))
+    assert _stats(scenario, "Goblin Guide", "alice")[0] == 2 + 1
+    assert _stats(scenario, "Grizzly Bears", "alice")[0] == 2 + 1
+    assert _stats(scenario, "Changeling Outcast", "alice")[0] == 1 + 2
+
+
+def test_shared_animosity_gives_nothing_to_a_lone_attacker() -> None:
+    scenario = _scenario(["Shared Animosity", "Goblin Guide", "Raging Goblin"], step=Step.UPKEEP)
+    _attack(scenario, scenario.creature("Goblin Guide", "alice"))
+    assert _stats(scenario, "Goblin Guide", "alice")[0] == 2
+
+
+def test_lightmine_field_hurts_every_attacker_by_the_number_of_attackers() -> None:
+    scenario = _scenario(
+        ["Lightmine Field", "Grizzly Bears", "Memnite", "Colossal Dreadmaw"], step=Step.UPKEEP
+    )
+    _attack(scenario, *scenario.creatures("Grizzly Bears", "Memnite", "Colossal Dreadmaw", username="alice"))
+    assert _names(scenario, Zone.GRAVEYARD, "alice") == ["Grizzly Bears", "Memnite"]
+    assert scenario.creature("Colossal Dreadmaw", "alice").damage == 3
+
+
+def test_lightmine_field_deals_one_to_a_lone_attacker() -> None:
+    scenario = _scenario(["Lightmine Field", "Grizzly Bears"], step=Step.UPKEEP)
+    _attack(scenario, scenario.creature("Grizzly Bears", "alice"))
+    assert scenario.creature("Grizzly Bears", "alice").damage == 1
+
+
+def test_fiery_bombardment_deals_damage_equal_to_the_red_symbols_sacrificed() -> None:
+    scenario = _scenario(["Fiery Bombardment", "Hellrider"])
+    hellrider = scenario.creature("Hellrider", "alice")
+    scenario.activate(
+        scenario.find("Fiery Bombardment", Zone.BATTLEFIELD, "alice"),
+        sacrificing=[hellrider],
+        targets=["bob"],
+        auto=True,
+    )
+    _resolve_all(scenario)
+    assert _life(scenario, "bob") == 20 - 2  # {2}{R}{R}
+
+
+def test_fiery_bombardment_counts_a_single_red_symbol() -> None:
+    scenario = _scenario(["Fiery Bombardment", "Goblin Guide", "Grizzly Bears"])
+    scenario.activate(
+        scenario.find("Fiery Bombardment", Zone.BATTLEFIELD, "alice"),
+        sacrificing=[scenario.creature("Goblin Guide", "alice")],
+        targets=["bob"],
+        auto=True,
+    )
+    _resolve_all(scenario)
+    assert _life(scenario, "bob") == 19
+
+
+def test_fiery_bombardment_deals_nothing_for_a_creature_without_red_symbols() -> None:
+    scenario = _scenario(["Fiery Bombardment", "Grizzly Bears"])
+    scenario.activate(
+        scenario.find("Fiery Bombardment", Zone.BATTLEFIELD, "alice"),
+        sacrificing=[scenario.creature("Grizzly Bears", "alice")],
+        targets=["bob"],
+        auto=True,
+    )
+    _resolve_all(scenario)
+    assert _life(scenario, "bob") == 20
