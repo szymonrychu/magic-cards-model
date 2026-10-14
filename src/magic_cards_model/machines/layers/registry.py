@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 
-from ...models.card import Color, Supertype, Type
+from ...models.card import Supertype, Type
 from ...models.card_state import (
     CardState,
     ChoiceKind,
@@ -208,45 +208,6 @@ def _tarmogoyf(
             source_ability=text,
             selector=_only(source.id),
             modification=define_power_toughness(FixedCount(value=types), 0, 1),
-        )
-    ]
-
-
-def _omnath_locus_of_mana(
-    source: CardState,
-    timestamp: int,
-    targets: Sequence[CardState],
-    context: LayerContext,
-) -> list[ContinuousEffect]:
-    """ "Omnath gets +1/+1 for each unspent green mana you have."
-
-    Sublayer 7c (CR 613.4c: "modify power and/or toughness ... don't set"),
-    not the characteristic-defining 7a of Tarmogoyf or Boneyard Wurm - Omnath
-    is a printed 1/1 and this *adds* to that, so an empty pool leaves a 1/1
-    rather than a 0/0. There is no duration: CR 611.3 gives a static ability's
-    own continuous effect exactly the life of the ability.
-
-    The count is read off `context.unspent_mana_of` at build time, and the
-    board is rebuilt on every call (CR 613.5), so this tracks the pool live.
-    That is the whole of DDR#955: with four green floating during CR 601.2h's
-    payment, Omnath really is a 5/5 at the moment it is sacrificed, and it is
-    a 1/1 again once that mana is spent.
-
-    "You" is CR 109.5's - the object's controller - which is also whose pool
-    `unspent_mana_of` is asked for.
-    """
-    green = context.unspent_mana_of(source.controller, Color.GREEN)
-    if green == 0:
-        return []
-    return [
-        ContinuousEffect(
-            description=f"Omnath, Locus of Mana: +{green}/+{green} from unspent green mana",
-            layer=Layer.POWER_TOUGHNESS,
-            sublayer=Sublayer.MODIFY,
-            timestamp=timestamp,
-            source_id=source.id,
-            selector=_only(source.id),
-            modification=modify_power_toughness(green, green),
         )
     ]
 
@@ -478,7 +439,6 @@ LAYER_EFFECTS: dict[str, EffectBuilder] = {
     # of something that is not on the battlefield and not in a graveyard
     # either - the controller's own mana pool - so no generalised shape reads
     # it and the row is not dead weight.
-    "Omnath, Locus of Mana": _omnath_locus_of_mana,
     "Nighthawk Scavenger": _nighthawk_scavenger,
     "Allosaurus Rider": _allosaurus_rider,
     "Tishana's Tidebinder": _tishanas_tidebinder,
@@ -952,7 +912,6 @@ from .model import (  # noqa: E402
     every_creature,
     grant_ability,
     lose_all_abilities,
-    modify_power_toughness,
     only_this_incarnation,
     other_non_aura_enchantments,
     set_power_toughness,

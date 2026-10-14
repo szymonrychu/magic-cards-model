@@ -96,6 +96,9 @@ _COLOR_WORD = {
 _MANA_SYMBOL_RE = re.compile(
     r"^(?P<color>white|blue|black|red|green) mana symbol in its mana cost$"
 )
+_UNSPENT_MANA_RE = re.compile(
+    r"^unspent (?P<color>white|blue|black|red|green) mana you have$", re.IGNORECASE
+)
 _BOARD_RE = re.compile(
     r"^(?P<other>other )?(?P<adjectives>(?:(?:untapped|tapped|transformed|modified|snow) )*)"
     r"(?P<noun>[a-z]+)"
@@ -255,6 +258,13 @@ def count_for(
         return CountOwnManaSymbols(
             colors=(_COLOR_WORD[match["color"]],),
             costs=tuple((card_id, cost) for card_id, cost in context.mana_cost_by_id.items()),
+        )
+    if (unspent := _UNSPENT_MANA_RE.fullmatch(text)) is not None:
+        # "for each unspent green mana you have" (Omnath, Locus of Mana): the
+        # controller's floating mana of that colour (CR 106.4), read off the
+        # pool at every computation (CR 613.5) - "you" is CR 109.5's controller.
+        return FixedCount(
+            value=context.unspent_mana_of(source.controller, _COLOR_WORD[unspent["color"]])
         )
     if text == "time it has attacked this turn":
         return CountByObjectId(counts=tuple(context.attack_count_by_id.items()))
