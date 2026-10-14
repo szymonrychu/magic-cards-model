@@ -1155,51 +1155,47 @@ def _parse_exile_that_players_top_gain_life_cast_with_any_color(
 # Lukka, Coppercoat Outcast
 # --------------------------------------------------------------------------
 
-_EXILE_TOP_CREATURES_CAST_WHILE_CONTROLLING_RE = re.compile(
-    r"^exile the top (?P<n>\w+) cards of your library\. (?P<kind>creature) cards exiled this "
-    r"way gain \"you may cast this card from exile as long as you control an? "
-    r"(?P<subtype>[a-z]+) planeswalker\.?\"$",
+_EXILE_TOP_CARDS_GRANTING_RE = re.compile(
+    r"^exile the top (?P<n>\w+) cards of your library\. (?P<kind>[a-z]+) cards exiled this "
+    r"way gain [\"\u201c](?P<granted>[^\"\u201d]+)[\"\u201d]\.?$",
     re.IGNORECASE,
 )
 
 
 @ABILITY_TEXT.rung("s8")
-def _parse_exile_top_cards_that_gain_cast_while_controlling_planeswalker(
+def _parse_exile_top_cards_that_gain_a_cast_permission(
     effect_text: str,
 ) -> "AbilityEffect | None":
-    """Exile the top N cards (CR 406.2); the exiled cards of a type gain
-    "you may cast this card from exile as long as you control a `<subtype>`
-    planeswalker" (CR 611.2b) - a cast permission (CR 601.3) usable only
-    while the controller controls any planeswalker of that type
-    (`PlayPermission.while_controlling` = `planeswalker_subtype_key`), not
-    ending with the turn."""
+    """Exile the top N cards (CR 406.2); the exiled cards of a type gain a
+    line (Lukka's "You may cast this card from exile as long as you control a
+    Lukka planeswalker", CR 601.3). The line goes on
+    `CardState.granted_ability_texts`, which `move_to` drops at the card's next
+    zone change (CR 400.7), and is read by the same reader as a printed
+    self-zone permission (`printed_self_zone_cast`), its condition checked
+    whenever the card would be cast. A line that reader cannot read is not
+    granted: the clause is marked as half-played (CR 608.2c)."""
     from ..models.card import Type
-    from .casting.permissions import planeswalker_subtype_key
+    from .casting.permissions import printed_self_zone_cast
+    from .effects.continuous import _with_unparsed_remainder
 
-    match = _EXILE_TOP_CREATURES_CAST_WHILE_CONTROLLING_RE.fullmatch(clean(effect_text))
+    match = _EXILE_TOP_CARDS_GRANTING_RE.fullmatch(clean(effect_text))
     count = None if match is None else parse_count(match.group("n"))
     if match is None or not count:
         return None
-    card_type = Type(match.group("kind").lower())
-    key = planeswalker_subtype_key(match.group("subtype").title())
+    try:
+        card_type = Type(match.group("kind").lower())
+    except ValueError:
+        return None
+    granted = match.group("granted").strip()
+    readable = printed_self_zone_cast(granted) is not None
 
     def effect(game: "Game", ability: Any) -> None:
-        controller = controller_of(game, ability)
-        player = game.player(controller)
-        exiled = [game.exile_permanent(state) for state in list(player.library[:count])]
-        for card in exiled:
-            if card_type in card.types:
-                game.grant_play_permission(
-                    card,
-                    controller,
-                    source_name=ability.source_name,
-                    rule="CR 601.3",
-                    zone=card.zone,
-                    until_end_of_turn=False,
-                    while_controlling=key,
-                )
+        player = game.player(controller_of(game, ability))
+        for card in game.exile_cards(list(player.library[:count])):
+            if readable and card.zone is Zone.EXILE and card_type in card.types:
+                card.granted_ability_texts = (*card.granted_ability_texts, granted)
 
-    return effect
+    return effect if readable else _with_unparsed_remainder(effect, granted)
 
 
 _EXILE_TARGET_THEN_REVEAL_UNTIL_GREATER_RE = re.compile(

@@ -18,6 +18,8 @@ wrote this file:
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.casting import why_cannot_cast_from
+from magic_cards_model.machines.casting.permissions import CAST_PERMISSION
 from magic_cards_model.machines.combat import Keyword, has_keyword
 from magic_cards_model.models import Zone
 
@@ -1444,11 +1446,12 @@ def test_lukka_plus_one_lets_you_cast_exiled_creature_cards_while_you_control_a_
     scenario.resolve_top()
     assert len(scenario.player("alice").library) == 1
     bears = scenario.find("Grizzly Bears", Zone.EXILE)
-    assert scenario.game.play_permission_for(bears, "alice") is not None
+    assert why_cannot_cast_from(bears, "alice", Zone.EXILE, scenario.game) is None
     for other in (FOREST, LIGHTNING_BOLT):
-        assert scenario.game.play_permission_for(scenario.find(other, Zone.EXILE), "alice") is None
+        card = scenario.find(other, Zone.EXILE)
+        assert why_cannot_cast_from(card, "alice", Zone.EXILE, scenario.game) is not None
     casting = scenario.cast("Grizzly Bears", from_zone=Zone.EXILE)
-    casting.use_permission()
+    casting.use_keyword(CAST_PERMISSION)
     scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Forest", "Forest"))
     scenario.put_on_stack(casting)
     assert scenario.resolve_top().zone is Zone.BATTLEFIELD
@@ -1459,10 +1462,10 @@ def test_lukka_plus_one_permission_lasts_only_while_a_lukka_planeswalker_is_cont
     scenario.activate(lukka, index=0)
     scenario.resolve_top()
     bears = scenario.find("Grizzly Bears", Zone.EXILE)
-    assert scenario.game.play_permission_for(bears, "alice") is not None
+    assert why_cannot_cast_from(bears, "alice", Zone.EXILE, scenario.game) is None
     scenario.game.destroy(lukka)
     scenario.game.check_state_based_actions()
-    assert scenario.game.play_permission_for(bears, "alice") is None
+    assert why_cannot_cast_from(bears, "alice", Zone.EXILE, scenario.game) is not None
 
 
 def test_lukka_minus_two_puts_a_greater_mana_value_creature_onto_the_battlefield():
