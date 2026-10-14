@@ -8663,7 +8663,7 @@ Tests: `tests/scenarios/test_ep02_r3_for_each_cards.py` (every listed card has a
 ## EP-02-R3 T8: damage, pump and cost amounts
 
 | Mechanic | CR | Reader | Card | Test |
-| "+X/+X (-X/-X) until end of turn, where X is the greatest mana value among permanents you control / 7 minus the number of cards in that creature's controller's hand"; negative X flips the sign | 107.3f, 107.2, 202.3, 608.2h | `ep02_r3_damage_cost_amounts_pumps.controller_amount/object_amount/x_literal`, hooked in `effects/amounts.py` | Boon of Boseiju, Flunk | `test_ep02_r3_damage_cost_amounts.py` |
+| "+X/+X (-X/-X) until end of turn, where X is the greatest mana value among permanents you control / 7 minus the number of cards in that creature's controller's hand"; a negative X is zero | 107.3f, 107.1b, 107.2, 202.3, 608.2h | `ep02_r3_damage_cost_amounts_pumps.controller_amount/object_amount/x_literal`, hooked in `effects/amounts.py` | Boon of Boseiju, Flunk | `test_ep02_r3_damage_cost_amounts.py` |
 | "Untap it." closing a targeted spell | 701.26b | `untap_the_target` (mixed clause) | Boon of Boseiju | same |
 | "It / equipped creature gets +X/+X ... where X is ..." (greatest power and/or toughness among other creatures, resolutions this turn) | 608.2h, 611.2a, 301.5 | `it_gets_pump` | Freelance Muscle, Bronze Cudgels, Rubblebelt Rioters | same |
 | "You may have target creature get +X/+X until end of turn, where X is ..."; "the power of the exiled card"; "times this creature was kicked / has mutated" | 608.2d, 607.2a, 702.33d, 702.140c | `may_have_pump`, `object_amount` | Resilient Khenra, Bishop of Binding, Voyager Drake, Porcuparrot | same |

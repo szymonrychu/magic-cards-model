@@ -7,6 +7,7 @@ Rules, each looked up with `mise run rules:find` in the session that wrote this 
 - **CR 608.2h** - information about an object is taken once, as the effect applies.
 - **CR 608.2c** - instructions are followed in order; later text refers to earlier text.
 - **CR 107.3f** - X in the text of a spell or ability, not in a cost, is defined by that text.
+- **CR 107.1b** - a calculation that yields a negative number uses zero instead.
 - **CR 202.3** - mana value is the total amount of mana in the mana cost.
 - **CR 119.3** - life gain and loss adjust a player's life total.
 - **CR 122.1** - counters.
@@ -219,7 +220,7 @@ def test_flunk_reads_the_hand_of_the_creatures_controller_not_the_casters() -> N
     assert bears.zone is Zone.GRAVEYARD
 
 
-def test_flunk_with_a_full_hand_is_not_a_pump() -> None:
+def test_flunk_with_a_full_hand_changes_nothing() -> None:
     scenario = _scenario(
         [],
         ["Serra Angel"],
@@ -228,8 +229,8 @@ def test_flunk_with_a_full_hand_is_not_a_pump() -> None:
     )
     angel = scenario.creature("Serra Angel", "bob")
     _cast_all(scenario, "Flunk", targets=[angel])
-    # 7 - 8 = -1: the creature gets +1/+1 (CR 107.1b is about counts; X stays -1 here)
-    assert _stats(scenario, angel) == (5, 5)
+    # 7 - 8 = -1: CR 107.1b uses zero, so the creature gets -0/-0
+    assert _stats(scenario, angel) == (4, 4)
 
 
 def test_resilient_khenra_pumps_a_creature_by_its_own_power() -> None:
@@ -1264,3 +1265,40 @@ def test_radical_idea_is_cast_with_jump_start() -> None:
     _resolve_all(scenario)
     assert island.zone is Zone.GRAVEYARD and radical.zone is Zone.EXILE
     assert len(scenario.player("alice").hand) == 1  # drew a card
+
+
+# ---------------------------------------------------------------------------
+# Porcuparrot: "X damage ..., where X is the number of times this creature has mutated"
+# (CR 702.140c: each spell merged into it is one mutation)
+# ---------------------------------------------------------------------------
+
+
+def _mutate_onto(scenario, name: str, target) -> None:
+    casting = scenario.cast(name)
+    casting.use_keyword("Mutate")
+    casting.choose_targets([target])
+    payment = casting.begin_paying()
+    scenario.auto_pay(payment, username="alice")
+    scenario.put_on_stack(casting)
+    scenario.will_choose_top(False, username="alice")  # under: Porcuparrot stays on top
+    scenario.resolve_top()
+
+
+def test_porcuparrot_deals_damage_equal_to_the_times_it_has_mutated() -> None:
+    scenario = _scenario(["Porcuparrot"], hand=["Gemrazer", "Brokkos, Apex of Forever"])
+    parrot = scenario.creature("Porcuparrot", "alice")
+    _mutate_onto(scenario, "Gemrazer", parrot)
+    _activate_all(scenario, parrot, targets=["bob"])
+    assert scenario.player("bob").life == 20 - 1
+    for permanent in scenario.game.battlefield:
+        permanent.untap(exert_applies=False)
+    _mutate_onto(scenario, "Brokkos, Apex of Forever", parrot)
+    _activate_all(scenario, parrot, targets=["bob"])
+    assert scenario.player("bob").life == 20 - 1 - 2
+
+
+def test_porcuparrot_that_never_mutated_deals_no_damage() -> None:
+    scenario = _scenario(["Porcuparrot"])
+    parrot = scenario.creature("Porcuparrot", "alice")
+    _activate_all(scenario, parrot, targets=["bob"])
+    assert scenario.player("bob").life == 20

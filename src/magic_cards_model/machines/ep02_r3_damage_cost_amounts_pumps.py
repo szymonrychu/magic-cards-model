@@ -5,14 +5,14 @@ and its spell-side twin) additively:
 
 - `controller_amount`: an extremum or a difference the controller alone fixes
   ("the greatest mana value among permanents you control", CR 202.3;
-  "7 minus the number of cards in your hand", CR 107.1b for a negative result).
+  "7 minus the number of cards in your hand"; a negative result uses zero, CR 107.1b).
 - `object_amount`: an amount that reads the resolving object (CR 608.2h, taken once
   as the effect applies): "the greatest power and/or toughness among other creatures
   you control" (the source is not "other"), "7 minus the number of cards in that
   creature's controller's hand" (the target's controller), "the power of the exiled
   card" (the card the source exiled, CR 607.2a).
-- `x_literal`: the sentence with its X written out, a negative X flipping the sign
-  of a "-X" the way arithmetic does (CR 107.3f defines X in the text; "-X/-X" with X = -1 is +1/+1).
+- `x_literal`: the sentence with its X written out (CR 107.3f defines X in the text); an X
+  that calculates below zero is zero (CR 107.1b), so "-X/-X" with X = -1 is -0/-0.
 - `may_have_pump`: "you may have target creature get +X/+X until end of turn, where X is ..."
   is the optional (CR 608.2d) form of the plain pump.
 """
@@ -57,8 +57,9 @@ _EXILED_STAT_RE = re.compile(
 
 
 def x_literal(sentence: str, magnitude: int) -> str:
-    """`sentence` with every X replaced by `magnitude`; a sign in front of X is
-    multiplied in ("-X" with X = -1 reads "+1")."""
+    """`sentence` with every X replaced by `magnitude`, floored at zero (CR 107.1b: a
+    calculation that yields a negative number uses zero); a sign in front of X stays."""
+    magnitude = max(magnitude, 0)
 
     def one(match: re.Match[str]) -> str:
         sign = match.group("sign")
@@ -115,7 +116,7 @@ def controller_amount(phrase: str) -> Callable[["Game", str], int] | None:
         if inner is None:
             return None
         base = int(match.group("n"))
-        return lambda game, controller: base - inner(game, controller)
+        return lambda game, controller: max(base - inner(game, controller), 0)  # CR 107.1b
     return None
 
 
@@ -144,7 +145,7 @@ def object_amount(phrase: str) -> Callable[["Game", Any], int] | None:
         if inner is None:
             return None
         base = int(match.group("n"))
-        return lambda game, obj: base - inner(game, obj)
+        return lambda game, obj: max(base - inner(game, obj), 0)  # CR 107.1b
     if lowered.startswith("the number of cards in ") and (hand := _hand_of_target(text)):
         return hand
     if lowered.startswith("this ") and (own := _OWN_STAT_RE.fullmatch(lowered)) is not None:
