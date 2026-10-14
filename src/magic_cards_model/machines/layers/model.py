@@ -207,8 +207,6 @@ class Characteristics(EngineModel):
     name: str
     mana_value: float = 0.0
     controller: str | None = None
-    owner: str | None = None
-    """The object's owner (CR 108.3), for "you control but don't own"."""
     supertypes: tuple[Supertype, ...] = ()
     types: tuple[Type, ...] = ()
     subtypes: tuple[str, ...] = ()
@@ -263,7 +261,8 @@ class Characteristics(EngineModel):
     #: trample and ward {2}.").
     transformed: bool = False
     #: `CardState.owner` (CR 108.3) - carried like `transformed`, so a `Count`
-    #: can say "a land you control but don't own" (Herald of Leshrac).
+    #: can say "a land you control but don't own" (Herald of Leshrac), and a
+    #: `Selector` "creatures you control but don't own" (Laughing Jasper Flint).
     owner: str | None = None
     #: `CardState.tapped` (CR 110.5) as of this computation - a physical status
     #: carried like `transformed`, so a `Count` can say "for each untapped

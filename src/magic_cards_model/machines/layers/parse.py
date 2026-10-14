@@ -133,7 +133,6 @@ def printed_characteristics(
             attached_to=state.attached_to,
             paired_with=state.paired_with,
             transformed=state.transformed,
-            owner=state.owner,
             tapped=state.tapped,
         )
     # CR 712.8d/712.8e/712.8f: a double-faced permanent has only the
@@ -192,7 +191,6 @@ def printed_characteristics(
         attached_to=state.attached_to,
         paired_with=state.paired_with,
         transformed=state.transformed,
-        owner=state.owner,
         tapped=state.tapped,
     )
 
