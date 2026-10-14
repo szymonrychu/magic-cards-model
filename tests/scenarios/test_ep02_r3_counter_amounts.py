@@ -1914,3 +1914,14 @@ def test_rabble_rouser_bloodthirst_enters_with_a_counter_after_damage_to_an_oppo
 
 def test_rabble_rouser_bloodthirst_enters_bare_without_damage_to_an_opponent():
     assert _rabble_enters(False).counter_count(Counter.PLUS_ONE) == 0
+
+
+def test_kaito_shizuki_phases_out_at_the_end_step_of_the_turn_it_entered():
+    scenario = _main_board(hand=["Kaito Shizuki"])
+    kaito = scenario.put_onto_battlefield("Kaito Shizuki")
+    for _ in range(12):
+        if scenario.step is Step.END_STEP:
+            break
+        scenario.advance()
+    _settle(scenario)
+    assert kaito in scenario.game.phased_out
