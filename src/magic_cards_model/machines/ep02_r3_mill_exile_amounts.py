@@ -589,3 +589,175 @@ def _parse_mill_x_doubled_from_graveyard(
                 mill_players(game, [target], [amount])
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# Discover with a follow-up amount, and the exile-the-top loops
+# --------------------------------------------------------------------------
+
+_DISCOVER_THEN_TOKENS_RE = re.compile(
+    r"^discover (?P<n>\d+)\. if the discovered card'?s mana value is less than (?P=n), "
+    r"create a number of tapped (?P<token>[a-z]+) tokens equal to the difference$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s14")
+def _parse_discover_then_tokens_for_the_difference(
+    spell_text: str,
+) -> "Callable[[Game, CardState], None] | None":
+    """CR 701.57a discover N, then CR 701.57c's "discovered card" (the final
+    card exiled, only when its mana value is N or less) sets the CR 608.2h
+    amount: N minus its mana value, as tapped predefined tokens (CR 111.10).
+    With no discovered card there is no difference, so no tokens."""
+    match = _DISCOVER_THEN_TOKENS_RE.fullmatch(clean(spell_text))
+    if match is None:
+        return None
+    n = int(match.group("n"))
+    token = match.group("token").capitalize()
+
+    def effect(game: "Game", spell: CardState) -> None:
+        from ..models.token import PREDEFINED, create_predefined_tokens
+        from .keywords import discover
+
+        if token not in PREDEFINED:
+            return
+        controller = controller_of(game, spell)
+        result = discover(game, controller, n, source_name=spell.name, source_id=source_id_of(spell))
+        if result.hit is not None and result.hit.mana_value < n:
+            create_predefined_tokens(
+                game, token, controller, n - int(result.hit.mana_value), tapped=True
+            )
+
+    return effect
+
+
+_OWNER_SHUFFLES_THEN_DISCOVERS_RE = re.compile(
+    r"^the owner of (?P<phrase>target .+?) shuffles it into their library\. "
+    r"then that player discovers x, where x is its mana value$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s14")
+def _parse_owner_shuffles_target_then_discovers_its_mana_value(
+    spell_text: str,
+) -> "Callable[[Game, CardState], None] | None":
+    """The owner of the target permanent shuffles it into their library
+    (CR 701.24a), then discovers X (CR 701.57a) for X its mana value as it
+    last existed on the battlefield (CR 608.2h: taken before it moves)."""
+    from .effects._common import _targets_understood
+
+    match = _OWNER_SHUFFLES_THEN_DISCOVERS_RE.fullmatch(clean(spell_text))
+    if match is None or not _targets_understood(
+        match.group("phrase"), count_agnostic=True, battlefield_only=True
+    ):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        from .keywords import discover
+
+        for target in game.resolve_targets(spell):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            owner = target.owner
+            x_value = int(target.mana_value)
+            game.put_cards_into_library([target])
+            game.shuffle_library(owner)
+            discover(game, owner, x_value, source_name=spell.name, source_id=source_id_of(spell))
+
+    return effect
+
+
+_EXILE_TOP_LOOP_RE = re.compile(
+    r"^(?P<exiles>(?:exile the top card of your library\. ?){2,})"
+    r"if the last card exiled isn'?t a land card, repeat this process\. "
+    r"create an? (?P<desc>.+?) tokens? for each nonland card exiled this way$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s14")
+def _parse_exile_top_loop_then_tokens_per_nonland(
+    spell_text: str,
+) -> "Callable[[Game, CardState], None] | None":
+    """Exile the top card N times, repeat the whole process while the last
+    card exiled is not a land (CR 406.2 exile, CR 701.20a face up), then a
+    token per nonland card exiled this way (CR 111.2). A library that runs
+    out ends the process."""
+    from .effects.tokens import _parse_generic_token_descriptor
+
+    match = _EXILE_TOP_LOOP_RE.fullmatch(clean(spell_text))
+    if match is None:
+        return None
+    batch_size = match.group("exiles").lower().count("exile the top card")
+    definition = _parse_generic_token_descriptor(match.group("desc").split(), None)
+    if definition is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        from ..models.token import create_tokens
+        from .keywords import exile_until
+
+        controller = controller_of(game, spell)
+        library_owner = game.player(controller)
+        nonland = 0
+        while True:
+            batch = exile_until(
+                game,
+                library_owner,
+                lambda _state, exiled: len(exiled) >= batch_size,
+                source_name=spell.name,
+            )
+            nonland += sum(1 for state in batch if not state.card.is_land)
+            if not batch or batch[-1].card.is_land:
+                break
+        if nonland:
+            create_tokens(game, definition, controller, nonland)
+
+    return effect
+
+
+_EXILE_UNTIL_NONLAND_TO_HAND_RE = re.compile(
+    r"^exile cards from the top of your library until you exile a nonland card, then put "
+    r"that card into your hand\. if the card'?s mana value is (?P<n>\d+) or greater, repeat "
+    r"this process\. (?:this \w+|[^.]+?) deals (?P<d>\d+) damage to you for each card put "
+    r"into your hand this way$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s8")
+def _parse_exile_until_nonland_to_hand_repeat_damage(effect_text: str) -> "AbilityEffect | None":
+    """Exile until a nonland card (CR 406.2), put it into hand, repeat while
+    its mana value is at least N, then damage to the controller per card put
+    into hand (CR 120.3). The exiled lands stay in exile."""
+    match = _EXILE_UNTIL_NONLAND_TO_HAND_RE.fullmatch(clean(effect_text))
+    if match is None:
+        return None
+    threshold, per_card = int(match.group("n")), int(match.group("d"))
+
+    def effect(game: "Game", ability: Any) -> None:
+        from .keywords import exile_until
+
+        player = game.player(controller_of(game, ability))
+        taken = 0
+        while True:
+            exiled = exile_until(
+                game,
+                player,
+                lambda state, _: not state.card.is_land,
+                source_name=ability.source_name,
+            )
+            if not exiled or exiled[-1].card.is_land:
+                break
+            hit = exiled[-1]
+            game.exile.remove(hit)
+            player.add(hit, Zone.HAND)
+            taken += 1
+            if hit.mana_value < threshold:
+                break
+        if taken:
+            game.deal_damage(player, taken * per_card, source=ability.source_or_last_known(game))
+
+    return effect

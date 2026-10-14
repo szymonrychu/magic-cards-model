@@ -791,3 +791,206 @@ def test_fraying_sanity_with_nothing_put_into_a_graveyard_mills_nothing():
     scenario.advance()
     scenario.pass_until_resolved()
     assert _graveyard(scenario, "bob") == 0
+
+
+# --------------------------------------------------------------------------
+# Part 3 - exile loops and discover amounts.
+#
+# CR 701.57a-c (discover, the "discovered card"), CR 406.2 (exile), CR 608.2h
+# (an amount from the game state is fixed as the instruction applies),
+# CR 111.10 (predefined tokens), CR 701.24a (shuffle) - each read with
+# `mise run rules:find` in the session that wrote this block.
+# --------------------------------------------------------------------------
+
+LIGHTNING_BOLT = "Lightning Bolt"
+FOREST = "Forest"
+
+
+def _names(cards):
+    return [card.name for card in cards]
+
+
+def _treasures(scenario, name):
+    return [c for c in scenario.game.permanents_controlled_by(name) if c.name == "Treasure Token"]
+
+
+def test_hit_the_mother_lode_makes_tapped_treasures_for_the_shortfall():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Hit the Mother Lode"],
+            battlefield=["Mountain"] * 7,
+            library=[FOREST, LIGHTNING_BOLT, SWAMP],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_take_the_may(False, source="Hit the Mother Lode")
+    scenario.cast_and_resolve("Hit the Mother Lode", *scenario.untapped_sources(*["Mountain"] * 7))
+    assert LIGHTNING_BOLT in _names(scenario.player("alice").hand)
+    treasures = _treasures(scenario, "alice")
+    assert len(treasures) == 9  # 10 minus the discovered card's mana value 1
+    assert all(treasure.tapped for treasure in treasures)
+
+
+def test_hit_the_mother_lode_with_a_card_of_mana_value_ten_makes_no_treasure():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Hit the Mother Lode"],
+            battlefield=["Mountain"] * 7,
+            library=["Ulamog, the Defiler"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_take_the_may(False, source="Hit the Mother Lode")
+    scenario.cast_and_resolve("Hit the Mother Lode", *scenario.untapped_sources(*["Mountain"] * 7))
+    assert _treasures(scenario, "alice") == []
+
+
+def test_hit_the_mother_lode_with_nothing_to_discover_makes_no_treasure():
+    """CR 701.57c: with no card of mana value 10 or less there is no
+    discovered card, so no difference to count."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Hit the Mother Lode"],
+            battlefield=["Mountain"] * 7,
+            library=[FOREST, FOREST],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve("Hit the Mother Lode", *scenario.untapped_sources(*["Mountain"] * 7))
+    assert _treasures(scenario, "alice") == []
+
+
+def test_zoyowas_justice_shuffles_the_target_away_then_its_owner_discovers_its_mana_value():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Zoyowa's Justice"], battlefield=["Mountain", "Mountain"])
+        .player("bob", battlefield=["Kitchen Finks"], library=[FOREST, FOREST, FOREST])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    finks = scenario.creature("Kitchen Finks", "bob")
+    scenario.will_take_the_may(False, username="bob", source="Zoyowa's Justice")
+    scenario.cast_and_resolve(
+        "Zoyowa's Justice",
+        *scenario.untapped_sources("Mountain", "Mountain"),
+        targets=[finks],
+    )
+    assert "Kitchen Finks" not in scenario.battlefield_names()
+    # The only nonland card in bob's shuffled library is the Finks itself,
+    # mana value 3 = X, so bob discovered it into their hand.
+    assert _names(scenario.player("bob").hand) == ["Kitchen Finks"]
+    assert len(scenario.player("bob").library) == 3
+
+
+def test_zoyowas_justice_discover_amount_is_the_last_known_mana_value():
+    """X is 3 (Kitchen Finks), so the Bolt (1) is a hit if it comes first and
+    the Finks (3) is a hit otherwise: either way exactly one nonland card ends
+    in bob's hand and nothing is left on the battlefield."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Zoyowa's Justice"], battlefield=["Mountain", "Mountain"])
+        .player("bob", battlefield=["Kitchen Finks"], library=[LIGHTNING_BOLT, FOREST])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_take_the_may(False, username="bob", source="Zoyowa's Justice")
+    scenario.cast_and_resolve(
+        "Zoyowa's Justice",
+        *scenario.untapped_sources("Mountain", "Mountain"),
+        targets=[scenario.creature("Kitchen Finks", "bob")],
+    )
+    assert len(scenario.player("bob").hand) == 1
+    assert "Kitchen Finks" not in scenario.battlefield_names()
+
+
+def test_rally_the_horde_repeats_while_the_last_exiled_card_is_not_a_land():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Rally the Horde"],
+            battlefield=["Mountain"] * 6,
+            library=[
+                LIGHTNING_BOLT, FOREST, LIGHTNING_BOLT,  # last is a nonland: repeat
+                LIGHTNING_BOLT, LIGHTNING_BOLT, FOREST,  # last is a land: stop
+                SWAMP,
+            ],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve("Rally the Horde", *scenario.untapped_sources(*["Mountain"] * 6))
+    warriors = [c for c in scenario.game.permanents_controlled_by("alice") if c.name == "Warrior Token"]
+    assert len(warriors) == 4  # four nonland cards exiled
+    assert len(scenario.player("alice").library) == 1
+    assert len(scenario.game.exile) == 6
+
+
+def test_rally_the_horde_stops_when_the_library_runs_out():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Rally the Horde"],
+            battlefield=["Mountain"] * 6,
+            library=[LIGHTNING_BOLT, LIGHTNING_BOLT],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve("Rally the Horde", *scenario.untapped_sources(*["Mountain"] * 6))
+    warriors = [c for c in scenario.game.permanents_controlled_by("alice") if c.name == "Warrior Token"]
+    assert len(warriors) == 2
+
+
+def test_demonlord_belzenlok_puts_nonland_cards_in_hand_and_repeats_on_mana_value_four():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Demonlord Belzenlok"],
+            battlefield=["Swamp"] * 6,
+            library=[FOREST, "Serra Angel", FOREST, LIGHTNING_BOLT, SWAMP],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve("Demonlord Belzenlok", *scenario.untapped_sources(*["Swamp"] * 6))
+    _settle(scenario)
+    assert sorted(_names(scenario.player("alice").hand)) == ["Lightning Bolt", "Serra Angel"]
+    assert scenario.player("alice").life == 18  # one damage per card put into hand
+    assert _names(scenario.game.exile) == [FOREST, FOREST]
+
+
+def test_demonlord_belzenlok_stops_after_a_cheap_card():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Demonlord Belzenlok"],
+            battlefield=["Swamp"] * 6,
+            library=[LIGHTNING_BOLT, "Serra Angel"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve("Demonlord Belzenlok", *scenario.untapped_sources(*["Swamp"] * 6))
+    _settle(scenario)
+    assert _names(scenario.player("alice").hand) == ["Lightning Bolt"]
+    assert scenario.player("alice").life == 19
