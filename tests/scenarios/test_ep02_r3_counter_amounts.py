@@ -1426,3 +1426,70 @@ def test_kaya_minus_six_exiles_every_graveyard_and_makes_a_spirit_per_card():
     assert not scenario.player("bob").graveyard
     spirits = [t.name for t in _tokens(scenario) if "Spirit" in t.name]
     assert len(spirits) == 3, (spirits, [c.name for c in scenario.game.exile])
+
+
+# -- Jade Seedstones // Jadeheart Attendant: distribute three counters; the
+# crafted back face gains life equal to the mana value of the card exiled to craft
+
+
+def _craft_jade(material_name, *, graveyard=()):
+    from magic_cards_model.machines.keywords import craft_activation
+
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Jade Seedstones // Jadeheart Attendant", material_name, *["Forest"] * 7],
+            graveyard=list(graveyard),
+            library=["Forest"] * 8,
+        )
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    crafter = scenario.find("Jade Seedstones // Jadeheart Attendant", Zone.BATTLEFIELD, "alice")
+    material = scenario.find(material_name, Zone.BATTLEFIELD, "alice")
+    activation = craft_activation(scenario.game, crafter, "alice", [material])
+    scenario.pay_with(activation.begin_paying(), *scenario.untapped_sources(*["Forest"] * 7))
+    activation.activate()
+    return scenario
+
+
+def test_jadeheart_attendant_gains_life_equal_to_the_crafted_cards_mana_value():
+    scenario = _craft_jade("Hill Giant")
+    before = scenario.player("alice").life
+    _settle(scenario)
+    # Hill Giant is {3}{R}: mana value 4.
+    assert scenario.player("alice").life == before + 4
+
+
+def test_jadeheart_attendant_gains_the_mana_value_of_a_cheaper_material():
+    scenario = _craft_jade("Grizzly Bears")
+    before = scenario.player("alice").life
+    _settle(scenario)
+    assert scenario.player("alice").life == before + 2
+
+
+def test_jade_seedstones_distributes_three_counters_among_its_targets():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Jade Seedstones // Jadeheart Attendant"],
+            battlefield=["Grizzly Bears", "Hill Giant", *["Forest"] * 4],
+            library=["Forest"] * 8,
+        )
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    giant = scenario.creature("Hill Giant", "alice")
+    scenario.will_choose_targets(bears, giant)
+    scenario.will_choose_an_amount(1)  # one more than the minimum to the first target
+    scenario.cast_and_resolve(
+        "Jade Seedstones // Jadeheart Attendant", *scenario.untapped_sources(*["Forest"] * 4)
+    )
+    _settle(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 2
+    assert giant.counter_count(Counter.PLUS_ONE) == 1

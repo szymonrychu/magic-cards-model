@@ -732,3 +732,38 @@ def _parse_target_counter_then_transform_source(effect_text: str) -> AbilityEffe
                     transform_permanent(game, source)
 
     return effect
+
+
+# -- "You gain life equal to the mana value of the exiled card used to craft it."
+
+_CRAFT_MANA_VALUE_LIFE_RE = re.compile(
+    r"^you gain life equal to the mana value of the exiled cards? used to craft "
+    r"(?:it|this [a-z]+)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_gain_life_equal_to_crafted_cards_mana_value(
+    effect_text: str,
+) -> AbilityEffect | None:
+    """Jadeheart Attendant. CR 702.167c: the exiled cards used to craft a
+    permanent are recorded on it (`CardState.crafted_with`); their mana value
+    (CR 202.3) is read as they sit in exile, counted once as the effect applies
+    (CR 608.2h). A permanent that was not crafted has no such card: 0."""
+    if " used to craft " not in effect_text.lower():
+        return None
+    if _CRAFT_MANA_VALUE_LIFE_RE.fullmatch(" ".join(effect_text.strip().split())) is None:
+        return None
+
+    def effect(game: "Game", ability: "AbilityOnStack") -> None:
+        source = ability.source_or_last_known(game)
+        if source is None:
+            return
+        amount = sum(
+            int(state.card.cmc) for state in game.exile if state.id in source.crafted_with
+        )
+        if amount > 0:
+            game.gain_life(game.player(ability.controller), amount)
+
+    return effect
