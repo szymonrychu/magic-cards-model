@@ -1650,3 +1650,104 @@ def test_amped_raptor_put_onto_the_battlefield_only_gets_energy():
     _settle(scenario)
     assert scenario.player("alice").counters[C.ENERGY] == 2
     assert not scenario.game.exile
+
+
+# -- Hostile Hostel // Creeping Inn: soul counters, then a drain per creature card
+# exiled with it; {4}: phases out
+
+
+def _creeping_inn(graveyard=("Grizzly Bears", "Hill Giant")):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Hostile Hostel // Creeping Inn", *["Forest"] * 4],
+            graveyard=list(graveyard),
+            library=["Forest"] * 8,
+        )
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    inn = scenario.find("Hostile Hostel // Creeping Inn", Zone.BATTLEFIELD, "alice")
+    transform_permanent(scenario.game, inn)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    return scenario, inn
+
+
+def test_creeping_inn_attack_drains_for_each_creature_card_exiled_with_it():
+    scenario, inn = _creeping_inn()
+    scenario.will_take_the_may(True)
+    scenario.will_choose_cards(scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice"))
+    scenario.attack_with(inn)
+    _settle(scenario)
+    assert scenario.player("bob").life == 19
+    assert scenario.player("alice").life == 21
+    assert [c.name for c in scenario.game.cards_exiled_with(inn.id, inn.zone_change_stamp)] == [
+        "Grizzly Bears"
+    ]
+
+
+def test_creeping_inn_counts_every_creature_card_exiled_with_it():
+    from magic_cards_model.machines.effects.removal import linked_exile_annotation
+
+    scenario, inn = _creeping_inn(graveyard=("Hill Giant", "Grizzly Bears"))
+    earlier = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    scenario.game.exile_cards([earlier])
+    earlier.exile_annotation = linked_exile_annotation(
+        scenario.game, _FakeAbility(inn), earlier
+    )
+    scenario.will_take_the_may(True)
+    scenario.will_choose_cards(scenario.find("Hill Giant", Zone.GRAVEYARD, "alice"))
+    scenario.attack_with(inn)
+    _settle(scenario)
+    assert scenario.player("bob").life == 18
+    assert scenario.player("alice").life == 22
+
+
+def test_creeping_inn_may_decline_to_exile():
+    scenario, inn = _creeping_inn()
+    scenario.will_take_the_may(False)
+    scenario.attack_with(inn)
+    _settle(scenario)
+    assert scenario.player("bob").life == 20
+    assert not scenario.game.exile
+
+
+def test_creeping_inn_phases_out_for_four():
+    scenario, inn = _creeping_inn()
+    scenario.activate(inn, *scenario.untapped_sources(*["Forest"] * 4), index=0)
+    scenario.resolve_top()
+    assert inn in scenario.game.phased_out
+
+
+def test_hostile_hostel_transforms_and_untaps_on_the_third_soul_counter():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Hostile Hostel // Creeping Inn", "Grizzly Bears", "Forest"],
+            library=["Forest"] * 8,
+        )
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    hostel = scenario.find("Hostile Hostel // Creeping Inn", Zone.BATTLEFIELD, "alice")
+    hostel.add_counters("soul", 2)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.activate(
+        hostel, *scenario.untapped_sources("Forest"), index=1, sacrificing=[bears]
+    )
+    scenario.resolve_top()
+    assert hostel.up_face_name == "Creeping Inn"
+    assert not hostel.tapped
+    assert hostel.counter_count("soul") == 0
+
+
+class _FakeAbility:
+    """The two fields `linked_exile_annotation` reads off an ability."""
+
+    def __init__(self, source):
+        self.source_id = source.id
+        self.source_stamp = source.zone_change_stamp

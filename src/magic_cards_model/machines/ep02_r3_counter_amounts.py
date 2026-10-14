@@ -22,6 +22,7 @@ from .effects._common import AbilityEffect, Effect, TargetedClause, _targets_und
 from .effects.amounts import _for_each_multiplier
 from .effects.continuous import transform_permanent
 from .effects.counters import _counter_kind
+from .effects.removal import linked_exile_annotation
 from .effects.tokens import _parse_token_clause
 from .keywords import exile_until
 from .layers import is_genuine_resolution_layer_sentence
@@ -883,5 +884,103 @@ def _parse_energy_then_exile_and_cast_for_energy(effect_text: str) -> AbilityEff
             rule="Amped Raptor",
             alternative_cost=cost,
         )
+
+    return effect
+
+
+# -- "You may exile a creature card from your graveyard. If you do, each opponent loses
+# X life and you gain X life, where X is the number of creature cards exiled with this
+# creature."
+
+_EXILE_FROM_GRAVEYARD_DRAIN_RE = re.compile(
+    r"^you may exile an? (?P<type>[a-z]+) card from your graveyard\.\s+if you do, each "
+    r"opponent loses X life and you gain X life, where X is the number of (?P=type) cards "
+    r"exiled with this (?P<noun>[a-z]+)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_exile_from_graveyard_then_drain_by_cards_exiled_with(
+    effect_text: str,
+) -> AbilityEffect | None:
+    """Creeping Inn. The card exiled is linked to the source (CR 607.2a), and X
+    counts every card of that type exiled with this incarnation of it (CR 400.7),
+    the one just exiled included, as the drain applies (CR 608.2h). Declining the
+    "may", or having no such card, ends it."""
+    if " exiled with this " not in effect_text.lower():
+        return None
+    match = _EXILE_FROM_GRAVEYARD_DRAIN_RE.fullmatch(" ".join(effect_text.strip().split()))
+    if match is None:
+        return None
+    wanted = next((t for t in Type if t.value.lower() == match.group("type").lower()), None)
+    if wanted is None:
+        return None
+
+    def effect(game: "Game", ability: "AbilityOnStack") -> None:
+        controller = game.player(ability.controller)
+        source = ability.source_or_last_known(game)
+        if source is None:
+            return
+        candidates = [state for state in controller.graveyard if wanted in state.card.types]
+        if not candidates or not game.may(
+            controller,
+            f"exile a {wanted.value.lower()} card from your graveyard",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+            cards=candidates,
+        ):
+            return
+        (chosen_id,) = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=ability.controller,
+                prompt=f"choose a {wanted.value.lower()} card to exile",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                amount=1,
+                cards=tuple(state.id for state in candidates),
+            )
+        )
+        chosen = next(state for state in candidates if state.id == chosen_id)
+        game.exile_cards([chosen])
+        if chosen.zone is Zone.EXILE:
+            chosen.exile_annotation = linked_exile_annotation(game, ability, chosen)
+        drained = sum(
+            1
+            for state in game.cards_exiled_with(source.id, ability.source_stamp)
+            if wanted in state.card.types
+        )
+        if drained <= 0:
+            return
+        for opponent in [p for p in game.players_in_game if p.username != ability.controller]:
+            game.lose_life(opponent, drained)
+        game.gain_life(controller, drained)
+
+    return effect
+
+
+# -- "This creature phases out."
+
+_SELF_PHASES_OUT_RE = re.compile(
+    r"^this (?:creature|permanent|artifact|land|enchantment|vehicle) phases out\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_self_phases_out(effect_text: str) -> AbilityEffect | None:
+    """Creeping Inn's {4}: CR 702.26b - the permanent phases out, and whatever
+    is attached to it with it (CR 702.26g, `Game.phase_out`). A source that has
+    left the battlefield does nothing."""
+    if " phases out" not in effect_text.lower():
+        return None
+    if _SELF_PHASES_OUT_RE.fullmatch(" ".join(effect_text.strip().split())) is None:
+        return None
+
+    def effect(game: "Game", ability: "AbilityOnStack") -> None:
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            game.phase_out(source)
 
     return effect
