@@ -4394,7 +4394,7 @@ def _parse_variable_count_token_clause(clause: str, *, for_spell: bool) -> Targe
     counted = count_expression(match.group("expr"))
     # A player-level term `count_expression` has no row for - "your life total" (Storm Herd),
     # "your speed" - is an `amount_expression` term.
-    amount = None if counted is not None else amount_expression(match.group("expr"))
+    amount = None if counted is not None else amount_term(match.group("expr").strip())
     if counted is None and amount is None:
         return None
 
@@ -4404,7 +4404,9 @@ def _parse_variable_count_token_clause(clause: str, *, for_spell: bool) -> Targe
             count = counted(game, controller)
         else:
             assert amount is not None
-            source = stack_object if isinstance(stack_object, CardState) else None
+            source = (
+                stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+            )
             count = amount(game, controller, source, 0)
         if count > 0:
             create_tokens(game, definition, controller, count, tapped=tapped)

@@ -210,19 +210,36 @@ _LIFE_WHO = frozenset(
 )
 
 
-@MIXED_CLAUSE.rung(
-    "s26", for_spell=FORWARD, after=["life._parse_each_player_life_per_group_they_control_clause"]
+_REFERS_TO_ANOTHER_OBJECT_RE = re.compile(
+    r"\b(?:its|their|that (?:creature|permanent|card|artifact|land|spell|token)'s|"
+    r"the (?:sacrificed|exiled|discarded|destroyed|returned|milled|revealed|chosen|tapped|"
+    r"targeted) [a-z ]+?'s)\s",
+    re.IGNORECASE,
 )
-def _parse_life_amount_clause(clause: str, *, for_spell: bool) -> "Callable[..., None] | None":
+
+
+def life_amount_clause(clause: str, *, for_spell: bool) -> "Callable[..., None] | None":
     """ "<who> gains/loses twice X life | life equal to <expr> | N life for each <count> |
     X life, where X is <expr>" - the one life-sentence reader (`amount_sentences`) run as a
     clause, so every amount a sibling reader knows is usable in a sequence of sentences
-    (CR 608.2c). X is the announced X of the spell or ability (CR 107.3a)."""
+    (CR 608.2c). Called by `_parse_mixed_clause` after the plain-player clause reader has
+    declined, so it only reads what no older reader does and no existing sentence changes
+    reader."""
     lowered = clause.lower()
     if " life" not in lowered or not ("gain" in lowered or "lose" in lowered):
         return None
     life = parse_life_clause(clause)
     if life is None or life.who not in _LIFE_WHO:
+        return None
+    if life.expr is not None and _REFERS_TO_ANOTHER_OBJECT_RE.search(life.expr):
+        # "life equal to its toughness" / "the sacrificed creature's power": the referent is an
+        # earlier instruction's object, which the sentence-pair readers know and a lone clause
+        # does not - this clause would read the spell's own number instead.
+        return None
+    if life.kind == "x" and life.expr is None:
+        # The announced X (CR 107.3a) of a clause that may be defined by a later one ("You
+        # gain X life and each opponent loses X life, where X is ...") is read only when the
+        # clause is the whole text: `_parse_announced_x_life_spell`.
         return None
     if life.who.startswith("target"):
         from .effects import _targets_understood
@@ -236,6 +253,36 @@ def _parse_life_amount_clause(clause: str, *, for_spell: bool) -> "Callable[...,
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         apply_life(game, stack_object, who, gains, amount)
+
+    return effect
+
+
+@SPELL_TEXT.rung("s18")
+def _parse_announced_x_life_spell(effect_text: str) -> "Callable[..., None] | None":
+    """A spell that is nothing but "<who> gains | loses [twice] X life" with the X announced as
+    it was cast (CR 107.3a, CR 107.3f): Sanguine Sacrament's first sentence once its own
+    put-on-the-bottom sentence is a replacement. Read as the whole text so that an X defined
+    by a later clause (", where X is ...") is never taken for the announced one."""
+    from .effects import _strip_non_effect_preamble
+
+    text = " ".join(_strip_non_effect_preamble(effect_text).split())
+    if " x life" not in text.lower() or "where x" in text.lower():
+        return None
+    life = parse_life_clause(text)
+    if life is None or life.kind != "x" or life.expr is not None or life.who not in _LIFE_WHO:
+        return None
+    if life.who.startswith("target"):
+        from .effects import _targets_understood
+
+        if not _targets_understood(life.who, allow_player_targets=True):
+            return None
+    amount = life_clause_amount(life, spell_x=True)
+    if amount is None:
+        return None
+    who, gains = life.who, life.gains
+
+    def effect(game: "Game", spell: "StackObject") -> None:
+        apply_life(game, spell, who, gains, amount)
 
     return effect
 

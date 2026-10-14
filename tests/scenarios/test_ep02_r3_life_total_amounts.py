@@ -584,7 +584,9 @@ def test_gwenom_permission_ends_with_the_turn():
 
 def _heliods_intervention(mode, x, targets):
     scenario = _main(
-        _build(["Plains"] * 6, ["Sol Ring", "Mind Stone", "Pacifism"], hand=["Heliod's Intervention"])
+        _build(
+            ["Plains"] * 6, ["Sol Ring", "Mind Stone", "Pacifism"], hand=["Heliod's Intervention"]
+        )
     )
     permanents = {"Sol Ring", "Mind Stone", "Pacifism"}
     resolved = [
@@ -602,7 +604,11 @@ def _heliods_intervention(mode, x, targets):
 
 def test_heliods_intervention_destroys_x_artifacts_and_or_enchantments():
     scenario = _heliods_intervention(1, 2, ["Sol Ring", "Pacifism"])
-    names = {c.name for c in scenario.game.battlefield if c.name in {"Sol Ring", "Mind Stone", "Pacifism"}}
+    names = {
+        c.name
+        for c in scenario.game.battlefield
+        if c.name in {"Sol Ring", "Mind Stone", "Pacifism"}
+    }
     assert names == {"Mind Stone"}
     assert not scenario.game.mode_notices
 
@@ -627,7 +633,12 @@ def test_heliods_intervention_target_player_gains_twice_x_life():
 
 @pytest.mark.parametrize(
     ("top", "drawn", "gained"),
-    [("Serra Angel", 4, 4), ("Hill Giant", 3, 3), ("Grizzly Bears", 2, 2), ("Lightning Bolt", 0, 0)],
+    [
+        ("Serra Angel", 4, 4),
+        ("Hill Giant", 3, 3),
+        ("Grizzly Bears", 2, 2),
+        ("Lightning Bolt", 0, 0),
+    ],
 )
 def test_nissas_revelation_draws_power_and_gains_toughness_of_a_revealed_creature(
     top, drawn, gained
@@ -855,9 +866,9 @@ def test_azors_gateway_draws_then_exiles_a_card_from_hand_each_activation():
     scenario, gateway = _azors_gateway(["Lightning Bolt", "Island"] + FOREST10)
     _activate_gateway(scenario, gateway)
     assert scenario.player("alice").hand == []  # drew the Bolt, exiled it
-    assert [c.name for c in scenario.game.cards_exiled_with(gateway.id, gateway.zone_change_stamp)] == [
-        "Lightning Bolt"
-    ]
+    assert [
+        c.name for c in scenario.game.cards_exiled_with(gateway.id, gateway.zone_change_stamp)
+    ] == ["Lightning Bolt"]
     assert not gateway.transformed
 
 
@@ -910,7 +921,7 @@ def _loyalty(scenario, name, loyalty):
 
 @pytest.mark.parametrize("life", [1, 7, 20])
 def test_proof_ajani_caller_of_the_pride_makes_a_cat_per_point_of_life(life):
-    """"X 2/2 white Cat creature tokens, where X is your life total" (the Storm Herd reader)."""
+    """ "X 2/2 white Cat creature tokens, where X is your life total" (the Storm Herd reader)."""
     scenario = _main(_build(["Ajani, Caller of the Pride"], life=life))
     ajani = _loyalty(scenario, "Ajani, Caller of the Pride", 8)
     scenario.activate(ajani, index=2)
@@ -951,11 +962,15 @@ def test_proof_ember_fist_zubera_counts_the_zubera_that_died_this_turn(dead_befo
 
 @pytest.mark.parametrize(("speed", "lands"), [(1, 1), (3, 3)])
 def test_proof_point_the_way_fetches_basic_lands_equal_to_your_speed(speed, lands):
-    scenario = _main(_build(["Point the Way", "Forest"] * 1 + ["Plains"] * 3, library=["Forest"] * 6))
+    scenario = _main(
+        _build(["Point the Way", "Forest"] * 1 + ["Plains"] * 3, library=["Forest"] * 6)
+    )
     scenario.player("alice").speed = speed
     way = next(c for c in scenario.game.battlefield if c.name == "Point the Way")
     scenario.will_choose_cards(*scenario.top_of_library(lands), source="Point the Way", times=None)
-    scenario.activate(way, *scenario.untapped_sources("Plains", "Plains", "Plains", "Forest"), index=0)
+    scenario.activate(
+        way, *scenario.untapped_sources("Plains", "Plains", "Plains", "Forest"), index=0
+    )
     scenario.pass_until_resolved()
     on_battlefield = [c for c in scenario.game.battlefield if c.name == "Forest"]
     assert len(on_battlefield) == 1 + lands
