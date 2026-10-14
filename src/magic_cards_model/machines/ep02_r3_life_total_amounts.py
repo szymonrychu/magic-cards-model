@@ -26,7 +26,7 @@ from uuid import UUID
 from ..models.zone import Zone
 from ..numbers import parse_multiplier
 from .amount_sentences import apply_life, life_clause_amount, parse_life_clause
-from .effects._chains import FORWARD, MIXED_CLAUSE, SPELL_TEXT
+from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 
 if TYPE_CHECKING:
     from ..models.card_state import CardState
@@ -481,6 +481,74 @@ def _parse_add_that_much_mana_clause(
             symbols,
             factor * triggering_quantity(game, stack_object),  # type: ignore[arg-type]
             stack_object=stack_object,
+        )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "Until end of turn, you may ... play cards from the top of your library" (Gwenom)
+# --------------------------------------------------------------------------
+
+_UNTIL_EOT_TOP_OF_LIBRARY_RE = re.compile(
+    r"^until end of turn, you may look at the top card of your library any time and you may "
+    r"(?P<act>play cards|play lands and cast spells|cast spells) from the top of your library\.?"
+    r"(?P<rider> if you cast a spell this way, pay life equal to its mana value rather than pay "
+    r"its mana cost\.?)?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_until_end_of_turn_top_of_library_permission(
+    effect_text: str,
+) -> "Callable[..., None] | None":
+    """ "Until end of turn, you may look at the top card of your library any time and you may
+    play cards from the top of your library. If you cast a spell this way, pay life equal to
+    its mana value rather than pay its mana cost." - the same permission a static ability
+    prints (`casting.static_zone_cast_permission`, CR 601.3, CR 118.9, CR 611.3d), granted for
+    the turn as a layer 6 ability of the source (CR 611.2a, CR 514.2), so every casting,
+    payment and land-play check reads the one reader."""
+    if "top card of your library any time" not in effect_text.lower():
+        return None
+    match = _UNTIL_EOT_TOP_OF_LIBRARY_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+    from .casting.permissions import static_zone_cast_permission
+
+    line = (
+        "You may look at the top card of your library any time, and you may "
+        f"{match.group('act')} from the top of your library."
+    )
+    if match.group("rider"):
+        line += " If you cast a spell this way, pay life equal to its mana value rather than pay"
+        line += " its mana cost."
+    if static_zone_cast_permission(line) is None:
+        return None
+
+    def effect(game: "Game", ability: "AbilityOnStack") -> None:
+        from .layers.model import (
+            ContinuousEffect,
+            Duration,
+            Layer,
+            grant_ability,
+            only_this_incarnation,
+        )
+
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        store = game.continuous_effects
+        store.add(
+            ContinuousEffect(
+                description=f"{source.name}: may play cards from the top of its library",
+                layer=Layer.ABILITY,
+                timestamp=store.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=only_this_incarnation(source, source.zone_change_stamp),
+                modification=grant_ability(line),
+            ),
+            game,
         )
 
     return effect

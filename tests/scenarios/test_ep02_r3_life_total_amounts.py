@@ -9,7 +9,7 @@ Every CR number here was looked up with `mise run rules:find`.
 
 import pytest
 
-from magic_cards_model.machines import Step
+from magic_cards_model.machines import Step, payability
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color
 from tests.scenarios.harness import Scenario
@@ -530,3 +530,45 @@ def test_fangorn_adds_twice_the_attacking_treefolk_as_green(attackers, green):
     scenario.attack_with(*scenario.creatures(*attackers, username="alice"))
     _settle(scenario)
     assert scenario.player("alice").mana_pool.floating.get(Color.GREEN, 0) == green
+
+
+# --------------------------------------------------------------------------
+# Until end of turn, play cards from the top of the library paying life equal to mana value
+# rather than the mana cost (Gwenom, Remorseless) - CR 118.9, 601.3, 611.2a
+# --------------------------------------------------------------------------
+
+
+def _gwenom_attacks(library, *, attack=True):
+    scenario = _build(["Gwenom, Remorseless"], ["Hill Giant"], library=library)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    if attack:
+        scenario.attack_with(scenario.creature("Gwenom, Remorseless", "alice"))
+        _settle(scenario)
+    return scenario
+
+
+def _top_is_payable(scenario):
+    top = scenario.find("Lightning Bolt", Zone.LIBRARY, "alice")
+    return payability(scenario.game, "alice", top).payable
+
+
+def test_the_top_of_the_library_is_closed_without_gwenoms_attack():
+    assert not _top_is_payable(_gwenom_attacks(["Lightning Bolt", "Island"], attack=False))
+
+
+def test_gwenom_attack_opens_the_top_of_the_library_for_life_until_end_of_turn():
+    scenario = _gwenom_attacks(["Lightning Bolt", "Island"])
+    assert _top_is_payable(scenario)
+    casting = scenario.cast("Lightning Bolt", "alice", from_zone=Zone.LIBRARY)
+    casting.use_keyword("Cast permission")
+    casting.choose_targets(["bob"])
+    casting.begin_paying().pay()
+    scenario.put_on_stack(casting)
+    assert _life(scenario) == 19  # life equal to its mana value, no mana
+
+
+def test_gwenom_permission_ends_with_the_turn():
+    scenario = _gwenom_attacks(["Lightning Bolt", "Island"])
+    while scenario.game.turn.active_player == "alice":
+        scenario.advance()
+    assert not _top_is_payable(scenario)
