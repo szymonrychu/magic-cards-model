@@ -533,10 +533,9 @@ def _token_step(
 
 
 def _read_token(sentences: list[str], index: int, for_spell: bool) -> tuple[Step, int] | None:
-    """A token sentence the ordinary token reader does not take: one that enters
-    attacking without being tapped, one repeated for each opponent, one whose
-    size the next sentence states, or one whose tokens "have" a quoted ability the
-    next sentence gives them."""
+    """A token sentence the ordinary token reader does not take: one repeated for
+    each opponent, one whose size the next sentence states, or one whose tokens
+    "have" a quoted ability the next sentence gives them."""
     if "create" not in sentences[index].lower():
         return None
     match = _TOKEN_SENTENCE_RE.fullmatch(sentences[index].strip())
@@ -545,8 +544,7 @@ def _read_token(sentences: list[str], index: int, for_spell: bool) -> tuple[Step
     following = sentences[index + 1].strip() if index + 1 < len(sentences) else ""
     sized = _SIZE_SENTENCE_RE.fullmatch(following)
     granting = _GRANT_SENTENCE_RE.fullmatch(following)
-    plain_attack = match.group("attacking") and not match.group("tapped")
-    if not (match.group("each") or plain_attack or sized or granting):
+    if not (match.group("each") or sized or granting):
         return None
     size = None
     if sized is not None:

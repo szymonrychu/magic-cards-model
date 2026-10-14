@@ -1570,3 +1570,30 @@ def test_rampaging_soulrager_gets_plus_three_with_two_unlocked_doors_among_your_
 
     scenario.game.unlock_door(room_of(scenario), "Misty Salon")
     assert size(scenario, soulrager) == (4, 4)  # two unlocked doors
+
+
+def test_kheru_lich_lord_returns_a_creature_for_a_turn_and_exiles_it_at_its_next_end_step():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Kheru Lich Lord", "Swamp", "Swamp", "Swamp"],
+            graveyard=["Grizzly Bears"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.will_pay_the_mana_cost(True, source="Kheru Lich Lord")
+    reach(scenario, Step.UPKEEP)
+    scenario.resolve_top()
+
+    bears = scenario.creature("Grizzly Bears")
+    assert bears.zone is Zone.BATTLEFIELD
+    abilities = {ability.lower() for ability in scenario.game.computed_board().of(bears).abilities}
+    assert {"flying", "trample", "haste"} <= abilities
+    trigger = scenario.game.delayed_triggers.triggers[0]
+    assert trigger.only_when_active == "alice"  # "your next end step"
+
+    reach(scenario, Step.END_STEP)
+    scenario.resolve_top()
+    assert bears.zone is Zone.EXILE

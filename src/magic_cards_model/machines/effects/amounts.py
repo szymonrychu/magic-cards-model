@@ -4394,9 +4394,12 @@ def _parse_variable_count_token_clause(clause: str, *, for_spell: bool) -> Targe
     reader = count_expression(match.group("expr"))
     if reader is None:
         # A count that reads the resolving object itself ("the number of other
-        # attacking creatures": other than the source) is an `amount_expression`
-        # term - CR 608.2h takes it once, as the instruction is applied.
-        sourced = amount_expression(match.group("expr"))
+        # attacking creatures": other than the source) is one of the token-count
+        # terms (`ep02_r3_token_counts.amount_term`) - CR 608.2h takes it once,
+        # as the instruction is applied.
+        from ..ep02_r3_token_counts import amount_term
+
+        sourced = amount_term(match.group("expr"))
         if sourced is None:
             return None
 
