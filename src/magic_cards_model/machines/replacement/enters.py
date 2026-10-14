@@ -3078,6 +3078,7 @@ def _self_enters_modifiers(
         performable.append(enters_under_opponent)
 
     performable.extend(_riot_modifiers(game, card_state))
+    performable.extend(_unleash_modifiers(game, card_state))
     performable.extend(_cast_permission_rider_modifiers(game, card_state))
     performable.extend(_extra_mana_counter_modifiers(game, card_state))
 
@@ -3204,6 +3205,49 @@ def _riot_modifiers(game: "Game", card_state: CardState) -> list[tuple[str, Appl
                 event.grants_haste = True
 
         found.append((f"self:riot:{index}", apply, "Riot (CR 702.136a)", False))
+    return found
+
+
+def _unleash_modifiers(game: "Game", card_state: CardState) -> list[tuple[str, Apply, str, bool]]:
+    """Unleash (CR 702.98a), read off the keyword: "You may have this permanent
+    enter with an additional +1/+1 counter on it" - a CR 614.1c "enters with"
+    replacement asked of its controller (CR 608.2d), one per instance. The
+    other half, "can't block as long as it has a +1/+1 counter on it", is
+    `machines/combat.block_refusal`'s."""
+    from ...models.card_state import Counter
+    from ..abilities import keyword_abilities
+
+    instance_count = sum(
+        1
+        for ability in keyword_abilities(card_state.card)
+        if ability.canonical.lower() == "unleash"
+    ) + granted_instance_count(game, card_state, "unleash")
+    found: list[tuple[str, Apply, str, bool]] = []
+    for index in range(instance_count):
+
+        def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+            if source is None:
+                return
+            controller = source.controller or source.owner
+            if controller is None:
+                return
+            if game.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=controller,
+                    prompt=(
+                        f"have {source.name} enter with an additional +1/+1 counter "
+                        "(unleash, CR 702.98a)"
+                    ),
+                    source=source.name,
+                    source_id=source_id_of(source),
+                )
+            ):
+                event.counters[str(Counter.PLUS_ONE)] = (
+                    event.counters.get(str(Counter.PLUS_ONE), 0) + 1
+                )
+
+        found.append((f"self:unleash:{index}", apply, "Unleash (CR 702.98a)", False))
     return found
 
 

@@ -203,6 +203,18 @@ def is_basic_land_source(source: CardState, game: Any = None) -> bool:
     return Supertype.BASIC in source.supertypes and Type.LAND in source.types
 
 
+def is_cave_source(source: CardState, game: Any = None) -> bool:
+    """Whether mana from this permanent is mana from a Cave (CR 106.3: the
+    source of mana is the source of the ability that produced it) - read off the
+    computed board where it still is, else off what it last was."""
+    if game is not None and source.zone is Zone.BATTLEFIELD:
+        try:
+            return "Cave" in game.characteristics_of(source).subtypes
+        except (AttributeError, KeyError):
+            pass
+    return "Cave" in source.subtypes
+
+
 def source_allowed_by(only_from: str | None, source: CardState, game: Any = None) -> bool:
     """Whether `source` may pay a cost limited by `ManaSpend.only_from`."""
     if only_from == "basic_land":
@@ -615,6 +627,7 @@ _SPEND_CUMULATIVE_UPKEEP_CLAUSE = re.compile(r"^pay cumulative upkeep costs?$", 
 #: "gain a Class level" (Sorcerer Class) - CR 716.2a: a Class gains a level
 #: only by activating its "[Cost]: Level N" bar, so this is an activation
 #: clause narrowed to level bars.
+_SPEND_FORETELL_CLAUSE = re.compile(r"^foretell cards?$", re.IGNORECASE)
 _SPEND_CLASS_LEVEL_CLAUSE = re.compile(r"^gain an? Class level$", re.IGNORECASE)
 #: A trailing "with mana value N or greater" / "with {X} in its/their mana
 #: cost(s)" narrows the spell by CR 202.3's mana value or its printed cost
@@ -623,7 +636,8 @@ _SPEND_CAST_CLAUSE = re.compile(
     r"^cast (?P<quality>.*?) ?spells?"
     r"(?P<chosen> of the chosen type)?"
     r"(?: with mana value (?P<min_mv>\d+) or greater"
-    r"|(?P<x_cost> with \{X\} in (?:its|their) mana costs?))?"
+    r"|(?P<x_cost> with \{X\} in (?:its|their) mana costs?)"
+    r"|(?P<foretell> that have foretell))?"
     r"(?: from (?P<zone>.+))?$",
     re.IGNORECASE,
 )
@@ -686,7 +700,7 @@ _SPEND_CLAUSE_SPLIT = re.compile(r" and/or | and | or (?!greater\b|less\b)")
 _SPEND_INFINITIVE_SPLIT = re.compile(r" (?:and/or|and|or) (?=to )")
 #: The verb a split "only to ..." phrase opens with, lent to a following
 #: phrase that elides it.
-_SPEND_VERB = re.compile(r"^(?:cast|activate|pay|unlock) ", re.IGNORECASE)
+_SPEND_VERB = re.compile(r"^(?:cast|activate|pay|unlock|foretell) ", re.IGNORECASE)
 #: CR 400.1's zones, by the word a card prints for each. The sideboard is not
 #: one ("Cards in a player's sideboard are outside the game", CR 400.11a) and
 #: is left out so a "from the sideboard" sentence fails closed.
@@ -960,6 +974,8 @@ def _one_spend_clause(phrase: str, chosen_type: str | None) -> SpendClause | Non
             clause = clause.model_copy(update={"min_mana_value": int(cast.group("min_mv"))})
         if cast.group("x_cost") is not None:
             clause = clause.model_copy(update={"requires_x_in_cost": True})
+        if cast.group("foretell") is not None:
+            clause = clause.model_copy(update={"requires_foretell": True})
         return clause
 
     activate = _SPEND_ACTIVATE_CLAUSE.match(phrase)
@@ -968,6 +984,9 @@ def _one_spend_clause(phrase: str, chosen_type: str | None) -> SpendClause | Non
         if activate.group("chosen") and chosen is None:
             return None
         return _spend_clause(activate.group("quality") or "", SpendPurpose.ACTIVATE_ABILITY, chosen)
+    if _SPEND_FORETELL_CLAUSE.match(phrase):
+        # CR 116.2h's special action: the {2} that exiles a card face down.
+        return SpendClause(purpose=SpendPurpose.FORETELL)
     if _SPEND_CLASS_LEVEL_CLAUSE.match(phrase):
         return SpendClause(purpose=SpendPurpose.ACTIVATE_ABILITY, class_level=True)
     if _SPEND_CUMULATIVE_UPKEEP_CLAUSE.match(phrase):
@@ -3114,6 +3133,7 @@ def _mana_pool_overwrite(target: ManaPool, contents: ManaPool) -> None:
     target.treasure = copied.treasure
     target.creature = copied.creature
     target.basic_land = copied.basic_land
+    target.cave = copied.cave
     target.restricted = copied.restricted
     target.spend_effects = copied.spend_effects
     target.retained = copied.retained
@@ -3135,6 +3155,7 @@ def _copy_pool(pool: ManaPool) -> ManaPool:
         treasure=dict(pool.treasure),
         creature=dict(pool.creature),
         basic_land=dict(pool.basic_land),
+        cave=dict(pool.cave),
         restricted=[entry.model_copy(deep=True) for entry in pool.restricted],
         spend_effects=[tagged.model_copy(deep=True) for tagged in pool.spend_effects],
         retained=[entry.model_copy(deep=True) for entry in pool.retained],
@@ -3704,6 +3725,7 @@ class CostPayment(EngineModel):
             treasure=is_treasure_source(source, self.game),
             creature=is_creature_source(source, self.game),
             basic_land=is_basic_land_source(source, self.game),
+            cave=is_cave_source(source, self.game),
         )
         if self.game is not None:
             # CR 405.6c: the mana ability's other effect happens with the mana,
@@ -4251,6 +4273,7 @@ class CostPayment(EngineModel):
         pool.treasure = dict(self.pool.treasure)
         pool.creature = dict(self.pool.creature)
         pool.basic_land = dict(self.pool.basic_land)
+        pool.cave = dict(self.pool.cave)
         pool.restricted = [entry.model_copy(deep=True) for entry in self.pool.restricted]
         pool.retained = [entry.model_copy(deep=True) for entry in self.pool.retained]
 
@@ -4290,6 +4313,7 @@ class CostPayment(EngineModel):
         pool.treasure = dict(self._preexisting.treasure)
         pool.creature = dict(self._preexisting.creature)
         pool.basic_land = dict(self._preexisting.basic_land)
+        pool.cave = dict(self._preexisting.cave)
         pool.restricted = [entry.model_copy(deep=True) for entry in self._preexisting.restricted]
         pool.retained = [entry.model_copy(deep=True) for entry in self._preexisting.retained]
 

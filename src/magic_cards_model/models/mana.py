@@ -549,8 +549,13 @@ class SpendPurpose(StrEnum):
     #: carries it is `machines/keywords._cumulative_upkeep_effect`'s payment
     #: (`ManaSpend.paying_cumulative_upkeep`).
     PAY_CUMULATIVE_UPKEEP = "pay_cumulative_upkeep"
+    #: Niko Defies Destiny's "Spend this mana only to foretell cards": the {2}
+    #: of the CR 116.2h special action, which is neither a cast nor an
+    #: activation (`ManaSpend.foretelling`).
+    FORETELL = "foretell"
 
 
+_FORETELL_LINE_RE = re.compile(r"^Foretell\b", re.MULTILINE)
 _CANT_SPEND_MANA_RE = re.compile(r"^You can't spend mana to cast this spell\.$", re.MULTILINE)
 
 
@@ -679,6 +684,9 @@ class ManaSpend(EngineModel):
     is paid). `None` for an activation, which has no spell to ask about."""
     x_in_cost: bool = False
     """Whether the spell being cast has an {X} in its mana cost."""
+    has_foretell: bool = False
+    """Whether the spell being cast has foretell (CR 702.143a) - Niko Defies
+    Destiny's "cast spells that have foretell"."""
     no_mana: bool = False
     """The spell says "You can't spend mana to cast this spell." (Hogaak,
     Arisen Necropolis): no mana of any kind may pay for it, only the objects
@@ -745,6 +753,8 @@ class ManaSpend(EngineModel):
             update={
                 "mana_value": float(base) + x_count * x_value,
                 "x_in_cost": x_count > 0,
+                "has_foretell": _FORETELL_LINE_RE.search(getattr(card, "oracle_text", "") or "")
+                is not None,
                 "snow_any_color": snow_any_color,
                 "no_mana": reads_cant_spend_mana_line(getattr(card, "oracle_text", "") or ""),
                 "only_from": spend_only_from(getattr(card, "oracle_text", "") or ""),
@@ -771,6 +781,12 @@ class ManaSpend(EngineModel):
         """
         spend = cls._of(SpendPurpose.ACTIVATE_ABILITY, card, None, any_color=any_color)
         return spend.model_copy(update={"class_level": True}) if class_level else spend
+
+    @classmethod
+    def foretelling(cls, card: "HasCharacteristics") -> "ManaSpend":
+        """Mana spent on the {2} of foretelling `card` (CR 116.2h, CR 702.143a),
+        which is a special action - neither a cast nor an activation."""
+        return cls._of(SpendPurpose.FORETELL, card, None)
 
     @classmethod
     def paying_cumulative_upkeep(cls, card: "HasCharacteristics") -> "ManaSpend":
@@ -847,6 +863,8 @@ class SpendClause(EngineModel):
     the spell's CR 202.3 mana value must reach this. `None` asks nothing."""
     requires_x_in_cost: bool = False
     """Helga's "creature spells with {X} in their mana costs"."""
+    requires_foretell: bool = False
+    """Niko Defies Destiny's "cast spells that have foretell"."""
     class_level: bool = False
     """Sorcerer Class's "to gain a Class level": only a CR 716.2a level bar's
     activation (`ManaSpend.class_level`)."""
@@ -872,6 +890,8 @@ class SpendClause(EngineModel):
         if self.requires_x_in_cost and not spend.x_in_cost:
             return False
         if self.class_level and not spend.class_level:
+            return False
+        if self.requires_foretell and not spend.has_foretell:
             return False
         # CR 109.2: every negated type must be absent, independently of
         # `joined` and of whatever the positive qualities below ask - "not
@@ -1108,6 +1128,10 @@ class ManaPayment(EngineModel):
     basic_land_spent: dict[Color, int] = Field(default_factory=dict)
     """How much of `spend` came from a basic land (CR 106.3), so paying with the
     restricted sub-pool also takes it out of `ManaPool.basic_land`."""
+    cave_spent: dict[Color, int] = Field(default_factory=dict)
+    """How much of `spend` came from a Cave (CR 106.3) - Bat Colony's "for each
+    mana from a Cave spent to cast it". A sub-count of `spend` whatever tags
+    the mana carried; read onto `CastRecord`."""
     retained_spent: list[RetainedMana] = Field(default_factory=list)
     """How much of `spend` was retained mana (CR 500.5a/500.5b), and under
     which scope - `restricted_spent`'s third sibling, read back by `pay` so
@@ -1330,6 +1354,10 @@ class ManaPool(EngineModel):
     after. Like `treasure` it narrows nothing; a payment spends it before
     other mana of the same colour (CR 118.3a leaves which mana to the
     payer)."""
+    cave: dict[Color, int] = Field(default_factory=dict)
+    """The part of `floating` a Cave produced (CR 106.3), whatever else it is
+    tagged with - what Bat Colony's "mana from a Cave spent to cast it" asks
+    after. Like `creature` it narrows nothing."""
     restricted: list[RestrictedMana] = Field(default_factory=list)
     """The CR 106.6-restricted part of `floating`, one entry per distinct
     restriction. Never more than `floating` holds of that colour; the rest of
@@ -1386,6 +1414,7 @@ class ManaPool(EngineModel):
         treasure: bool = False,
         creature: bool = False,
         basic_land: bool = False,
+        cave: bool = False,
     ) -> None:
         if amount < 0:
             raise ValueError("cannot add a negative amount of mana")
@@ -1397,6 +1426,8 @@ class ManaPool(EngineModel):
             self.creature[color] = self.creature.get(color, 0) + amount
         if basic_land and amount:
             self.basic_land[color] = self.basic_land.get(color, 0) + amount
+        if cave and amount:
+            self.cave[color] = self.cave.get(color, 0) + amount
         if (
             treasure
             and amount
@@ -1427,6 +1458,7 @@ class ManaPool(EngineModel):
         treasure: bool = False,
         creature: bool = False,
         basic_land: bool = False,
+        cave: bool = False,
     ) -> None:
         for color in colors:
             self.add(
@@ -1438,6 +1470,7 @@ class ManaPool(EngineModel):
                 treasure=treasure,
                 creature=creature,
                 basic_land=basic_land,
+                cave=cave,
             )
 
     def empty(
@@ -1482,6 +1515,7 @@ class ManaPool(EngineModel):
             self.treasure = {}
             self.creature = {}
             self.basic_land = {}
+            self.cave = {}
             self.restricted = []
             self.spend_effects = []
             self.retained = surviving
@@ -1501,6 +1535,7 @@ class ManaPool(EngineModel):
             self.treasure = _kept(self.treasure, keep)
             self.creature = _kept(self.creature, keep)
             self.basic_land = _kept(self.basic_land, keep)
+            self.cave = _kept(self.cave, keep)
             for tagged in (*self.restricted, *self.spend_effects):
                 tagged.amounts = _kept(tagged.amounts, keep)
             self.restricted = [entry for entry in self.restricted if entry.amounts]
@@ -1518,6 +1553,7 @@ class ManaPool(EngineModel):
         self.treasure = _recoloured(self.treasure, lost, becomes)
         self.creature = _recoloured(self.creature, lost, becomes)
         self.basic_land = _recoloured(self.basic_land, lost, becomes)
+        self.cave = _recoloured(self.cave, lost, becomes)
         for tagged in (*self.restricted, *self.spend_effects):
             tagged.amounts = _recoloured(tagged.amounts, lost, becomes)
         self.retained = surviving
@@ -1678,6 +1714,8 @@ class ManaPool(EngineModel):
                 self.creature[color] = max(self.creature.get(color, 0) - amount, 0)
             for color, amount in payment.basic_land_spent.items():
                 self.basic_land[color] = max(self.basic_land.get(color, 0) - amount, 0)
+            for color, amount in payment.cave_spent.items():
+                self.cave[color] = max(self.cave.get(color, 0) - amount, 0)
             for taken in payment.restricted_spent:
                 entry = self._entry_for(taken.restriction)
                 for color, amount in taken.amounts.items():
@@ -1698,6 +1736,7 @@ class ManaPool(EngineModel):
         self.treasure = {color: n for color, n in self.treasure.items() if n > 0}
         self.creature = {color: n for color, n in self.creature.items() if n > 0}
         self.basic_land = {color: n for color, n in self.basic_land.items() if n > 0}
+        self.cave = {color: n for color, n in self.cave.items() if n > 0}
         for entry in self.restricted:
             entry.amounts = {color: n for color, n in entry.amounts.items() if n > 0}
         self.restricted = [entry for entry in self.restricted if entry.amounts]
@@ -1771,6 +1810,11 @@ class ManaPool(EngineModel):
                 color: taken
                 for color, amount in spend.items()
                 if (taken := min(amount, self.basic_land.get(color, 0))) > 0
+            },
+            cave_spent={
+                color: taken
+                for color, amount in spend.items()
+                if (taken := min(amount, self.cave.get(color, 0))) > 0
             },
             restricted_spent=[
                 RestrictedMana(restriction=self.restricted[slot].restriction, amounts=dict(taken))

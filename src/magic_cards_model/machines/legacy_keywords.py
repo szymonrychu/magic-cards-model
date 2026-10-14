@@ -127,6 +127,13 @@ def _backup_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _fabricate_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.123a (`ep02_r3_counter_amounts.fabricate_ability`)."""
+    from .ep02_r3_counter_amounts import fabricate_ability
+
+    return fabricate_ability(ability)
+
+
 _REMINDER_RE = re.compile(r"\s*\([^)]*\)")
 
 
@@ -423,4 +430,5 @@ LEGACY_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]]]
     "mentor": lambda ability: [_mentor_ability(ability)],
     "graft": lambda ability: [_graft_ability(ability)],
     "backup": lambda ability: [_backup_ability(ability)],
+    "fabricate": lambda ability: [_fabricate_ability(ability)],
 }

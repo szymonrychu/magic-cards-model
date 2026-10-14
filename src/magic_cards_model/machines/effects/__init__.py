@@ -1222,6 +1222,7 @@ from .removal import (
     exile_each_opponents_graveyard,
     exile_target_players_graveyard,
     hangarback_dies,
+    link_cards_exiled_as_cost,
     link_cards_exiled_during,
     linked_exile_annotation,
     regenerate_ability_targets,
@@ -2808,6 +2809,7 @@ from .. import ep02_r2_counter_amounts as ep02_r2_counter_amounts  # noqa: E402
 from .. import ep02_r2_revealed_this_way as ep02_r2_revealed_this_way  # noqa: E402
 from .. import ep02_r3_static_pumps_events as ep02_r3_static_pumps_events  # noqa: E402
 from .. import ep02_r3_static_pumps_triggers as ep02_r3_static_pumps_triggers  # noqa: E402
+from .. import ep02_r3_counter_amounts as ep02_r3_counter_amounts  # noqa: E402
 
 __all__ = [
     "ACTIVATED_EFFECTS",
@@ -5211,6 +5213,7 @@ __all__ = [
     "layer_context_for",
     "learn",
     "life_total_becomes_effect_for",
+    "link_cards_exiled_as_cost",
     "link_cards_exiled_during",
     "linked_exile_annotation",
     "manifest",

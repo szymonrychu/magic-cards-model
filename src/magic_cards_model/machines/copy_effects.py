@@ -13,7 +13,7 @@ import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING, NamedTuple
 
-from ..models.card import Supertype, Type
+from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from ..numbers import parse_count
@@ -369,6 +369,10 @@ class CopyExceptions(NamedTuple):
     set_type_line: bool = False
     abilities: tuple[str, ...] = ()
     keeps_this_ability: bool = False
+    #: Colors gained on top of the copied ones - Olag's "legendary blue and
+    #: black Zombie in addition to its other colors and types" (CR 707.9b,
+    #: CR 105.3's retaining form).
+    add_colors: tuple[Color, ...] = ()
 
 
 #: A name exception written with the card's own name, after normalization.
@@ -480,7 +484,9 @@ def _become_a_copy(
     types = list(copied.types)
     subtypes = list(copied.subtypes)
     abilities = list(copied.abilities)
+    colors = tuple(copied.colors)
     if exceptions is not None:
+        colors += tuple(c for c in exceptions.add_colors if c not in colors)
         if exceptions.name is not None:
             name = own_name if exceptions.name == SELF_NAME else exceptions.name
         if exceptions.power is not None:
@@ -516,7 +522,7 @@ def _become_a_copy(
                 supertypes=tuple(supertypes),
                 types=tuple(types),
                 subtypes=tuple(subtypes),
-                colors=copied.colors,
+                colors=colors,
                 abilities=tuple(abilities),
                 power=power,
                 toughness=toughness,

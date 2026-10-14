@@ -40,6 +40,7 @@ from ...machines.cost import (
     discard_cost,
     exile_cost,
     increase,
+    is_cave_source,
     is_creature_source,
     is_treasure_source,
     loyalty_cost,
@@ -57,6 +58,7 @@ from ...machines.effects import (
     devotion_to,
     modal_trigger_profile,
 )
+from ...machines.effects.amounts import locked_amount_as_cast
 from ...machines.ep02_r1_counter_amounts import counters_self_reference_normalised
 from ...machines.equip_block_statics import additional_loyalty_cost, loyalty_activation_limit
 from ...machines.keywords import (
@@ -2634,7 +2636,10 @@ class ActivationMixin:
         if profile.division is None:
             raise ValueError(f"{ability.text} does not divide anything to announce (CR 601.2d)")
         shares = [int(share) for share in division]
-        amount = profile.division.amount if profile.division.amount is not None else x_value
+        locked = locked_amount_as_cast(self, ability.text, self.controller_of(permanent).username)
+        amount = profile.division.amount
+        if amount is None:
+            amount = x_value if locked is None else locked
         profile.check_division(shares, targets, amount=amount)
         return shares
 
@@ -3249,6 +3254,7 @@ class ActivationMixin:
                 )
                 from_treasure = is_treasure_source(permanent, self)
                 from_creature = is_creature_source(permanent, self)
+                from_cave = is_cave_source(permanent, self)
                 for produced in produced_mana:
                     self.player(controller).mana_pool.add(
                         produced,
@@ -3256,6 +3262,7 @@ class ActivationMixin:
                         spend_effect=spend_effect,
                         treasure=from_treasure,
                         creature=from_creature,
+                        cave=from_cave,
                     )
                 # CR 405.6c: "If a mana ability both produces mana and has
                 # another effect, the mana is produced and the other effect
@@ -3301,6 +3308,11 @@ class ActivationMixin:
                     self.put_triggers_on_stack()
                 return None
 
+            # Lukka's "where X is ... as you activate this ability" (CR 602.2b):
+            # the count is fixed now, so resolution reads it back.
+            locked_x = locked_amount_as_cast(
+                self, ability.text, self.controller_of(permanent).username
+            )
             on_stack = AbilityOnStack(
                 kind=AbilityKind.ACTIVATED,
                 ability=ability,
@@ -3316,7 +3328,7 @@ class ActivationMixin:
                 targets=[TargetRef.coerce(target) for target in targets or []],
                 modes=list(announced_modes[0]) if announced_modes is not None else [],
                 mode_targets=list(announced_modes[1]) if announced_modes is not None else [],
-                x_value=x_value,
+                x_value=x_value if locked_x is None else locked_x,
                 division=announced_division,
                 cost_exiled_card_id=exiled_for_cost.id if exiled_for_cost is not None else None,
                 # CR 602.2b: the objects the paid cost moved, read off the

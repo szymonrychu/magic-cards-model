@@ -334,7 +334,13 @@ _QUALIFIER = r"(?: [a-z][a-z-]*)*?"
 #: reasoning as `_QUALIFIER`: this parser never re-derives who was legally
 #: targeted, it only has to recognise the shape, so admitting the second
 #: possessive costs nothing.
-_CONTROLLER_CLAUSE = r"(?: you control| an opponent controls)?"
+_CONTROLLER_CLAUSE = (
+    r"(?: you control| an opponent controls)?"
+    # "target creature you control with the greatest power gains ..." (Triumph
+    # of Gerrard): the extremum is a target restriction `machines/targeting.
+    # ComparisonCount.GROUP_EXTREMUM` enforces, recognised here like the rest.
+    r"(?: with the (?:greatest|highest|least|lowest) (?:power|toughness|mana value))?"
+)
 #: "Up to one other target creature" (Glamer Gifter's, Lizard, Connors's
 #: Curse's and Abigale, Eloquent First-Year's own enters triggers) - CR
 #: 115.6's "up to one" with "other" excluding the source itself, which

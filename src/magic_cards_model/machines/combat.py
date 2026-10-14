@@ -2591,6 +2591,11 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
         # a grant refuses the block exactly like the printed keyword does.
         return f"{blocker.name} has decayed and can't block (CR 702.147a)"
 
+    if has_keyword(blocker, "unleash", game) and blocker.counter_count("+1/+1") > 0:
+        # CR 702.98a's second static ability: "This permanent can't block as
+        # long as it has a +1/+1 counter on it."
+        return f"{blocker.name} has unleash and a +1/+1 counter, so it can't block (CR 702.98a)"
+
     if has_keyword(attacker, Keyword.FLYING, game) and not (
         has_keyword(blocker, Keyword.FLYING, game)
         or has_keyword(blocker, Keyword.REACH, game)

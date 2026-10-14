@@ -5064,6 +5064,11 @@ class Casting(EngineModel):
                     if self.payment is not None and self.payment.mana_payment is not None
                     else 0
                 ),
+                cave_mana_spent=(
+                    sum(self.payment.mana_payment.cave_spent.values())
+                    if self.payment is not None and self.payment.mana_payment is not None
+                    else 0
+                ),
                 returned_mana_value=self.returned_mana_value,
                 extra_mana_counters=self.extra_mana_counters,
                 convoked=(
@@ -5690,7 +5695,15 @@ class MarkedExile(EngineModel):
     def begin_paying(self) -> CostPayment:
         """Open the payment for the special action's cost (CR 601.2h shape)."""
         if self.payment is None:
-            self.payment = CostPayment.for_total(self.cost, game=self.game, payer=self.player)
+            self.payment = CostPayment.for_total(
+                self.cost,
+                game=self.game,
+                payer=self.player,
+                # CR 106.6: foretelling's {2} is a spend a restriction may name.
+                spend=ManaSpend.foretelling(self.card)
+                if self.marker is ExileMarker.FORETOLD
+                else None,
+            )
         return self.payment
 
     def take(self) -> CardState:

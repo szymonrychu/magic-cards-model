@@ -527,13 +527,27 @@ def player_counter_count(
 
 
 _AS_YOU_CAST_SUFFIX = " as you cast this spell"
+#: Lukka, Bound to Ruin's "... as you activate this ability": the activated
+#: ability's twin of the spell wording (CR 602.2b runs CR 601.2d's announcement
+#: for an activation exactly as for a cast).
+_AS_YOU_ACTIVATE_SUFFIX = " as you activate this ability"
 _WHERE_X_AS_YOU_CAST_RE = re.compile(
-    r",?\s*where X is (?P<expr>[^.]+? as you cast this spell)\s*\.", re.IGNORECASE
+    r",?\s*where X is (?P<expr>[^.]+? as you (?:cast this spell|activate this ability))\s*\.",
+    re.IGNORECASE,
+)
+
+
+_FOR_EACH_CONTROLLED_AS_CAST_RE = re.compile(
+    r"for each (?P<what>modified creature) you controlled as you cast this spell",
+    re.IGNORECASE,
 )
 
 
 def _locked_or_live(game: "Game", controller: str, live: Callable[["Game", str], int]) -> int:
-    """The X `Casting` recorded for the spell now resolving, else the live count."""
+    """The X `Casting` recorded for the spell now resolving (or the activation
+    that locked an ability's), else the live count."""
+    if isinstance(game.resolving, AbilityOnStack):
+        return game.resolving.x_value
     record = game.cast_record_of(game.resolving)
     return live(game, controller) if record is None else record.x_value
 
@@ -544,11 +558,19 @@ def locked_amount_as_cast(game: "Game", text: str, caster: str) -> int | None:
     definition or the count is one `count_expression` cannot read. Called by
     `Casting` while the spell is being cast (CR 601.2d: the division needs the
     total), the one moment the count is fixed."""
-    if "as you cast this spell" not in text:
+    if "as you cast this spell" not in text and "as you activate this ability" not in text:
         return None
     defined = _WHERE_X_AS_YOU_CAST_RE.search(text)
     if defined is None:
-        return None
+        # Lethal Exploit: "... for each modified creature you controlled as you
+        # cast this spell" defines no X, but its count is fixed at casting all
+        # the same (CR 601.2i), so it rides the cast record's X (the spell has
+        # no {X} of its own).
+        each = _FOR_EACH_CONTROLLED_AS_CAST_RE.search(text)
+        if each is None:
+            return None
+        reader = count_expression(f"the number of {each.group('what')}s you control")
+        return None if reader is None else reader(game, caster)
     reader = count_expression(defined.group("expr"))
     return None if reader is None else reader(game, caster)
 
@@ -955,14 +977,22 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             return None
         times = 2 if factor.lower() == "twice" else 3
         return lambda game, controller: times * inner(game, controller)
-    if stripped.lower().endswith(_AS_YOU_CAST_SUFFIX):
+    suffix = next(
+        (
+            sfx
+            for sfx in (_AS_YOU_CAST_SUFFIX, _AS_YOU_ACTIVATE_SUFFIX)
+            if stripped.lower().endswith(sfx)
+        ),
+        None,
+    )
+    if suffix is not None:
         # "... as you cast this spell" (Jaws of Stone, Monstrous Onslaught):
         # the count was fixed while the spell was being cast (CR 601.2d needs it
         # to announce the division) and `Casting` recorded it as the cast's X,
         # so resolution reads that back instead of recounting a board a
         # response may have changed. A spell with no cast record (never cast
         # through a `Casting`) has nothing locked and counts live.
-        live = count_expression(stripped[: -len(_AS_YOU_CAST_SUFFIX)])
+        live = count_expression(stripped[: -len(suffix)])
         if live is None:
             return None
         return lambda game, controller: _locked_or_live(game, controller, live)
@@ -1692,7 +1722,7 @@ _CARDS_EXILED_WITH_IT_RE = re.compile(
 #: moment this list gains an entry.
 _SPELLS_CAST_THIS_TURN_AMOUNT_RE = re.compile(
     r"^(?:the number of )?(?P<other>other )?(?:(?P<types>[a-z, ]+?) )?spells? you'?ve cast "
-    r"this turn$",
+    r"this turn(?P<not_first> other than the first)?$",
     re.IGNORECASE,
 )
 
@@ -1708,9 +1738,15 @@ def _spells_cast_this_turn_count(match: re.Match[str]) -> Callable[["Game", str]
     if match.group("types") is not None and types is None:
         return None
     leaves_out_resolving = match.group("other") is not None
+    # "other than the first" (Outlaw Stitcher): the first spell cast is not
+    # counted, so a lone spell counts none.
+    skipped = 1 if match.group("not_first") is not None else 0
 
     def count_spells_cast_this_turn(game: "Game", controller: str) -> int:
         resolving = game.resolving if leaves_out_resolving else None
+        return max(0, skipped_total(game, controller, resolving) - skipped)
+
+    def skipped_total(game: "Game", controller: str, resolving) -> int:
         return sum(
             1
             for state in game.spells_cast_this_turn.get(controller, [])
@@ -3237,6 +3273,22 @@ _LIFE_LOST_BY_OPPONENTS_EACH_RE = re.compile(
 )
 
 
+_OTHER_THAN_THIS_TAIL_RE = re.compile(
+    r"^(?P<what>[A-Za-z]+(?: (?:and/or|or) [A-Za-z]+)*) you control other than this "
+    r"(?:[a-z]+)$",
+    re.IGNORECASE,
+)
+_FORETOLD_IN_EXILE_EACH_RE = re.compile(r"^foretold card you own in exile$", re.IGNORECASE)
+_CAVE_MANA_SPENT_EACH_RE = re.compile(
+    r"^mana from an? (?P<kind>[A-Za-z]+) spent to cast (?:it|this spell)$", re.IGNORECASE
+)
+_TIME_KICKED_EACH_RE = re.compile(r"^time (?:it|this spell|[A-Z][^.]*?) was kicked$")
+_LEFT_UNDER_YOUR_CONTROL_EACH_RE = re.compile(
+    r"^(?P<quality>[a-z -]+?) that left the battlefield under your control this turn$",
+    re.IGNORECASE,
+)
+
+
 def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int] | None:
     """The count of an "N `<effect>` for each `<phrase>`" tail, as a
     `(game, controller, source_id) -> int` reader, or `None` when `phrase` is
@@ -3252,6 +3304,11 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
     spells the count out that way instead.
     """
     stripped = phrase.strip().rstrip(".")
+    if other_than_this := _OTHER_THAN_THIS_TAIL_RE.fullmatch(stripped):
+        # Spire Mechcycle: "Mount and/or Vehicle you control other than this
+        # Vehicle" says what "other Mount or Vehicle you control" says - the
+        # source itself is the one left out (CR 608.2h counts once).
+        stripped = f"other {other_than_this.group('what').replace('and/or', 'or')} you control"
     if _TREASURE_MANA_SPENT_EACH_RE.fullmatch(stripped):
         # Fixed as the spell was cast (CR 601.2h), never the Treasures still
         # on the board as it resolves.
@@ -3273,6 +3330,61 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
         if counted is None:
             return None
         return lambda game, _controller, _source_id: _count_for_targeted_player(game, counted)
+    if left := _LEFT_UNDER_YOUR_CONTROL_EACH_RE.fullmatch(stripped):
+        # Kutzil's Flanker: "creature that left the battlefield under your
+        # control this turn" - `Game.turn_history`'s "left_battlefield" entries
+        # (one per departure, CR 603.10a's look-back characteristics), those
+        # this player controlled as they went; counted as the effect applies
+        # (CR 608.2h).
+        from ..conditions.history import _quality
+
+        quality = _quality(left.group("quality"))
+        if quality is not None:
+            return lambda game, controller, _source_id: sum(
+                1
+                for entry in game.turn_history
+                if entry.kind == "left_battlefield"
+                and entry.player == controller
+                and quality(entry)
+            )
+    if _FORETOLD_IN_EXILE_EACH_RE.fullmatch(stripped):
+        # Niko Defies Destiny I: foretold cards (CR 702.143a, CR 406.3) in
+        # exile this player owns, counted as the effect applies (CR 608.2h).
+        return lambda game, controller, _source_id: game.foretold_in_exile_counts().get(
+            controller, 0
+        )
+    if (cave_mana := _CAVE_MANA_SPENT_EACH_RE.fullmatch(stripped)) is not None:
+        # Bat Colony: "for each mana from a Cave spent to cast it" - CR 106.3's
+        # source of the mana, fixed on the cast record at CR 601.2h (the
+        # permanent the spell became, CR 400.7d, carries the record).
+        if cave_mana.group("kind").lower() != "cave":
+            return None
+
+        def count_cave_mana(game: "Game", _controller: str, source_id: str | None) -> int:
+            resolving = game.resolving
+            if isinstance(resolving, CardState) and str(resolving.id) == source_id:
+                obj = resolving
+            else:
+                obj = None if source_id is None else game.find_by_id(UUID(source_id))
+            record = None if obj is None else game.cast_record_of(obj)
+            return 0 if record is None else record.cave_mana_spent
+
+        return count_cave_mana
+    if _TIME_KICKED_EACH_RE.fullmatch(stripped):
+        # Spell Contortion: "Draw a card for each time Spell Contortion was
+        # kicked" - CR 702.33d's count of multikicker payments, read off the
+        # cast record of the spell (or the permanent it became, CR 400.7d)
+        # whose effect is resolving (CR 608.2h).
+        def count_kicks(game: "Game", _controller: str, source_id: str | None) -> int:
+            resolving = game.resolving
+            if isinstance(resolving, CardState) and str(resolving.id) == source_id:
+                obj = resolving
+            else:
+                obj = None if source_id is None else game.find_by_id(UUID(source_id))
+            record = None if obj is None else game.cast_record_of(obj)
+            return 0 if record is None else record.kicked
+
+        return count_kicks
     types_among = card_types_among_spells_cast_reader(stripped)
     if types_among is not None:
         # CR 608.2h: counted once, as the effect applies.

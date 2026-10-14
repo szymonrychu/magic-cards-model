@@ -1016,6 +1016,14 @@ _ORDINAL_SPELL_EACH_TURN = re.compile(
 )
 
 
+#: "you cast a spell during your turn other than your first spell that turn"
+#: (Geralf, the Fleshwright), "... other than your first spell each turn"
+#: (Arcbound Tracker): every spell but the caster's first of the turn (CR 603.2).
+_OTHER_THAN_FIRST_SPELL = re.compile(
+    r"other than (?:your|their) first (?:[a-z]+ )?spell(?: that turn| each turn)?"
+)
+
+
 def _ordinal_spell_this_turn_matches(
     game: "Game", condition: str, controller: str, event: GameEvent
 ) -> bool | None:
@@ -1045,12 +1053,17 @@ def _ordinal_spell_this_turn_matches(
     type this turn, and a spell of the wrong type never satisfies the clause
     at all, whatever position it fell in.
     """
-    match = _ORDINAL_SPELL_EACH_TURN.search(condition.lower())
-    if match is None:
+    lowered = condition.lower()
+    match = _ORDINAL_SPELL_EACH_TURN.search(lowered)
+    not_first = _OTHER_THAN_FIRST_SPELL.search(lowered) if "other than" in lowered else None
+    if match is None and not_first is None:
         return None
-    ordinal = parse_ordinal(match.group("ordinal"))
-    if ordinal is None:
-        return False
+    if match is not None and not_first is None:
+        ordinal = parse_ordinal(match.group("ordinal"))
+        if ordinal is None:
+            return False
+    else:
+        ordinal = 1
     if event.player is None:
         return False
     if not _types_match(event.subject_types, condition):
@@ -1071,6 +1084,8 @@ def _ordinal_spell_this_turn_matches(
         ),
         None,
     )
+    if not_first is not None:
+        return position is not None and position > 1
     return position == ordinal
 
 

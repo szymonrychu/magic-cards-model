@@ -2608,3 +2608,31 @@ def test_a_snapshot_written_before_the_death_batch_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_DEATH_BATCH}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before EP02-R3-T2: the Cave mana provenance sub-pool
+#: (`ManaPool.cave`, `ManaPayment.cave_spent`, `CastRecord.cave_mana_spent`), the
+#: turn-long `TokenAmountReplacement` and the foretell mana restriction. The last
+#: shape without them is 169.
+_SCHEMA_VERSION_BEFORE_EP02_R3_T2_CAVE_MANA = 169
+
+
+def test_a_snapshot_written_before_cave_mana_provenance_is_refused() -> None:
+    """A version-169 dump has no record of which floating or spent mana came from
+    a Cave, so a decode as current would count Bat Colony's Bats from zero: refused
+    instead."""
+    from magic_cards_model.models.game.records import CastRecord
+    from magic_cards_model.models.mana import ManaPayment, ManaPool
+
+    assert "cave" in ManaPool.model_fields
+    assert "cave_spent" in ManaPayment.model_fields
+    assert "cave_mana_spent" in CastRecord.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_EP02_R3_T2_CAVE_MANA
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_EP02_R3_T2_CAVE_MANA
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP02_R3_T2_CAVE_MANA}",
+    ):
+        Game.model_validate(dumped)
