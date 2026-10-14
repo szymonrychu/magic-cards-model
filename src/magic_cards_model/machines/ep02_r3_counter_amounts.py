@@ -18,6 +18,7 @@ from .decisions import Decision, DecisionKind, source_id_of
 from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES
 from .effects._common import AbilityEffect, TargetedClause, _targets_understood
 from .effects.amounts import _for_each_multiplier
+from .effects.continuous import transform_permanent
 from .effects.counters import _counter_kind
 from .effects.tokens import _parse_token_clause
 from .layers import is_genuine_resolution_layer_sentence
@@ -691,3 +692,43 @@ def _parse_create_then_choose_counter_for_each(
             game.add_counters(token, _counter_kind(kind if kind in kinds else kinds[0]), 1)
 
     return [effect]
+
+
+# -- "put a +1/+1 counter on target creature you control. Then if that creature has
+# three or more +1/+1 counters on it, transform <this enchantment>."
+
+_TARGET_COUNTER_THEN_TRANSFORM_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?P<target>target [^.]+?)\.\s+"
+    rf"then if that (?P<noun>[a-z]+) has (?P<threshold>{COUNT}) or more (?P=kind) counters on it, "
+    r"transform (?P<self>[^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_target_counter_then_transform_source(effect_text: str) -> AbilityEffect | None:
+    """Hadana's Climb. The threshold is read from the targeted object after the
+    counter is put on it (CR 608.2c, in order), while the transform is of the
+    ability's source (CR 701.27a); a source that has left does nothing (CR 400.7)."""
+    if "transform" not in effect_text.lower():
+        return None
+    match = _TARGET_COUNTER_THEN_TRANSFORM_RE.fullmatch(" ".join(effect_text.strip().split()))
+    if match is None or not _targets_understood(match.group("target")):
+        return None
+    amount = parse_count(match.group("n"))
+    threshold = parse_count(match.group("threshold"))
+    if amount is None or threshold is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", ability: "AbilityOnStack") -> None:
+        for target in game.resolve_targets(ability):
+            if isinstance(target, Player):
+                continue
+            game.add_counters(target, kind, amount)
+            if target.counter_count(kind) >= threshold:
+                source = ability.source(game)
+                if source is not None and source.zone is Zone.BATTLEFIELD:
+                    transform_permanent(game, source)
+
+    return effect

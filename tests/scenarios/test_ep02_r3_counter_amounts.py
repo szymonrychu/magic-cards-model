@@ -7,6 +7,7 @@ affected creatures is fixed when the effect begins).
 """
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.effects.continuous import transform_permanent
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
@@ -1200,3 +1201,45 @@ def test_invoke_the_ancients_makes_two_spirits_with_the_chosen_counters():
 def test_invoke_the_ancients_both_may_pick_the_same_kind():
     spirits = _invoke("vigilance", "vigilance")
     assert [s.counters.counts.get("vigilance", 0) for s in spirits] == [1, 1]
+
+
+# -- Hadana's Climb // Winged Temple of Orazca: counter on target creature, then
+# transform the Climb when that creature has three or more +1/+1 counters
+
+
+def _hadana(counters):
+    scenario = _main_board("Hadana's Climb", "Grizzly Bears")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    if counters:
+        bears.add_counters(Counter.PLUS_ONE, counters)
+    scenario.advance()  # beginning of combat
+    scenario.game.put_triggers_on_stack()
+    return scenario, bears
+
+
+def test_hadana_s_climb_puts_a_counter_without_transforming_below_three():
+    scenario, bears = _hadana(1)
+    _settle(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 2
+    assert scenario.find("Hadana's Climb", Zone.BATTLEFIELD, "alice")
+
+
+def test_hadana_s_climb_transforms_when_the_creature_reaches_three():
+    scenario, bears = _hadana(2)
+    _settle(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 3
+    assert scenario.find("Winged Temple of Orazca", Zone.BATTLEFIELD, "alice")
+
+
+def test_winged_temple_of_orazca_gives_flying_and_plus_its_power():
+    scenario = _main_board(
+        "Hadana's Climb // Winged Temple of Orazca", "Grizzly Bears", "Forest", "Island", "Forest"
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    temple = scenario.find("Hadana's Climb // Winged Temple of Orazca", Zone.BATTLEFIELD, "alice")
+    transform_permanent(scenario.game, temple)
+    scenario.activate(temple, *scenario.untapped_sources("Forest", "Island", "Forest"), index=1)
+    scenario.resolve_top()
+    # Bears are 2/2, so X = 2.
+    assert _characteristics(scenario, bears) == (4, 4)
+    assert scenario.game.computed_board().of(bears).has_ability("Flying")
