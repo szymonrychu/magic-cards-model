@@ -5678,9 +5678,15 @@ def _bite_amount(game: "Game", biter: CardState, stat: str) -> int:
 
 
 @MIXED_CLAUSE.rung("s13", for_spell=FORWARD)
-def _parse_bite_damage_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
-    """`_BITE_DAMAGE_RE`'s shape - see the banner above. The biter and each
-    victim are told apart by the "target" instance each was announced for
+def _parse_bite_damage_clause(
+    clause: str,
+    *,
+    for_spell: bool,
+    scale: "Callable[[Game, StackObject], int] | None" = None,
+) -> TargetedClause | None:
+    """`_BITE_DAMAGE_RE`'s shape - see the banner above. `scale`, when given, is the factor the
+    damage is multiplied by as it is dealt ("deals twice that much damage instead"). The biter
+    and each victim are told apart by the "target" instance each was announced for
     (`_BiteSlots`), never by who controls them: Fall of the Hammer's victim may
     be yours, Mutiny's biter and victim are both an opponent's. The
     anaphoric-object twin (Flourishing Grapple's "... to that permanent.") is
@@ -5710,7 +5716,13 @@ def _parse_bite_damage_clause(clause: str, *, for_spell: bool) -> TargetedClause
             return None
 
         def effect(game: "Game", stack_object: "StackObject") -> None:
-            _resolve_bite_damage(game, stack_object, stat, slots=slots)
+            _resolve_bite_damage(
+                game,
+                stack_object,
+                stat,
+                slots=slots,
+                scale=1 if scale is None else scale(game, stack_object),
+            )
 
         return effect
     group = _bite_group_recipients(obj)
@@ -5857,7 +5869,12 @@ def _bite_group_recipients(
 
 
 def _resolve_bite_damage(
-    game: "Game", stack_object: "StackObject", stat: str, *, slots: _BiteSlots | None = None
+    game: "Game",
+    stack_object: "StackObject",
+    stat: str,
+    *,
+    slots: _BiteSlots | None = None,
+    scale: int = 1,
 ) -> CardState | None:
     """Deal a bite and return its biter (or `None` when there was none).
 
@@ -5878,7 +5895,7 @@ def _resolve_bite_damage(
         biter, victims = _bite_participants(game, stack_object, slots)
         if biter is None:
             return None
-        amount = _bite_amount(game, biter, stat)
+        amount = scale * _bite_amount(game, biter, stat)
         _deal_all(game, [(biter, victim, amount) for victim in victims])
         return biter
     controller = game.controller_of(stack_object)

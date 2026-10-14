@@ -467,3 +467,42 @@ def test_betor_end_step_chain_applies_every_threshold_reached(
         for angel in scenario.creatures(*["Serra Angel"] * angels, username="alice")
     )
     assert _life(scenario, "bob") == opponent_life
+
+
+# --------------------------------------------------------------------------
+# Kicker - Return a land you control to its owner's hand; "twice that much damage
+# instead" (Chocobo Kick) - CR 702.33a, 118.8a, 120.3
+# --------------------------------------------------------------------------
+
+
+def _chocobo_kick(*, kicked):
+    scenario = _main(
+        _build(
+            ["Forest", "Forest", "Forest", "Grizzly Bears"],
+            ["Serra Angel"],
+            hand=["Chocobo Kick"],
+        )
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    giant = scenario.creature("Serra Angel", "bob")
+    casting = scenario.cast("Chocobo Kick")
+    if kicked:
+        casting.pay_kicker(choosing=[scenario.untapped_sources("Forest")[-1]])
+    casting.choose_targets([bears, giant])
+    scenario.auto_pay(casting.begin_paying())
+    scenario.put_on_stack(casting)
+    scenario.pass_until_resolved()
+    return scenario, giant
+
+
+def test_chocobo_kick_unkicked_deals_damage_equal_to_the_creatures_power():
+    scenario, giant = _chocobo_kick(kicked=False)
+    assert giant.zone is Zone.BATTLEFIELD
+    assert giant.damage == 2
+
+
+def test_chocobo_kick_kicked_returns_a_land_and_deals_twice_that_much_damage():
+    scenario, giant = _chocobo_kick(kicked=True)
+    assert giant.zone is Zone.GRAVEYARD  # 4 damage kills the 4-toughness angel; 2 would not
+    assert len([c for c in scenario.player("alice").hand if c.name == "Forest"]) == 1
+    assert len([c for c in scenario.game.battlefield if c.name == "Forest"]) == 2

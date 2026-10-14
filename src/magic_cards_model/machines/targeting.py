@@ -301,7 +301,8 @@ class ComparisonCount(StrEnum):
     CONTROLLER_LIFE = "controller_life"
     """"with power greater than or equal to your life total" (Blazing Hope): the bound is the
     life total (CR 119.1) of the caster of the spell or ability being aimed, read at every
-    `rejects` call, so a life change between casting and resolving is seen by the CR 608.2b recheck."""
+    `rejects` call, so a life change between casting and resolving is seen by the CR 608.2b
+    recheck."""
 
 
 class CombatState(StrEnum):

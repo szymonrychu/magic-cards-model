@@ -24,8 +24,9 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from ..models.zone import Zone
+from ..numbers import parse_multiplier
 from .amount_sentences import apply_life, life_clause_amount, parse_life_clause
-from .effects._chains import FORWARD, MIXED_CLAUSE
+from .effects._chains import FORWARD, MIXED_CLAUSE, SPELL_TEXT
 
 if TYPE_CHECKING:
     from ..models.card_state import CardState
@@ -385,6 +386,49 @@ def _parse_then_if_clause(clause: str, *, for_spell: bool) -> "Callable[..., Non
             tail(game, stack_object)
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# A bite that "deals twice that much damage instead" under a condition (Chocobo Kick)
+# --------------------------------------------------------------------------
+
+_BITE_SCALED_RE = re.compile(
+    r"^(?P<bite>target (?:creature|planeswalker) you control deals damage equal to its "
+    r"(?:power|loyalty) to [^.]+?)\.\s*if (?P<condition>[^,]+), the (?:creature|planeswalker) "
+    r"you control deals (?P<factor>twice|three times) that much damage instead\.?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s18")
+def _parse_scaled_bite_spell(effect_text: str) -> "Callable[..., None] | None":
+    """ "<Bite>. If <condition>, the creature you control deals twice that much damage
+    instead." The bite is the ordinary one (CR 701.14 is not invoked: the creature deals the
+    damage); the condition (here CR 702.33d's "this spell was kicked") is read as the spell
+    resolves and scales the amount fixed in that one damage event (CR 120.3, CR 608.2h)."""
+    if " that much damage instead" not in effect_text.lower():
+        return None
+    from ..models.game._conditions import condition_is_readable
+    from .effects import _strip_non_effect_preamble
+    from .effects.damage import _parse_bite_damage_clause
+
+    match = _BITE_SCALED_RE.fullmatch(" ".join(_strip_non_effect_preamble(effect_text).split()))
+    if match is None:
+        return None
+
+    condition = match.group("condition").strip()
+    factor = parse_multiplier(match.group("factor"))
+    if factor is None or not condition_is_readable(condition):
+        return None
+
+    def scale(game: "Game", spell: "StackObject") -> int:
+        from .amount_sentences import controller_of, source_card
+
+        controller = controller_of(game, spell)
+        holds = game.condition_holds(controller, condition, source_card(game, spell))
+        return factor if holds else 1
+
+    return _parse_bite_damage_clause(match.group("bite"), for_spell=True, scale=scale)
 
 
 __all__ = ["amount_term", "count_term", "for_each_count"]
