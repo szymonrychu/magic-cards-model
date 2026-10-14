@@ -3243,6 +3243,9 @@ _OTHER_THAN_THIS_TAIL_RE = re.compile(
     re.IGNORECASE,
 )
 _FORETOLD_IN_EXILE_EACH_RE = re.compile(r"^foretold card you own in exile$", re.IGNORECASE)
+_CAVE_MANA_SPENT_EACH_RE = re.compile(
+    r"^mana from an? (?P<kind>[A-Za-z]+) spent to cast (?:it|this spell)$", re.IGNORECASE
+)
 _TIME_KICKED_EACH_RE = re.compile(r"^time (?:it|this spell|[A-Z][^.]*?) was kicked$")
 _LEFT_UNDER_YOUR_CONTROL_EACH_RE = re.compile(
     r"^(?P<quality>[a-z -]+?) that left the battlefield under your control this turn$",
@@ -3314,6 +3317,23 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
         return lambda game, controller, _source_id: game.foretold_in_exile_counts().get(
             controller, 0
         )
+    if (cave_mana := _CAVE_MANA_SPENT_EACH_RE.fullmatch(stripped)) is not None:
+        # Bat Colony: "for each mana from a Cave spent to cast it" - CR 106.3's
+        # source of the mana, fixed on the cast record at CR 601.2h (the
+        # permanent the spell became, CR 400.7d, carries the record).
+        if cave_mana.group("kind").lower() != "cave":
+            return None
+
+        def count_cave_mana(game: "Game", _controller: str, source_id: str | None) -> int:
+            resolving = game.resolving
+            if isinstance(resolving, CardState) and str(resolving.id) == source_id:
+                obj = resolving
+            else:
+                obj = None if source_id is None else game.find_by_id(UUID(source_id))
+            record = None if obj is None else game.cast_record_of(obj)
+            return 0 if record is None else record.cave_mana_spent
+
+        return count_cave_mana
     if _TIME_KICKED_EACH_RE.fullmatch(stripped):
         # Spell Contortion: "Draw a card for each time Spell Contortion was
         # kicked" - CR 702.33d's count of multikicker payments, read off the

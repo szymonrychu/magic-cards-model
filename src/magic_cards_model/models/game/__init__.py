@@ -288,6 +288,7 @@ from ...machines.cost import increase as increase
 from ...ids import install_id_allocator as install_id_allocator
 from ...machines.triggers import intervening_if_holds as intervening_if_holds
 from ...data.card_names import is_card_name as is_card_name
+from ...machines.cost import is_cave_source as is_cave_source
 from ...machines.cost import is_creature_source as is_creature_source
 from ...machines.keywords import is_indestructible as is_indestructible
 from ..token import is_token as is_token
@@ -1980,7 +1981,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 169
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 170
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2402,6 +2403,14 @@ class Game(
     #: this way", a loyalty-counter-sized creature, a base power and toughness set on a
     #: group, and a CR 603.8 "has N or fewer counters" state; an older dump would
     #: resolve each of these as a no-op.
+    #: 170 (EP-02-R3-T2): `ManaPool` gained `cave` and `ManaPayment` `cave_spent`
+    #: (CR 106.3's Cave provenance), `CastRecord` gained `cave_mana_spent` (Bat Colony),
+    #: and `CreatedReplacementSpec` gained `TokenAmountReplacement` (Kaya's turn-long
+    #: token doubler); `ManaSpend`/`SpendClause` gained `has_foretell`/
+    #: `requires_foretell` and `SpendPurpose` `FORETELL` (Niko Defies Destiny's
+    #: restricted mana); and an `AbilityOnStack.x_value` now holds a count locked "as
+    #: you activate this ability" (Lukka). An older dump would resolve each of these
+    #: as a no-op or refuse the restricted mana.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

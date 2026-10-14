@@ -5064,6 +5064,11 @@ class Casting(EngineModel):
                     if self.payment is not None and self.payment.mana_payment is not None
                     else 0
                 ),
+                cave_mana_spent=(
+                    sum(self.payment.mana_payment.cave_spent.values())
+                    if self.payment is not None and self.payment.mana_payment is not None
+                    else 0
+                ),
                 returned_mana_value=self.returned_mana_value,
                 extra_mana_counters=self.extra_mana_counters,
                 convoked=(

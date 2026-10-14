@@ -566,6 +566,10 @@ class CastRecord(EngineModel):
     """How much of `mana_spent` came from creatures (CR 106.3), from
     `ManaPayment.creature_spent` - "three or more mana from creatures was
     spent to cast it"."""
+    cave_mana_spent: int = 0
+    """How much of `mana_spent` came from Caves (CR 106.3), from
+    `ManaPayment.cave_spent` - Bat Colony's "for each mana from a Cave spent to
+    cast it". Fixed at CR 601.2h; 0 for a copy (CR 707.10)."""
     returned_mana_value: int = 0
     """The mana value of the creature returned to its owner's hand to pay a
     web-slinging cost (CR 702.188a), fixed as it was chosen (CR 601.2b) -

@@ -255,6 +255,7 @@ class CastingMixin:
         beheld_for_cost: bool = False,
         waterbend_paid: bool = False,
         creature_mana_spent: int = 0,
+        cave_mana_spent: int = 0,
         convoked: int = 0,
         returned_mana_value: int = 0,
         extra_mana_counters: int = 0,
@@ -358,6 +359,7 @@ class CastingMixin:
                 False if is_copy else controlled_modified_creature_as_cast
             ),
             creature_mana_spent=0 if is_copy else creature_mana_spent,
+            cave_mana_spent=0 if is_copy else cave_mana_spent,
             convoked=0 if is_copy else convoked,
             returned_mana_value=0 if is_copy else returned_mana_value,
             extra_mana_counters=0 if is_copy else extra_mana_counters,

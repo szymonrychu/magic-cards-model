@@ -203,6 +203,18 @@ def is_basic_land_source(source: CardState, game: Any = None) -> bool:
     return Supertype.BASIC in source.supertypes and Type.LAND in source.types
 
 
+def is_cave_source(source: CardState, game: Any = None) -> bool:
+    """Whether mana from this permanent is mana from a Cave (CR 106.3: the
+    source of mana is the source of the ability that produced it) - read off the
+    computed board where it still is, else off what it last was."""
+    if game is not None and source.zone is Zone.BATTLEFIELD:
+        try:
+            return "Cave" in game.characteristics_of(source).subtypes
+        except (AttributeError, KeyError):
+            pass
+    return "Cave" in source.subtypes
+
+
 def source_allowed_by(only_from: str | None, source: CardState, game: Any = None) -> bool:
     """Whether `source` may pay a cost limited by `ManaSpend.only_from`."""
     if only_from == "basic_land":
@@ -3115,6 +3127,7 @@ def _mana_pool_overwrite(target: ManaPool, contents: ManaPool) -> None:
     target.treasure = copied.treasure
     target.creature = copied.creature
     target.basic_land = copied.basic_land
+    target.cave = copied.cave
     target.restricted = copied.restricted
     target.spend_effects = copied.spend_effects
     target.retained = copied.retained
@@ -3136,6 +3149,7 @@ def _copy_pool(pool: ManaPool) -> ManaPool:
         treasure=dict(pool.treasure),
         creature=dict(pool.creature),
         basic_land=dict(pool.basic_land),
+        cave=dict(pool.cave),
         restricted=[entry.model_copy(deep=True) for entry in pool.restricted],
         spend_effects=[tagged.model_copy(deep=True) for tagged in pool.spend_effects],
         retained=[entry.model_copy(deep=True) for entry in pool.retained],
@@ -3705,6 +3719,7 @@ class CostPayment(EngineModel):
             treasure=is_treasure_source(source, self.game),
             creature=is_creature_source(source, self.game),
             basic_land=is_basic_land_source(source, self.game),
+            cave=is_cave_source(source, self.game),
         )
         if self.game is not None:
             # CR 405.6c: the mana ability's other effect happens with the mana,
@@ -4252,6 +4267,7 @@ class CostPayment(EngineModel):
         pool.treasure = dict(self.pool.treasure)
         pool.creature = dict(self.pool.creature)
         pool.basic_land = dict(self.pool.basic_land)
+        pool.cave = dict(self.pool.cave)
         pool.restricted = [entry.model_copy(deep=True) for entry in self.pool.restricted]
         pool.retained = [entry.model_copy(deep=True) for entry in self.pool.retained]
 
@@ -4291,6 +4307,7 @@ class CostPayment(EngineModel):
         pool.treasure = dict(self._preexisting.treasure)
         pool.creature = dict(self._preexisting.creature)
         pool.basic_land = dict(self._preexisting.basic_land)
+        pool.cave = dict(self._preexisting.cave)
         pool.restricted = [entry.model_copy(deep=True) for entry in self._preexisting.restricted]
         pool.retained = [entry.model_copy(deep=True) for entry in self._preexisting.retained]
 

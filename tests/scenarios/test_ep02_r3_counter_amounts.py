@@ -1694,9 +1694,7 @@ def test_creeping_inn_counts_every_creature_card_exiled_with_it():
     scenario, inn = _creeping_inn(graveyard=("Hill Giant", "Grizzly Bears"))
     earlier = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
     scenario.game.exile_cards([earlier])
-    earlier.exile_annotation = linked_exile_annotation(
-        scenario.game, _FakeAbility(inn), earlier
-    )
+    earlier.exile_annotation = linked_exile_annotation(scenario.game, _FakeAbility(inn), earlier)
     scenario.will_take_the_may(True)
     scenario.will_choose_cards(scenario.find("Hill Giant", Zone.GRAVEYARD, "alice"))
     scenario.attack_with(inn)
@@ -1736,9 +1734,7 @@ def test_hostile_hostel_transforms_and_untaps_on_the_third_soul_counter():
     hostel = scenario.find("Hostile Hostel // Creeping Inn", Zone.BATTLEFIELD, "alice")
     hostel.add_counters("soul", 2)
     bears = scenario.creature("Grizzly Bears", "alice")
-    scenario.activate(
-        hostel, *scenario.untapped_sources("Forest"), index=1, sacrificing=[bears]
-    )
+    scenario.activate(hostel, *scenario.untapped_sources("Forest"), index=1, sacrificing=[bears])
     scenario.resolve_top()
     assert hostel.up_face_name == "Creeping Inn"
     assert not hostel.tapped
@@ -1819,3 +1815,70 @@ def test_olag_copies_the_exiled_card_the_controller_chose():
     chars = scenario.game.characteristics_of(ludevic)
     assert Color.WHITE in chars.colors
     assert Color.GREEN not in chars.colors
+
+
+# -- Bat Colony: a Bat for each mana from a Cave spent to cast it; a Cave entering
+# puts a +1/+1 counter on target creature you control
+
+
+def _bat_colony(*lands):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Bat Colony"],
+            battlefield=list(lands),
+            library=["Forest"] * 8,
+        )
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*lands)
+    scenario.cast_and_resolve("Bat Colony", *sources)
+    _settle(scenario)
+    return scenario
+
+
+def _bats(scenario):
+    return [c for c in scenario.game.permanents_controlled_by("alice") if c.name == "Bat Token"]
+
+
+def test_bat_colony_makes_a_bat_per_mana_from_a_cave():
+    scenario = _bat_colony("Captivating Cave", "Secret Tunnel", "Plains")
+    assert len(_bats(scenario)) == 2
+
+
+def test_bat_colony_with_no_cave_mana_makes_no_bats():
+    scenario = _bat_colony("Plains", "Plains", "Plains")
+    assert _bats(scenario) == []
+
+
+def test_bat_colony_one_cave_makes_one_bat():
+    scenario = _bat_colony("Captivating Cave", "Plains", "Plains")
+    assert len(_bats(scenario)) == 1
+
+
+def test_bat_colony_counts_cave_mana_as_cast_and_not_later_caves():
+    scenario = _bat_colony("Plains", "Plains", "Plains", "Captivating Cave")
+    assert _bats(scenario) == []
+
+
+def test_bat_colony_puts_a_counter_on_a_creature_when_a_cave_enters():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Captivating Cave"],
+            battlefield=["Bat Colony", "Grizzly Bears"],
+            library=["Forest"] * 8,
+        )
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.will_choose_targets(bears)
+    scenario.play_land("Captivating Cave")
+    _settle(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 1

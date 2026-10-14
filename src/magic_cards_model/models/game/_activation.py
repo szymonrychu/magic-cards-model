@@ -40,6 +40,7 @@ from ...machines.cost import (
     discard_cost,
     exile_cost,
     increase,
+    is_cave_source,
     is_creature_source,
     is_treasure_source,
     loyalty_cost,
@@ -3253,6 +3254,7 @@ class ActivationMixin:
                 )
                 from_treasure = is_treasure_source(permanent, self)
                 from_creature = is_creature_source(permanent, self)
+                from_cave = is_cave_source(permanent, self)
                 for produced in produced_mana:
                     self.player(controller).mana_pool.add(
                         produced,
@@ -3260,6 +3262,7 @@ class ActivationMixin:
                         spend_effect=spend_effect,
                         treasure=from_treasure,
                         creature=from_creature,
+                        cave=from_cave,
                     )
                 # CR 405.6c: "If a mana ability both produces mana and has
                 # another effect, the mana is produced and the other effect
