@@ -15,8 +15,8 @@ from ..numbers import COUNT, parse_count
 from .abilities import KeywordAbility, TriggeredAbility, TriggerEvent, TriggerWord
 from .amount_sentences import parse_put_counters
 from .decisions import Decision, DecisionKind, source_id_of
-from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES
-from .effects._common import AbilityEffect, TargetedClause, _targets_understood
+from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES, SPELL_TEXT
+from .effects._common import AbilityEffect, Effect, TargetedClause, _targets_understood
 from .effects.amounts import _for_each_multiplier
 from .effects.continuous import transform_permanent
 from .effects.counters import _counter_kind
@@ -765,5 +765,61 @@ def _parse_gain_life_equal_to_crafted_cards_mana_value(
         )
         if amount > 0:
             game.gain_life(game.player(ability.controller), amount)
+
+    return effect
+
+
+# -- "For each tapped nonland permanent target opponent controls, search that
+# player's library for a card with the same name as that permanent. Put those
+# cards onto the battlefield under your control, then that player shuffles."
+
+_SEARCH_SAME_NAME_PER_TAPPED_RE = re.compile(
+    r"^for each tapped nonland permanent target opponent controls, search that player's "
+    r"library for a card with the same name as that permanent\.\s+put those cards onto "
+    r"the battlefield under your control, then that player shuffles\.?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s10")
+def _parse_search_same_name_as_each_tapped_permanent(text: str) -> Effect | None:
+    """Dichotomancy. The permanents to match are the tapped nonland ones the
+    targeted opponent controls as the spell resolves (CR 608.2c, 608.2h); each
+    is one search of that player's library (CR 701.23a) by the searcher, who
+    need not find a card (CR 701.23b). The found cards are put onto the
+    battlefield under the caster's control, and only then is the library
+    shuffled (CR 701.24b)."""
+    if "same name as that permanent" not in text.lower():
+        return None
+    if _SEARCH_SAME_NAME_PER_TAPPED_RE.fullmatch(" ".join(text.strip().split())) is None:
+        return None
+
+    def effect(game: "Game", spell: "StackObject") -> None:
+        opponent = next((t for t in game.resolve_targets(spell) if isinstance(t, Player)), None)
+        if opponent is None:
+            return
+        caster = game.controller_of(spell)
+        board = game.computed_board()
+        names = [
+            permanent.name
+            for permanent in game.permanents_controlled_by(opponent.username)
+            if permanent.tapped and Type.LAND not in board.of(permanent).types
+        ]
+        found: list = []
+        for name in names:
+            found.extend(
+                game.search_library(
+                    opponent,
+                    lambda state, wanted=name: state.name == wanted,
+                    optional=True,
+                    shuffle=False,
+                    searcher=caster.username,
+                    source=spell.name,
+                    source_id=source_id_of(spell),
+                )
+            )
+        for state in found:
+            game.put_onto_battlefield(state, caster.username)
+        game.shuffle_library(opponent)
 
     return effect

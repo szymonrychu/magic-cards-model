@@ -1493,3 +1493,51 @@ def test_jade_seedstones_distributes_three_counters_among_its_targets():
     _settle(scenario)
     assert bears.counter_count(Counter.PLUS_ONE) == 2
     assert giant.counter_count(Counter.PLUS_ONE) == 1
+
+
+# -- Dichotomancy: a same-name card from the library for each tapped nonland
+# permanent the target opponent controls, put onto the battlefield under your control
+
+
+def _dichotomancy(bob_library):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Dichotomancy"],
+            battlefield=["Island"] * 9,
+            library=["Forest"] * 8,
+        )
+        .player(
+            "bob",
+            battlefield=["Grizzly Bears", "Grizzly Bears", "Grizzly Bears", "Hill Giant", "Forest"],
+            library=bob_library,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = [c for c in scenario.game.permanents_controlled_by("bob") if c.name == "Grizzly Bears"]
+    giant = scenario.creature("Hill Giant", "bob")
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "bob")
+    for tapped in (bears[0], bears[1], giant, forest):
+        tapped.tap()
+    scenario.cast_and_resolve(
+        "Dichotomancy",
+        *scenario.untapped_sources(*["Island"] * 9),
+        targets=[scenario.player("bob")],
+    )
+    return scenario
+
+
+def test_dichotomancy_takes_a_same_name_card_per_tapped_nonland_permanent():
+    scenario = _dichotomancy(["Grizzly Bears"] * 3 + ["Hill Giant", "Forest"])
+    mine = sorted(c.name for c in scenario.game.permanents_controlled_by("alice") if c.name != "Island")
+    assert mine == ["Grizzly Bears", "Grizzly Bears", "Hill Giant"]
+    # Bob's untapped Bears and his tapped land asked for nothing.
+    assert sorted(c.name for c in scenario.player("bob").library) == ["Forest", "Grizzly Bears"]
+
+
+def test_dichotomancy_finds_what_the_library_has():
+    scenario = _dichotomancy(["Grizzly Bears", "Forest"])
+    mine = sorted(c.name for c in scenario.game.permanents_controlled_by("alice") if c.name != "Island")
+    assert mine == ["Grizzly Bears"]
