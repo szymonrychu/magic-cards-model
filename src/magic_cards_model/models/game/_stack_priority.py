@@ -852,6 +852,18 @@ class StackPriorityMixin:
             # for, and leaving it around risks nothing but also gains nothing.
             cast_from_hand = self.cast_record(spell).origin_zone is Zone.HAND
             self.put_into_graveyard(spell, resolving=True)
+            if spell.zone is Zone.GRAVEYARD and "haunt" in map(str.lower, spell.card.keywords):
+                # CR 702.55a: "When this spell is put into a graveyard during its resolution".
+                self.emit(
+                    GameEvent(
+                        event=TriggerEvent.RESOLVED_INTO_GRAVEYARD,
+                        subject_id=spell.id,
+                        subject_name=spell.name,
+                        subject_controller=spell.controller,
+                        subject_card=spell.card,
+                        player=spell.controller,
+                    )
+                )
             self._create_rebound_delayed_trigger(spell, cast_from_hand)
             self._create_paradigm_delayed_trigger(spell)
             self._resolve_epic(spell)

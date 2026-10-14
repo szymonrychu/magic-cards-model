@@ -98,6 +98,7 @@ from ..card_state import (
     CardState,
     ChoiceKind,
     Counter,
+    ExileMarker,
     TargetRef,
 )
 from ..mana import ManaCost, ManaSpend
@@ -747,7 +748,12 @@ class TriggersDecisionsMixin:
             sources.extend(
                 card
                 for card in self.exile
-                if card.is_suspended or _has_exile_conditioned_trigger(card)
+                if card.is_suspended
+                or _has_exile_conditioned_trigger(card)
+                or (
+                    card.exile_annotation is not None
+                    and card.exile_annotation.marker is ExileMarker.HAUNTING
+                )
             )
             # CR 114.4: "Abilities of emblems function in the command zone."
             sources.extend(

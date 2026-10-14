@@ -496,6 +496,11 @@ class ExileMarker(StrEnum):
     load-bearing here in a way it is not for most of the markers above: the
     permission is the **owner's**, and the player who airbent the object is
     usually somebody else."""
+    HAUNTING = "haunting"
+    """CR 702.55b: "Cards that are in the exile zone as the result of a haunt ability
+    'haunt' the creature targeted by that ability." `ExileAnnotation.linked_permanent_id`
+    is that creature, which the card's own "When the creature this card haunts dies"
+    trigger (CR 702.55c, it triggers from exile) reads back."""
     LINKED = "linked"
     """CR 607.2a / CR 406.6: a card exiled by an ability of an object that also
     has an ability referring to "the exiled card(s)" - Skyclave Apparition's

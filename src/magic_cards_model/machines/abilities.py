@@ -1585,6 +1585,10 @@ class TriggerWord(StrEnum):
     AT = "at"
 
 
+#: CR 702.55b: "the creature this card haunts" / "the creature it haunts" in a trigger condition.
+HAUNTED_CREATURE_RE = re.compile(r"\bcreature (?:this card|it) haunts\b", re.IGNORECASE)
+
+
 class TriggerEvent(StrEnum):
     """The common trigger shapes, recognised off the condition text.
 
@@ -1673,6 +1677,10 @@ class TriggerEvent(StrEnum):
     #: and produces mana". `CostPayment.tap_for_mana` is the only place the
     #: engine taps a permanent for mana, so that is where this is emitted.
     TAPPED_FOR_MANA = "tapped_for_mana"
+    #: CR 702.55a: "When this spell is put into a graveyard during its resolution" - an
+    #: instant or sorcery leaving the stack for a graveyard as the last step of resolving
+    #: (CR 608.2n). Haunt's trigger; emitted by `Game._resolve_top` for a spell with haunt.
+    RESOLVED_INTO_GRAVEYARD = "resolved_into_graveyard"
     #: A permanent moving from the battlefield straight to exile - the "or is
     #: put into exile" half of CR 701.66a's earthbend. Distinct from `EXILED`
     #: (CR 702.35a), which is scoped to madness's own narrower "exiled this

@@ -21,6 +21,7 @@ from ...numbers import (
 )
 from ..abilities import (
     _ABILITY_WORD,
+    HAUNTED_CREATURE_RE,
     ActivatedAbility,
     TriggeredAbility,
     TriggerEvent,
@@ -300,6 +301,9 @@ def _strip_trailing_standalone_triggered_ability(text: str) -> str:
                 # it is its own ability (Edgar's Awakening, Choking Tethers),
                 # triggered off `machines/triggers.py`, never resolution text.
                 or any(triggers_only_off_the_stack(ability) for ability in parsed)
+                # CR 702.55c: a haunt card's "When the creature this card haunts dies"
+                # triggers from exile, never as part of the spell's resolution.
+                or any(HAUNTED_CREATURE_RE.search(ability.condition or "") for ability in parsed)
             )
         ):
             break

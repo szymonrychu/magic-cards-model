@@ -235,6 +235,10 @@ def executes(keyword: str) -> bool:
         # CR 702.93a: `_undying_ability` (`_TRIGGER_EXPANSIONS`), resolved by
         # `_undying_effect`.
         "undying",
+        # CR 702.55a: `_haunt_ability` (`_TRIGGER_EXPANSIONS`), resolved by `_haunt_effect`;
+        # the exiled card's own "When the creature this card haunts dies" is
+        # `ExileMarker.HAUNTING` read by `machines/triggers/conditions.py`.
+        "haunt",
         # CR 702.43a: the dying half is `_modular_ability`/`_modular_effect` here,
         # the "enters with" half `machines/replacement/enters.
         # _modular_entering_counters`.
@@ -896,6 +900,31 @@ def _undying_ability(ability: KeywordAbility) -> TriggeredAbility:
         effect=(
             "return it to the battlefield under its owner's control with a +1/+1 counter on it"
         ),
+        event=TriggerEvent.DIES,
+    )
+
+
+def _haunt_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.55a: "Haunt" on a permanent means "When this permanent is put into a
+    graveyard from the battlefield, exile it haunting target creature."; on an instant
+    or sorcery spell, "When this spell is put into a graveyard during its resolution,
+    exile it haunting target creature." The printed reminder says which of the two it is."""
+    effect = "exile it haunting target creature"
+    if "spell card" in (ability.reminder or "").lower():
+        return _expansion(
+            ability,
+            keyword="haunt",
+            word=TriggerWord.WHEN,
+            condition="this spell is put into a graveyard during its resolution",
+            effect=effect,
+            event=TriggerEvent.RESOLVED_INTO_GRAVEYARD,
+        )
+    return _expansion(
+        ability,
+        keyword="haunt",
+        word=TriggerWord.WHEN,
+        condition="this permanent is put into a graveyard from the battlefield",
+        effect=effect,
         event=TriggerEvent.DIES,
     )
 
@@ -1875,6 +1904,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "replicate": _single(_replicate_ability),
     "persist": _single(_persist_ability),
     "undying": _single(_undying_ability),
+    "haunt": _single(_haunt_ability),
     "modular": _single(_modular_ability),
     "mobilize": _single(_mobilize_ability),
     "offspring": _single(_offspring_ability),
@@ -6858,6 +6888,26 @@ def _undying_effect(game: Any, ability: AbilityOnStack) -> CardState | None:
     return undying_return(game, source)
 
 
+def _haunt_effect(game: Any, ability: AbilityOnStack) -> None:
+    """CR 702.55a: exile the haunt card from the graveyard it went to, haunting the target
+    creature (CR 702.55b: the exiled card is linked to it). A card that has left the graveyard
+    since, or a target that is gone, does nothing (CR 608.2b, CR 400.7)."""
+    source = ability.source(game)
+    if source is None or not ability.targets or source.zone is not Zone.GRAVEYARD:
+        return
+    target = game.resolve_target(ability.targets[0])
+    if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+        return
+    game.exile_permanent(source)
+    if source.zone is Zone.EXILE:
+        source.exile_annotation = ExileAnnotation(
+            marker=ExileMarker.HAUNTING,
+            owner=source.owner,
+            turn_exiled=game.turn.turns_taken if game.turn is not None else None,
+            linked_permanent_id=target.id,
+        )
+
+
 def _modular_effect(game: Any, ability: AbilityOnStack) -> None:
     """CR 702.43a's dying half: the +1/+1 counters it had as it last existed on the
     battlefield (CR 603.10a, `last_known_counters`) go onto the target artifact
@@ -7637,6 +7687,7 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "prowess": _prowess_effect,
     "persist": _persist_effect,
     "undying": _undying_effect,
+    "haunt": _haunt_effect,
     "modular": _modular_effect,
     "cascade": _cascade_effect,
     "ripple": _ripple_effect,

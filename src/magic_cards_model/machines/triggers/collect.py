@@ -10,6 +10,7 @@ from ...models.zone import Zone
 from ...numbers import COUNT, parse_count
 from ...snapshot import scan_pin
 from ..abilities import (
+    HAUNTED_CREATURE_RE,
     Ability,
     AbilityKind,
     ActivatedAbility,
@@ -313,6 +314,13 @@ def zones_ability_functions_in(
     cycled = _CYCLE_CONDITION.match(lowered.strip())
     if cycled is not None and cycled.group("what") == "this card":
         return frozenset({Zone.GRAVEYARD, Zone.EXILE})
+
+    # CR 702.55a: a haunt spell's trigger happens as the spell lands in a graveyard, and
+    # CR 702.55c: the exiled card's "creature this card haunts dies" works from exile.
+    if ability.event is TriggerEvent.RESOLVED_INTO_GRAVEYARD:
+        return frozenset({Zone.GRAVEYARD})
+    if ability.event is TriggerEvent.DIES and HAUNTED_CREATURE_RE.search(lowered):
+        return frozenset({Zone.EXILE})
 
     # CR 702.35a: madness watches its own exile, which can only be observed
     # while the card is, in fact, being exiled that way.

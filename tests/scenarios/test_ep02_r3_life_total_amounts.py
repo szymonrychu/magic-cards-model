@@ -358,3 +358,58 @@ def test_loxodon_lifechanter_may_set_life_to_total_toughness(take):
     scenario.will_take_the_may(take)
     _creature_etb(scenario, "Loxodon Lifechanter")
     assert _life(scenario) == (6 + 2 + 4 if take else 20)
+
+
+# --------------------------------------------------------------------------
+# Haunt (Benediction of Moons) - CR 702.55a, 702.55b, 702.55c
+# --------------------------------------------------------------------------
+
+
+def _haunted_benediction():
+    """alice casts Benediction of Moons while bob controls a lone Grizzly Bears."""
+    scenario = _main(_build(["Plains"], ["Grizzly Bears"], hand=["Benediction of Moons"]))
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.will_choose_targets(bears, source="Benediction of Moons")
+    scenario.cast_and_resolve("Benediction of Moons", auto=True, username="alice")
+    _settle(scenario)
+    return scenario, bears
+
+
+def test_benediction_haunts_the_creature_it_targets_when_it_resolves():
+    """CR 702.55a: put into a graveyard during resolution, it is exiled haunting a creature."""
+    scenario, bears = _haunted_benediction()
+    card = next(c for c in scenario.game.exile if c.name == "Benediction of Moons")
+    assert card.exile_annotation.marker.value == "haunting"
+    assert card.exile_annotation.linked_permanent_id == bears.id
+    assert _life(scenario) == 22  # the spell itself gained 1 per player first
+    assert not [c for c in scenario.player("alice").graveyard if c.name == "Benediction of Moons"]
+
+
+def test_the_haunting_card_triggers_from_exile_when_its_creature_dies():
+    """CR 702.55b-c: "the creature this card haunts" dies, and the exiled card still triggers."""
+    scenario, bears = _haunted_benediction()
+    scenario.game.destroy(bears)
+    _settle(scenario)
+    assert _life(scenario) == 24
+
+
+def test_another_creature_dying_does_not_trigger_the_haunting_card():
+    scenario = _main(
+        _build(["Plains"], ["Grizzly Bears", "Hill Giant"], hand=["Benediction of Moons"])
+    )
+    bears = scenario.creature("Grizzly Bears", "bob")
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.will_choose_targets(bears, source="Benediction of Moons")
+    scenario.cast_and_resolve("Benediction of Moons", auto=True, username="alice")
+    _settle(scenario)
+    scenario.game.destroy(giant)
+    _settle(scenario)
+    assert _life(scenario) == 22
+
+
+def test_benediction_with_no_creature_to_haunt_stays_in_the_graveyard():
+    scenario = _main(_build(["Plains"], hand=["Benediction of Moons"]))
+    scenario.cast_and_resolve("Benediction of Moons", auto=True, username="alice")
+    _settle(scenario)
+    assert [c for c in scenario.player("alice").graveyard if c.name == "Benediction of Moons"]
+    assert _life(scenario) == 22
