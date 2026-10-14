@@ -2613,12 +2613,12 @@ def test_a_snapshot_written_before_the_death_batch_is_refused() -> None:
 #: The version stamped before EP02-R3-T2: the Cave mana provenance sub-pool
 #: (`ManaPool.cave`, `ManaPayment.cave_spent`, `CastRecord.cave_mana_spent`), the
 #: turn-long `TokenAmountReplacement` and the foretell mana restriction. The last
-#: shape without them is 169.
-_SCHEMA_VERSION_BEFORE_EP02_R3_T2_CAVE_MANA = 169
+#: shape without them is 171.
+_SCHEMA_VERSION_BEFORE_EP02_R3_T2_CAVE_MANA = 171
 
 
 def test_a_snapshot_written_before_cave_mana_provenance_is_refused() -> None:
-    """A version-169 dump has no record of which floating or spent mana came from
+    """A version-171 dump has no record of which floating or spent mana came from
     a Cave, so a decode as current would count Bat Colony's Bats from zero: refused
     instead."""
     from magic_cards_model.models.game.records import CastRecord
@@ -2640,12 +2640,12 @@ def test_a_snapshot_written_before_cave_mana_provenance_is_refused() -> None:
 
 #: The version stamped before EP02-R3-T3: `PlayPermission.any_color_mana`
 #: (Daxos of Meletis's "you may spend mana as though it were mana of any color
-#: to cast that spell"). The last shape without it is 169.
-_SCHEMA_VERSION_BEFORE_EP02_R3_T3_ANY_COLOR_MANA = 169
+#: to cast that spell"). The last shape without it is 172.
+_SCHEMA_VERSION_BEFORE_EP02_R3_T3_ANY_COLOR_MANA = 172
 
 
 def test_a_snapshot_written_before_the_any_color_mana_permission_is_refused() -> None:
-    """A version-169 dump holds a play permission with no any-color rider, so a
+    """A version-172 dump holds a play permission with no any-color rider, so a
     decode as current would refuse the payment the exiled card was granted:
     refused instead."""
     from magic_cards_model.machines.casting.permissions import PlayPermission
@@ -2664,12 +2664,12 @@ def test_a_snapshot_written_before_the_any_color_mana_permission_is_refused() ->
 
 #: The version stamped before EP02-R3-T8: `PlayPermission.harmonize` (a graveyard card that
 #: "gains harmonize", Songcrafter Mage) and the `CipherCopyAndCast` delayed-effect variant
-#: (an encoded card's trigger, Whispering Madness). The last shape without them is 169.
-_SCHEMA_VERSION_BEFORE_EP02_R3_T8_HARMONIZE = 169
+#: (an encoded card's trigger, Whispering Madness). The last shape without them is 175.
+_SCHEMA_VERSION_BEFORE_EP02_R3_T8_HARMONIZE = 175
 
 
 def test_a_snapshot_written_before_granted_harmonize_is_refused() -> None:
-    """A version-169 dump cannot say that a permission is a harmonize grant, so a
+    """A version-175 dump cannot say that a permission is a harmonize grant, so a
     decode as current would cast the card without its tap discount and without exiling
     it afterwards: refused instead."""
     from magic_cards_model.machines.casting import PlayPermission

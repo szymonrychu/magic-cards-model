@@ -2010,7 +2010,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 174
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 176
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2375,7 +2375,7 @@ class Game(
     #: (the simultaneous-death batch of "whenever one or more creatures die",
     #: CR 603.2c / CR 704.3), reachable from `Game` through a pending
     #: `AbilityOnStack.event`.
-    #: 172 (EP02-R3-T3, reserved: 169 + task 3): `PlayPermission` gained
+    #: 173 (EP02-R3-T3): `PlayPermission` gained
     #: `any_color_mana` (Daxos of Meletis's "you may spend mana as though it were
     #: mana of any color to cast that spell" on a CR 601.3 grant); a decoded older
     #: permission would price the cast against the printed colors, and a pending
@@ -2383,7 +2383,7 @@ class Game(
     #: selector variant `CreaturesControlledButNotOwnedBy` (Laughing Jasper
     #: Flint's "creatures you control but don't own are Mercenaries"), reachable
     #: from `Game.continuous_effects`.
-    #: 170 (EP-02-R3-T4): `GameEvent` gained `batch_ids` (a pending
+    #: 174 (EP-02-R3-T4): `GameEvent` gained `batch_ids` (a pending
     #: `AbilityOnStack.event`'s "from among them", for CR 603.2c's batched "put
     #: into exile" event); an older dump has none, so a "put into exile" trigger
     #: would never have seen the exiled cards. Also dispatch a decoded game could
@@ -2393,7 +2393,7 @@ class Game(
     #: return, "return ... and all Auras attached to it", and the any-type-mana
     #: rider on "If you cast a spell this way"; an older dump would resolve
     #: each of these as a no-op.
-    #: 174 (EP02-R3-T5, reserved: 169 + task 5): `Game` gained
+    #: 175 (EP02-R3-T5): `Game` gained
     #: `loyalty_activation_allowance` (Kaito, Dancing Shadow's "activate loyalty abilities of
     #: Kaito twice this turn", CR 606.3); `ExileMarker` gained `HAUNTING` (CR 702.55b) and
     #: `TriggerEvent` gained `RESOLVED_INTO_GRAVEYARD` (CR 702.55a), both reachable through a
@@ -2460,7 +2460,7 @@ class Game(
     #: counts ("for each <type> card in your graveyard", "card types among
     #: cards in your graveyard", "that player's graveyard") now resolve where
     #: an older dump would have resolved the same text as a no-op.
-    #: 170 (EP02-R3-T8): `PlayPermission` gained `harmonize` (CR 702.180a), so a graveyard
+    #: 176 (EP02-R3-T8): `PlayPermission` gained `harmonize` (CR 702.180a), so a graveyard
     #: card that "gains harmonize" (Songcrafter Mage) is cast with the tap-a-creature discount
     #: and exiled instead of going to the graveyard; and `DelayedEffectSpec` gained the
     #: `CipherCopyAndCast` variant (CR 702.99a, Whispering Madness), which an older decode
@@ -2474,7 +2474,7 @@ class Game(
     #: this way", a loyalty-counter-sized creature, a base power and toughness set on a
     #: group, and a CR 603.8 "has N or fewer counters" state; an older dump would
     #: resolve each of these as a no-op.
-    #: 170 (EP-02-R3-T2): `ManaPool` gained `cave` and `ManaPayment` `cave_spent`
+    #: 172 (EP-02-R3-T2): `ManaPool` gained `cave` and `ManaPayment` `cave_spent`
     #: (CR 106.3's Cave provenance), `CastRecord` gained `cave_mana_spent` (Bat Colony),
     #: and `CreatedReplacementSpec` gained `TokenAmountReplacement` (Kaya's turn-long
     #: token doubler); `ManaSpend`/`SpendClause` gained `has_foretell`/
