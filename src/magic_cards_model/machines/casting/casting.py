@@ -5695,7 +5695,9 @@ class MarkedExile(EngineModel):
                 game=self.game,
                 payer=self.player,
                 # CR 106.6: foretelling's {2} is a spend a restriction may name.
-                spend=ManaSpend.foretelling(self.card) if self.marker is ExileMarker.FORETOLD else None,
+                spend=ManaSpend.foretelling(self.card)
+                if self.marker is ExileMarker.FORETOLD
+                else None,
             )
         return self.payment
 

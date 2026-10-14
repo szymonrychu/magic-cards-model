@@ -9,11 +9,13 @@ import re
 from typing import TYPE_CHECKING
 
 from ..models.card import Type
+from ..models.card_state import Counter
 from ..models.player import Player
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
 from .abilities import KeywordAbility, TriggeredAbility, TriggerEvent, TriggerWord
 from .amount_sentences import parse_put_counters
+from .cost.text import total_cost_for_phrase
 from .decisions import Decision, DecisionKind, source_id_of
 from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES, SPELL_TEXT
 from .effects._common import AbilityEffect, Effect, TargetedClause, _targets_understood
@@ -21,6 +23,7 @@ from .effects.amounts import _for_each_multiplier
 from .effects.continuous import transform_permanent
 from .effects.counters import _counter_kind
 from .effects.tokens import _parse_token_clause
+from .keywords import exile_until
 from .layers import is_genuine_resolution_layer_sentence
 
 if TYPE_CHECKING:
@@ -698,7 +701,8 @@ def _parse_create_then_choose_counter_for_each(
 # three or more +1/+1 counters on it, transform <this enchantment>."
 
 _TARGET_COUNTER_THEN_TRANSFORM_RE = re.compile(
-    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?P<target>target [^.]+?)\.\s+"
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
+    r"(?P<target>target [^.]+?)\.\s+"
     rf"then if that (?P<noun>[a-z]+) has (?P<threshold>{COUNT}) or more (?P=kind) counters on it, "
     r"transform (?P<self>[^.]+?)\.?$",
     re.IGNORECASE,
@@ -760,9 +764,7 @@ def _parse_gain_life_equal_to_crafted_cards_mana_value(
         source = ability.source_or_last_known(game)
         if source is None:
             return
-        amount = sum(
-            int(state.card.cmc) for state in game.exile if state.id in source.crafted_with
-        )
+        amount = sum(int(state.card.cmc) for state in game.exile if state.id in source.crafted_with)
         if amount > 0:
             game.gain_life(game.player(ability.controller), amount)
 
@@ -821,5 +823,65 @@ def _parse_search_same_name_as_each_tapped_permanent(text: str) -> Effect | None
         for state in found:
             game.put_onto_battlefield(state, caster.username)
         game.shuffle_library(opponent)
+
+    return effect
+
+
+# -- "You get {E}{E}. Then if you cast it from your hand, exile cards from the top of
+# your library until you exile a nonland card. You may cast that card by paying an
+# amount of {E} equal to its mana value rather than paying its mana cost."
+
+_ENERGY_THEN_EXILE_CAST_RE = re.compile(
+    r"^you get (?P<energy>(?:\{E\})+)\s*\.\s+then if you cast it from your hand, exile cards "
+    r"from the top of your library until you exile a nonland card\.\s+you may cast that card "
+    r"by paying an amount of \{E\} equal to its mana value rather than paying its mana cost\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_energy_then_exile_and_cast_for_energy(effect_text: str) -> AbilityEffect | None:
+    """Amped Raptor. The energy comes first (CR 107.14), then, only if the
+    source was cast from its owner's hand (CR 601.2a; a copy was not cast,
+    CR 707.10), exile until a nonland card (the exiling half every
+    "until you exile" sentence shares, `keywords.exile_until`). The card may be
+    cast during resolution (CR 608.2g) for `{E}` equal to its mana value as an
+    alternative cost (CR 118.9): the energy has to be there (CR 107.14), and a
+    card not cast stays in exile."""
+    if "amount of {e} equal to its mana value" not in effect_text.lower():
+        return None
+    match = _ENERGY_THEN_EXILE_CAST_RE.fullmatch(" ".join(effect_text.strip().split()))
+    if match is None:
+        return None
+    gained = match.group("energy").upper().count("{E}")
+
+    def effect(game: "Game", ability: "AbilityOnStack") -> None:
+        controller = game.player(ability.controller)
+        game.add_player_counters(controller, Counter.ENERGY, gained)
+        source = ability.source_or_last_known(game)
+        record = None if source is None else game.cast_record_of(source)
+        if record is None or record.is_copy or record.origin_zone is not Zone.HAND:
+            return
+        exiled = exile_until(
+            game,
+            controller,
+            lambda state, _: not state.card.is_land,
+            source_name=ability.source_name,
+        )
+        hit = exiled[-1] if exiled and not exiled[-1].card.is_land else None
+        if hit is None:
+            return
+        value = int(hit.card.cmc)
+        cost = total_cost_for_phrase("{E}" * value, ability.controller) if value else None
+        game.may_cast_during_resolution(
+            hit,
+            ability.controller,
+            prompt=f"cast {hit.name} by paying {{E}} x {value} rather than its mana cost",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+            source_name=ability.source_name,
+            rule="Amped Raptor",
+            alternative_cost=cost,
+        )
 
     return effect

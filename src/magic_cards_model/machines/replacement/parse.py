@@ -4471,8 +4471,8 @@ from .model import (  # noqa: E402
     DamageLifeFloorReplacement,
     DrawSkipReplacement,
     EntersTappedThisTurn,
-    TokenAmountReplacement,
-    token_creation_matches,
     EnterUncastExile,
     EventKind,
+    TokenAmountReplacement,
+    token_creation_matches,
 )

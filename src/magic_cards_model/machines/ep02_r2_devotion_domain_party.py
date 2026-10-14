@@ -212,7 +212,15 @@ def look_top_effect(text: str, *, for_spell: bool = False) -> "Any | None":
 
 
 def _build(  # noqa: ANN202
-    reveal, depth, kept_kind, k, rest_to, win, draw_at, life_tails, token_tails=()  # noqa: ANN001
+    reveal,
+    depth,
+    kept_kind,
+    k,
+    rest_to,
+    win,
+    draw_at,
+    life_tails,
+    token_tails=(),  # noqa: ANN001
 ):
     def effect(game: "Game", stack_object: Any) -> None:
         from .effects.counters import _counter_kind

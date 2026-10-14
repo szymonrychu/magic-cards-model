@@ -3242,9 +3242,7 @@ _OTHER_THAN_THIS_TAIL_RE = re.compile(
     r"(?:[a-z]+)$",
     re.IGNORECASE,
 )
-_FORETOLD_IN_EXILE_EACH_RE = re.compile(
-    r"^foretold card you own in exile$", re.IGNORECASE
-)
+_FORETOLD_IN_EXILE_EACH_RE = re.compile(r"^foretold card you own in exile$", re.IGNORECASE)
 _TIME_KICKED_EACH_RE = re.compile(r"^time (?:it|this spell|[A-Z][^.]*?) was kicked$")
 _LEFT_UNDER_YOUR_CONTROL_EACH_RE = re.compile(
     r"^(?P<quality>[a-z -]+?) that left the battlefield under your control this turn$",

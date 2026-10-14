@@ -1531,7 +1531,9 @@ def _dichotomancy(bob_library):
 
 def test_dichotomancy_takes_a_same_name_card_per_tapped_nonland_permanent():
     scenario = _dichotomancy(["Grizzly Bears"] * 3 + ["Hill Giant", "Forest"])
-    mine = sorted(c.name for c in scenario.game.permanents_controlled_by("alice") if c.name != "Island")
+    mine = sorted(
+        c.name for c in scenario.game.permanents_controlled_by("alice") if c.name != "Island"
+    )
     assert mine == ["Grizzly Bears", "Grizzly Bears", "Hill Giant"]
     # Bob's untapped Bears and his tapped land asked for nothing.
     assert sorted(c.name for c in scenario.player("bob").library) == ["Forest", "Grizzly Bears"]
@@ -1539,7 +1541,9 @@ def test_dichotomancy_takes_a_same_name_card_per_tapped_nonland_permanent():
 
 def test_dichotomancy_finds_what_the_library_has():
     scenario = _dichotomancy(["Grizzly Bears", "Forest"])
-    mine = sorted(c.name for c in scenario.game.permanents_controlled_by("alice") if c.name != "Island")
+    mine = sorted(
+        c.name for c in scenario.game.permanents_controlled_by("alice") if c.name != "Island"
+    )
     assert mine == ["Grizzly Bears"]
 
 
@@ -1585,3 +1589,64 @@ def test_intrude_on_the_mind_opponent_may_take_the_other_pile():
     assert {c.id for c in scenario.player("alice").hand} == {top[2].id, top[3].id, top[4].id}
     (thopter,) = [c for c in _tokens(scenario) if "Thopter" in c.name]
     assert thopter.counter_count(Counter.PLUS_ONE) == 2
+
+
+# -- Amped Raptor: {E}{E}, then if cast from hand exile to a nonland card and
+# maybe cast it for {E} equal to its mana value
+
+
+def _amped_raptor(library, *, cast=True):
+    from magic_cards_model.models.card_state import Counter as C
+
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Amped Raptor"],
+            battlefield=["Mountain", "Mountain"],
+            library=library,
+        )
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    if cast:
+        scenario.cast_and_resolve(
+            "Amped Raptor", *scenario.untapped_sources("Mountain", "Mountain")
+        )
+    else:
+        scenario.put_onto_battlefield("Amped Raptor", "alice")
+    return scenario, C
+
+
+def test_amped_raptor_casts_the_exiled_card_for_energy_equal_to_its_mana_value():
+    scenario, C = _amped_raptor(["Forest", "Lightning Bolt", "Forest", "Forest"])
+    scenario.will_take_the_may(True)
+    scenario.will_choose_targets("bob")
+    _settle(scenario)
+    assert scenario.player("alice").counters[C.ENERGY] == 1
+    assert scenario.player("bob").life == 17
+    assert [c.name for c in scenario.game.exile] == ["Forest"]
+
+
+def test_amped_raptor_may_decline_and_the_card_stays_in_exile():
+    scenario, C = _amped_raptor(["Forest", "Lightning Bolt", "Forest", "Forest"])
+    scenario.will_take_the_may(False)
+    _settle(scenario)
+    assert scenario.player("alice").counters[C.ENERGY] == 2
+    assert sorted(c.name for c in scenario.game.exile) == ["Forest", "Lightning Bolt"]
+
+
+def test_amped_raptor_cannot_afford_a_card_costing_more_energy_than_it_has():
+    scenario, C = _amped_raptor(["Hill Giant", "Forest"])
+    scenario.will_take_the_may(True)
+    _settle(scenario)
+    assert scenario.player("alice").counters[C.ENERGY] == 2
+    assert [c.name for c in scenario.game.exile] == ["Hill Giant"]
+
+
+def test_amped_raptor_put_onto_the_battlefield_only_gets_energy():
+    scenario, C = _amped_raptor(["Lightning Bolt", "Forest"], cast=False)
+    _settle(scenario)
+    assert scenario.player("alice").counters[C.ENERGY] == 2
+    assert not scenario.game.exile
