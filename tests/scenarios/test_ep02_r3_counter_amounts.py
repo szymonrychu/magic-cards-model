@@ -520,3 +520,322 @@ def test_geralf_makes_no_zombie_for_the_first_spell_of_the_turn():
 def test_geralf_makes_a_zombie_for_each_later_spell_of_the_turn():
     scenario = _geralf_after_spells(3)
     assert len(_zombies(scenario)) == 2
+
+
+# -- Kutzil's Flanker: "a +1/+1 counter ... for each creature that left the
+# battlefield under your control this turn" (mode 1)
+
+
+def _flanker_after(departures):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Kutzil's Flanker", "Shock", "Shock"][: 1 + departures],
+            battlefield=["Plains"] * 3 + ["Mountain"] * 2 + ["Grizzly Bears", "Savannah Lions"],
+            library=["Forest"] * 8,
+        )
+        .player("bob", battlefield=["Grizzly Bears"], library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    victims = ["Grizzly Bears", "Savannah Lions"][:departures]
+    for victim in victims:
+        scenario.cast_and_resolve(
+            "Shock",
+            *scenario.untapped_sources("Mountain"),
+            targets=[scenario.creature(victim, "alice")],
+        )
+    scenario.will_choose_mode(
+        "Put a +1/+1 counter on this creature for each creature that left the battlefield "
+        "under your control this turn."
+    )
+    scenario.cast_and_resolve("Kutzil's Flanker", *scenario.untapped_sources("Plains", "Plains", "Plains"))
+    _settle(scenario)
+    return scenario
+
+
+def test_kutzils_flanker_counts_creatures_that_left_under_your_control():
+    scenario = _flanker_after(2)
+    (flanker,) = _named(scenario, "Kutzil's Flanker")
+    assert flanker.counter_count(Counter.PLUS_ONE) == 2
+
+
+def test_kutzils_flanker_counts_one_departure():
+    scenario = _flanker_after(1)
+    (flanker,) = _named(scenario, "Kutzil's Flanker")
+    assert flanker.counter_count(Counter.PLUS_ONE) == 1
+
+
+def test_kutzils_flanker_with_no_departures_gets_nothing():
+    scenario = _flanker_after(0)
+    (flanker,) = _named(scenario, "Kutzil's Flanker")
+    assert flanker.counter_count(Counter.PLUS_ONE) == 0
+
+
+def test_kutzils_flanker_ignores_an_opponents_creature_leaving():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Kutzil's Flanker", "Shock"],
+            battlefield=["Plains"] * 3 + ["Mountain"],
+            library=["Forest"] * 8,
+        )
+        .player("bob", battlefield=["Grizzly Bears"], library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve(
+        "Shock", *scenario.untapped_sources("Mountain"), targets=[scenario.creature("Grizzly Bears", "bob")]
+    )
+    scenario.will_choose_mode(
+        "Put a +1/+1 counter on this creature for each creature that left the battlefield "
+        "under your control this turn."
+    )
+    scenario.cast_and_resolve("Kutzil's Flanker", *scenario.untapped_sources("Plains", "Plains", "Plains"))
+    _settle(scenario)
+    (flanker,) = _named(scenario, "Kutzil's Flanker")
+    assert flanker.counter_count(Counter.PLUS_ONE) == 0
+
+
+# -- Emergent Sequence: a land becomes a 0/0 Fractal; a counter per land that
+# entered under your control this turn
+
+
+def _emergent(lands_played):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Emergent Sequence", *["Forest"] * lands_played],
+            battlefield=["Forest", "Island"],
+            library=["Forest", "Island", "Forest", "Forest"],
+        )
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    for _ in range(lands_played):
+        scenario.put_onto_battlefield("Forest", "alice")
+    scenario.cast_and_resolve("Emergent Sequence", *scenario.untapped_sources("Forest", "Island"))
+    _settle(scenario)
+    return scenario
+
+
+def _fractal_land(scenario):
+    found = [
+        c
+        for c in scenario.game.permanents_controlled_by("alice")
+        if c.counter_count(Counter.PLUS_ONE) or "Fractal" in str(scenario.game.characteristics_of(c).subtypes)
+    ]
+    assert len(found) == 1
+    return found[0]
+
+
+def test_emergent_sequence_land_enters_alone_is_a_one_one_fractal_land():
+    scenario = _emergent(0)
+    land = _fractal_land(scenario)
+    chars = scenario.game.characteristics_of(land)
+    assert chars.is_creature and chars.is_land
+    assert land.tapped
+    assert scenario.game.power_of(land) == 1
+    assert land.counter_count(Counter.PLUS_ONE) == 1
+
+
+def test_emergent_sequence_counts_a_land_played_earlier_this_turn():
+    scenario = _emergent(2)
+    land = _fractal_land(scenario)
+    assert land.counter_count(Counter.PLUS_ONE) == 3
+    assert scenario.game.power_of(land) == 3
+
+
+# -- Sovereign Okinec Ahau: counters equal to power minus base power, for each
+# creature you control
+
+
+def _okinec_attack(*extra, pump=None, opponent=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Giant Growth"] if pump else [],
+            battlefield=["Sovereign Okinec Ahau", "Forest", *extra],
+            library=["Forest"] * 8,
+        )
+        .player("bob", battlefield=list(opponent), library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    return scenario
+
+
+def test_okinec_trigger_adds_the_difference_to_each_pumped_creature():
+    scenario = _okinec_attack("Grizzly Bears", "Savannah Lions")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    lions = scenario.creature("Savannah Lions", "alice")
+    bears.add_counters(Counter.PLUS_ONE, 2)
+    okinec = scenario.creature("Sovereign Okinec Ahau", "alice")
+    scenario.attack_with(okinec)
+    _settle(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 4
+    assert lions.counter_count(Counter.PLUS_ONE) == 0
+    assert okinec.counter_count(Counter.PLUS_ONE) == 0
+
+
+def test_okinec_counts_itself_when_it_is_bigger_than_its_base_power():
+    scenario = _okinec_attack()
+    okinec = scenario.creature("Sovereign Okinec Ahau", "alice")
+    okinec.add_counters(Counter.PLUS_ONE, 1)
+    scenario.attack_with(okinec)
+    _settle(scenario)
+    assert okinec.counter_count(Counter.PLUS_ONE) == 2
+
+
+def test_okinec_counts_a_temporary_pump_too():
+    scenario = _okinec_attack("Grizzly Bears", pump=True)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.cast_and_resolve("Giant Growth", *scenario.untapped_sources("Forest"), targets=[bears])
+    okinec = scenario.creature("Sovereign Okinec Ahau", "alice")
+    scenario.attack_with(okinec)
+    _settle(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 3
+
+
+def test_okinec_ignores_the_opponents_creatures():
+    scenario = _okinec_attack(opponent=["Grizzly Bears"])
+    theirs = scenario.creature("Grizzly Bears", "bob")
+    theirs.add_counters(Counter.PLUS_ONE, 2)
+    scenario.attack_with(scenario.creature("Sovereign Okinec Ahau", "alice"))
+    _settle(scenario)
+    assert theirs.counter_count(Counter.PLUS_ONE) == 2
+
+
+# -- Bounding Felidar: "attacks while saddled": a counter on each other creature,
+# 1 life per creature
+
+
+def _saddle_felidar(scenario, *saddlers):
+    from magic_cards_model.machines.keywords import saddle_activation
+
+    mount = scenario.creature("Bounding Felidar", "alice")
+    activation = saddle_activation(scenario.game, mount, list(saddlers), "alice")
+    assert activation.why_not() is None
+    activation.begin_paying()
+    activation.payment.pay()
+    activation.activate()
+    scenario.pass_until_resolved()
+    return mount
+
+
+def _felidar_board():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Bounding Felidar", "Grizzly Bears", "Savannah Lions", "Memnite"],
+            library=["Plains"] * 5,
+        )
+        .player("bob", library=["Plains"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_bounding_felidar_saddled_attack_pumps_each_other_creature_and_gains_life():
+    scenario = _felidar_board()
+    bears = scenario.creature("Grizzly Bears", "alice")
+    mount = _saddle_felidar(scenario, bears)
+    life = scenario.player("alice").life
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(mount)
+    _settle(scenario)
+    others = [c for c in scenario.game.permanents_controlled_by("alice") if c is not mount]
+    assert len(others) == 3
+    assert all(c.counter_count(Counter.PLUS_ONE) == 1 for c in others)
+    assert mount.counter_count(Counter.PLUS_ONE) == 0
+    assert scenario.player("alice").life == life + 3
+
+
+def test_bounding_felidar_unsaddled_attack_does_nothing():
+    scenario = _felidar_board()
+    mount = scenario.creature("Bounding Felidar", "alice")
+    life = scenario.player("alice").life
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(mount)
+    _settle(scenario)
+    assert scenario.player("alice").life == life
+    assert scenario.creature("Memnite", "alice").counter_count(Counter.PLUS_ONE) == 0
+
+
+# -- Spire Mechcycle: exhaust, a counter per other Mount/Vehicle you control
+
+
+def test_spire_mechcycle_exhaust_counts_other_mounts_and_vehicles():
+    scenario = _main_board("Spire Mechcycle", "Bounding Felidar", "Spire Mechcycle")
+    cycles = _named(scenario, "Spire Mechcycle")
+    felidar = _named(scenario, "Bounding Felidar")[0]
+    scenario.activate(cycles[0], tapping_for_cost=[cycles[1]], index=0)
+    _settle(scenario)
+    # the other Vehicle (tapped as the cost) and the Mount: two others
+    assert cycles[0].counter_count(Counter.PLUS_ONE) == 2
+    assert scenario.game.characteristics_of(cycles[0]).is_creature
+    del felidar
+
+
+def test_spire_mechcycle_exhaust_is_once_only():
+    scenario = _main_board("Spire Mechcycle", "Bounding Felidar", "Bounding Felidar")
+    cycle = _named(scenario, "Spire Mechcycle")[0]
+    felidars = _named(scenario, "Bounding Felidar")
+    scenario.activate(cycle, tapping_for_cost=[felidars[0]], index=0)
+    _settle(scenario)
+    assert cycle.counter_count(Counter.PLUS_ONE) == 2
+    assert scenario.why_cannot_activate(cycle, 0, "alice")
+
+
+# -- The Goose Mother: enters with X counters; half X Food, rounded up
+
+
+def _goose(x):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["The Goose Mother"],
+            battlefield=["Forest"] * 5 + ["Island"] * 2,
+            library=["Forest"] * 8,
+        )
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    spell = scenario.find("The Goose Mother", Zone.HAND, "alice")
+    scenario.game.cast(
+        spell, "alice", x_value=x, mana_sources=scenario.untapped_sources(*(["Forest"] * (x + 1)), "Island"),
+    )
+    scenario.pass_until_resolved()
+    _settle(scenario)
+    return scenario
+
+
+def _food(scenario):
+    return [c for c in scenario.game.permanents_controlled_by("alice") if c.name.startswith("Food")]
+
+
+def test_goose_mother_x_three_makes_two_food():
+    scenario = _goose(3)
+    (goose,) = _named(scenario, "The Goose Mother")
+    assert goose.counter_count(Counter.PLUS_ONE) == 3
+    assert len(_food(scenario)) == 2
+
+
+def test_goose_mother_x_four_makes_two_food():
+    scenario = _goose(4)
+    assert len(_food(scenario)) == 2
+
+
+def test_goose_mother_x_one_makes_one_food():
+    scenario = _goose(1)
+    assert len(_food(scenario)) == 1

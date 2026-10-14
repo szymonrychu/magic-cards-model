@@ -3207,6 +3207,17 @@ _LIFE_LOST_BY_OPPONENTS_EACH_RE = re.compile(
 )
 
 
+_OTHER_THAN_THIS_TAIL_RE = re.compile(
+    r"^(?P<what>[A-Za-z]+(?: (?:and/or|or) [A-Za-z]+)*) you control other than this "
+    r"(?:[a-z]+)$",
+    re.IGNORECASE,
+)
+_LEFT_UNDER_YOUR_CONTROL_EACH_RE = re.compile(
+    r"^(?P<quality>[a-z -]+?) that left the battlefield under your control this turn$",
+    re.IGNORECASE,
+)
+
+
 def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int] | None:
     """The count of an "N `<effect>` for each `<phrase>`" tail, as a
     `(game, controller, source_id) -> int` reader, or `None` when `phrase` is
@@ -3222,6 +3233,11 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
     spells the count out that way instead.
     """
     stripped = phrase.strip().rstrip(".")
+    if other_than_this := _OTHER_THAN_THIS_TAIL_RE.fullmatch(stripped):
+        # Spire Mechcycle: "Mount and/or Vehicle you control other than this
+        # Vehicle" says what "other Mount or Vehicle you control" says - the
+        # source itself is the one left out (CR 608.2h counts once).
+        stripped = f"other {other_than_this.group('what').replace('and/or', 'or')} you control"
     if _TREASURE_MANA_SPENT_EACH_RE.fullmatch(stripped):
         # Fixed as the spell was cast (CR 601.2h), never the Treasures still
         # on the board as it resolves.
@@ -3243,6 +3259,21 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
         if counted is None:
             return None
         return lambda game, _controller, _source_id: _count_for_targeted_player(game, counted)
+    if left := _LEFT_UNDER_YOUR_CONTROL_EACH_RE.fullmatch(stripped):
+        # Kutzil's Flanker: "creature that left the battlefield under your
+        # control this turn" - `Game.turn_history`'s "left_battlefield" entries
+        # (one per departure, CR 603.10a's look-back characteristics), those
+        # this player controlled as they went; counted as the effect applies
+        # (CR 608.2h).
+        from ..conditions.history import _quality
+
+        quality = _quality(left.group("quality"))
+        if quality is not None:
+            return lambda game, controller, _source_id: sum(
+                1
+                for entry in game.turn_history
+                if entry.kind == "left_battlefield" and entry.player == controller and quality(entry)
+            )
     types_among = card_types_among_spells_cast_reader(stripped)
     if types_among is not None:
         # CR 608.2h: counted once, as the effect applies.

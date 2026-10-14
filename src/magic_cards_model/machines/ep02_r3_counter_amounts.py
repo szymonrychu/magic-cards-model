@@ -15,6 +15,7 @@ from ..numbers import COUNT, parse_count
 from .abilities import KeywordAbility, TriggeredAbility, TriggerEvent, TriggerWord
 from .amount_sentences import parse_put_counters
 from .decisions import Decision, DecisionKind, source_id_of
+from .layers import is_genuine_resolution_layer_sentence
 from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES
 from .effects._common import AbilityEffect, TargetedClause, _targets_understood
 from .effects.amounts import _for_each_multiplier
@@ -215,5 +216,258 @@ def _parse_counters_on_entering_object_for_each_other_entered(
         others = game.turn_count(fact, ability.controller) - 1
         if others > 0:
             game.add_counters(subject, kind, unit * others)
+
+    return effect
+
+
+# -- "Search your library for a basic land card, put it onto the battlefield
+# tapped, then shuffle. That land becomes a 0/0 green and blue Fractal creature
+# that's still a land. Put a +1/+1 counter on it for each land you had enter
+# the battlefield under your control this turn."
+
+_SEARCH_ANIMATE_COUNT_RE = re.compile(
+    r"^search your library for an? (?P<quality>[a-z ]+?) card, put it onto the battlefield "
+    r"tapped, then shuffle\.\s+that land becomes (?P<becomes>an? .+? creature) that's still "
+    r"an? (?P<still>[a-z]+)\.\s+put (?P<n>{count}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
+    r"it for each land you had enter the battlefield under your control this turn\.?$".replace(
+        "{count}", COUNT
+    ),
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_search_animate_then_count_counters(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """Emergent Sequence: the found land (CR 701.23a, "that land" is the card
+    the search put onto the battlefield, CR 400.7) becomes the stated creature
+    for good (CR 611.2a: no duration, CR 205.1b: "still a land"), and gets a
+    counter per land that entered under its controller's control this turn
+    (CR 608.2c, in order; `Game.lands_entered_this_turn` counts the found land
+    itself, which entered as the first instruction ran)."""
+    if "that land becomes" not in text.lower():
+        return None
+    match = _SEARCH_ANIMATE_COUNT_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    unit = parse_count(match.group("n"))
+    quality = _quality_matcher_for(match.group("quality"))
+    if unit is None or quality is None:
+        return None
+    animation = f"It becomes {match.group('becomes')}. It's still a {match.group('still')}."
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        from .effects import continuous_effects, layer_context_for
+
+        controller = game.controller_of(stack_object)
+        found = game.search_library(
+            controller,
+            quality,
+            count=1,
+            optional=False,
+            shuffle=True,
+            source=stack_object.name,
+            source_id=source_id_of(stack_object),
+        )
+        if not found:
+            return
+        land = found[0]
+        game.put_onto_battlefield(land, controller.username, tapped=True)
+        if land.zone is not Zone.BATTLEFIELD:
+            return
+        continuous_effects(game).create(
+            stack_object,
+            targets=[land],
+            context=layer_context_for(game, controller),
+            ability_text=animation,
+            game=game,
+        )
+        entered = game.lands_entered_this_turn.get(controller.username, 0)
+        if entered > 0:
+            game.add_counters(land, kind, unit * entered)
+
+    return [effect]
+
+
+def _quality_matcher_for(quality: str):
+    from .effects import _quality_matcher, _search_quality_is_readable
+
+    if not _search_quality_is_readable(quality):
+        return None
+    return _quality_matcher(quality)
+
+
+# -- "for each creature you control with power greater than that creature's base
+# power, put a number of +1/+1 counters on that creature equal to the difference."
+
+_POWER_OVER_BASE_RE = re.compile(
+    r"^for each creature you control with power greater than that creature's base power, "
+    r"put a number of (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters on that creature equal to "
+    r"the difference\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_counters_equal_to_power_over_base(effect_text: str) -> AbilityEffect | None:
+    """Sovereign Okinec Ahau. CR 208.4b: a creature's base power is its power
+    before counters and +X/+Y effects (sublayers 7c and 7d); the difference
+    between its power now and that is read once for each creature as the
+    ability resolves (CR 608.2h), all of them before any counter lands, so
+    one creature's new counters never feed another's difference."""
+    if "greater than that creature's base power" not in effect_text.lower():
+        return None
+    match = _POWER_OVER_BASE_RE.fullmatch(" ".join(effect_text.strip().split()))
+    if match is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", ability: "AbilityOnStack") -> None:
+        base = game.base_power_toughness_board()
+        board = game.computed_board()
+        gains = []
+        for permanent in game.permanents_controlled_by(ability.controller):
+            chars = board.of(permanent)
+            if not chars.is_creature:
+                continue
+            difference = chars.numeric_power - base.of(permanent).numeric_power
+            if difference > 0:
+                gains.append((permanent, difference))
+        for permanent, difference in gains:
+            game.add_counters(permanent, kind, difference)
+
+    return effect
+
+
+# -- "Put a +1/+1 counter on each other creature you control. You gain 1 life for
+# each of those creatures."
+
+_COUNTER_EACH_OTHER_GAIN_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each other creature you "
+    rf"control\.\s+you gain (?P<life>{COUNT}) life for each of those creatures\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_counter_on_each_other_creature_then_gain_per_creature(
+    effect_text: str,
+) -> AbilityEffect | None:
+    """Bounding Felidar. "Those creatures" are the ones the first instruction
+    put counters on (CR 608.2c, in order), so the life gained is `N` per
+    creature that was in that group as it resolved (CR 608.2h)."""
+    if " for each of those creatures" not in effect_text.lower():
+        return None
+    match = _COUNTER_EACH_OTHER_GAIN_RE.fullmatch(" ".join(effect_text.strip().split()))
+    if match is None:
+        return None
+    unit = parse_count(match.group("n"))
+    life = parse_count(match.group("life"))
+    if unit is None or life is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", ability: "AbilityOnStack") -> None:
+        source = ability.source(game)
+        board = game.computed_board()
+        group = [
+            permanent
+            for permanent in game.permanents_controlled_by(ability.controller)
+            if permanent is not source and board.of(permanent).is_creature
+        ]
+        for permanent in group:
+            game.add_counters(permanent, kind, unit)
+        if group:
+            game.gain_life(game.player(ability.controller), life * len(group))
+
+    return effect
+
+
+# -- "create half X Food tokens, rounded up."
+
+_HALF_TOKENS_RE = re.compile(
+    r"^create half (?P<amount>X|\d+) (?P<token>.+?) tokens?, rounded (?P<direction>up|down)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_create_half_x_tokens(effect_text: str) -> AbilityEffect | None:
+    """The Goose Mother: CR 107.1a, a half that is not a whole number is
+    rounded as the card says ("rounded up"); X is the value an enters trigger
+    takes from the spell that became it (CR 107.3m), already written into the
+    text as the ability resolves. The token itself is read by the token
+    clause reader, once per unit."""
+    if " rounded " not in effect_text.lower() or "create half " not in effect_text.lower():
+        return None
+    match = _HALF_TOKENS_RE.fullmatch(" ".join(effect_text.strip().split()))
+    if match is None or match.group("amount").upper() == "X":
+        return None if match is None else _unresolved_x_effect
+    template = _parse_token_clause(f"create a {match.group('token')} token", for_spell=False)
+    if template is None:
+        return None
+    whole = int(match.group("amount"))
+    times = (whole + 1) // 2 if match.group("direction").lower() == "up" else whole // 2
+
+    def effect(game: "Game", ability: "AbilityOnStack") -> None:
+        for _ in range(times):
+            template(game, ability)
+
+    return effect
+
+
+def _unresolved_x_effect(game: "Game", ability: "AbilityOnStack") -> None:
+    """X with no value written in (CR 107.3b: it is 0), so half of it makes
+    nothing."""
+
+
+# -- "This Vehicle becomes an artifact creature. Put a +1/+1 counter on it for each
+# Mount and/or Vehicle you control other than this Vehicle."
+
+_BECOMES_THEN_COUNTERS_RE = re.compile(
+    r"^(?P<becomes>this [a-z]+ becomes an? [a-z ]+? creature)\.\s+"
+    rf"(?P<put>put (?:{COUNT}) (?:\+1/\+1|-1/-1|[a-z]+) counters? on it for each .+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_becomes_creature_then_counters_for_each(effect_text: str) -> AbilityEffect | None:
+    """Spire Mechcycle's exhaust ability. The source becomes the creature for
+    good (CR 611.2a, no duration), then "it" is that same permanent (CR 608.2c,
+    in order) and gets `N` counters per counted thing, the count taken once as
+    the instruction applies (CR 608.2h)."""
+    if " becomes " not in effect_text.lower() or " counter" not in effect_text.lower():
+        return None
+    match = _BECOMES_THEN_COUNTERS_RE.fullmatch(" ".join(effect_text.strip().split()))
+    if match is None:
+        return None
+    animation = f"{match.group('becomes')}."
+    put = parse_put_counters(match.group("put"))
+    if put is None or put.x or put.on.lower() != "it" or put.each is None:
+        return None
+    reader = _for_each_multiplier(put.each)
+    if reader is None or not is_genuine_resolution_layer_sentence(animation):
+        return None
+    kind = _counter_kind(put.kind)
+
+    def effect(game: "Game", ability: "AbilityOnStack") -> None:
+        from .effects import continuous_effects, layer_context_for
+
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        continuous_effects(game).create(
+            source,
+            targets=[source],
+            context=layer_context_for(game, game.controller_of(ability)),
+            ability_text=animation,
+            game=game,
+        )
+        amount = put.n * reader(game, ability.controller, source_id_of(ability))
+        if amount > 0:
+            game.add_counters(source, kind, amount)
 
     return effect
