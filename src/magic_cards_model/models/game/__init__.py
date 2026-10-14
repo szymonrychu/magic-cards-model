@@ -1149,7 +1149,7 @@ class Game(
     """The permanents `ExtraTriggerEvent.PERMANENTS_TAPPED` is being matched
     for right now (`tapped_batch`). Empty outside `announce_batched_events`.
     Not persisted: read only while that event is being raised."""
-    _exile_arrivals_pending: list["ExileArrival"] = PrivateAttr(default_factory=list)
+    _exile_arrivals_pending: tuple["ExileArrival", ...] = PrivateAttr(default=())
     """Cards and permanents put into exile from the battlefield or a graveyard
     since `announce_batched_events` last ran, one entry per arrival. Drained
     into one `ExtraTriggerEvent.PUT_INTO_EXILE` per player (CR 603.2c). Not

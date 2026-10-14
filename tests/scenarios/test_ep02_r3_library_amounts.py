@@ -68,7 +68,7 @@ def test_every_listed_card_reads_handled(name):
     assert outcomes == {"handled"}, name
 
 
-PROOF: list[str] = []
+PROOF = ["Alpine Watchdog", "Essence Reliquary", "Hubris", "Igneous Cur"]
 
 
 @pytest.mark.parametrize("name", PROOF)

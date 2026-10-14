@@ -4915,6 +4915,41 @@ def _milled_cards(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         yield mill
 
 
+def _exiled_creatures(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """ "Whenever one or more creatures you control and/or creature cards in
+    your graveyard are put into exile" (Kaya, Spirits' Justice; CR 406.2,
+    CR 603.2c): a creature of alice's exiled from the battlefield, a creature
+    card exiled from her graveyard, and both in one instruction (one event)."""
+
+    def from_battlefield() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(case, ability, battlefield=("Serra Angel",))
+        scenario.game.exile_cards([_last(scenario, "Serra Angel", Zone.BATTLEFIELD, ALICE)])
+        return scenario, source_id
+
+    yield from_battlefield
+
+    def from_graveyard() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(case, ability, graveyard=("Grizzly Bears",))
+        scenario.game.exile_cards([_last(scenario, "Grizzly Bears", Zone.GRAVEYARD, ALICE)])
+        return scenario, source_id
+
+    yield from_graveyard
+
+    def from_both() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(
+            case, ability, battlefield=("Serra Angel",), graveyard=("Grizzly Bears",)
+        )
+        scenario.game.exile_cards(
+            [
+                _last(scenario, "Serra Angel", Zone.BATTLEFIELD, ALICE),
+                _last(scenario, "Grizzly Bears", Zone.GRAVEYARD, ALICE),
+            ]
+        )
+        return scenario, source_id
+
+    yield from_both
+
+
 def _special_exile(scenario: PlayedScenario, state: CardState, action: MarkedExile) -> None:
     """Pay a CR 116.2 special action's cost with the stock lands and take it."""
     payment = action.begin_paying()
@@ -5227,6 +5262,8 @@ def _attempts(case: Case) -> Iterator[Attempt]:
         elif kind == "put_into_graveyard":
             yield from _to_graveyard(case, ability)
             yield from _milled_cards(case, ability)
+        elif kind == "put_into_exile":
+            yield from _exiled_creatures(case, ability)
         elif kind == "enlists":
             yield from _enlisting(case, ability)
         elif kind == "final_chapter_resolved":

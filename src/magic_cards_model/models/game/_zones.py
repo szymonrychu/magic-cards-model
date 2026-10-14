@@ -3512,7 +3512,7 @@ class ZonesMixin:
         permanent.move_to(Zone.EXILE)
         self.exile.append(permanent)
         if arrival is not None:
-            self._exile_arrivals_pending.append(arrival)
+            self._exile_arrivals_pending = (*self._exile_arrivals_pending, arrival)
         self._accompany_meld_partner(permanent, Zone.EXILE)
         if was_on_battlefield:
             self.emit(
