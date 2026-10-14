@@ -9900,7 +9900,8 @@ def _parse_face_down_exile_play_clause(effect_text: str) -> TargetedClause | Non
 #: per-opponent target is `machines/targeting._FOR_EACH_OPPONENT_TARGET_RE`'s
 #: (one "up to one" target per opponent, CR 115.6, distinct controllers).
 _FOR_EACH_OPPONENT_EXILE_RE = re.compile(
-    r"^for each (?:opponent|other player), exile up to one target (?P<desc>.+?) that player controls"
+    r"^for each (?:opponent|other player), exile up to one target (?P<desc>.+?) "
+    r"that player controls"
     r"(?:(?P<until> until this (?:permanent|enchantment|artifact|creature|planeswalker) leaves "
     r"the battlefield)|(?P<life> and that player gains life equal to its power))?\.?$",
     re.IGNORECASE,

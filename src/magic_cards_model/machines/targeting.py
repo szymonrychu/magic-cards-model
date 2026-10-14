@@ -4274,7 +4274,8 @@ _REFLEXIVE_CLAUSE_CONSEQUENCE_RE = re.compile(
 #: not the sentence's own count words, is what says how many targets this
 #: asks for.
 _FOR_EACH_OPPONENT_TARGET_RE = re.compile(
-    r"for each (?P<who>opponent|other player|player),[^.]*?\b(?P<up_to>up to one )?target (?P<desc>[^.]+?) "
+    r"for each (?P<who>opponent|other player|player),[^.]*?\b(?P<up_to>up to one )?target "
+    r"(?P<desc>[^.]+?) "
     r"that (?:player|opponent) controls\b",
     re.IGNORECASE | re.DOTALL,
 )

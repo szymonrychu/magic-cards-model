@@ -170,9 +170,7 @@ def test_orzhov_charm_returns_the_creature_and_the_auras_you_control():
 def test_orzhov_charm_leaves_an_opponents_aura_to_fall_off():
     def pre(scenario):
         scenario.rancor = _aura(scenario, "Rancor", scenario.creature("Grizzly Bears"), "alice")
-        scenario.pacifism = _aura(
-            scenario, "Pacifism", scenario.creature("Grizzly Bears"), "bob"
-        )
+        scenario.pacifism = _aura(scenario, "Pacifism", scenario.creature("Grizzly Bears"), "bob")
 
     scenario = _charm(
         RETURN_MODE,
@@ -182,7 +180,9 @@ def test_orzhov_charm_leaves_an_opponents_aura_to_fall_off():
         pre=pre,
     )
     assert scenario.rancor.zone is Zone.HAND
-    assert scenario.pacifism.zone is Zone.GRAVEYARD, "CR 704.5m: it was not returned, so it fell off"
+    assert scenario.pacifism.zone is Zone.GRAVEYARD, (
+        "CR 704.5m: it was not returned, so it fell off"
+    )
     assert _names(scenario, Zone.HAND) == ["Grizzly Bears", "Rancor"]
 
 
@@ -247,10 +247,7 @@ def _names(scenario, zone, username="alice"):
 
 
 def _battlefield(scenario, username):
-    return sorted(
-        state.name
-        for state in scenario.game.permanents_controlled_by(username)
-    )
+    return sorted(state.name for state in scenario.game.permanents_controlled_by(username))
 
 
 # --------------------------------------------------------------------------
@@ -294,7 +291,9 @@ def test_rogues_gallery_may_return_nothing():
 
 
 def test_rogues_gallery_refuses_two_cards_of_one_color():
-    scenario = _board(hand=[GALLERY], battlefield=["Swamp"] * 3, graveyard=[*COLOURED, "Hill Giant"])
+    scenario = _board(
+        hand=[GALLERY], battlefield=["Swamp"] * 3, graveyard=[*COLOURED, "Hill Giant"]
+    )
     zealot = next(s for s in scenario.player("alice").graveyard if s.name == "Ash Zealot")
     giant = next(s for s in scenario.player("alice").graveyard if s.name == "Hill Giant")
     casting = scenario.cast(GALLERY, "alice")
@@ -414,9 +413,7 @@ EDDIE = "Eddie Brock // Venom, Lethal Protector"
 
 
 def _venom(*, hand=(), library=("Island",) * 8, battlefield=("Grizzly Bears",)):
-    scenario = _board(
-        hand=hand, battlefield=[EDDIE, *battlefield], library=library
-    )
+    scenario = _board(hand=hand, battlefield=[EDDIE, *battlefield], library=library)
     scenario.find(EDDIE, Zone.BATTLEFIELD, "alice").transform()
     scenario.start_at(Step.DECLARE_ATTACKERS)
     return scenario
@@ -494,7 +491,14 @@ def test_venom_sacrificing_a_mana_value_zero_creature_draws_none_and_may_put_a_l
 KAYA = "Kaya, Spirits' Justice"
 
 
-def _kaya(*, battlefield=("Grizzly Bears",), graveyard=(), bob_battlefield=(), bob_graveyard=(), library=("Island",) * 8):
+def _kaya(
+    *,
+    battlefield=("Grizzly Bears",),
+    graveyard=(),
+    bob_battlefield=(),
+    bob_graveyard=(),
+    library=("Island",) * 8,
+):
     scenario = _board(
         battlefield=[KAYA, *battlefield],
         graveyard=graveyard,
@@ -649,7 +653,9 @@ def test_kaya_trigger_does_not_fire_for_a_noncreature_card_from_my_graveyard():
 
 
 def test_kaya_trigger_is_one_event_for_creatures_and_cards_exiled_together():
-    scenario, kaya = _kaya(battlefield=["Grizzly Bears", "Memnite", "Hill Giant"], graveyard=["Serra Angel"])
+    scenario, kaya = _kaya(
+        battlefield=["Grizzly Bears", "Memnite", "Hill Giant"], graveyard=["Serra Angel"]
+    )
     _token(scenario, "Hill Giant")
     batch = [
         scenario.creature("Grizzly Bears"),

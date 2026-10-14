@@ -56,8 +56,8 @@ from .effects.library import (
     put_ability_targets_on_bottom_of_owners_library,
 )
 from .effects.search import _search_and_exile_matching_name, _single_names
-from .targeting import profile_for_text
 from .return_transformed_attached import _back_face_enchant_refusal
+from .targeting import profile_for_text
 from .triggers import is_ability
 
 if TYPE_CHECKING:
@@ -1300,7 +1300,8 @@ _RETURN_WITH_AURAS_RE = re.compile(
 )
 _AND_LIFE_RE = re.compile(
     r"^(?P<lead>(?:destroy|exile) target [^.]+?) and (?P<who>you|its controller) "
-    r"(?P<verb>lose|loses|gain|gains) life equal to (?P<rest>its (?:power|toughness|mana value))\.?$",
+    r"(?P<verb>lose|loses|gain|gains) life equal to "
+    r"(?P<rest>its (?:power|toughness|mana value))\.?$",
     re.IGNORECASE,
 )
 
@@ -1342,7 +1343,9 @@ def _and_life_clause(text: str, *, for_spell: bool) -> Any:
     if match is None:
         return None
     who = match.group("who").capitalize()
-    split = f"{match.group('lead')}. {who} {match.group('verb')} life equal to {match.group('rest')}."
+    split = (
+        f"{match.group('lead')}. {who} {match.group('verb')} life equal to {match.group('rest')}."
+    )
     return (_spell_effect_or_notice if for_spell else _ability_effect_or_notice)(split)
 
 
@@ -1391,7 +1394,11 @@ def _graveyard_card_targets(game: "Game", obj: Any) -> list[CardState]:
     seen: set[Any] = set()
     found: list[CardState] = []
     for target in game.resolve_targets(obj):
-        if isinstance(target, CardState) and target.zone is Zone.GRAVEYARD and target.id not in seen:
+        if (
+            isinstance(target, CardState)
+            and target.zone is Zone.GRAVEYARD
+            and target.id not in seen
+        ):
             seen.add(target.id)
             found.append(target)
     return found
@@ -1493,7 +1500,9 @@ def sacrificed_value_draw_and_put(text: str) -> Callable[..., None] | None:
             Decision(
                 kind=DecisionKind.CHOOSE_CARDS,
                 player=player.username,
-                prompt=f"you may put a permanent card with mana value {amount} or less onto the battlefield",
+                prompt=(
+                    f"you may put a card with mana value {amount} or less onto the battlefield"
+                ),
                 source=source,
                 source_id=source_id,
                 amount=1,
