@@ -601,6 +601,24 @@ class DrawACardForController(DelayedEffectSpecBase):
             game.draw_cards(trigger.controller, self.count)
 
 
+class UntapAllCreaturesForController(DelayedEffectSpecBase):
+    """ "At the beginning of that combat, untap all creatures you control" -
+    Moraug, Fury of Akoum's additional combat phase (CR 500.8). The creating
+    ability's controller untaps every creature they control as the delayed
+    trigger resolves (CR 701.26b); no object is named (CR 603.7c has nothing
+    to check)."""
+
+    kind: Literal["untap_all_creatures_for_controller"] = "untap_all_creatures_for_controller"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        if not game.is_in_game(trigger.controller):
+            return
+        board = game.computed_board()
+        for permanent in game.permanents_controlled_by(trigger.controller):
+            if Type.CREATURE in board.of(permanent).types and permanent.tapped:
+                permanent.untap(exert_applies=False)
+
+
 class DamageEachOpponentPerCardStillExiled(DelayedEffectSpecBase):
     """ "At the beginning of your next end step, `<this>` deals `<n>` damage to
     each opponent for each of those cards that are still exiled" - Dragonhawk,
@@ -2678,6 +2696,7 @@ DelayedEffectSpec = Annotated[
     | ParadigmCopyAndCast
     | CopyEpicSpell
     | DrawACardForController
+    | UntapAllCreaturesForController
     | AddManaAmountForController
     | DamageEachOpponentPerCardStillExiled
     | AddManaInAnyCombinationForController

@@ -537,3 +537,96 @@ def test_battlement_cannot_exile_tokens_other_players_creatures_or_itself():
     assert names == ["Grizzly Bears", "Llanowar Elves"]
     bob_bears = scenario.creature("Grizzly Bears", "bob")
     assert bob_bears.id not in offered
+
+
+# -- Moraug, Fury of Akoum: landfall in a main phase -> additional combat phase, creatures untap
+# at the beginning of that combat; +1/+0 for each time a creature has attacked this turn
+
+
+def _moraug_board(hand=("Forest",), bob=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Moraug, Fury of Akoum", "Grizzly Bears"],
+            hand=list(hand),
+            library=["Island"] * 4,
+        )
+        .player("bob", battlefield=list(bob), library=["Forest"] * 4)
+        .build()
+    )
+    return scenario
+
+
+def _advance_to(scenario, step, *, occurrence=1):
+    seen = 0
+    while True:
+        scenario.advance()
+        _resolve_stack(scenario)
+        if scenario.step is step:
+            seen += 1
+            if seen == occurrence:
+                return
+
+
+def test_moraug_landfall_in_main_phase_adds_a_combat_that_untaps_creatures():
+    scenario = _moraug_board()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.attack_with(bears, defending="bob")
+    assert bears.tapped
+    assert _pt(scenario, bears) == (3, 2)  # attacked once this turn
+    _advance_to(scenario, Step.POSTCOMBAT_MAIN)
+    scenario.play_land("Forest", "alice")
+    _resolve_stack(scenario)
+    _advance_to(scenario, Step.BEGINNING_OF_COMBAT)
+    assert scenario.step is Step.BEGINNING_OF_COMBAT
+    _resolve_stack(scenario)
+    assert not bears.tapped
+    _advance_to(scenario, Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears, defending="bob")
+    # Attacked twice this turn: +2/+0 (CR 613.4c, sublayer 7c).
+    assert _pt(scenario, bears) == (4, 2)
+
+
+def test_moraug_landfall_outside_a_main_phase_adds_no_combat():
+    scenario = _moraug_board()
+    scenario.start_at(Step.BEGINNING_OF_COMBAT)
+    land = scenario.put_onto_battlefield("Forest", "alice")
+    scenario.game.put_triggers_on_stack()
+    _resolve_stack(scenario)
+    assert land.zone is Zone.BATTLEFIELD
+    _advance_to(scenario, Step.DECLARE_ATTACKERS)
+    _advance_to(scenario, Step.END_OF_COMBAT)
+    _advance_to(scenario, Step.POSTCOMBAT_MAIN)
+    assert scenario.step is Step.POSTCOMBAT_MAIN
+
+
+def test_moraug_precombat_landfall_gives_a_combat_before_the_regular_one():
+    scenario = _moraug_board()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.play_land("Forest", "alice")
+    _resolve_stack(scenario)
+    steps = []
+    while scenario.step is not Step.POSTCOMBAT_MAIN:
+        scenario.advance()
+        _resolve_stack(scenario)
+        steps.append(scenario.step)
+    assert steps.count(Step.BEGINNING_OF_COMBAT) == 2
+
+
+def test_moraug_each_land_adds_its_own_combat():
+    scenario = _moraug_board(hand=("Forest", "Forest"))
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.game.put_onto_battlefield(scenario.find("Forest", Zone.HAND, "alice"), "alice")
+    scenario.game.put_triggers_on_stack()
+    _resolve_stack(scenario)
+    scenario.game.put_onto_battlefield(scenario.find("Forest", Zone.HAND, "alice"), "alice")
+    scenario.game.put_triggers_on_stack()
+    _resolve_stack(scenario)
+    steps = []
+    while scenario.step is not Step.POSTCOMBAT_MAIN:
+        scenario.advance()
+        _resolve_stack(scenario)
+        steps.append(scenario.step)
+    assert steps.count(Step.BEGINNING_OF_COMBAT) == 3

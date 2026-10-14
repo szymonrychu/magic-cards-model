@@ -115,3 +115,45 @@ def _parse_exile_any_number_until_leaves(text: str) -> Any:
         exile_linked_until_leaves(game, source, chosen, player.username)
 
     return effect
+
+
+_ADDITIONAL_COMBAT_AFTER_THIS_PHASE_RE = re.compile(
+    r"^there(?: is|'s) an additional combat phase after this (?:main )?phase\."
+    r"(?: at the beginning of that combat, (?P<rider>untap all creatures you control))?\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_additional_combat_then_untap(text: str) -> Any:
+    """ "There's an additional combat phase after this phase. At the beginning
+    of that combat, untap all creatures you control" (Moraug, Fury of Akoum):
+    CR 500.8 adds the phase directly after the one in progress, and the
+    delayed trigger (CR 603.7) fires at the beginning of the next combat
+    phase, which is the added one."""
+    match = _ADDITIONAL_COMBAT_AFTER_THIS_PHASE_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    untaps = match["rider"] is not None
+
+    def effect(game: "Game", ability: Any) -> None:
+        from .delayed import DelayedTrigger, UntapAllCreaturesForController
+        from .abilities import TriggerEvent
+        from .turn import COMBAT_PHASE_STEPS, Step
+
+        assert game.turn is not None
+        game.turn.insert_extra_phase(COMBAT_PHASE_STEPS)
+        if untaps:
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text="At the beginning of that combat, untap all creatures you control.",
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=Step.BEGINNING_OF_COMBAT,
+                    controller=game.controller_of(ability).username,
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    effect=UntapAllCreaturesForController(),
+                )
+            )
+
+    return effect
