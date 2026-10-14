@@ -1192,7 +1192,9 @@ _EXILE_TARGET_PLAYERS_GRAVEYARD_RE = re.compile(
 #: `<quality>` from all graveyards." (Sanctifier en-Vec) - no "target" at all
 #: (CR 115.1 has nothing to target here), so neither collides with
 #: `_EXILE_TARGET_RE`'s "target" requirement.
-_EXILE_ALL_GRAVEYARDS_RE = re.compile(r"^exile all graveyards\.?$", re.IGNORECASE)
+_EXILE_ALL_GRAVEYARDS_RE = re.compile(
+    r"^exile all (?:cards from all )?graveyards\.?$", re.IGNORECASE
+)
 #: "Exile each opponent's graveyard." (Soul-Guide Lantern, Ashiok, Dream
 #: Render) - `_EXILE_ALL_GRAVEYARDS_RE`'s own "no target" shape (CR 115.1)
 #: with a player-set qualifier narrowing which graveyards, the way

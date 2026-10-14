@@ -12,6 +12,7 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.effects.continuous import transform_permanent
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
+from magic_cards_model.models.token import is_token
 from tests.scenarios.harness import Scenario
 
 
@@ -1370,3 +1371,58 @@ def test_lukka_minus_four_refuses_a_division_that_is_not_x():
     scenario, lukka, bears, lions = _lukka_board()
     with pytest.raises(ValueError):
         scenario.activate(lukka, index=2, targets=[bears, lions], division=[2, 2])
+
+
+# -- Kaya, Geist Hunter: -2 doubles token creation for the turn, -6 exiles every
+# graveyard and makes a Spirit per card
+
+
+def _kaya_board(hand=(), battlefield=(), graveyard=(), opponent_graveyard=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Kaya, Geist Hunter", *battlefield],
+            hand=list(hand),
+            graveyard=list(graveyard),
+            library=["Forest"] * 8,
+        )
+        .player("bob", graveyard=list(opponent_graveyard), library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario, scenario.find("Kaya, Geist Hunter", Zone.BATTLEFIELD, "alice")
+
+
+def _tokens(scenario, username="alice"):
+    return [c for c in scenario.game.permanents_controlled_by(username) if is_token(c)]
+
+
+def test_kaya_minus_two_doubles_tokens_this_turn():
+    scenario, kaya = _kaya_board(hand=["Raise the Alarm"], battlefield=["Plains", "Plains"])
+    scenario.activate(kaya, index=1)
+    scenario.resolve_top()
+    scenario.cast_and_resolve("Raise the Alarm", *scenario.untapped_sources("Plains", "Plains"))
+    assert len(_tokens(scenario)) == 4
+
+
+def test_kaya_minus_two_ends_with_the_turn():
+    scenario, kaya = _kaya_board(hand=["Raise the Alarm"], battlefield=["Plains", "Plains"])
+    scenario.activate(kaya, index=1)
+    scenario.resolve_top()
+    assert scenario.game.created_replacements
+    scenario.game.cleanup_step()
+    assert not scenario.game.created_replacements
+
+
+def test_kaya_minus_six_exiles_every_graveyard_and_makes_a_spirit_per_card():
+    scenario, kaya = _kaya_board(
+        graveyard=["Grizzly Bears"], opponent_graveyard=["Hill Giant", "Forest"]
+    )
+    kaya.add_counters(Counter.LOYALTY, 4)
+    scenario.activate(kaya, index=2)
+    scenario.resolve_top()
+    assert not scenario.player("alice").graveyard
+    assert not scenario.player("bob").graveyard
+    spirits = [t.name for t in _tokens(scenario) if "Spirit" in t.name]
+    assert len(spirits) == 3, (spirits, [c.name for c in scenario.game.exile])

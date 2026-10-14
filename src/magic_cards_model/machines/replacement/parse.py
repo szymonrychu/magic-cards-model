@@ -2870,19 +2870,7 @@ def _extra_token_applies(wanted: frozenset[Type]) -> Applies:
     """
 
     def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
-        if event.kind is not EventKind.CREATE_TOKENS or event.amount <= 0:
-            return False
-        if event.creating_controller is None or event.creating_controller != source.controller:
-            return False
-        if not wanted:
-            return True
-        if event.definition is not None:
-            types: Iterable[Type] = event.definition.types
-        elif event.card is not None:
-            types = event.card.types
-        else:
-            return False
-        return any(card_type in wanted for card_type in types)
+        return token_creation_matches(event, source.controller, wanted)
 
     return applies
 
@@ -3283,6 +3271,23 @@ def _compile_counter_doubler(effect: ReplacementEffect) -> CardReplacement | Non
 
     spec = read_counter_amount(effect)
     return None if spec is None else _static_form(effect.text, spec)
+
+
+def read_token_amount(effect: ReplacementEffect) -> "TokenAmountReplacement | None":
+    """`TokenAmountReplacement`'s reader - the multiplier half of
+    `_compile_token_doubler`, for the turn-long form (Kaya, Geist Hunter)."""
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    wanted = _token_creation_filter(effect)
+    if wanted is None:
+        return None
+    match = _TOKEN_MULTIPLIER_RE.match((effect.replacement or "").strip().rstrip("."))
+    if match is None:
+        return None
+    multiplier = parse_multiplier(match.group("it_mult") or match.group("mult"))
+    if multiplier is None:
+        return None
+    return TokenAmountReplacement(types=tuple(sorted(wanted, key=str)), multiplier=multiplier)
 
 
 def read_counter_amount(effect: ReplacementEffect) -> "CounterAmountReplacement | None":
@@ -4435,6 +4440,7 @@ def created_replacement_spec(sentence: str) -> CreatedReplacementSpec | None:
         for reader in (
             read_draw_skip,
             read_counter_amount,
+            read_token_amount,
             read_enter_uncast_exile,
             read_die_to_exile,
         ):
@@ -4465,6 +4471,8 @@ from .model import (  # noqa: E402
     DamageLifeFloorReplacement,
     DrawSkipReplacement,
     EntersTappedThisTurn,
+    TokenAmountReplacement,
+    token_creation_matches,
     EnterUncastExile,
     EventKind,
 )

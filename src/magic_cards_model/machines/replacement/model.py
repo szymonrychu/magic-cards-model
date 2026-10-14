@@ -1674,6 +1674,55 @@ class CounterAmountReplacement(EngineModel):
         event.amount = max(scaled, 0)
 
 
+def token_creation_matches(
+    event: "ReplaceableEvent", controller: str | None, wanted: "Iterable[Type]"
+) -> bool:
+    """Whether `event` is "one or more `<wanted>` tokens ... created under
+    `controller`'s control" (CR 111.2, CR 614.1a).
+
+    "Under your control" is tested against the player *creating* them (or
+    whoever a control-changing replacement already moved them to,
+    `ReplaceableEvent.creating_controller`). The token's kind is read off the
+    event's `definition` when the creating effect stated one (CR 111.3), else
+    off the original permanent's own types for a token copy (CR 707.2). An
+    empty `wanted` names no type and takes every token.
+    """
+    if event.kind is not EventKind.CREATE_TOKENS or event.amount <= 0:
+        return False
+    if event.creating_controller is None or event.creating_controller != controller:
+        return False
+    wanted = tuple(wanted)
+    if not wanted:
+        return True
+    if event.definition is not None:
+        types: Iterable[Type] = event.definition.types
+    elif event.card is not None:
+        types = event.card.types
+    else:
+        return False
+    return any(card_type in wanted for card_type in types)
+
+
+class TokenAmountReplacement(EngineModel):
+    """ "Until end of turn, if one or more tokens would be created under your
+    control, twice that many of those tokens are created instead." (Kaya, Geist
+    Hunter's -2) - the turn-long twin of Doubling Season's token line. "Those
+    tokens" keep their characteristics and only the count changes (CR 614.5).
+    `types` is the optional "artifact" style filter."""
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["token_amount"] = "token_amount"
+    types: tuple[Type, ...] = ()
+    multiplier: int = 1
+
+    def applies(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> bool:
+        return token_creation_matches(event, controller, self.types)
+
+    def apply(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> None:
+        event.amount = max(event.amount * self.multiplier, 0)
+
+
 class EnterUnderYourControl(EngineModel):
     """ "If a creature would enter the battlefield under an opponent's control
     this turn, it enters under your control instead." (Gather Specimens) and
@@ -1914,6 +1963,7 @@ class GainNoLifeReplacement(EngineModel):
 CreatedReplacementSpec = Annotated[
     DrawSkipReplacement
     | CounterAmountReplacement
+    | TokenAmountReplacement
     | EnterUnderYourControl
     | EntersTappedThisTurn
     | EnterUncastExile
