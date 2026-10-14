@@ -6670,7 +6670,8 @@ _SOURCE_STAT_COUNTS = {
 #: (see `ComparisonCount.SOURCE_LOYALTY`'s own docstring for why the name
 #: itself is never checked against anything).
 _COMPARISON_CLAUSE = re.compile(
-    r"\b(?P<attr>mana value|converted mana cost|power or toughness|total power and toughness|power|toughness)\b"
+    r"\b(?P<attr>mana value|converted mana cost|power or toughness"
+    r"|total power and toughness|power|toughness)\b"
     r"\s+(?:is\s+)?"
     r"(?:"
     r"(?P<num_or>x|\d+)\s+or\s+(?P<dir>less|greater)"

@@ -63,7 +63,8 @@ if TYPE_CHECKING:
 
 _SUBJECT_RE = re.compile(
     r"^(?:(?P<quantity>up to one|any number of) )?(?P<who>target (?:player|opponent)s?)"
-    r"(?: each)?$|^(?P<plain>you|each player|each opponent|that player|they|enchanted player)(?: each)?$",
+    r"(?: each)?$"
+    r"|^(?P<plain>you|each player|each opponent|that player|they|enchanted player)(?: each)?$",
     re.IGNORECASE,
 )
 _HALF_LIBRARY_RE = re.compile(
