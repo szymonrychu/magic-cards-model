@@ -471,3 +471,75 @@ def _parse_becomes_creature_then_counters_for_each(effect_text: str) -> AbilityE
             game.add_counters(source, kind, amount)
 
     return effect
+
+
+# -- "Look at the top six cards of your library. Put up to two land cards from among
+# them onto the battlefield tapped and the rest on the bottom of your library in a
+# random order. If you put fewer than two lands onto the battlefield this way,
+# proliferate a number of times equal to the difference."
+
+_LOOK_PUT_PROLIFERATE_RE = re.compile(
+    rf"^look at the top (?P<n>{COUNT}) cards of your library\.\s+put up to (?P<k>{COUNT}) "
+    r"(?P<kind>[a-z]+) cards from among them onto the battlefield tapped and the rest on the "
+    r"bottom of your library in a random order\.\s+if you put fewer than (?P=k) (?P=kind)s onto "
+    r"the battlefield this way, proliferate a number of times equal to the difference\.?"
+    r"(?:\s*\([^)]*\))?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_look_put_lands_then_proliferate_for_shortfall(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """Expand the Sphere. CR 608.2d: the controller picks "up to" two of the
+    land cards (zero is legal); CR 608.2c: the rest go to the bottom first-
+    named instruction by first, then the shortfall is counted from what
+    actually reached the battlefield "this way" (a land a replacement kept
+    off it does not count), and CR 701.34a proliferate runs that many times
+    (`counters.proliferate_times`)."""
+    if "proliferate a number of times equal to the difference" not in text.lower():
+        return None
+    match = _LOOK_PUT_PROLIFERATE_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    top = parse_count(match.group("n"))
+    limit = parse_count(match.group("k"))
+    kind = match.group("kind").lower()
+    if top is None or limit is None or kind not in _TYPE_WORDS:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        from .effects.counters import proliferate_times
+        from .effects.library import _shuffle_remainder_to_bottom
+
+        controller = game.controller_of(stack_object)
+        looked = list(controller.library[:top])
+        wanted = [
+            state for state in looked if kind in {t.value.lower() for t in state.card.types}
+        ]
+        taken: list = []
+        if wanted:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt=f"put up to {limit} {kind} cards onto the battlefield tapped",
+                    source=stack_object.name,
+                    source_id=source_id_of(stack_object),
+                    amount=min(limit, len(wanted)),
+                    exact=False,
+                    cards=tuple(state.id for state in wanted),
+                )
+            )
+            by_id = {state.id: state for state in wanted}
+            taken = [by_id[card_id] for card_id in chosen_ids if card_id in by_id][:limit]
+        arrived = 0
+        for state in taken:
+            game.put_onto_battlefield(state, controller.username, tapped=True)
+            if state.zone is Zone.BATTLEFIELD:
+                arrived += 1
+        _shuffle_remainder_to_bottom(game, controller, [s for s in looked if s not in taken])
+        proliferate_times(game, stack_object, max(limit - arrived, 0))
+
+    return [effect]

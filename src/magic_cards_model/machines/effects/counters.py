@@ -4345,9 +4345,71 @@ def _parse_support_clause(clause: str) -> TargetedClause | None:
 #: ..." shape already uses, so a fixed repeat count and an X-defined one read
 #: through the identical path.
 _PROLIFERATE_RE = re.compile(
-    rf"^proliferate(?: {count_pattern('times', x=True)} times)?{where_x_pattern()}\.?$",
+    rf"^proliferate(?: (?:{count_pattern('times', x=True)} times|(?P<twice>twice)))?"
+    rf"{where_x_pattern()}\.?$",
     re.IGNORECASE,
 )
+
+
+def proliferate_times(game: "Game", stack_object: "StackObject", times: int) -> None:
+    """CR 701.34a, `times` times over: the one place a proliferate runs, for
+    `_parse_proliferate_clause` and any reader that proliferates a computed
+    number of times (Expand the Sphere)."""
+    controller = game.controller_of(stack_object)
+    source_name = (
+        stack_object.source_name if isinstance(stack_object, AbilityOnStack) else stack_object.name
+    )
+    # CR 614.1a: each proliferate is its own event (Tekuthal: "proliferate
+    # twice instead"), and each of the resulting ones is its own choice.
+    repeats = sum(game.proliferation_count(controller.username) for _ in range(max(times, 0)))
+    for _ in range(repeats):
+        candidates = [
+            state
+            for state in game.battlefield
+            if any(count > 0 for count in state.counters.counts.values())
+        ]
+        chosen: list[CardState] = []
+        if candidates:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt="choose any number of permanents to proliferate",
+                    source=source_name,
+                    source_id=source_id_of(stack_object),
+                    amount=len(candidates),
+                    cards=tuple(state.id for state in candidates),
+                    exact=False,
+                )
+            )
+            by_id = {state.id: state for state in candidates}
+            chosen = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
+        player_candidates = [
+            player
+            for player in game.players
+            if any(count > 0 for count in player.counters.counts.values())
+        ]
+        chosen_players: list[str] = []
+        if player_candidates:
+            chosen_usernames = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_PLAYERS,
+                    player=controller.username,
+                    prompt="choose any number of players to proliferate",
+                    source=source_name,
+                    source_id=source_id_of(stack_object),
+                    amount=len(player_candidates),
+                    players=tuple(player.username for player in player_candidates),
+                    exact=False,
+                )
+            )
+            offered_usernames = {player.username for player in player_candidates}
+            chosen_players = [
+                username for username in chosen_usernames if username in offered_usernames
+            ]
+        if not chosen and not chosen_players:
+            continue
+        game.proliferate(chosen, chosen_players)
 
 
 @MIXED_CLAUSE.rung("s9")
@@ -4367,7 +4429,8 @@ def _parse_proliferate_clause(clause: str) -> TargetedClause | None:
     match = _PROLIFERATE_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    times_raw = match.group("times")
+    # Contagion Engine's "Proliferate twice": CR 107.1a, "twice" is two times.
+    times_raw = match.group("times") or ("two" if match.group("twice") else None)
     where_x = match.group("where_x")
     times_reader = None
     if times_raw is not None:
@@ -4383,64 +4446,9 @@ def _parse_proliferate_clause(clause: str) -> TargetedClause | None:
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
-        source_name = (
-            stack_object.source_name
-            if isinstance(stack_object, AbilityOnStack)
-            else stack_object.name
-        )
         x_value = stack_object.x_value if isinstance(stack_object, AbilityOnStack) else 0
         times = times_reader(game, controller.username, None, x_value or 0) if times_reader else 1
-        # CR 614.1a: each proliferate is its own event (Tekuthal: "proliferate
-        # twice instead"), and each of the resulting ones is its own choice.
-        repeats = sum(game.proliferation_count(controller.username) for _ in range(max(times, 0)))
-        for _ in range(repeats):
-            candidates = [
-                state
-                for state in game.battlefield
-                if any(count > 0 for count in state.counters.counts.values())
-            ]
-            chosen: list[CardState] = []
-            if candidates:
-                chosen_ids = game.ask(
-                    Decision(
-                        kind=DecisionKind.CHOOSE_CARDS,
-                        player=controller.username,
-                        prompt="choose any number of permanents to proliferate",
-                        source=source_name,
-                        source_id=source_id_of(stack_object),
-                        amount=len(candidates),
-                        cards=tuple(state.id for state in candidates),
-                        exact=False,
-                    )
-                )
-                by_id = {state.id: state for state in candidates}
-                chosen = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
-            player_candidates = [
-                player
-                for player in game.players
-                if any(count > 0 for count in player.counters.counts.values())
-            ]
-            chosen_players: list[str] = []
-            if player_candidates:
-                chosen_usernames = game.ask(
-                    Decision(
-                        kind=DecisionKind.CHOOSE_PLAYERS,
-                        player=controller.username,
-                        prompt="choose any number of players to proliferate",
-                        source=source_name,
-                        source_id=source_id_of(stack_object),
-                        amount=len(player_candidates),
-                        players=tuple(player.username for player in player_candidates),
-                        exact=False,
-                    )
-                )
-                offered_usernames = {player.username for player in player_candidates}
-                chosen_players = [
-                    username for username in chosen_usernames if username in offered_usernames
-                ]
-            if not chosen and not chosen_players:
-                continue
-            game.proliferate(chosen, chosen_players)
+        proliferate_times(game, stack_object, times)
 
     return effect
 

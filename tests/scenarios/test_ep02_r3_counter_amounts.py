@@ -839,3 +839,125 @@ def test_goose_mother_x_four_makes_two_food():
 def test_goose_mother_x_one_makes_one_food():
     scenario = _goose(1)
     assert len(_food(scenario)) == 1
+
+
+# -- Contagion Engine: "Proliferate twice."
+
+
+def _engine_board():
+    scenario = _main_board(
+        "Contagion Engine",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Grizzly Bears",
+        "Savannah Lions",
+    )
+    return scenario
+
+
+def test_contagion_engine_proliferates_twice_choosing_each_time():
+    scenario = _engine_board()
+    engine = _named(scenario, "Contagion Engine")[0]
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.add_counters(Counter.PLUS_ONE, 1)
+    scenario.will_choose_cards(bears, times=2)
+    scenario.activate(engine, *scenario.untapped_sources("Plains", "Plains", "Plains", "Plains"))
+    _settle(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 3
+
+
+def test_contagion_engine_proliferates_every_chosen_permanent_each_time():
+    scenario = _engine_board()
+    engine = _named(scenario, "Contagion Engine")[0]
+    bears = scenario.creature("Grizzly Bears", "alice")
+    lions = scenario.creature("Savannah Lions", "alice")
+    bears.add_counters(Counter.PLUS_ONE, 1)
+    lions.add_counters(Counter.PLUS_ONE, 1)
+    scenario.will_choose_cards(bears, lions, times=2)
+    scenario.activate(engine, *scenario.untapped_sources("Plains", "Plains", "Plains", "Plains"))
+    _settle(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 3
+    assert lions.counter_count(Counter.PLUS_ONE) == 3
+
+
+def test_contagion_engine_enters_with_minus_counters_on_a_players_creatures():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Contagion Engine"], battlefield=["Plains"] * 6, library=["Forest"] * 8)
+        .player("bob", battlefield=["Grizzly Bears", "Savannah Lions"], library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve("Contagion Engine", *scenario.untapped_sources(*["Plains"] * 6))
+    scenario.game.put_triggers_on_stack()
+    scenario.choose_trigger_targets("Contagion Engine", ["bob"])
+    _settle(scenario)
+    assert scenario.stack_names() == []
+
+
+# -- Expand the Sphere: lands from the top six; proliferate for the shortfall
+
+
+def _sphere(lands_on_top, *, creature_counters=1):
+    top = ["Forest"] * lands_on_top + ["Grizzly Bears"] * (6 - lands_on_top)
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Expand the Sphere"],
+            battlefield=["Forest"] * 4 + ["Savannah Lions"],
+            library=top + ["Island"] * 4,
+        )
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    lions = scenario.creature("Savannah Lions", "alice")
+    lions.add_counters(Counter.PLUS_ONE, creature_counters)
+    return scenario, lions
+
+
+def _cast_sphere(scenario, lands, then=None):
+    """Answer the land pick first, then (when proliferating) the permanent pick."""
+    if lands:
+        scenario.will_choose_cards(*lands)
+    if then is not None:
+        scenario.will_choose_cards(then, times=None)
+    scenario.cast_and_resolve("Expand the Sphere", *scenario.untapped_sources(*["Forest"] * 4))
+    _settle(scenario)
+
+
+def test_expand_the_sphere_two_lands_no_proliferate():
+    scenario, lions = _sphere(3)
+    forests = [c for c in scenario.player("alice").library[:6] if c.name == "Forest"]
+    _cast_sphere(scenario, forests[:2])
+    on_battlefield = _named(scenario, "Forest")
+    assert len(on_battlefield) == 6
+    assert sum(1 for f in on_battlefield if f.tapped) >= 2
+    assert lions.counter_count(Counter.PLUS_ONE) == 1
+
+
+def test_expand_the_sphere_one_land_proliferates_once():
+    scenario, lions = _sphere(1)
+    forest = [c for c in scenario.player("alice").library[:6] if c.name == "Forest"]
+    _cast_sphere(scenario, forest, then=lions)
+    assert lions.counter_count(Counter.PLUS_ONE) == 2
+
+
+def test_expand_the_sphere_no_lands_proliferates_twice():
+    scenario, lions = _sphere(0)
+    _cast_sphere(scenario, [], then=lions)
+    assert lions.counter_count(Counter.PLUS_ONE) == 3
+
+
+def test_expand_the_sphere_rest_go_to_the_bottom_of_the_library():
+    scenario, _ = _sphere(2)
+    library_before = len(scenario.player("alice").library)
+    forests = [c for c in scenario.player("alice").library[:6] if c.name == "Forest"]
+    _cast_sphere(scenario, forests)
+    library = scenario.player("alice").library
+    assert len(library) == library_before - 2
+    assert [c.name for c in library[:4]] == ["Island"] * 4
+    assert [c.name for c in library[4:]] == ["Grizzly Bears"] * 4
