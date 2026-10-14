@@ -1162,3 +1162,41 @@ def test_goliath_hatchery_does_nothing_below_three_poison_counters():
     hand = len(scenario.player("alice").hand)
     _settle(scenario)
     assert len(scenario.player("alice").hand) == hand
+
+
+# -- Invoke the Ancients: two 4/5 Spirits, each with a reach, vigilance or trample
+# counter of its controller's choice
+
+
+def _invoke(*choices):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Invoke the Ancients"],
+            battlefield=["Forest"] * 5,
+            library=["Forest"] * 8,
+        )
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    for choice in choices:
+        scenario.will_choose(choice)
+    scenario.cast_and_resolve("Invoke the Ancients", *scenario.untapped_sources(*["Forest"] * 5))
+    _settle(scenario)
+    return [c for c in scenario.game.permanents_controlled_by("alice") if "Spirit" in c.name]
+
+
+def test_invoke_the_ancients_makes_two_spirits_with_the_chosen_counters():
+    spirits = _invoke("reach", "trample")
+    assert len(spirits) == 2
+    kinds = sorted(
+        next(str(kind) for kind, n in s.counters.counts.items() if n > 0) for s in spirits
+    )
+    assert kinds == ["reach", "trample"]
+
+
+def test_invoke_the_ancients_both_may_pick_the_same_kind():
+    spirits = _invoke("vigilance", "vigilance")
+    assert [s.counters.counts.get("vigilance", 0) for s in spirits] == [1, 1]

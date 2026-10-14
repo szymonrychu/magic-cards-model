@@ -640,3 +640,54 @@ def _parse_choose_creature_draw_total_toxic_value(effect_text: str) -> AbilityEf
             game.draw_cards(game.player(ability.controller), draws)
 
     return effect
+
+
+# -- "Create two 4/5 green Spirit creature tokens. For each of them, put your choice
+# of a reach counter, a vigilance counter, or a trample counter on it."
+
+_CREATE_THEN_CHOICE_COUNTER_RE = re.compile(
+    r"^(?P<create>create .+? tokens?)\.\s+for each of them, put your choice of "
+    r"(?P<choices>an? [a-z+/-]+ counter(?:, an? [a-z+/-]+ counter)*,? or an? [a-z+/-]+ counter)"
+    r" on it\.?$",
+    re.IGNORECASE,
+)
+_CHOICE_KIND_RE = re.compile(r"an? ([a-z+/-]+) counter", re.IGNORECASE)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_create_then_choose_counter_for_each(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """Invoke the Ancients. The tokens come first (CR 608.2c); then each one
+    gets the kind its controller picks for it (CR 608.2d), one question per
+    token, in the order they were created."""
+    if "your choice of" not in text.lower() or " for each of them," not in text.lower():
+        return None
+    match = _CREATE_THEN_CHOICE_COUNTER_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    kinds = [word.lower() for word in _CHOICE_KIND_RE.findall(match.group("choices"))]
+    create = _parse_token_clause(match.group("create"), for_spell=for_spell)
+    if create is None or len(kinds) < 2:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        before = {existing.id for existing in game.battlefield}
+        create(game, stack_object)
+        for token in [state for state in game.battlefield if state.id not in before]:
+            picked = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_A_QUALITY,
+                    player=controller,
+                    prompt=f"choose a counter kind to put on {token.name}",
+                    source=getattr(stack_object, "source_name", None) or stack_object.name,
+                    source_id=source_id_of(stack_object),
+                    options=tuple(kinds),
+                    quality="counter",
+                )
+            )
+            kind = str(picked).lower()
+            game.add_counters(token, _counter_kind(kind if kind in kinds else kinds[0]), 1)
+
+    return [effect]
