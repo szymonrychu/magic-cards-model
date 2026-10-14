@@ -31,6 +31,7 @@ from .effects._chains import FORWARD, MIXED_CLAUSE, SPELL_TEXT
 if TYPE_CHECKING:
     from ..models.card_state import CardState
     from ..models.game import Game, StackObject
+    from .triggers.events import AbilityOnStack
 
 #: `(game, controller, source_id) -> int`, the `_for_each_multiplier` reader shape.
 ForEachReader = Callable[["Game", str, "str | None"], int]
@@ -429,6 +430,60 @@ def _parse_scaled_bite_spell(effect_text: str) -> "Callable[..., None] | None":
         return factor if holds else 1
 
     return _parse_bite_damage_clause(match.group("bite"), for_spell=True, scale=scale)
+
+
+# --------------------------------------------------------------------------
+# "add twice that much {G}" - mana for the quantity the trigger event establishes (Fangorn)
+# --------------------------------------------------------------------------
+
+_ADD_THAT_MUCH_MANA_RE = re.compile(
+    r"^add (?P<factor>twice |three times )?that much (?P<symbols>(?:\{[wubrgc]\})+)$",
+    re.IGNORECASE,
+)
+
+
+def triggering_quantity(game: "Game", ability: "AbilityOnStack") -> int:
+    """The "that much" a trigger's condition establishes (CR 603.2c, CR 607.1): for "one or
+    more <creatures> attack" the number of those creatures that were declared as attackers
+    (the batch the condition counts); otherwise the event's own amount."""
+    from .triggers.collect import batched_attackers
+
+    event = ability.event
+    if event is None:
+        return 0
+    batch = batched_attackers(game, ability.ability.condition, ability.controller)
+    if batch is not None:
+        return len(batch)
+    return event.amount or 0
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_add_that_much_mana_clause(
+    clause: str, *, for_spell: bool
+) -> "Callable[..., None] | None":
+    """ "Add [twice] that much {G}." (CR 106.4): mana of the stated colour equal to the
+    quantity the triggering event established, times the factor. Ability-only: a spell has no
+    event for "that much" to point back at (CR 608.2c)."""
+    if for_spell or "that much" not in clause.lower():
+        return None
+    match = _ADD_THAT_MUCH_MANA_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    if match is None:
+        return None
+    factor = parse_multiplier((match.group("factor") or "").strip()) or 1
+    symbols = match.group("symbols")
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        from .amount_sentences import add_mana_times, controller_of
+
+        add_mana_times(
+            game,
+            controller_of(game, stack_object),
+            symbols,
+            factor * triggering_quantity(game, stack_object),  # type: ignore[arg-type]
+            stack_object=stack_object,
+        )
+
+    return effect
 
 
 __all__ = ["amount_term", "count_term", "for_each_count"]

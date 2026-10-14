@@ -11,6 +11,7 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card import Color
 from tests.scenarios.harness import Scenario
 
 FOREST10 = ["Forest"] * 10
@@ -506,3 +507,26 @@ def test_chocobo_kick_kicked_returns_a_land_and_deals_twice_that_much_damage():
     assert giant.zone is Zone.GRAVEYARD  # 4 damage kills the 4-toughness angel; 2 would not
     assert len([c for c in scenario.player("alice").hand if c.name == "Forest"]) == 1
     assert len([c for c in scenario.game.battlefield if c.name == "Forest"]) == 2
+
+
+# --------------------------------------------------------------------------
+# "Whenever one or more Treefolk you control attack, add twice that much {G}" (Fangorn)
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("attackers", "green"),
+    [
+        (["Fangorn, Tree Shepherd"], 2),
+        (["Fangorn, Tree Shepherd", "Indomitable Ancients"], 4),
+        (["Fangorn, Tree Shepherd", "Indomitable Ancients", "Grizzly Bears"], 4),
+        (["Grizzly Bears"], 0),
+    ],
+)
+def test_fangorn_adds_twice_the_attacking_treefolk_as_green(attackers, green):
+    board = ["Fangorn, Tree Shepherd", "Indomitable Ancients", "Grizzly Bears"]
+    scenario = _build(board, ["Hill Giant"])
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(*scenario.creatures(*attackers, username="alice"))
+    _settle(scenario)
+    assert scenario.player("alice").mana_pool.floating.get(Color.GREEN, 0) == green
