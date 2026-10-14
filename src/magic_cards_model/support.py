@@ -2111,6 +2111,10 @@ def _static_ability_category(
     copy_clause = _enters_as_copy_line_category(printing, text)
     if copy_clause is not None:
         return copy_clause
+    if reads_as_transforms_line(text):
+        # CR 712.20 (ahead of `missed_layer_shape`: Olag's "becomes a copy"):
+        # `effects.transform_permanent` applies it as it transforms.
+        return HANDLED
     if missed_layer_shape(text) is not None:
         return SILENT
     if player_keyword_grant_of_line(text) is not None:
@@ -2144,9 +2148,6 @@ def _static_ability_category(
         # CR 509.1c: `combat.declare_blockers` (via `combat_statics.
         # unobeyed_must_be_blocked_requirement`) refuses a declaration that
         # leaves this attacker unblocked while a legal blocker exists.
-        return HANDLED
-    if reads_as_transforms_line(text):
-        # CR 712.20: `effects.transform_permanent` applies it as it transforms.
         return HANDLED
     if reads_as_graveyard_cast_permission_line(text):
         # CR 601.3: `casting.granted_cast_options` hands out the once-each-turn
