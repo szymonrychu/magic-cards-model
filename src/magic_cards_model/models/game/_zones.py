@@ -98,7 +98,7 @@ from ..token import (
 )
 from ..zone import Zone
 from ._common import Targetable
-from .records import GraveyardArrival, Reveal
+from .records import ExileArrival, GraveyardArrival, Reveal
 
 if TYPE_CHECKING:
     from . import Game
@@ -2397,6 +2397,11 @@ class ZonesMixin:
         """The arrivals of the `PUT_INTO_GRAVEYARD` event being matched."""
         return self._graveyard_batch
 
+    @property
+    def exile_batch(self: "Game") -> tuple[ExileArrival, ...]:
+        """The arrivals of the `PUT_INTO_EXILE` event being matched."""
+        return self._exile_batch
+
     def note_permanent_tapped(self: "Game", permanent: CardState) -> None:
         """`permanent` just became tapped (CR 701.26a) - `CardState.tap` and
         `.tap_if_untapped` call this for a bound permanent, whatever tapped it
@@ -3435,6 +3440,33 @@ class ZonesMixin:
         else:
             self._owner_of(card).add(card, destination)
 
+    def _exile_arrival_of(
+        self: "Game", card: CardState, from_battlefield: bool, graveyard_owner: str | None
+    ) -> "ExileArrival | None":
+        """The ledger entry for a battlefield or graveyard card about to be
+        exiled (CR 406.2), read before it moves: a permanent as it last
+        existed (CR 603.10a, so a borrowed creature counts for its controller
+        and an animated artifact as a creature), a graveyard card by its
+        printed types."""
+        if from_battlefield:
+            chars = self._left_battlefield_characteristics.get(card.id)
+            return ExileArrival(
+                card_id=card.id,
+                player=(chars.controller if chars is not None else None) or card.controller,
+                origin_zone=Zone.BATTLEFIELD,
+                is_creature=Type.CREATURE in (chars.types if chars is not None else card.types),
+                is_token=card.token,
+            )
+        if graveyard_owner is not None:
+            return ExileArrival(
+                card_id=card.id,
+                player=graveyard_owner,
+                origin_zone=Zone.GRAVEYARD,
+                is_creature=Type.CREATURE in card.types,
+                is_token=card.token,
+            )
+        return None
+
     def exile_permanent(self: "Game", permanent: CardState) -> CardState:
         """Move a permanent to the shared exile zone.
 
@@ -3470,13 +3502,17 @@ class ZonesMixin:
         if move_refused(permanent, Zone.EXILE) is not None:
             return permanent
         was_on_battlefield = permanent in self.battlefield
+        graveyard_owner = self._graveyard_owner_of(permanent)
         if was_on_battlefield:
             self._note_left_battlefield(permanent)
             self._detach_dependents(permanent)
+        arrival = self._exile_arrival_of(permanent, was_on_battlefield, graveyard_owner)
         self._take_out_of_every_zone(permanent)
         self.combat.remove(permanent.id)  # CR 506.4
         permanent.move_to(Zone.EXILE)
         self.exile.append(permanent)
+        if arrival is not None:
+            self.exile_arrivals_pending.append(arrival)
         self._accompany_meld_partner(permanent, Zone.EXILE)
         if was_on_battlefield:
             self.emit(

@@ -1642,6 +1642,24 @@ class CastingMixin:
                         )
                     finally:
                         self._tapped_batch = ()
+            if self.exile_arrivals_pending:
+                pending, self.exile_arrivals_pending = self.exile_arrivals_pending, []
+                for player in dict.fromkeys(arrival.player for arrival in pending):
+                    # CR 603.2c: one event per player whose permanents or
+                    # graveyard cards were exiled together.
+                    batch = tuple(arrival for arrival in pending if arrival.player == player)
+                    self._exile_batch = batch
+                    try:
+                        self.emit(
+                            GameEvent(
+                                event=ExtraTriggerEvent.PUT_INTO_EXILE,
+                                player=player,
+                                amount=len(batch),
+                                batch_ids=tuple(arrival.card_id for arrival in batch),
+                            )
+                        )
+                    finally:
+                        self._exile_batch = ()
             if self.graveyard_arrivals_announced < len(self.graveyard_arrivals_this_turn):
                 arrivals = self.graveyard_arrivals_this_turn[self.graveyard_arrivals_announced :]
                 self.graveyard_arrivals_announced = len(self.graveyard_arrivals_this_turn)

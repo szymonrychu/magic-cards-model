@@ -454,6 +454,7 @@ from .records import (
     CombatDamageToPlayer,
     CountersPutRecord,
     DamageDealt,
+    ExileArrival,
     GraveyardArrival,
     KnownCard,
     KnownCarry,
@@ -1148,6 +1149,9 @@ class Game(
     """The permanents `ExtraTriggerEvent.PERMANENTS_TAPPED` is being matched
     for right now (`tapped_batch`). Empty outside `announce_batched_events`.
     Not persisted: read only while that event is being raised."""
+    _exile_batch: tuple["ExileArrival", ...] = PrivateAttr(default=())
+    """The arrivals `ExtraTriggerEvent.PUT_INTO_EXILE` is being matched for
+    right now. Empty outside `announce_batched_events`; not persisted."""
     _graveyard_batch: tuple["GraveyardArrival", ...] = PrivateAttr(default=())
     """The arrivals `ExtraTriggerEvent.PUT_INTO_GRAVEYARD` is being matched for
     right now (`graveyard_batch`). Empty outside `announce_batched_events`.
@@ -1605,6 +1609,11 @@ class Game(
     `GraveyardArrival.is_permanent_card`'s own docstring for why CR 700.11's
     "from anywhere" needs that in addition to `permanent_types`."""
 
+    exile_arrivals_pending: list[ExileArrival] = Field(default_factory=list)
+    """Cards and permanents put into exile from the battlefield or a graveyard
+    since `announce_batched_events` last ran, one entry per arrival. Drained
+    into one `ExtraTriggerEvent.PUT_INTO_EXILE` per player (CR 603.2c)."""
+
     activations: dict[str, int] = Field(default_factory=dict)
     """How often each ability has been activated this turn, keyed
     `"<permanent id>:<ability index>"`, for CR 602.5b restrictions such as
@@ -1979,7 +1988,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 169
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 170
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2335,6 +2344,18 @@ class Game(
     #: hand size." are read off the battlefield, and a Crew N ability is
     #: once-per-turn; an older dump would resolve each of these as a no-op.
     #: EP-02-R2: T2, T4, T5 and T7 each reserved 164; the round lands as one version, 169.
+    #: 170 (EP-02-R3-T4): `Game` gained `exile_arrivals_pending` (`ExileArrival`,
+    #: the cards one instruction put into exile from the battlefield or a
+    #: graveyard, waiting for CR 603.2c's one batched event) and `GameEvent`
+    #: gained `batch_ids` (a pending `AbilityOnStack.event`'s "from among
+    #: them"); an older dump has neither, so a "put into exile" trigger would
+    #: never have seen the exiled cards. Also dispatch a decoded game could
+    #: already point at: "draw X cards, then you may put a permanent card with
+    #: mana value X or less from your hand onto the battlefield" off a
+    #: sacrifice, the per-colour graveyard return, the two-target graveyard
+    #: return, "return ... and all Auras attached to it", and the any-type-mana
+    #: rider on "If you cast a spell this way"; an older dump would resolve
+    #: each of these as a no-op.
     #: 169 (EP02-R2-T2): `Player` gained `cannot_cast_spells_for_rest_of_game`
     #: and `CardState` gained `epic_suppressed` (epic, CR 702.50a/b), and
     #: `DelayedEffectSpec` gained the variant `epic_copy_spell`; a pending
@@ -3803,6 +3824,7 @@ __all__ = [
     "CountersPutRecord",
     "DamageDealt",
     "ENERGY_PAID_OR_LOST",
+    "ExileArrival",
     "Game",
     "GraveyardArrival",
     "KnownCard",

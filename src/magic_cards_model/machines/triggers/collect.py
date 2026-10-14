@@ -75,6 +75,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
                 TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE,
             }
         )
+    if _CREATURES_OR_GRAVEYARD_CREATURE_CARDS_EXILED_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.PUT_INTO_EXILE})
     if _NTH_DRAW_CONDITION.match(lowered):
         return frozenset({TriggerEvent.DRAWS_A_CARD})
     if _NTH_COUNTER_PUT_CONDITION.match(lowered):
@@ -272,7 +274,13 @@ def zones_ability_functions_in(
     # Coil) is a state about the player's graveyard, not a statement of where
     # its own source works - it functions from the battlefield like any state
     # trigger.
-    state_about_a_zone = ability.event is None and reads_state_condition(ability.condition)
+    state_about_a_zone = ability.event is None and (
+        reads_state_condition(ability.condition)
+        # Kaya, Spirits' Justice names "creature cards in your graveyard" as the
+        # objects the event is about (other cards), not as the zone the ability
+        # itself functions from (CR 113.6).
+        or _CREATURES_OR_GRAVEYARD_CREATURE_CARDS_EXILED_CONDITION.match(lowered) is not None
+    )
     if not state_about_a_zone and (
         "in your graveyard" in lowered
         or ("from your graveyard" in lowered and not cast_origin and not enters_origin)
@@ -2098,6 +2106,7 @@ from ._common import (  # noqa: E402
     _CLASS_BECOMES_LEVEL_CONDITION,
     _COUNTERS_PUT_CONDITION,
     _COUNTERS_PUT_ON_DESCRIPTION_CONDITION,
+    _CREATURES_OR_GRAVEYARD_CREATURE_CARDS_EXILED_CONDITION,
     _CRIME_COMMITTED_CONDITION,
     _CYCLE_CONDITION,
     _DOOR_UNLOCKED_CONDITION,

@@ -4274,7 +4274,7 @@ _REFLEXIVE_CLAUSE_CONSEQUENCE_RE = re.compile(
 #: not the sentence's own count words, is what says how many targets this
 #: asks for.
 _FOR_EACH_OPPONENT_TARGET_RE = re.compile(
-    r"for each (?P<who>opponent|player),[^.]*?\b(?P<up_to>up to one )?target (?P<desc>[^.]+?) "
+    r"for each (?P<who>opponent|other player|player),[^.]*?\b(?P<up_to>up to one )?target (?P<desc>[^.]+?) "
     r"that (?:player|opponent) controls\b",
     re.IGNORECASE | re.DOTALL,
 )
@@ -4337,7 +4337,8 @@ def _for_each_opponent_profile(text: str) -> TargetingProfile | None:
     if base is None:
         return None
     mandatory = match.group("up_to") is None
-    opponents_only = match.group("who").lower() == "opponent"
+    who = match.group("who").lower()
+    opponents_only = who == "opponent"
     requirement = base.model_copy(
         update={
             "phrase": f"target {description} "
@@ -4348,10 +4349,23 @@ def _for_each_opponent_profile(text: str) -> TargetingProfile | None:
             "distinct_controllers": True,
             "one_per_opponent": mandatory,
             "controller": (
-                ControllerRestriction.OPPONENT if opponents_only else ControllerRestriction.ANY
+                ControllerRestriction.OPPONENT
+                if opponents_only
+                else ControllerRestriction.NOT_YOU
+                if who == "other player"
+                else ControllerRestriction.ANY
             ),
         }
     )
+    # CR 601.2c: every "target" the text prints is announced, so a "target"
+    # in a sentence before this one (Kaya's "Exile target creature you
+    # control. For each other player, ...") keeps its own requirement.
+    earlier = text[: match.start()]
+    if _TARGET_WORD.search(earlier):
+        prior = _parse(earlier, spell_only=False)
+        if not prior.understood:
+            return None
+        return TargetingProfile(requirements=(*prior.requirements, requirement))
     return TargetingProfile(requirements=(requirement,))
 
 
@@ -5803,6 +5817,19 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     #: item as the noun that follows it, not a fresh item of its own.
     after_conjunction = False
     in_subtype_list = False
+    if (
+        adjectives.must_be_token
+        and index > 0
+        and words[index - 1] in {"token", "tokens"}
+        and not (index < len(words) and words[index].removesuffix("s") in _ALL_NOUNS)
+    ):
+        # "target token you control" (Kaya, Spirits' Justice): CR 111.1's token
+        # as the noun itself - the adjective reader took the word, so with no
+        # noun after it the token is the permanent being named.
+        allows_cards = True
+        permanent_noun = True
+        nouns_read = 1
+        noun_end = index
 
     while index < len(words):
         word = words[index]

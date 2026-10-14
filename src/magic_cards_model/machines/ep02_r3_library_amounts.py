@@ -1507,3 +1507,115 @@ def sacrificed_value_draw_and_put(text: str) -> Callable[..., None] | None:
                 game.put_onto_battlefield(state, player.username)
 
     return run
+
+
+# --------------------------------------------------------------------------
+# "Surveil 2, then exile a card from a graveyard." and the exiled-batch trigger
+# "you may choose a creature card from among them. Until end of turn, target
+# token you control becomes a copy of it, except it has flying."
+# --------------------------------------------------------------------------
+
+_THEN_EXILE_GRAVEYARD_RE = re.compile(
+    r"^(?P<lead>(?:surveil|scry) \d+), then (?P<tail>exile a card from a graveyard)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_surveil_then_exile_from_graveyard(text: str) -> Any:
+    """CR 608.2c: the lead instruction (CR 701.25 surveil / CR 701.22 scry)
+    runs, then the controller exiles a card of their choice from any
+    graveyard (the reader that holds the bare sentence)."""
+    from .exiled_with_peek import parse_exile_a_card_from_a_graveyard
+
+    match = _THEN_EXILE_GRAVEYARD_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    lead = _ability_effect_or_notice(f"{match.group('lead')}.")
+    tail = parse_exile_a_card_from_a_graveyard(match.group("tail"))
+    if lead is None or tail is None:
+        return None
+
+    def effect(game: "Game", ability: Any) -> None:
+        lead(game, ability)
+        tail(game, ability)
+
+    return effect
+
+
+_CHOOSE_FROM_AMONG_THEM_COPY_RE = re.compile(
+    r"^you may choose an? (?P<quality>[a-z ]+?) card from among them\. "
+    r"until end of turn, target (?P<subject>[a-z ]+?) becomes a copy of it, "
+    r"except (?P<exception>it has [a-z ]+)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_choose_exiled_card_then_become_copy(text: str) -> Any:
+    """CR 603.2c / CR 707.9: off a batched "put into exile" event, choose one
+    of the exiled cards (never a token, CR 108.2) and make the targeted
+    permanent a copy of it until end of turn, with the stated exception
+    written into the copy (CR 707.9b)."""
+    from .copy_effects import _become_a_copy, _copiable_values_of, _parse_become_copy_exceptions
+    from .layers import Duration
+
+    match = _CHOOSE_FROM_AMONG_THEM_COPY_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None or not _card_description_is_readable(match.group("quality")):
+        return None
+    if not _targets_understood(f"target {match.group('subject')}", count_agnostic=True):
+        return None
+    exceptions = _parse_become_copy_exceptions(match.group("exception"))
+    if exceptions is None:
+        return None
+    matches_quality = _quality_matcher(match.group("quality"))
+
+    def effect(game: "Game", ability: Any) -> None:
+        batch = ability.event.batch_ids if ability.event is not None else ()
+        cards = [
+            state
+            for card_id in batch
+            if isinstance(state := game.find_by_id(card_id), CardState)
+            and state.zone is Zone.EXILE
+            and not state.token
+            and matches_quality(state)
+        ]
+        subject = next(
+            (
+                target
+                for target in game.resolve_card_targets(ability)
+                if target.zone is Zone.BATTLEFIELD
+            ),
+            None,
+        )
+        if not cards or subject is None:
+            return
+        controller = game.controller_of(ability)
+        answer = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt=f"you may choose a {match.group('quality')} card from among them",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                amount=1,
+                exact=False,
+                cards=tuple(state.id for state in cards),
+            )
+        )
+        assert isinstance(answer, tuple)
+        chosen = next((state for state in cards if state.id in set(answer)), None)
+        if chosen is None:
+            return
+        _become_a_copy(
+            game,
+            subject=subject,
+            copied=_copiable_values_of(game, chosen),
+            exceptions=exceptions,
+            source_name=ability.source_name,
+            own_name=subject.name,
+            this_ability=None,
+            duration=Duration.UNTIL_END_OF_TURN,
+        )
+
+    return effect

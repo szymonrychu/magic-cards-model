@@ -16,6 +16,7 @@ Rules, each read in full with `mise run rules:find` in this session:
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.combat import has_keyword
 from magic_cards_model.machines.decisions import DecisionKind
 from magic_cards_model.models import Zone
 
@@ -484,3 +485,196 @@ def test_venom_sacrificing_a_mana_value_zero_creature_draws_none_and_may_put_a_l
     _attack(scenario, sacrifice=memnite, put=forest)
     assert forest.zone is Zone.BATTLEFIELD
     assert len(scenario.player("alice").hand) == 1
+
+
+# --------------------------------------------------------------------------
+# Kaya, Spirits' Justice
+# --------------------------------------------------------------------------
+
+KAYA = "Kaya, Spirits' Justice"
+
+
+def _kaya(*, battlefield=("Grizzly Bears",), graveyard=(), bob_battlefield=(), bob_graveyard=(), library=("Island",) * 8):
+    scenario = _board(
+        battlefield=[KAYA, *battlefield],
+        graveyard=graveyard,
+        bob_battlefield=bob_battlefield,
+        bob_graveyard=bob_graveyard,
+        library=library,
+    )
+    return scenario, scenario.find(KAYA, Zone.BATTLEFIELD, "alice")
+
+
+def _token(scenario, name, username="alice"):
+    state = scenario.creature(name, username)
+    state.token = True
+    return state
+
+
+def test_kaya_plus_two_surveils_then_exiles_a_card_from_a_graveyard():
+    scenario, kaya = _kaya(graveyard=["Lightning Bolt"], library=["Island", "Forest", "Swamp"])
+    bolt = next(s for s in scenario.player("alice").graveyard if s.name == "Lightning Bolt")
+    scenario.will_choose_cards(bolt, username="alice", source=KAYA)
+    scenario.activate(kaya, index=0)
+    _resolve_all(scenario)
+    assert bolt.zone is Zone.EXILE
+    surveils = [q for q in scenario.questions_asked() if q.source == KAYA]
+    assert surveils, "the surveil looked at the top two cards"
+
+
+def test_kaya_plus_two_exiles_from_an_opponents_graveyard_too():
+    scenario, kaya = _kaya(bob_graveyard=["Hill Giant"])
+    giant = next(s for s in scenario.player("bob").graveyard if s.name == "Hill Giant")
+    scenario.will_choose_cards(giant, username="alice", source=KAYA)
+    scenario.activate(kaya, index=0)
+    _resolve_all(scenario)
+    assert giant.zone is Zone.EXILE
+
+
+def test_kaya_minus_two_exiles_my_creature_and_one_creature_of_each_other_player():
+    scenario, kaya = _kaya(bob_battlefield=["Hill Giant"])
+    bears = scenario.creature("Grizzly Bears")
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.activate(kaya, index=2, targets=[bears, giant])
+    _resolve_all(scenario)
+    assert bears.zone is Zone.EXILE
+    assert giant.zone is Zone.EXILE
+
+
+def test_kaya_minus_two_may_exile_none_of_the_other_players_creatures():
+    scenario, kaya = _kaya(bob_battlefield=["Hill Giant"])
+    bears = scenario.creature("Grizzly Bears")
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.activate(kaya, index=2, targets=[bears])
+    _resolve_all(scenario)
+    assert bears.zone is Zone.EXILE
+    assert giant.zone is Zone.BATTLEFIELD
+
+
+def test_kaya_minus_two_refuses_my_own_creature_as_the_other_players_target():
+    scenario, kaya = _kaya(battlefield=["Grizzly Bears", "Memnite"])
+    with pytest.raises(ValueError):
+        scenario.activate(
+            kaya,
+            index=2,
+            targets=[scenario.creature("Grizzly Bears"), scenario.creature("Memnite")],
+        )
+
+
+def test_kaya_trigger_copies_an_exiled_creature_onto_a_token_with_flying():
+    scenario, kaya = _kaya(battlefield=["Serra Angel", "Hill Giant"])
+    angel = scenario.creature("Serra Angel")
+    token = _token(scenario, "Hill Giant")
+    scenario.will_choose_targets(token, username="alice")
+    scenario.will_choose_cards(angel, username="alice", source=KAYA)
+    scenario.activate(kaya, index=2, targets=[angel])
+    _resolve_all(scenario)
+    assert angel.zone is Zone.EXILE
+    chars = scenario.game.characteristics_of(token)
+    assert chars.name == "Serra Angel"
+    assert has_keyword(token, "flying", scenario.game)
+    assert has_keyword(token, "vigilance", scenario.game)
+
+
+def test_kaya_trigger_gives_the_token_flying_even_when_the_card_had_none():
+    scenario, kaya = _kaya(battlefield=["Grizzly Bears", "Hill Giant"])
+    bears = scenario.creature("Grizzly Bears")
+    token = _token(scenario, "Hill Giant")
+    scenario.will_choose_targets(token, username="alice")
+    scenario.will_choose_cards(bears, username="alice", source=KAYA)
+    scenario.activate(kaya, index=2, targets=[bears])
+    _resolve_all(scenario)
+    chars = scenario.game.characteristics_of(token)
+    assert chars.name == "Grizzly Bears"
+    assert has_keyword(token, "flying", scenario.game), "the stated exception"
+
+
+def test_kaya_trigger_copy_ends_at_end_of_turn():
+    scenario, kaya = _kaya(battlefield=["Grizzly Bears", "Hill Giant"])
+    bears = scenario.creature("Grizzly Bears")
+    token = _token(scenario, "Hill Giant")
+    scenario.will_choose_targets(token, username="alice")
+    scenario.will_choose_cards(bears, username="alice", source=KAYA)
+    scenario.activate(kaya, index=2, targets=[bears])
+    _resolve_all(scenario)
+    scenario.start_at(Step.CLEANUP)
+    scenario.turn_based_actions()
+    assert scenario.game.characteristics_of(token).name == "Hill Giant"
+
+
+def test_kaya_trigger_may_choose_no_card():
+    scenario, kaya = _kaya(battlefield=["Grizzly Bears", "Hill Giant"])
+    bears = scenario.creature("Grizzly Bears")
+    token = _token(scenario, "Hill Giant")
+    scenario.will_choose_targets(token, username="alice")
+    scenario.will_choose_cards(username="alice", source=KAYA)
+    scenario.activate(kaya, index=2, targets=[bears])
+    _resolve_all(scenario)
+    assert scenario.game.characteristics_of(token).name == "Hill Giant"
+
+
+def test_kaya_trigger_fires_for_a_creature_card_exiled_from_my_graveyard():
+    scenario, kaya = _kaya(battlefield=["Hill Giant"], graveyard=["Serra Angel"])
+    angel = next(s for s in scenario.player("alice").graveyard if s.name == "Serra Angel")
+    token = _token(scenario, "Hill Giant")
+    scenario.will_choose_cards(angel, username="alice", source=KAYA)
+    scenario.will_choose_targets(token, username="alice")
+    scenario.will_choose_cards(angel, username="alice", source=KAYA)
+    scenario.activate(kaya, index=0)
+    _resolve_all(scenario)
+    assert angel.zone is Zone.EXILE
+    assert scenario.game.characteristics_of(token).name == "Serra Angel"
+
+
+def test_kaya_trigger_ignores_an_opponents_creature_or_graveyard_card():
+    scenario, kaya = _kaya(
+        battlefield=["Hill Giant"], bob_battlefield=["Grizzly Bears"], bob_graveyard=["Serra Angel"]
+    )
+    token = _token(scenario, "Hill Giant")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.game.exile_cards([bears, *scenario.player("bob").graveyard])
+    scenario.game.announce_batched_events()
+    scenario.game.put_triggers_on_stack()
+    assert not scenario.game.stack
+    assert scenario.game.characteristics_of(token).name == "Hill Giant"
+
+
+def test_kaya_trigger_does_not_fire_for_a_noncreature_card_from_my_graveyard():
+    scenario, kaya = _kaya(battlefield=["Hill Giant"], graveyard=["Lightning Bolt"])
+    _token(scenario, "Hill Giant")
+    scenario.game.exile_cards(list(scenario.player("alice").graveyard))
+    scenario.game.announce_batched_events()
+    scenario.game.put_triggers_on_stack()
+    assert not scenario.game.stack
+
+
+def test_kaya_trigger_is_one_event_for_creatures_and_cards_exiled_together():
+    scenario, kaya = _kaya(battlefield=["Grizzly Bears", "Memnite", "Hill Giant"], graveyard=["Serra Angel"])
+    _token(scenario, "Hill Giant")
+    batch = [
+        scenario.creature("Grizzly Bears"),
+        scenario.creature("Memnite"),
+        *scenario.player("alice").graveyard,
+    ]
+    scenario.game.exile_cards(batch)
+    scenario.game.announce_batched_events()
+    scenario.game.put_triggers_on_stack()
+    kaya_abilities = [obj for obj in scenario.game.stack if getattr(obj, "source_name", "") == KAYA]
+    assert len(kaya_abilities) == 1
+    assert len(kaya_abilities[0].event.batch_ids) == 3
+
+
+def test_kaya_trigger_a_token_exiled_gives_no_card_to_choose():
+    scenario, kaya = _kaya(battlefield=["Hill Giant", "Memnite"])
+    token = _token(scenario, "Hill Giant")
+    memnite = _token(scenario, "Memnite")
+    scenario.will_choose_targets(token, username="alice")
+    scenario.activate(kaya, index=2, targets=[memnite])
+    _resolve_all(scenario)
+    asked = [
+        q
+        for q in scenario.questions_asked()
+        if q.kind is DecisionKind.CHOOSE_CARDS and "from among them" in q.prompt
+    ]
+    assert asked == []
+    assert scenario.game.characteristics_of(token).name == "Hill Giant"

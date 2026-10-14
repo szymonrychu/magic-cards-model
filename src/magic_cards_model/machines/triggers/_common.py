@@ -124,6 +124,15 @@ _EXILE_FROM_GRAVEYARD_OR_BATTLEFIELD_CONDITION = re.compile(
     r" during your turn$"
 )
 
+#: Kaya, Spirits' Justice's "one or more creatures you control and/or creature
+#: cards in your graveyard are put into exile" (CR 406.2, CR 603.2c): one
+#: condition naming a battlefield origin and a graveyard origin, both read
+#: off the batched `PUT_INTO_EXILE` event for the controller.
+_CREATURES_OR_GRAVEYARD_CREATURE_CARDS_EXILED_CONDITION = re.compile(
+    r"^one or more creatures you control and/or creature cards in your graveyard "
+    r"are put into exile$"
+)
+
 #: Caged Sun's "a land's ability causes you to add one or more mana of the
 #: chosen color" - CR 605.1b's triggered mana ability, watching CR 106.12a's
 #: own event for the mana it now carries (`GameEvent.mana_added`). "The chosen
