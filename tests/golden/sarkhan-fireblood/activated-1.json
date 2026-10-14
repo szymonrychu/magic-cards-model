@@ -80,6 +80,7 @@
                       "joined": false,
                       "min_mana_value": null,
                       "purpose": "cast_spell",
+                      "requires_foretell": false,
                       "requires_x_in_cost": false,
                       "subtypes": ["dragon"],
                       "supertypes": [],

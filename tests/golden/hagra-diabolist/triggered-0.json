@@ -42,7 +42,7 @@
         "kind": "may",
         "player": "alice",
         "players": [],
-        "prompt": "have target player lose 1 life",
+        "prompt": "have target player lose life equal to the number of Allies you control",
         "source": "Hagra Diabolist"
       }
     ],

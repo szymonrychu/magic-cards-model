@@ -71,6 +71,7 @@
                       "joined": false,
                       "min_mana_value": null,
                       "purpose": "activate_ability",
+                      "requires_foretell": false,
                       "requires_x_in_cost": false,
                       "subtypes": [],
                       "supertypes": [],

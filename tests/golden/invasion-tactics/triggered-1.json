@@ -52,7 +52,7 @@
   "number": 1,
   "recipe": {
     "attempt": "combat",
-    "index": 0,
+    "index": 5,
     "params": {},
     "variant": "quiet"
   }
