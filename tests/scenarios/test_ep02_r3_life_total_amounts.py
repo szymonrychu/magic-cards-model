@@ -1028,3 +1028,27 @@ def test_haunt_on_a_permanent_expands_to_a_dies_trigger_and_on_a_spell_to_a_reso
     assert _haunt_ability(permanent[0]).event is TriggerEvent.DIES
     assert _haunt_ability(spell[0]).event is TriggerEvent.RESOLVED_INTO_GRAVEYARD
     assert _haunt_ability(permanent[0]).effect == "exile it haunting target creature"
+
+
+# --------------------------------------------------------------------------
+# Gluttonous Troll: "create a Food token for each opponent you have" (CR 608.2h,
+# the count is taken as the instruction is applied)
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("opponents", [1, 3])
+def test_gluttonous_troll_makes_a_food_per_opponent(opponents):
+    builder = Scenario().player(
+        "alice",
+        hand=["Gluttonous Troll"],
+        battlefield=["Forest", "Forest", "Swamp", "Forest"],
+        library=list(FOREST10),
+    )
+    for index in range(opponents):
+        builder = builder.player(f"opp{index}", library=list(FOREST10))
+    scenario = _main(builder.build())
+    scenario.cast_and_resolve(
+        "Gluttonous Troll", *scenario.untapped_sources("Forest", "Forest", "Swamp", "Forest")
+    )
+    _settle(scenario)
+    assert len(_tokens(scenario, "Food Token")) == opponents
