@@ -122,6 +122,8 @@ def record(game: "Game", event: "GameEvent") -> None:
         _record_departure(game, event, "to_hand")
     elif kind is TriggerEvent.IS_SACRIFICED:
         _record_departure(game, event, "sacrificed")
+    elif kind is TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE:
+        _record_departure(game, event, "to_exile")
     elif kind is TriggerEvent.ATTACKS and event.subject_id is not None:
         _record_attackers(game)
     elif kind is TriggerEvent.BLOCKS and event.subject_id is not None:

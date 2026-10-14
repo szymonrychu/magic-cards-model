@@ -7580,13 +7580,15 @@ def _parse_cant_be_regenerated_clause_pair(
     if _MASS_CREATURE_SUBJECT_RE.search(stripped) and stripped.lower().startswith("destroy"):
 
         def destroy_all(game: "Game", stack_object: "StackObject") -> None:
-            for permanent in [
+            doomed = [
                 candidate
                 for candidate in list(game.battlefield)
                 if game.characteristics_of(candidate).is_creature
-            ]:
-                if permanent.zone is Zone.BATTLEFIELD:
-                    game.destroy(permanent, regeneration_allowed=False)
+            ]
+            with game.dying_together():  # CR 608.2f: one simultaneous event
+                for permanent in doomed:
+                    if permanent.zone is Zone.BATTLEFIELD:
+                        game.destroy(permanent, regeneration_allowed=False)
 
         return destroy_all
 

@@ -161,3 +161,121 @@ def _parse_base_pt_becomes_source_pt(text: str) -> Any:
             )
 
     return effect
+
+
+_FUNGUS_DINOSAUR_RE = re.compile(
+    r"^create an? (?P<color>[a-z]+) (?P<types>(?:[A-Z][a-z]+ )+)creature token "
+    r"with base power and toughness each equal to the total power of those creatures\.?$",
+    re.IGNORECASE,
+)
+
+
+def total_power_of_those_creatures(game: "Game", stack_object: Any) -> int:
+    """The summed last-known power (CR 603.10a) of the creatures that died in
+    the one event (`GameEvent.died_together`, CR 704.3) which match the
+    triggered ability's own condition - "those creatures" of a "whenever one or
+    more nontoken creatures you control die" trigger (CR 603.2c)."""
+    from .triggers.conditions import _condition_matches
+
+    event = stack_object.event
+    source = stack_object.source_or_last_known(game)
+    if event is None or source is None:
+        return 0
+    members = event.died_together or (event,)
+    return sum(
+        member.subject_power or 0
+        for member in members
+        if _condition_matches(game, stack_object.ability, source, stack_object.controller, member)
+    )
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_token_base_pt_total_power(text: str) -> Any:
+    """ "Create a `<color>` `<types>` creature token with base power and
+    toughness each equal to the total power of those creatures" (The Skullspore
+    Nexus, CR 111.3: the creating effect defines the token's characteristics,
+    so the total is its base power and toughness)."""
+    match = _FUNGUS_DINOSAUR_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    from ..models.card import Color, Type
+    from ..models.token import TokenDefinition, create_tokens
+
+    try:
+        color = Color[match["color"].upper()]
+    except KeyError:
+        return None
+    subtypes = tuple(word.capitalize() for word in match["types"].split())
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        total = total_power_of_those_creatures(game, stack_object)
+        create_tokens(
+            game,
+            TokenDefinition(
+                types=(Type.CREATURE,),
+                subtypes=subtypes,
+                colors=(color,),
+                power=total,
+                toughness=total,
+            ),
+            game.controller_of(stack_object).username,
+        )
+
+    return effect
+
+
+_DOUBLE_POWER_RE = re.compile(
+    r"^double (?P<target>target [^.,']+?)(?:'s|’s) power until end of turn\.?$", re.IGNORECASE
+)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_double_target_power(text: str) -> Any:
+    """ "Double target creature's power until end of turn" (The Skullspore
+    Nexus): +X/+0 in sublayer 7c (CR 613.4c) where X is the target's power as
+    the instruction is applied (CR 608.2h) - fixed then, so a later change to
+    the power does not change the size of the pump - lasting until the
+    cleanup step (CR 514.2)."""
+    match = _DOUBLE_POWER_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    from .effects._common import _targets_understood
+
+    if not _targets_understood(match["target"]):
+        return None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        from .effects.continuous import continuous_effects
+        from .layers.model import (
+            ContinuousEffect,
+            Duration,
+            Layer,
+            Sublayer,
+            modify_power_toughness,
+            only_this_incarnation,
+        )
+
+        source = stack_object.source_or_last_known(game)
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        for target in game.resolve_targets(stack_object):
+            if not hasattr(target, "zone_change_stamp") or target.zone is not Zone.BATTLEFIELD:
+                continue
+            power = game.computed_board().of(target).power
+            if not power:
+                continue
+            store.add(
+                ContinuousEffect(
+                    description=f"{source.name if source else 'Double'}: {target.name} gets "
+                    f"{power:+d}/+0",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=modify_power_toughness(power, 0),
+                )
+            )
+
+    return effect
+

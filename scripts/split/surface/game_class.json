@@ -467,6 +467,7 @@
     "draw_prohibited",
     "draw_step",
     "drop_ring_bearers_controlled_by_others",
+    "dying_together",
     "emblems_of",
     "emit",
     "emit_became_tapped",

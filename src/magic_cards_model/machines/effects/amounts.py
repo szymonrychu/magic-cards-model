@@ -641,6 +641,14 @@ _COUNT_DIED_THIS_TURN_RE = re.compile(
     r"^(?:the )?number of (?:(?P<nontoken>nontoken) )?(?P<qualifier>[a-z]+) that died this turn$",
     re.IGNORECASE,
 )
+#: "the number of creatures that were exiled under your opponents' control this
+#: turn" (Vren, the Relentless): permanents that left the battlefield for exile,
+#: by who controlled them as they went.
+_COUNT_EXILED_UNDER_CONTROL_RE = re.compile(
+    r"^(?:the )?number of (?P<qualifier>[a-z]+) that were exiled under "
+    r"(?P<whose>your opponents'|your|an opponent's) control this turn$",
+    re.IGNORECASE,
+)
 #: "the number of red mana symbols in the mana costs of permanents you control"
 #: (Outrage Shaman, Heartlash Cinder): CR 700.5's devotion count, named by the
 #: chroma ability word's own template.
@@ -823,6 +831,32 @@ def _died_this_turn_count(phrase: str) -> Callable[["Game", str], int] | None:
     return died_this_turn
 
 
+def _exiled_under_control_count(phrase: str) -> Callable[["Game", str], int] | None:
+    """The turn's battlefield-to-exile departures (CR 406.2, CR 614.1a's "exile
+    it instead" included) that were `<qualifier>` as they last existed (CR
+    603.10a) under the named players' control, `Game.turn_history`'s
+    "to_exile" entries."""
+    match = _COUNT_EXILED_UNDER_CONTROL_RE.fullmatch(phrase)
+    if match is None:
+        return None
+    card_type = _singular_card_type(match.group("qualifier"))
+    if card_type is None:
+        return None
+    yours = match.group("whose").lower() == "your"
+
+    def exiled_under_control(game: "Game", controller: str) -> int:
+        return sum(
+            1
+            for entry in game.turn_history
+            if entry.kind == "to_exile"
+            and entry.characteristics is not None
+            and card_type in entry.characteristics.types
+            and ((entry.player == controller) if yours else (entry.player != controller))
+        )
+
+    return exiled_under_control
+
+
 def _colored_mana_symbols_count(phrase: str) -> Callable[["Game", str], int] | None:
     match = _COUNT_COLORED_MANA_SYMBOLS_RE.fullmatch(phrase)
     if match is None:
@@ -881,6 +915,8 @@ def _nw06_counted_term(stripped: str) -> Callable[["Game", str], int] | None:
         return _greatest_shared_creature_type_count(stripped)
     if "died this turn" in lowered:
         return _died_this_turn_count(stripped)
+    if "were exiled under" in lowered:
+        return _exiled_under_control_count(stripped)
     if "mana symbol" in lowered:
         return _colored_mana_symbols_count(stripped)
     if "cards in your graveyard" in lowered and "non" in lowered:

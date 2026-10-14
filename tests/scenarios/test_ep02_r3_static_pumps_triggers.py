@@ -9,6 +9,8 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card import Color
+from magic_cards_model.models.token import TokenDefinition, create_tokens
 
 from .harness import Scenario
 
@@ -697,3 +699,238 @@ def test_sunbird_effigy_ignores_exiled_cards_it_was_not_crafted_with():
     )
     scenario.activate(effigy)
     assert _floating(scenario) == {"GREEN": 1}
+
+
+# -- The Skullspore Nexus: one or more nontoken creatures you control die ->
+# a Fungus Dinosaur whose base P/T each equal the total power of those creatures
+
+
+def _nexus_board(alice=("Grizzly Bears", "Grizzly Bears"), bob=(), wrath=True):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Wrath of God"] if wrath else [],
+            battlefield=["The Skullspore Nexus", *alice] + ["Plains"] * 4,
+            library=["Island"] * 5,
+        )
+        .player("bob", battlefield=list(bob), library=["Forest"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _wrath(scenario):
+    scenario.cast_and_resolve(
+        "Wrath of God", *scenario.untapped_sources(*["Plains"] * 4, username="alice")
+    )
+    scenario.game.put_triggers_on_stack()
+    _resolve_stack(scenario)
+
+
+def _dinosaurs(scenario):
+    return [
+        c
+        for c in scenario.game.permanents_controlled_by("alice")
+        if "Fungus" in scenario.game.computed_board().of(c).subtypes
+    ]
+
+
+def test_skullspore_nexus_two_nontoken_creatures_dying_together_make_one_token():
+    # CR 603.2c: one event, however many occurrences it contains.
+    scenario = _nexus_board(alice=("Grizzly Bears", "Hill Giant"))
+    _wrath(scenario)
+    (dino,) = _dinosaurs(scenario)
+    assert _pt(scenario, dino) == (5, 5)
+    chars = scenario.game.computed_board().of(dino)
+    assert "Dinosaur" in chars.subtypes
+
+
+def test_skullspore_nexus_one_dying_creature_makes_a_token_of_its_power():
+    scenario = _nexus_board(alice=("Hill Giant",))
+    _wrath(scenario)
+    (dino,) = _dinosaurs(scenario)
+    assert _pt(scenario, dino) == (3, 3)
+
+
+def test_skullspore_nexus_ignores_tokens_and_opponents_creatures_in_the_total():
+    scenario = _nexus_board(alice=("Grizzly Bears",), bob=("Hill Giant",))
+    create_tokens(
+        scenario.game,
+        TokenDefinition(subtypes=("Goblin",), power=4, toughness=4),
+        "alice",
+    )
+    _wrath(scenario)
+    (dino,) = _dinosaurs(scenario)
+    assert _pt(scenario, dino) == (2, 2)
+
+
+def test_skullspore_nexus_does_not_trigger_when_only_a_token_or_opponents_creature_dies():
+    scenario = _nexus_board(alice=(), bob=("Hill Giant",))
+    create_tokens(
+        scenario.game, TokenDefinition(subtypes=("Goblin",), power=4, toughness=4), "alice"
+    )
+    _wrath(scenario)
+    assert _dinosaurs(scenario) == []
+
+
+def test_skullspore_nexus_uses_the_last_known_power_of_a_pumped_creature():
+    scenario = _nexus_board(alice=("Grizzly Bears", "Grizzly Bears"))
+    first = scenario.creatures("Grizzly Bears", "Grizzly Bears", username="alice")[0]
+    scenario.game.add_counters(first, "+1/+1", 3)
+    _wrath(scenario)
+    (dino,) = _dinosaurs(scenario)
+    assert _pt(scenario, dino) == (7, 7)
+
+
+def test_skullspore_nexus_token_keeps_a_base_pt_layer_effect_under_a_later_counter():
+    # CR 613.4b: the set is a base value, so a +1/+1 counter still adds on top.
+    scenario = _nexus_board(alice=("Hill Giant",))
+    _wrath(scenario)
+    (dino,) = _dinosaurs(scenario)
+    scenario.game.add_counters(dino, "+1/+1", 1)
+    assert _pt(scenario, dino) == (4, 4)
+
+
+def test_skullspore_nexus_state_based_deaths_batch_too():
+    # CR 704.3: lethal damage on two creatures is one simultaneous event.
+    scenario = _nexus_board(alice=("Grizzly Bears", "Grizzly Bears"), wrath=False)
+    for bears in scenario.creatures("Grizzly Bears", "Grizzly Bears", username="alice"):
+        scenario.game.deal_damage(bears, 2, source=None)
+    scenario.game.check_state_based_actions()
+    scenario.game.put_triggers_on_stack()
+    _resolve_stack(scenario)
+    dinos = _dinosaurs(scenario)
+    assert [_pt(scenario, d) for d in dinos] == [(4, 4)]
+
+
+def test_skullspore_nexus_doubles_target_creatures_power_until_end_of_turn():
+    scenario = _nexus_board(alice=("Hill Giant",), wrath=False)
+    giant = scenario.creature("Hill Giant", "alice")
+    nexus = scenario.creature("The Skullspore Nexus", "alice")
+    scenario.activate(
+        nexus,
+        *scenario.untapped_sources("Plains", "Plains", username="alice"),
+        targets=[giant],
+    )
+    scenario.resolve_top()
+    assert _pt(scenario, giant) == (6, 3)
+
+
+def test_skullspore_nexus_double_is_fixed_at_resolution_and_ends_at_end_of_turn():
+    scenario = _nexus_board(alice=("Hill Giant",), wrath=False)
+    giant = scenario.creature("Hill Giant", "alice")
+    nexus = scenario.creature("The Skullspore Nexus", "alice")
+    scenario.activate(
+        nexus,
+        *scenario.untapped_sources("Plains", "Plains", username="alice"),
+        targets=[giant],
+    )
+    scenario.resolve_top()
+    scenario.game.add_counters(giant, "+1/+1", 1)
+    # X was 3 when it resolved; the counter adds after and is not doubled.
+    assert _pt(scenario, giant) == (7, 4)
+    _advance_until(scenario, lambda s: s.turn.active_player == "bob")
+    assert _pt(scenario, giant) == (4, 4)
+
+
+def test_simultaneous_deaths_still_look_back_at_each_other():
+    # CR 603.10a: Blood Artist dying with two Bears sees all three deaths.
+    scenario = _nexus_board(alice=("Blood Artist", "Grizzly Bears", "Grizzly Bears"))
+    for _ in range(3):
+        scenario.will_choose_targets(scenario.player("bob"), username="alice")
+    _wrath(scenario)
+    assert scenario.player("bob").life == 17
+
+
+# -- Vren, the Relentless: opponents' creatures are exiled instead of dying; at each end
+# step, X 1/1 Rats (+1/+1 for each other Rat), X = creatures exiled under opponents' control
+
+
+def _vren_board(alice=(), bob=("Grizzly Bears", "Grizzly Bears")):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Swords to Plowshares"],
+            battlefield=["Vren, the Relentless", "Plains", *alice],
+            library=["Island"] * 5,
+        )
+        .player("bob", battlefield=list(bob), library=["Forest"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _rats(scenario):
+    return [
+        c
+        for c in scenario.game.permanents_controlled_by("alice")
+        if c.name != "Vren, the Relentless"
+        and "Rat" in scenario.game.computed_board().of(c).subtypes
+    ]
+
+
+def _to_end_step(scenario):
+    _advance_until(scenario, lambda s: s.step is Step.END_STEP)
+    scenario.game.put_triggers_on_stack()
+    _resolve_stack(scenario)
+
+
+def test_vren_makes_a_rat_for_each_creature_exiled_instead_of_dying():
+    scenario = _vren_board()
+    for bears in scenario.creatures("Grizzly Bears", "Grizzly Bears", username="bob"):
+        scenario.game.destroy(bears)
+    assert [c.name for c in scenario.player("bob").graveyard] == []
+    _to_end_step(scenario)
+    rats = _rats(scenario)
+    # Vren is a Rat too: each token gets +1/+1 for Vren and +1/+1 for the other token.
+    assert [_pt(scenario, r) for r in rats] == [(3, 3), (3, 3)]
+    chars = scenario.game.computed_board().of(rats[0])
+    assert Color.BLACK in chars.colors
+
+
+def test_vren_counts_creatures_exiled_by_other_effects_too():
+    scenario = _vren_board(bob=("Grizzly Bears",))
+    scenario.cast_and_resolve(
+        "Swords to Plowshares",
+        *scenario.untapped_sources("Plains", username="alice"),
+        targets=[scenario.creature("Grizzly Bears", "bob")],
+    )
+    _to_end_step(scenario)
+    assert [_pt(scenario, r) for r in _rats(scenario)] == [(2, 2)]
+
+
+def test_vren_does_not_count_its_controllers_own_exiled_creatures():
+    scenario = _vren_board(alice=("Grizzly Bears",), bob=())
+    scenario.game.exile_permanent(scenario.creature("Grizzly Bears", "alice"))
+    _to_end_step(scenario)
+    assert _rats(scenario) == []
+
+
+def test_vren_makes_no_rats_when_nothing_was_exiled():
+    scenario = _vren_board()
+    _to_end_step(scenario)
+    assert _rats(scenario) == []
+
+
+def test_vren_triggers_on_every_end_step_and_counts_only_this_turn():
+    scenario = _vren_board(bob=("Grizzly Bears",))
+    scenario.game.destroy(scenario.creature("Grizzly Bears", "bob"))
+    _to_end_step(scenario)
+    assert len(_rats(scenario)) == 1
+    # Next turn (bob's end step) nothing new was exiled: no more Rats.
+    _advance_until(scenario, lambda s: s.turn.active_player == "bob" and s.step is Step.END_STEP)
+    scenario.game.put_triggers_on_stack()
+    _resolve_stack(scenario)
+    assert len(_rats(scenario)) == 1
+
+
+def test_vren_rat_pump_counts_every_other_rat_its_controller_has():
+    scenario = _vren_board(bob=("Grizzly Bears", "Grizzly Bears", "Grizzly Bears"))
+    for bears in scenario.creatures("Grizzly Bears", "Grizzly Bears", "Grizzly Bears", username="bob"):
+        scenario.game.destroy(bears)
+    _to_end_step(scenario)
+    assert [_pt(scenario, r) for r in _rats(scenario)] == [(4, 4)] * 3

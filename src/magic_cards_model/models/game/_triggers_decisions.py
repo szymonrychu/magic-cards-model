@@ -781,6 +781,13 @@ class TriggersDecisionsMixin:
                 gone = self.find_by_id(event.subject_id)
                 if isinstance(gone, CardState) and gone not in sources:
                     sources = [*sources, gone]
+                # CR 603.10a: every creature that died in this one event
+                # (`Game.dying_together`) looks back at the others, though
+                # all of them are in graveyards by the time it is raised.
+                for member in event.died_together:
+                    fallen = self.find_by_id(member.subject_id) if member.subject_id else None
+                    if isinstance(fallen, CardState) and fallen not in sources:
+                        sources = [*sources, fallen]
             elif event.event is TriggerEvent.LEAVES_BATTLEFIELD_TO_HAND:
                 # CR 603.10a: every permanent returned by this one event looks
                 # back, itself included, though each is in a hand by now.

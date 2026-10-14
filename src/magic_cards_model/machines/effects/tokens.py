@@ -530,7 +530,12 @@ def _parse_token_tail(tail: str | None) -> tuple[tuple[str, ...], str | None] | 
     if (several := _several_quoted_abilities(tail)) is not None:
         keyword_part, quoted_text = several
     elif quoted := _TOKEN_TAIL_QUOTE_RE.match(tail):
+        # A quoted ability followed by ", where X is ..." is printed with the
+        # comma inside the quote (Vren's `"This token gets +1/+1 for each other
+        # Rat you control,"`): that comma stands for the sentence's full stop.
         quoted_text = quoted.group("text")
+        if quoted_text.endswith(","):
+            quoted_text = quoted_text[:-1] + "."
         keyword_part = _TOKEN_TAIL_KEYWORD_JOIN_RE.sub("", quoted.group("pre")).strip()
     if not keyword_part:
         return (), quoted_text

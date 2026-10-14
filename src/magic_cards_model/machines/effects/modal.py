@@ -4139,14 +4139,15 @@ def _parse_choose_creature_type_destroy_except_clause(
         )
         assert isinstance(chosen, str)
         board = game.computed_board()
-        for permanent in list(game.battlefield):
-            chars = board.of(permanent)
-            if Type.CREATURE not in chars.types:
-                continue
-            if chosen in chars.subtypes:
-                continue
-            if permanent.zone is Zone.BATTLEFIELD:
-                game.destroy(permanent)
+        with game.dying_together():  # CR 608.2f: one simultaneous event
+            for permanent in list(game.battlefield):
+                chars = board.of(permanent)
+                if Type.CREATURE not in chars.types:
+                    continue
+                if chosen in chars.subtypes:
+                    continue
+                if permanent.zone is Zone.BATTLEFIELD:
+                    game.destroy(permanent)
 
     return effect
 
@@ -5346,13 +5347,14 @@ def _parse_separate_into_two_piles_then_consequence_whole_text(
             )
             assert isinstance(wants_pile_one, bool)
             chosen = pile_one if wants_pile_one else pile_two
-            for permanent in chosen:
-                if permanent.zone is not Zone.BATTLEFIELD:
-                    continue
-                if verb == "sacrifice":
-                    game.sacrifice(permanent)
-                else:
-                    game.destroy(permanent, regeneration_allowed=regeneration_allowed)
+            with game.dying_together():  # CR 608.2f: one simultaneous event
+                for permanent in chosen:
+                    if permanent.zone is not Zone.BATTLEFIELD:
+                        continue
+                    if verb == "sacrifice":
+                        game.sacrifice(permanent)
+                    else:
+                        game.destroy(permanent, regeneration_allowed=regeneration_allowed)
 
     return effect
 
