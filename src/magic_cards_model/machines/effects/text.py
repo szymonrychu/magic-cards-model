@@ -1886,7 +1886,7 @@ _ATTACHED_SUBJECT_RE = re.compile(
 
 
 def _parse_anaphoric_clause_pair(
-    first: str, second: str, *, for_spell: bool
+    first: str, second: str, *, for_spell: bool, regeneration_allowed: bool = True
 ) -> TargetedClause | None:
     """ "<Destroy/exile> target X. Its/that X's controller <player clause>."
     as one combined clause, or `None` if this shape does not match or its
@@ -1950,7 +1950,7 @@ def _parse_anaphoric_clause_pair(
         referent = game.controller_of(target)
         power = game.power_of(target)
         if is_destroy:
-            game.destroy(target)
+            game.destroy(target, regeneration_allowed=regeneration_allowed)
         else:
             game.exile_permanent(target)
         # A legal target the first verb failed to move - CR 702.12b's

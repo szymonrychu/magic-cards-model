@@ -419,7 +419,7 @@ class CardsClause:
 
 _CARDS_RE = re.compile(
     rf"^(?:then )?(?:(?P<subject>.+?) )?(?P<verb>draws?|discards?) "
-    rf"(?:cards equal to (?P<expr>.+)|(?P<x>x) cards|(?P<n>{COUNT}) cards?)$",
+    rf"(?:(?:a number of )?cards equal to (?P<expr>.+)|(?P<x>x) cards|(?P<n>{COUNT}) cards?)$",
     re.IGNORECASE,
 )
 

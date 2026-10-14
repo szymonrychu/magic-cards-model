@@ -293,9 +293,12 @@ def _parse_effect_sentence(sentence: str) -> tuple[Action, StatRef, bool] | None
         return life_change, ref, who.startswith("target")
     if (cards := parse_cards_clause(sentence)) is not None:
         ref = parse_stat_phrase(cards.expr or "") if cards.kind == "equal" else None
-        if ref is None or cards.who not in ("", "you"):
+        if ref is None or cards.who not in ("", "you", "target player", "target opponent"):
             return None
+        who = cards.who
         if cards.draws:
+            if who not in ("", "you"):
+                return None
 
             def draw(game: "Game", stack_object: Any, referent: Referent | None) -> None:
                 game.draw_cards(game.controller_of(stack_object), stat_value(referent, ref.stat))
@@ -305,16 +308,23 @@ def _parse_effect_sentence(sentence: str) -> tuple[Action, StatRef, bool] | None
         def discard(game: "Game", stack_object: Any, referent: Referent | None) -> None:
             from .decisions import source_id_of
 
+            player = game.controller_of(stack_object)
+            if who.startswith("target"):
+                player = next(
+                    (t for t in game.resolve_targets(stack_object) if isinstance(t, Player)), None
+                )
+                if player is None:
+                    return
             discard_equal_to_stat(
                 game,
-                game.controller_of(stack_object).username,
+                player.username,
                 referent,
                 ref.stat,
                 getattr(stack_object, "source_name", None) or getattr(stack_object, "name", ""),
                 source_id_of(stack_object),
             )
 
-        return discard, ref, False
+        return discard, ref, who.startswith("target")
     if (mill := parse_mill_clause(sentence)) is not None:
         ref = parse_stat_phrase(mill.expr or "") if mill.kind == "equal" else None
         if ref is None or mill.who not in ("you", "target player", "target opponent"):
