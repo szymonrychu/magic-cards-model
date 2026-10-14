@@ -45,13 +45,18 @@ from .delayed import ReflexiveDamageEqualToSubjectPowerConsequence
 from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from .effects._common import _card_description_is_readable, _quality_matcher, _targets_understood
 from .effects.amounts import count_expression
-from .effects.dispatch import _ability_effect_or_notice, _parse_mixed_clause
+from .effects.dispatch import (
+    _ability_effect_or_notice,
+    _parse_mixed_clause,
+    _spell_effect_or_notice,
+)
 from .effects.library import (
     _bottom_in_random_order,
     _put_rest_on_bottom,
     put_ability_targets_on_bottom_of_owners_library,
 )
 from .effects.search import _search_and_exile_matching_name, _single_names
+from .targeting import profile_for_text
 from .return_transformed_attached import _back_face_enchant_refusal
 from .triggers import is_ability
 
@@ -1281,3 +1286,166 @@ def _parse_pump_where_x_other_attackers(text: str) -> Any:
         f"{match.group('subject')} gets {per(match.group('p'))}/{per(match.group('t'))} "
         "until end of turn for each other attacking creature."
     )
+
+
+# --------------------------------------------------------------------------
+# Return a permanent and the Auras attached to it, and the "destroy X and you
+# lose life equal to its toughness" single-sentence form.
+# --------------------------------------------------------------------------
+
+_RETURN_WITH_AURAS_RE = re.compile(
+    r"^return (?P<phrase>(?:another )?target [a-z ]+?) and all auras(?P<mine> you control)? "
+    r"attached to (?:it|that creature|that permanent) to (?:their|its) owners?'s? hands?\.?$",
+    re.IGNORECASE,
+)
+_AND_LIFE_RE = re.compile(
+    r"^(?P<lead>(?:destroy|exile) target [^.]+?) and (?P<who>you|its controller) "
+    r"(?P<verb>lose|loses|gain|gains) life equal to (?P<rest>its (?:power|toughness|mana value))\.?$",
+    re.IGNORECASE,
+)
+
+
+def _return_with_auras(text: str) -> Any:
+    """CR 701.19a: "Return target `<permanent>` and all Auras (you control)
+    attached to it to their owner's hand" - the Auras are those attached as the
+    instruction starts (CR 608.2c), all moved together with the permanent so
+    none falls off first (CR 704.5m)."""
+    match = _RETURN_WITH_AURAS_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None or not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    mine_only = match.group("mine") is not None
+
+    def effect(game: "Game", obj: Any) -> None:
+        controller = game.controller_of(obj)
+        moved: list[CardState] = []
+        for target in game.resolve_targets(obj):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            moved.append(target)
+            moved.extend(
+                aura
+                for aura in game.battlefield
+                if aura.attached_to == target.id
+                and "Aura" in game.characteristics_of(aura).subtypes
+                and (not mine_only or game.controller_of(aura).username == controller.username)
+            )
+        for permanent in moved:
+            game.return_to_hand(permanent)
+
+    return effect
+
+
+def _and_life_clause(text: str, *, for_spell: bool) -> Any:
+    """ "Destroy target creature and you lose life equal to its toughness" is
+    the two-sentence form (CR 608.2c: in order) the ordinary readers hold."""
+    match = _AND_LIFE_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    who = match.group("who").capitalize()
+    split = f"{match.group('lead')}. {who} {match.group('verb')} life equal to {match.group('rest')}."
+    return (_spell_effect_or_notice if for_spell else _ability_effect_or_notice)(split)
+
+
+def aura_return_effect(text: str, *, for_spell: bool) -> Any:
+    """The readers of this section for a modal spell's mode text."""
+    return _return_with_auras(text) or _and_life_clause(text, for_spell=for_spell)
+
+
+@SPELL_TEXT.rung("s23", before=("parse_mixed_effect_for_spell",))
+def _parse_aura_return_spell(text: str) -> Any:
+    lowered = text.lower()
+    if " and all auras" not in lowered and " life equal to " not in lowered:
+        return None
+    return aura_return_effect(text, for_spell=True)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_aura_return_ability(text: str) -> Any:
+    lowered = text.lower()
+    if " and all auras" not in lowered and " life equal to " not in lowered:
+        return None
+    return aura_return_effect(text, for_spell=False)
+
+
+# --------------------------------------------------------------------------
+# Several graveyard cards returned at once: "For each color, return up to one
+# target card of that color ..." and "Return target X card and (up to one)
+# target Y card from your graveyard to ...".
+# --------------------------------------------------------------------------
+
+_PER_COLOR_RETURN_RE = re.compile(
+    r"^for each color, return up to one target (?:[a-z]+ )?card of that color "
+    r"from your graveyard to your hand\.?$",
+    re.IGNORECASE,
+)
+_PAIR_RETURN_RE = re.compile(
+    r"^return (?P<first>target [a-z ,]+? card) and (?P<second>(?:up to one )?target [^.]+? card) "
+    r"from your graveyard to (?P<dest>the battlefield|your hand)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _graveyard_card_targets(game: "Game", obj: Any) -> list[CardState]:
+    """The still-legal targets (CR 608.2b) that are cards in a graveyard,
+    each once and in the order chosen."""
+    seen: set[Any] = set()
+    found: list[CardState] = []
+    for target in game.resolve_targets(obj):
+        if isinstance(target, CardState) and target.zone is Zone.GRAVEYARD and target.id not in seen:
+            seen.add(target.id)
+            found.append(target)
+    return found
+
+
+def _return_chosen_graveyard_cards(*, to_battlefield: bool) -> Any:
+    def effect(game: "Game", obj: Any) -> None:
+        controller = game.controller_of(obj)
+        cards = _graveyard_card_targets(game, obj)
+        if to_battlefield:
+            with game.entering_together():  # CR 603.6a: one instruction, one event
+                for card in cards:
+                    game.put_onto_battlefield(card, controller.username)
+        else:
+            for card in cards:
+                game.player(card.owner).move(card, Zone.HAND)
+
+    return effect
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_per_color_graveyard_return(clause: str, *, for_spell: bool) -> Any:
+    """CR 115.6 / CR 105.1: five optional colour slots (the targeting profile
+    holds them), every chosen card returned to its owner's hand."""
+    if "for each color" not in clause.lower():
+        return None
+    if _PER_COLOR_RETURN_RE.fullmatch(" ".join(clause.strip().split())) is None:
+        return None
+    if not profile_for_text(clause).understood:
+        return None
+    return _return_chosen_graveyard_cards(to_battlefield=False)
+
+
+def _pair_graveyard_return(clause: str) -> Any:
+    clause = _REMINDER_RE.sub("", clause).strip()
+    """ "Return target creature card and up to one target Cleric ... card from
+    your graveyard to the battlefield" - two targets from one instruction
+    (CR 601.2c), both returned together (CR 603.6a)."""
+    match = _PAIR_RETURN_RE.fullmatch(" ".join(clause.strip().split()))
+    if match is None:
+        return None
+    profile = profile_for_text(clause)
+    if not profile.understood or len(profile.requirements) != 2:
+        return None
+    if any(Zone.GRAVEYARD not in requirement.zones for requirement in profile.requirements):
+        return None
+    return _return_chosen_graveyard_cards(to_battlefield=match.group("dest").lower() != "your hand")
+
+
+@SPELL_TEXT.rung("s23", before=("parse_mixed_effect_for_spell",))
+def _parse_pair_graveyard_return_spell(text: str) -> Any:
+    return _pair_graveyard_return(text) if " card and " in text.lower() else None
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_pair_graveyard_return_ability(text: str) -> Any:
+    return _pair_graveyard_return(text) if " card and " in text.lower() else None

@@ -32,7 +32,7 @@
   },
   "mana_cost": "{2}{U}",
   "cmc": 3.0,
-  "type_line": "Creature — Merfolk Wizard",
+  "type_line": "Creature \u2014 Merfolk Wizard",
   "oracle_text": "Each other Wizard creature you control enters with an additional +1/+1 counter on it.\n{2}, Remove a +1/+1 counter from a creature you control: Draw a card.",
   "power": "2",
   "toughness": "2",
@@ -107,15 +107,15 @@
   "textless": false,
   "booster": false,
   "story_spotlight": false,
-  "edhrec_rank": 8223,
-  "penny_rank": 7026,
+  "edhrec_rank": 8251,
+  "penny_rank": 6993,
   "prices": {
-    "usd": "0.28",
+    "usd": "0.29",
     "usd_foil": null,
     "usd_etched": null,
-    "eur": "0.24",
+    "eur": "0.28",
     "eur_foil": null,
-    "tix": "0.26"
+    "tix": "0.29"
   },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=640465&printed=false",

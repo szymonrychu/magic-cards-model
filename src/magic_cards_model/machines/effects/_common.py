@@ -2495,7 +2495,9 @@ _EXILE_UNTIL_QUALITY_THIRD_PERSON_RE = re.compile(
 #: than folded into `_PLAY_PERMISSION_RE`, which only ever sees the sentence
 #: up to that comma.
 _ANY_TYPE_MANA_STANDALONE_RE = re.compile(
-    r"^mana of any type can be spent to cast (?:it|that spell|them)\.?$", re.IGNORECASE
+    r"^(?:if you cast a spell this way, )?mana of any type can be spent to cast "
+    r"(?:it|that spell|them)\.?$",
+    re.IGNORECASE,
 )
 
 

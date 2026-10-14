@@ -4144,6 +4144,53 @@ _UP_TO_ONE_OF_EACH_CARD_TYPE_RE = re.compile(
 _NONLAND_CARD_TYPES: tuple[Type, ...] = tuple(t for t in Type if t is not Type.LAND)
 
 
+#: "For each color, return up to one target `<type>` card of that color from
+#: your graveyard to your hand." (All Suns' Dawn, Rogues' Gallery): CR 601.2c
+#: announces every "target" the text prints, and "for each color" prints one
+#: instance per CR 105.1 color - five independent "up to one" slots (CR 115.6).
+_FOR_EACH_COLOR_RETURN_RE = re.compile(
+    r"for each color, return up to one target (?:(?P<kind>[a-z]+) )?card of that color "
+    r"from your graveyard to your hand",
+    re.IGNORECASE,
+)
+
+
+def _for_each_color_profile(text: str) -> TargetingProfile | None:
+    """`_FOR_EACH_COLOR_RETURN_RE`'s five colour slots, or `None`.
+
+    CR 115.3: it is one instance of the word "target", so no object may fill
+    two slots - each slot after the first is marked
+    `distinct_from_prior_requirement`, which compares it with every earlier
+    slot of the run (a multicolored card answers only one colour)."""
+    match = _FOR_EACH_COLOR_RETURN_RE.search(text)
+    if match is None:
+        return None
+    kind = match.group("kind")
+    card_type = _TYPE_NOUNS.get(kind.lower()) if kind else None
+    if kind and card_type is None:
+        return None
+    requirements = tuple(
+        TargetRequirement(
+            phrase=f"up to one target {color.name.lower()} "
+            + (f"{kind.lower()} " if kind else "")
+            + "card from your graveyard",
+            count=1,
+            minimum=0,
+            card_types=frozenset({card_type}) if card_type is not None else frozenset(),
+            required_colors=frozenset({color}),
+            allows_cards=True,
+            allows_players=False,
+            zones=frozenset({Zone.GRAVEYARD}),
+            controller=ControllerRestriction.YOU,
+            distinct_from_prior_requirement=index > 0,
+        )
+        for index, color in enumerate(
+            (Color.WHITE, Color.BLUE, Color.BLACK, Color.RED, Color.GREEN)
+        )
+    )
+    return TargetingProfile(requirements=requirements, understood=True)
+
+
 def _up_to_one_of_each_card_type_profile() -> TargetingProfile:
     """`_UP_TO_ONE_OF_EACH_CARD_TYPE_RE`'s shape, built directly rather than
     through `_parse`'s own text scan: one "up to one" requirement per
@@ -4741,6 +4788,9 @@ def _cards_from_target_player_pair(match: "re.Match[str]") -> str:
 @functools.lru_cache(maxsize=16384)
 def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     text = _spell_text(oracle_text) if spell_only else oracle_text
+    for_each_color = _for_each_color_profile(text)
+    if for_each_color is not None:
+        return for_each_color
     if spell_only:
         # CR 603.12: a reflexive ability's own targets are chosen when *it* goes
         # on the stack (CR 603.3d), so a spell's "When you discard a nonland
@@ -5752,6 +5802,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     #: and the noun it belongs to), since the adjective is part of the same
     #: item as the noun that follows it, not a fresh item of its own.
     after_conjunction = False
+    in_subtype_list = False
 
     while index < len(words):
         word = words[index]
@@ -5844,7 +5895,13 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             card_types.add(Type.LAND)
             subtype_elided_types.add(Type.LAND)
             allows_cards = True
-        elif nouns_read == 0 and _is_bare_subtype_word(raw_words[index], word):
+        elif (nouns_read == 0 or (in_subtype_list and after_conjunction)) and _is_bare_subtype_word(
+            raw_words[index], word
+        ):
+            # A run of bare creature types before one noun ("Cleric, Rogue,
+            # Warrior, or Wizard creature card", Thwart the Grave) is a
+            # disjunction: every word after the first is read by this branch too.
+            in_subtype_list = True
             # Aeronaut Cavalry's "another target Soldier you control" - CR
             # 205.3m's creature-type word standing alone as the target noun,
             # the elided-"creature" shape `_read_subtype_list` reads for two
