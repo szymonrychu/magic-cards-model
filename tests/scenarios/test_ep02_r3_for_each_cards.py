@@ -796,3 +796,86 @@ def test_blinkmoth_urn_adds_nothing_while_tapped() -> None:
     scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")  # Sol Ring stays untapped
     _first_main_of(scenario, "alice")
     assert scenario.player("alice").mana_pool.total == 0
+
+
+# ---------------------------------------------------------------------------
+# Aetherspouts: "For each attacking creature, its owner puts it on their choice of the
+# top or bottom of their library." (CR 401.1, CR 608.2d)
+# ---------------------------------------------------------------------------
+
+
+def _aetherspouts(answers: list[bool]):
+    scenario = _scenario(
+        ["Grizzly Bears", "Memnite"], hand=["Aetherspouts"], library=["Forest"] * 6, step=Step.UPKEEP
+    )
+    bears, memnite = scenario.creatures("Grizzly Bears", "Memnite", username="alice")
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears, memnite)
+    for answer in answers:
+        scenario.will_choose_top(answer, username="alice", times=1)
+    _cast_all(scenario, "Aetherspouts")
+    return scenario, [s.name for s in scenario.player("alice").library]
+
+
+def test_aetherspouts_puts_every_attacker_on_top_when_the_owner_chooses_top() -> None:
+    scenario, library = _aetherspouts([True, True])
+    assert sorted(library[:2]) == ["Grizzly Bears", "Memnite"]
+    assert scenario.attackers() == []
+
+
+def test_aetherspouts_puts_every_attacker_on_the_bottom_when_the_owner_chooses_bottom() -> None:
+    _scenario_, library = _aetherspouts([False, False])
+    assert sorted(library[-2:]) == ["Grizzly Bears", "Memnite"]
+
+
+def test_aetherspouts_asks_the_owner_once_per_attacker() -> None:
+    _scenario_, library = _aetherspouts([True, False])
+    assert library[0] in ("Grizzly Bears", "Memnite")
+    assert library[-1] in ("Grizzly Bears", "Memnite")
+    assert library[0] != library[-1]
+
+
+def test_aetherspouts_leaves_non_attackers_alone() -> None:
+    scenario = _scenario(["Grizzly Bears"], ["Serra Angel"], hand=["Aetherspouts"], step=Step.UPKEEP)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Grizzly Bears", "alice"))
+    _cast_all(scenario, "Aetherspouts")
+    assert _names(scenario, Zone.BATTLEFIELD, "bob").count("Serra Angel") == 1
+
+
+# ---------------------------------------------------------------------------
+# Hateful Eidolon: "Whenever an enchanted creature dies, draw a card for each Aura
+# you controlled that was attached to it." (CR 603.10a: leaves-the-battlefield
+# abilities look back)
+# ---------------------------------------------------------------------------
+
+
+def _eidolon(my_auras: int, their_auras: int):
+    scenario = _scenario(
+        ["Hateful Eidolon", *["Pacifism"] * my_auras],
+        ["Grizzly Bears", *["Pacifism"] * their_auras],
+        hand=["Lightning Bolt"],
+        library=["Forest"] * 8,
+    )
+    bears = scenario.creature("Grizzly Bears", "bob")
+    for aura in [s for s in scenario.all_card_states() if s.name == "Pacifism"]:
+        aura.attach_to(bears)
+    return scenario, bears
+
+
+def test_hateful_eidolon_draws_for_each_aura_you_controlled_on_the_dead_creature() -> None:
+    scenario, bears = _eidolon(2, 0)
+    _cast_all(scenario, "Lightning Bolt", targets=[bears])
+    assert _hand(scenario, "alice") == 2
+
+
+def test_hateful_eidolon_ignores_auras_an_opponent_controlled() -> None:
+    scenario, bears = _eidolon(1, 2)
+    _cast_all(scenario, "Lightning Bolt", targets=[bears])
+    assert _hand(scenario, "alice") == 1
+
+
+def test_hateful_eidolon_draws_nothing_when_an_unenchanted_creature_dies() -> None:
+    scenario = _scenario(["Hateful Eidolon"], ["Grizzly Bears"], hand=["Lightning Bolt"])
+    _cast_all(scenario, "Lightning Bolt", targets=[scenario.creature("Grizzly Bears", "bob")])
+    assert _hand(scenario, "alice") == 0

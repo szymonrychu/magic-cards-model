@@ -859,3 +859,60 @@ def _parse_draw_for_each_thing_two_target_players_control(text: str, *, for_spel
                 game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     return [effect]
+
+
+# --------------------------------------------------------------------------
+# "For each attacking creature, its owner puts it on their choice of the top or
+# bottom of their library." (Aetherspouts, CR 401.1, CR 608.2d)
+# --------------------------------------------------------------------------
+
+_FOR_EACH_OWNER_PUTS_IT_RE = re.compile(
+    r"^for each (?P<what>[a-z][a-z ]*?), its owner puts it on their choice of the top or "
+    r"bottom of their library$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
+def _parse_for_each_permanent_its_owner_puts_it_top_or_bottom(
+    clause: str, *, for_spell: bool
+) -> Any:
+    """Aetherspouts. The group is fixed as the instruction begins (CR 608.2f);
+    each one's owner - not the controller - makes their own top-or-bottom
+    choice for it (CR 108.3, CR 608.2d), and it moves from the battlefield to
+    that library (CR 401.1)."""
+    match = _FOR_EACH_OWNER_PUTS_IT_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    if match is None:
+        return None
+    from .targeting import permanent_description
+
+    requirement = permanent_description(match.group("what"))
+    if requirement is None:
+        return None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        from .decisions import Decision, DecisionKind, source_id_of
+
+        controller = game.controller_of(stack_object).username
+        source = stack_object.name if for_spell else stack_object.source_name
+        group = [
+            permanent
+            for permanent in list(game.battlefield)
+            if requirement.rejects(permanent, controller, game) is None
+        ]
+        for permanent in group:
+            if permanent.zone is not Zone.BATTLEFIELD or permanent.owner is None:
+                continue
+            top = game.ask(
+                Decision(
+                    kind=DecisionKind.PUT_ON_TOP_OR_BOTTOM,
+                    player=permanent.owner,
+                    prompt=f"put {permanent.name} on the top or bottom of {permanent.owner}'s library",
+                    source=source,
+                    source_id=source_id_of(stack_object),
+                )
+            )
+            assert isinstance(top, bool)
+            game.put_cards_into_library([permanent], to_bottom=not top)
+
+    return effect
