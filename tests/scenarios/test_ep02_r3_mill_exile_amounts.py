@@ -1190,3 +1190,79 @@ def test_kairi_mill_mode_returns_none_when_no_instant_or_sorcery_is_in_the_grave
     _settle(scenario)
     assert scenario.player("alice").hand == []
     assert len(scenario.player("alice").library) == 1
+
+
+# --------------------------------------------------------------------------
+# Sanity Grinding: CR 701.20a (reveal moves nothing), CR 107.4 (mana
+# symbols), CR 401.4 (any order), CR 701.17a (mill).
+# --------------------------------------------------------------------------
+
+
+def _sanity(library, bob_library=None):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Sanity Grinding"],
+            battlefield=["Island"] * 3,
+            library=list(library),
+        )
+        .player("bob", library=list(bob_library or [SWAMP] * 12))
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_sanity_grinding_mills_one_card_per_blue_symbol_among_the_revealed_cards():
+    scenario = _sanity(
+        ["Counterspell", "Divination", LIGHTNING_BOLT, *[FOREST] * 7, SWAMP]
+    )
+    scenario.cast_and_resolve(
+        "Sanity Grinding", *scenario.untapped_sources("Island", "Island", "Island"), targets=["bob"]
+    )
+    assert _graveyard(scenario, "bob") == 3  # {U}{U} + {2}{U}
+    # The revealed cards go back on the bottom: the whole library is the ten
+    # revealed plus the eleventh, which is now on top.
+    assert len(scenario.player("alice").library) == 11
+    assert scenario.player("alice").library[0].name == SWAMP
+
+
+def test_sanity_grinding_reveals_only_ten_cards():
+    scenario = _sanity([*[FOREST] * 10, "Counterspell"])
+    scenario.cast_and_resolve(
+        "Sanity Grinding", *scenario.untapped_sources("Island", "Island", "Island"), targets=["bob"]
+    )
+    assert _graveyard(scenario, "bob") == 0  # the eleventh card is not revealed
+
+
+def test_sanity_grinding_with_a_short_library_reveals_what_there_is():
+    scenario = _sanity(["Counterspell", FOREST])
+    scenario.cast_and_resolve(
+        "Sanity Grinding", *scenario.untapped_sources("Island", "Island", "Island"), targets=["bob"]
+    )
+    assert _graveyard(scenario, "bob") == 2
+
+
+def test_sanity_grinding_puts_the_revealed_cards_on_the_bottom_in_the_chosen_order():
+    scenario = _sanity(["Counterspell", "Divination", FOREST])
+    scenario.cast_and_resolve(
+        "Sanity Grinding", *scenario.untapped_sources("Island", "Island", "Island"), targets=["bob"]
+    )
+    assert sorted(_names(scenario.player("alice").library)) == ["Counterspell", "Divination", FOREST]
+
+
+def test_sanity_grinding_bottom_order_is_the_casters_choice():
+    scenario = _sanity(["Counterspell", "Divination", FOREST, SWAMP])
+    library = scenario.player("alice").library
+    counterspell, divination, forest, swamp = library[:4]
+    scenario.will_choose_cards(forest, divination, counterspell, swamp, username="alice")
+    scenario.cast_and_resolve(
+        "Sanity Grinding", *scenario.untapped_sources("Island", "Island", "Island"), targets=["bob"]
+    )
+    assert _names(scenario.player("alice").library) == [
+        FOREST,
+        "Divination",
+        "Counterspell",
+        SWAMP,
+    ]

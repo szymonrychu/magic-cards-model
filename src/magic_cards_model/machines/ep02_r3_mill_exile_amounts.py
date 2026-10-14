@@ -970,3 +970,57 @@ def _parse_return_cards_from_your_graveyard_to_hand_clause(
             game.return_to_hand(by_id[card_id])
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# Sanity Grinding: reveal the top N, a mill per colored mana symbol among them
+# --------------------------------------------------------------------------
+
+_REVEAL_TOP_MILL_PER_SYMBOL_RE = re.compile(
+    r"^(?:chroma\s*[—-]\s*)?reveal the top (?P<n>\w+) cards of your library\. "
+    r"for each (?P<color>white|blue|black|red|green) mana symbol in the mana costs of the "
+    r"revealed cards, target opponent mills a card\. then put the cards you revealed this way "
+    r"on the bottom of your library in any order$",
+    re.IGNORECASE,
+)
+
+
+def _symbols_of_color(state: CardState, color: Color) -> int:
+    """CR 107.4: the colored mana symbols of `color` in this card's mana cost
+    (a hybrid or Phyrexian symbol of that color is one such symbol)."""
+    cost = state.card.mana_cost
+    parsed = cost if isinstance(cost, ManaCost) else ManaCost.try_parse(cost or "")
+    if parsed is None:
+        return 0
+    return sum(1 for symbol in parsed.symbols if color in symbol.colors)
+
+
+@SPELL_TEXT.rung("s14")
+def _parse_reveal_top_mill_per_color_symbol(
+    spell_text: str,
+) -> "Callable[[Game, CardState], None] | None":
+    """Reveal the top N cards (CR 701.20a: nothing moves), the target
+    opponent mills a card per symbol of the color among their mana costs
+    (CR 701.17a), then the revealed cards go to the bottom of the library in
+    an order their owner picks (CR 401.4)."""
+    match = _REVEAL_TOP_MILL_PER_SYMBOL_RE.fullmatch(clean(spell_text))
+    count = None if match is None else parse_count(match.group("n"))
+    if match is None or not count:
+        return None
+    color = Color[match.group("color").upper()]
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.player(controller_of(game, spell))
+        revealed = list(controller.library[:count])
+        for state in revealed:
+            game.reveal(state, source=spell.name)
+        amount = sum(_symbols_of_color(state, color) for state in revealed)
+        victims = [t for t in game.resolve_targets(spell) if isinstance(t, Player)]
+        if amount:
+            mill_players(game, victims, [amount] * len(victims))
+        for state in game.ask_library_bottom_order(
+            controller, revealed, source=spell.name, source_id=source_id_of(spell)
+        ):
+            controller.move(state, Zone.LIBRARY)
+
+    return effect
