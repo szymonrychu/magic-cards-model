@@ -140,11 +140,9 @@ def test_eidolon_reads_its_own_controllers_board_for_an_enchanted_opposing_creat
     bears = scenario.creature("Grizzly Bears", "bob")
     before = _pt(scenario, bears)
     eidolon.attach_to(bears)
-    board = scenario.game.computed_board()
-    mine = [c for c in scenario.game.permanents_controlled_by("alice")]
-    creatures = sum(1 for c in mine if "creature" in {t.value for t in board.of(c).types})
-    # Bob's creature is pumped by Alice's creatures and Auras, not by Bob's.
-    assert _delta(scenario, bears, before) == (creatures + 1, creatures + 1)
+    # Alice controls the Eidolon (a creature) and Pacifism (an Aura): +2/+2. Bob's own
+    # Bears, his only permanent, add nothing to a pump read off Alice's board.
+    assert _delta(scenario, bears, before) == (2, 2)
 
 
 # -- Counted board groups ----------------------------------------------------
@@ -308,3 +306,147 @@ def test_march_of_the_machines_animates_noncreature_artifacts_by_mana_value():
     assert "creature" in {t.value for t in scenario.game.computed_board().of(stone).types}
     # A creature that was never an artifact is untouched.
     assert _pt(scenario, scenario.creature("Grizzly Bears")) == (2, 2)
+
+
+# -- Corner cases ---------------------------------------------------------------
+
+
+def _xande(graveyard=(), bob_graveyard=()):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Xande, Dark Mage"], graveyard=list(graveyard))
+        .player("bob", graveyard=list(bob_graveyard))
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario, scenario.creature("Xande, Dark Mage")
+
+
+def test_xande_counts_noncreature_nonland_cards_in_its_controllers_graveyard():
+    scenario, xande = _xande(graveyard=["Lightning Bolt", "Opt", "Bonesplitter"])
+    assert _pt(scenario, xande) == (6, 6)
+
+
+def test_xande_does_not_count_creature_or_land_cards_or_artifact_creatures():
+    # CR 205.2a: an artifact creature card is a creature card; a creature land is a land card.
+    scenario, xande = _xande(
+        graveyard=["Grizzly Bears", "Forest", "Myr Adapter", "Dryad Arbor", "Lightning Bolt"]
+    )
+    assert _pt(scenario, xande) == (4, 4)
+
+
+def test_xande_ignores_the_opponents_graveyard():
+    scenario, xande = _xande(bob_graveyard=["Lightning Bolt", "Opt"])
+    assert _pt(scenario, xande) == (3, 3)
+
+
+def test_xande_shrinks_again_when_a_card_leaves_the_graveyard():
+    # CR 611.3a: the count is re-evaluated continuously.
+    scenario, xande = _xande(graveyard=["Lightning Bolt", "Opt"])
+    assert _pt(scenario, xande) == (5, 5)
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    scenario.player("alice").graveyard.remove(bolt)
+    assert _pt(scenario, xande) == (4, 4)
+
+
+def test_xande_counts_cards_it_does_not_own_only_in_its_controllers_graveyard():
+    scenario, xande = _xande(graveyard=["Opt"], bob_graveyard=["Opt"])
+    assert _pt(scenario, xande) == (4, 4)
+
+
+def test_herald_does_not_count_lands_the_opponent_controls_that_you_own():
+    scenario = _setup(["Herald of Leshrac", "Forest"], bob=["Island"])
+    herald = scenario.creature("Herald of Leshrac")
+    before = _pt(scenario, herald)
+    # Alice's own Forest is under bob's control: not "you control", so not counted.
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "alice")
+    forest.controller = "bob"
+    assert _pt(scenario, herald) == before
+    # Bob's Island under alice's control is "you control but don't own".
+    island = scenario.find("Island", Zone.BATTLEFIELD, "bob")
+    island.controller = "alice"
+    assert _delta(scenario, herald, before) == (1, 1)
+
+
+def test_herald_does_not_count_a_land_it_controller_owns_and_controls():
+    scenario = _setup(["Herald of Leshrac", "Forest", "Forest", "Forest"])
+    herald = scenario.creature("Herald of Leshrac")
+    assert _pt(scenario, herald) == (2, 4)
+
+
+def test_copperhoof_vorrac_ignores_its_controllers_untapped_permanents_and_counts_tapped_status():
+    # CR 110.5: tapped/untapped is a status. Only untapped opposing permanents count.
+    scenario = _setup(["Copperhoof Vorrac", "Forest", "Forest"], bob=["Island", "Island", "Swamp"])
+    vorrac = scenario.creature("Copperhoof Vorrac")
+    assert _pt(scenario, vorrac) == (5, 5)
+    for land in [c for c in scenario.game.permanents_controlled_by("bob")]:
+        land.tapped = True
+    assert _pt(scenario, vorrac) == (2, 2)
+    scenario.find("Swamp", Zone.BATTLEFIELD, "bob").tapped = False
+    assert _pt(scenario, vorrac) == (3, 3)
+    # Its controller's own tapped state never matters.
+    for land in [c for c in scenario.game.permanents_controlled_by("alice")]:
+        land.tapped = True
+    assert _pt(scenario, vorrac) == (3, 3)
+
+
+def test_diligent_zookeeper_cap_of_ten_on_the_count_itself():
+    from magic_cards_model.machines.layers.model import CountOwnCharacteristic
+
+    scenario = _setup(["Diligent Zookeeper", "Grizzly Bears"])
+    chars = scenario.game.computed_board().of(scenario.creature("Grizzly Bears"))
+    board = scenario.game.computed_board().characteristics
+    many = chars.model_copy(update={"subtypes": tuple(f"Type{i}" for i in range(13))})
+    ten = chars.model_copy(update={"subtypes": tuple(f"Type{i}" for i in range(10))})
+    few = chars.model_copy(update={"subtypes": ("Bear", "Beast")})
+    capped = CountOwnCharacteristic(measure="creature_types", cap=10)
+    uncapped = CountOwnCharacteristic(measure="creature_types")
+    assert capped(many, board) == 10
+    assert capped(ten, board) == 10
+    assert capped(few, board) == 2
+    assert uncapped(many, board) == 13
+    # Duplicate types count once.
+    dup = chars.model_copy(update={"subtypes": ("Bear", "bear", "Beast")})
+    assert capped(dup, board) == 2
+
+
+# -- Second printings of the same static readers ---------------------------------
+
+
+def test_stoneforge_masterwork_counts_other_creatures_sharing_a_type_with_the_equipped_one():
+    scenario = _setup(
+        ["Stoneforge Masterwork", "Grizzly Bears", "Grizzly Bears", "Hill Giant"],
+        bob=["Grizzly Bears"],
+    )
+    bears = scenario.creatures("Grizzly Bears", "Grizzly Bears")[0]
+    before = _pt(scenario, bears)
+    _perm(scenario, "Stoneforge Masterwork").attach_to(bears)
+    # One other Bear under Alice's control; Bob's Bear and the Giant do not count.
+    assert _delta(scenario, bears, before) == (1, 1)
+
+
+def test_civic_saber_pumps_the_equipped_creature_by_its_colors():
+    scenario = _setup(["Civic Saber", "Linvala, Shield of Sea Gate", "Grizzly Bears"])
+    linvala = scenario.creature("Linvala, Shield of Sea Gate")
+    before = _pt(scenario, linvala)
+    _perm(scenario, "Civic Saber").attach_to(linvala)
+    assert _delta(scenario, linvala, before) == (2, 0)
+
+
+def test_thran_power_suit_counts_itself_and_every_attachment_on_the_creature():
+    scenario = _setup(["Thran Power Suit", "Grizzly Bears", "Pacifism"])
+    bears = scenario.creature("Grizzly Bears")
+    before = _pt(scenario, bears)
+    _perm(scenario, "Thran Power Suit").attach_to(bears)
+    assert _delta(scenario, bears, before) == (1, 1)
+    _perm(scenario, "Pacifism").attach_to(bears)
+    assert _delta(scenario, bears, before) == (2, 2)
+
+
+def test_loxodon_punisher_pumps_itself_per_equipment_attached():
+    scenario = _setup(["Loxodon Punisher", "Bonesplitter"])
+    punisher = scenario.creature("Loxodon Punisher")
+    before = _pt(scenario, punisher)
+    _perm(scenario, "Bonesplitter").attach_to(punisher)
+    # Bonesplitter's +2/+0, and the Punisher's own +2/+2 for it.
+    assert _delta(scenario, punisher, before) == (4, 2)

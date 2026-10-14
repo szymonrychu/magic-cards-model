@@ -16,7 +16,7 @@ import pytest
 
 from magic_cards_model.machines import PriorityOutcome, Step
 from magic_cards_model.machines.casting_restrictions import create_spells_cant_be_countered_grant
-from magic_cards_model.machines.triggers import AbilityOnStack
+from magic_cards_model.machines.triggers import AbilityOnStack, GameEvent
 from magic_cards_model.models import CardState, Match, Player
 from magic_cards_model.models.card import Color
 from magic_cards_model.models.game import Game, SchemaVersionMismatch
@@ -2563,5 +2563,48 @@ def test_a_snapshot_written_before_expend_and_once_grants_is_refused() -> None:
     with pytest.raises(
         SchemaVersionMismatch,
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP02_R2_T7_EXPEND}",
+    ):
+        Game.model_validate(dumped)
+
+
+#: The version stamped before EP02-R3-T1's layer additions: new `Count` kinds,
+#: `Characteristics.owner`/`tapped`, the `GAIN_CONTROL` cost component and the
+#: `untap_all_creatures_for_controller` delayed effect. The last shape without
+#: them is 169.
+_SCHEMA_VERSION_BEFORE_EP02_R3_T1_STATIC_PUMPS = 169
+
+
+def test_a_snapshot_written_before_the_r3_static_pump_counts_is_refused() -> None:
+    """A version-169 dump could hold a pending cumulative upkeep or delayed effect
+    the current build reads differently, and a static "for each" pump counted by
+    older rules: refused, not decoded."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_EP02_R3_T1_STATIC_PUMPS
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_EP02_R3_T1_STATIC_PUMPS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP02_R3_T1_STATIC_PUMPS}",
+    ):
+        Game.model_validate(dumped)
+
+
+#: The version stamped before the simultaneous-death batch: `GameEvent` gained
+#: `subject_power` and `died_together`. The last shape without them is 170.
+_SCHEMA_VERSION_BEFORE_DEATH_BATCH = 170
+
+
+def test_a_snapshot_written_before_the_death_batch_is_refused() -> None:
+    """A version-170 dump holds dies events with no batch, so a "whenever one or more
+    creatures die" trigger would fire once per creature: refused, not decoded."""
+    assert "died_together" in GameEvent.model_fields
+    assert "subject_power" in GameEvent.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_DEATH_BATCH
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_DEATH_BATCH
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_DEATH_BATCH}",
     ):
         Game.model_validate(dumped)

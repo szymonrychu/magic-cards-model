@@ -104,7 +104,7 @@ _BOARD_RE = re.compile(
     r"(?P<noun>[a-z]+)"
     r"(?: (?P<scope>you control|your opponents control|on the battlefield))?"
     r"(?P<tail>(?: but don't own| that's attached to a creature"
-    r"| that shares at least one creature type with it))?$"
+    r"| that shares (?:at least one|a) creature type with it))?$"
 )
 _TYPE_NOUNS = {
     "creature": Type.CREATURE,
@@ -274,6 +274,10 @@ def count_for(
 # -- subjects -----------------------------------------------------------------
 
 
+#: The permanent a pump's Aura or Equipment is attached to (CR 303.4, CR 301.5).
+_ATTACHED_SUBJECTS = ("enchanted creature", "enchanted permanent", "equipped creature")
+
+
 def _is_self(subject: str, source: CardState) -> bool:
     lowered = subject.strip().lower()
     names = {source.name.lower(), source.name.split(",")[0].lower(), source.name.split()[0].lower()}
@@ -294,7 +298,7 @@ def _selectors(subject: str, source: CardState) -> list[Any] | None:
         return found
     if _is_self(lowered, source):
         return [Only(card_id=source.id)]
-    if lowered in ("enchanted creature", "enchanted permanent"):
+    if lowered in _ATTACHED_SUBJECTS:
         return [] if source.attached_to is None else [Only(card_id=source.attached_to)]
     selector = _subject_selector(subject, source)
     return None if selector is None else [selector]
@@ -308,7 +312,7 @@ def _subject_readable(subject: str) -> bool:
     lowered = subject.strip().lower()
     if lowered in _SELF_WORDS or lowered in _THIS_AND_ENCHANTED:
         return True
-    if lowered in ("enchanted creature", "enchanted permanent"):
+    if lowered in _ATTACHED_SUBJECTS:
         return True
     if parse_group(_battlefield_part(subject)) is not None:
         return True

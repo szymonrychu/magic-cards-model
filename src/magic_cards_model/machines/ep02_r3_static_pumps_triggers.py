@@ -6,7 +6,7 @@ counts) or a plain game count, at the moment the instruction is applied
 
 - "draw a card for each Aura you control that's attached to a creature" (Sage's
   Reverie): a board count, CR 303.4 / CR 301.5 attachment, read after the Aura
-  entered (so it counts itself, CR 303.4f).
+  entered, so it counts itself (it is attached to a creature, CR 303.4).
 - "create a number of <token> tokens equal to the number of opponents you have"
   (Silverwing Squadron): CR 102.2 / CR 102.3 opponents; a player who has left
   the game is no longer an opponent (CR 800.4a).
@@ -278,4 +278,3 @@ def _parse_double_target_power(text: str) -> Any:
             )
 
     return effect
-

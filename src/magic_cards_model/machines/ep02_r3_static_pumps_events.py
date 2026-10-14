@@ -26,7 +26,8 @@ _RETURN_LANDS_RE = re.compile(
 @ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
 def _parse_each_player_regains_what_they_own(text: str) -> Any:
     """ "Each player gains control of each `<permanent>` they own that you
-    control" (CR 701.?): every such permanent goes back to its owner."""
+    control" (control change is CR 613.1b, ownership CR 108.3): every such
+    permanent goes back to its owner."""
     match = _RETURN_LANDS_RE.fullmatch(" ".join(text.strip().split()))
     if match is None:
         return None
@@ -74,7 +75,8 @@ def _parse_each_player_regains_what_they_own(text: str) -> Any:
 
 
 _EXILE_ANY_NUMBER_UNTIL_RE = re.compile(
-    r"^exile any number of other (?P<desc>nontoken [a-z]+s|[a-z]+s) you control until "
+    r"^(?:you may )?exile any number of (?P<other>other )?"
+    r"(?P<desc>nontoken [a-z]+s|non-[a-z]+ [a-z]+s|[a-z]+s) you control until "
     r"(?:it|this (?:creature|permanent|artifact|enchantment)) leaves the battlefield\.?$",
     re.IGNORECASE,
 )
@@ -83,7 +85,8 @@ _EXILE_ANY_NUMBER_UNTIL_RE = re.compile(
 @ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
 def _parse_exile_any_number_until_leaves(text: str) -> Any:
     """ "Exile any number of other nontoken creatures you control until this
-    creature leaves the battlefield" (Lumbering Battlement): the controller
+    creature leaves the battlefield" (Lumbering Battlement, Glorious Protector's
+    "you may ... non-Angel creatures"): the controller
     chooses zero up to all of them as it resolves (CR 107.1c, CR 608.2d); each is
     exiled linked to the source (CR 607.2a) and returns when it leaves
     (CR 610.3). CR 610.3b: a source that already left exiles nothing."""
@@ -96,6 +99,7 @@ def _parse_exile_any_number_until_leaves(text: str) -> Any:
     if permanent is None:
         return None
     _untapped, _other, predicate = permanent
+    excludes_source = match["other"] is not None
 
     def effect(game: "Game", ability: Any) -> None:
         from .ep02_r2_chosen_amounts import choose_any_number
@@ -108,7 +112,8 @@ def _parse_exile_any_number_until_leaves(text: str) -> Any:
         candidates = [
             permanent
             for permanent in game.permanents_controlled_by(player.username)
-            if permanent.id != source.id and predicate(game, player.username, permanent)
+            if not (excludes_source and permanent.id == source.id)
+            and predicate(game, player.username, permanent)
         ]
         chosen = choose_any_number(game, ability, player, candidates, text.strip().rstrip("."))
         exile_linked_until_leaves(game, source, chosen, player.username)

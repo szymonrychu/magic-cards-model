@@ -3145,34 +3145,30 @@ class ZonesMixin:
                                 )
                                 + 1
                             )
-                dies_event = (
-                    GameEvent(
-                        event=TriggerEvent.DIES,
-                        subject_id=card_state.id,
-                        subject_name=card_state.name,
-                        # CR 603.10a: who controlled it as it died - layer 2
-                        # (a borrowed creature, CR 613.1b), not the stored
-                        # controller the zone change reset.
-                        subject_controller=(
-                            left_battlefield_chars.controller or card_state.controller
-                        ),
-                        subject_card=card_state.card,
-                        # CR 603.10a: dies is a look-back event - the
-                        # snapshot taken above, while the permanent was still
-                        # on the battlefield, is that look-back: a live
-                        # `characteristics_of` here would `KeyError` on an
-                        # object `_take_out_of_every_zone` has already moved.
-                        subject_types=left_battlefield_chars.types,
-                        subject_subtypes=left_battlefield_chars.subtypes,
-                        player=card_state.controller,
-                        # CR 400.7e: the incarnation this move just minted
-                        # (`Player.add` above already ran `CardState.move_to`,
-                        # which stamped a fresh one), so a dead-self reader
-                        # resolving later can tell this exact object apart
-                        # from one that has since moved again.
-                        zone_change_stamp=card_state.zone_change_stamp,
-                        subject_power=left_battlefield_chars.power,
-                    )
+                dies_event = GameEvent(
+                    event=TriggerEvent.DIES,
+                    subject_id=card_state.id,
+                    subject_name=card_state.name,
+                    # CR 603.10a: who controlled it as it died - layer 2
+                    # (a borrowed creature, CR 613.1b), not the stored
+                    # controller the zone change reset.
+                    subject_controller=(left_battlefield_chars.controller or card_state.controller),
+                    subject_card=card_state.card,
+                    # CR 603.10a: dies is a look-back event - the
+                    # snapshot taken above, while the permanent was still
+                    # on the battlefield, is that look-back: a live
+                    # `characteristics_of` here would `KeyError` on an
+                    # object `_take_out_of_every_zone` has already moved.
+                    subject_types=left_battlefield_chars.types,
+                    subject_subtypes=left_battlefield_chars.subtypes,
+                    player=card_state.controller,
+                    # CR 400.7e: the incarnation this move just minted
+                    # (`Player.add` above already ran `CardState.move_to`,
+                    # which stamped a fresh one), so a dead-self reader
+                    # resolving later can tell this exact object apart
+                    # from one that has since moved again.
+                    zone_change_stamp=card_state.zone_change_stamp,
+                    subject_power=left_battlefield_chars.power,
                 )
                 if self._dying_together is not None:
                     self._dying_together.append(dies_event)

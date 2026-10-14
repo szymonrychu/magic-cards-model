@@ -283,7 +283,7 @@ def test_wolfbear_sets_the_humans_base_power_and_toughness_to_its_own():
 
 
 def test_wolfbear_copies_its_current_pumped_size_and_later_modifiers_still_apply():
-    # CR 613.4b: the set is sublayer 7b, so a +1/+1 counter (7d) still adds on top.
+    # CR 613.4b: the set is sublayer 7b, so a +1/+1 counter (7c) still adds on top.
     scenario = _wolfbear_board(extra=["Elite Vanguard"])
     wolf = scenario.creature("Exuberant Wolfbear", "alice")
     human = scenario.creature("Elite Vanguard", "alice")
@@ -930,7 +930,133 @@ def test_vren_triggers_on_every_end_step_and_counts_only_this_turn():
 
 def test_vren_rat_pump_counts_every_other_rat_its_controller_has():
     scenario = _vren_board(bob=("Grizzly Bears", "Grizzly Bears", "Grizzly Bears"))
-    for bears in scenario.creatures("Grizzly Bears", "Grizzly Bears", "Grizzly Bears", username="bob"):
+    for bears in scenario.creatures(
+        "Grizzly Bears", "Grizzly Bears", "Grizzly Bears", username="bob"
+    ):
         scenario.game.destroy(bears)
     _to_end_step(scenario)
     assert [_pt(scenario, r) for r in _rats(scenario)] == [(4, 4)] * 3
+
+
+# -- Glorious Protector (a second printing of the exile-any-number-until-leaves reader):
+# "you may exile any number of non-Angel creatures you control until this creature leaves"
+
+
+def _protector_board():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Glorious Protector"],
+            battlefield=["Plains"] * 4 + ["Grizzly Bears", "Serra Angel"],
+            library=["Island"] * 4,
+        )
+        .player("bob", battlefield=["Grizzly Bears"], library=["Forest"] * 4)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_glorious_protector_offers_only_non_angel_creatures_you_control():
+    scenario = _protector_board()
+    scenario.will_choose_cards(username="alice")
+    scenario.cast_and_resolve(
+        "Glorious Protector", *scenario.untapped_sources(*["Plains"] * 4, username="alice")
+    )
+    _resolve_stack(scenario)
+    offered = [d for d in scenario.questions_asked() if d.kind.name == "CHOOSE_CARDS"][-1].cards
+    assert [scenario.game.find_by_id(i).name for i in offered] == ["Grizzly Bears"]
+
+
+def test_glorious_protector_exiles_the_chosen_creature_and_returns_it_when_it_leaves():
+    scenario = _protector_board()
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.will_choose_cards(bears, username="alice")
+    scenario.cast_and_resolve(
+        "Glorious Protector", *scenario.untapped_sources(*["Plains"] * 4, username="alice")
+    )
+    _resolve_stack(scenario)
+    assert bears.zone is Zone.EXILE
+    protector = scenario.find("Glorious Protector", Zone.BATTLEFIELD, "alice")
+    scenario.game.destroy(protector)
+    scenario.game.put_triggers_on_stack()
+    _resolve_stack(scenario)
+    assert scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice").zone is Zone.BATTLEFIELD
+
+
+# -- Second printings: other cards the same readers handle
+
+
+def test_mouth_of_the_storm_shrinks_opponents_creatures_until_the_controllers_next_turn():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Mouth of the Storm"],
+            battlefield=["Island"] * 7 + ["Grizzly Bears"],
+            library=["Island"] * 4,
+        )
+        .player("bob", battlefield=["Hill Giant"], library=["Forest"] * 4)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve(
+        "Mouth of the Storm", *scenario.untapped_sources(*["Island"] * 7, username="alice")
+    )
+    _resolve_stack(scenario)
+    giant = scenario.creature("Hill Giant", "bob")
+    assert _pt(scenario, giant) == (0, 3)
+    assert _pt(scenario, scenario.creature("Grizzly Bears", "alice")) == (2, 2)
+    _advance_until(scenario, lambda s: s.turn.active_player == "bob" and s.step is Step.UPKEEP)
+    assert _pt(scenario, giant) == (0, 3)
+    _advance_until(scenario, lambda s: s.turn.active_player == "alice" and s.step is Step.UPKEEP)
+    assert _pt(scenario, giant) == (3, 3)
+
+
+def test_chittering_witch_makes_a_rat_for_each_opponent():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Chittering Witch"],
+            battlefield=["Swamp"] * 4,
+            library=["Island"] * 4,
+        )
+        .player("bob", library=["Forest"] * 4)
+        .player("carol", library=["Forest"] * 4)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve(
+        "Chittering Witch", *scenario.untapped_sources(*["Swamp"] * 4, username="alice")
+    )
+    _resolve_stack(scenario)
+    rats = [
+        c
+        for c in scenario.game.permanents_controlled_by("alice")
+        if "Rat" in scenario.game.computed_board().of(c).subtypes
+    ]
+    assert [_pt(scenario, r) for r in rats] == [(1, 1), (1, 1)]
+
+
+def test_aurelia_untaps_everything_and_adds_a_combat_when_it_first_attacks():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Aurelia, the Warleader", "Grizzly Bears"],
+            library=["Island"] * 4,
+        )
+        .player("bob", library=["Forest"] * 4)
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    aurelia = scenario.creature("Aurelia, the Warleader", "alice")
+    bears.tapped = True
+    scenario.attack_with(aurelia, defending="bob")
+    scenario.pass_until_resolved()
+    assert not bears.tapped
+    _advance_to(scenario, Step.BEGINNING_OF_COMBAT)
+    assert scenario.step is Step.BEGINNING_OF_COMBAT
