@@ -6,8 +6,8 @@ Rules, each read in full with `mise run rules:find` in this session:
 
 - CR 608.2c - instructions are followed in order.
 - CR 608.2h - information an effect needs is taken once; a destroyed creature's
-  power is its last known power (CR 113.7a / last known information).
-- CR 202.3 - mana value; a permanent with {X} in its cost counts X as 0 (CR 107.3b).
+  power is its last known power (last known information).
+- CR 202.3 - mana value; a permanent with {X} in its cost counts X as 0 (CR 202.3e).
 - CR 101.4 - APNAP order for simultaneous choices.
 - CR 701.9a - discard.
 """

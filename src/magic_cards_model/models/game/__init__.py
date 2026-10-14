@@ -1149,6 +1149,12 @@ class Game(
     """The permanents `ExtraTriggerEvent.PERMANENTS_TAPPED` is being matched
     for right now (`tapped_batch`). Empty outside `announce_batched_events`.
     Not persisted: read only while that event is being raised."""
+    _exile_arrivals_pending: list["ExileArrival"] = PrivateAttr(default_factory=list)
+    """Cards and permanents put into exile from the battlefield or a graveyard
+    since `announce_batched_events` last ran, one entry per arrival. Drained
+    into one `ExtraTriggerEvent.PUT_INTO_EXILE` per player (CR 603.2c). Not
+    persisted: every instruction ends with an announce, so it is empty at any
+    point a snapshot is taken."""
     _exile_batch: tuple["ExileArrival", ...] = PrivateAttr(default=())
     """The arrivals `ExtraTriggerEvent.PUT_INTO_EXILE` is being matched for
     right now. Empty outside `announce_batched_events`; not persisted."""
@@ -1608,11 +1614,6 @@ class Game(
     battlefield (a discard, a mill, a countered permanent spell) - see
     `GraveyardArrival.is_permanent_card`'s own docstring for why CR 700.11's
     "from anywhere" needs that in addition to `permanent_types`."""
-
-    exile_arrivals_pending: list[ExileArrival] = Field(default_factory=list)
-    """Cards and permanents put into exile from the battlefield or a graveyard
-    since `announce_batched_events` last ran, one entry per arrival. Drained
-    into one `ExtraTriggerEvent.PUT_INTO_EXILE` per player (CR 603.2c)."""
 
     activations: dict[str, int] = Field(default_factory=dict)
     """How often each ability has been activated this turn, keyed
@@ -2344,12 +2345,10 @@ class Game(
     #: hand size." are read off the battlefield, and a Crew N ability is
     #: once-per-turn; an older dump would resolve each of these as a no-op.
     #: EP-02-R2: T2, T4, T5 and T7 each reserved 164; the round lands as one version, 169.
-    #: 170 (EP-02-R3-T4): `Game` gained `exile_arrivals_pending` (`ExileArrival`,
-    #: the cards one instruction put into exile from the battlefield or a
-    #: graveyard, waiting for CR 603.2c's one batched event) and `GameEvent`
-    #: gained `batch_ids` (a pending `AbilityOnStack.event`'s "from among
-    #: them"); an older dump has neither, so a "put into exile" trigger would
-    #: never have seen the exiled cards. Also dispatch a decoded game could
+    #: 170 (EP-02-R3-T4): `GameEvent` gained `batch_ids` (a pending
+    #: `AbilityOnStack.event`'s "from among them", for CR 603.2c's batched "put
+    #: into exile" event); an older dump has none, so a "put into exile" trigger
+    #: would never have seen the exiled cards. Also dispatch a decoded game could
     #: already point at: "draw X cards, then you may put a permanent card with
     #: mana value X or less from your hand onto the battlefield" off a
     #: sacrifice, the per-colour graveyard return, the two-target graveyard

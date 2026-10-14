@@ -292,7 +292,7 @@ class ExtraTriggerEvent(StrEnum):
     #: per player whose permanents / graveyard cards were exiled
     #: (`GameEvent.player`), carrying every such card in `GameEvent.batch_ids`
     #: so the ability can choose "from among them". **Emitted by:** `Game.
-    #: announce_batched_events`, off `Game.exile_arrivals_pending`.
+    #: announce_batched_events`, off `Game._exile_arrivals_pending`.
     PUT_INTO_EXILE = "put_into_exile"
     #: CR 700.13: "A player commits a crime as that player casts a spell,
     #: activates an ability, or puts a triggered ability on the stack and

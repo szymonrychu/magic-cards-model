@@ -1307,9 +1307,9 @@ _AND_LIFE_RE = re.compile(
 
 
 def _return_with_auras(text: str) -> Any:
-    """CR 701.19a: "Return target `<permanent>` and all Auras (you control)
+    """CR 608.2c: "Return target `<permanent>` and all Auras (you control)
     attached to it to their owner's hand" - the Auras are those attached as the
-    instruction starts (CR 608.2c), all moved together with the permanent so
+    instruction starts, all moved together with the permanent so
     none falls off first (CR 704.5m)."""
     match = _RETURN_WITH_AURAS_RE.fullmatch(" ".join(text.strip().split()))
     if match is None or not _targets_understood(match.group("phrase"), count_agnostic=True):

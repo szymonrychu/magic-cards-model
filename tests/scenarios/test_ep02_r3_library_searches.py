@@ -8,7 +8,7 @@ Rules, each read in full with `mise run rules:find` in this session:
 - CR 701.23a / CR 701.23b - to search is to find a matching card; with a stated
   quality the searcher need not find it.
 - CR 701.24a / CR 701.24b - the shuffle; found cards are not in it.
-- CR 107.3a - X on a spell is announced; CR 107.3b, CR 107.3f - X from text.
+- CR 107.3a - X on a spell is announced; CR 107.3f - X from text.
 - CR 202.3 - mana value (a split card's is the combined halves in the library).
 - CR 105.1 / converge - colors of mana spent.
 - CR 702.179 - speed.
