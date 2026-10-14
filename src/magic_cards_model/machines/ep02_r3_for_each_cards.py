@@ -58,7 +58,7 @@ _N = r"^(?:the )?(?:(?:number|amount) of )?"
 
 
 def _norm(phrase: str) -> str:
-    return " ".join(phrase.strip().rstrip(".").split())
+    return " ".join(phrase.replace("\u2019", "'").strip().rstrip(".").split())
 
 
 # --------------------------------------------------------------------------
@@ -467,6 +467,47 @@ def _attached(text: str) -> _Term | None:
     return _Term(on_object, True)
 
 
+_YOURS_ON_A_CREATURE_RE = re.compile(
+    _N + r"(?P<quality>[a-z][a-z ,'-]*?) you control that(?:'s| is| are) attached to a creature$",
+    re.IGNORECASE,
+)
+
+
+def _yours_attached_to_a_creature(text: str) -> _Term | None:
+    """ "Aura you control that's attached to a creature" (Sage's Reverie): the
+    controller's permanents of the description attached to a creature (CR 303.4,
+    CR 301.5), off the computed board (CR 613.5) - an Aura that has just entered
+    attached to one counts itself."""
+    if "attached to a creature" not in text.lower():
+        return None
+    match = _YOURS_ON_A_CREATURE_RE.fullmatch(text)
+    if match is None:
+        return None
+    from ..models.game import _permanent_quality
+
+    quality = _permanent_quality(match.group("quality"))
+    if quality is None:
+        return None
+
+    def count(game: "Game", controller: str) -> int:
+        board = game.computed_board()
+        total = 0
+        for permanent in game.battlefield:
+            chars = board.of(permanent)
+            if chars.controller != controller or not quality(chars):
+                continue
+            host = None if permanent.attached_to is None else game.find_by_id(permanent.attached_to)
+            if (
+                isinstance(host, CardState)
+                and host.zone is Zone.BATTLEFIELD
+                and Type.CREATURE in board.of(host).types
+            ):
+                total += 1
+        return total
+
+    return _sourceless(count)
+
+
 # --------------------------------------------------------------------------
 # Mana symbols in a sacrificed card's cost (CR 107.4e), other attackers (CR 508.4)
 # --------------------------------------------------------------------------
@@ -537,6 +578,7 @@ _TERMS = (
     _cards_discarded_this_turn,
     _board,
     _cast_record,
+    _yours_attached_to_a_creature,
     _attached,
     _mana_symbols_in_sacrificed_cost,
     _other_attackers,
