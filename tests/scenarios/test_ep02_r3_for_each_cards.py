@@ -57,6 +57,18 @@ LISTED = [
 ]
 
 PROOF = [
+    "Subtlety",
+    "Aether Gust",
+    "Tamiyo, the Moon Sage",
+    "Growth Cycle",
+    "Terastodon",
+    "Hour of Need",
+    "K'rrik, Son of Yawgmoth",
+    "Ancestor Dragon",
+    "Bushmeat Poacher",
+    "Urza, Planeswalker",
+    "Luminate Primordial",
+    "Sylvan Primordial",
     "Lay Down Arms",
     "Bortuk Bonerattle",
     "Silent-Chant Zubera",
