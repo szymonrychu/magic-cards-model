@@ -37,7 +37,7 @@ from ..models.card_state import CardState
 from ..models.mana import ManaCost, SymbolKind
 from ..models.player import Player
 from ..models.zone import Zone
-from ..numbers import halve, parse_count
+from ..numbers import COUNT, halve, parse_count
 from .amount_sentences import (
     Amount,
     apply_mill,
@@ -785,7 +785,7 @@ def choose_one_card_optionally(
     card. Shared by every reader here that offers one card out of a pile."""
     if not candidates:
         return None
-    source = getattr(obj, "name", None) or obj.source_name
+    source = getattr(obj, "source_name", None) or obj.name
     if not game.may(player, what, source=source, source_id=source_id_of(obj)):
         return None
     chosen = game.ask(
@@ -913,5 +913,60 @@ def _parse_destroy_all_then_exile_top_x_put_one_onto_battlefield(
                 effect=return_subject_to_hand,
             )
         )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "Return [up to] N <quality> cards from your graveyard to your hand"
+# --------------------------------------------------------------------------
+
+_RETURN_CARDS_FROM_GRAVEYARD_TO_HAND_RE = re.compile(
+    rf"^return (?P<upto>up to )?(?P<n>{COUNT}) (?P<quality>[a-z ,/-]+?) cards? "
+    r"from your graveyard to your hand$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_return_cards_from_your_graveyard_to_hand_clause(
+    clause: str, *, for_spell: bool
+) -> "TargetedClause | None":
+    """A choice made as the clause resolves (CR 608.2d), not a target: the
+    controller picks N (at most N after "up to", CR 107.1c) matching cards in
+    their own graveyard, as it is when the clause applies - so cards a
+    preceding clause just milled are eligible (CR 608.2c)."""
+    from .effects._common import _quality_matcher
+
+    match = _RETURN_CARDS_FROM_GRAVEYARD_TO_HAND_RE.fullmatch(clause.strip().rstrip("."))
+    count = None if match is None else parse_count(match.group("n"))
+    if match is None or not count:
+        return None
+    matches = _quality_matcher(match.group("quality").replace("and/or", "or"))
+    exact = match.group("upto") is None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        player = game.player(controller_of(game, stack_object))
+        candidates = [state for state in player.cards_in(Zone.GRAVEYARD) if matches(state)]
+        wanted = min(count, len(candidates))
+        if wanted <= 0:
+            return
+        source = getattr(stack_object, "source_name", None) or stack_object.name
+        chosen = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt=f"choose {'' if exact else 'up to '}{wanted} card(s) to return to your hand",
+                source=source,
+                source_id=source_id_of(stack_object),
+                amount=wanted,
+                exact=exact,
+                cards=tuple(state.id for state in candidates),
+                card_labels=tuple(state.name for state in candidates),
+            )
+        )
+        by_id = {state.id: state for state in candidates}
+        for card_id in chosen:
+            game.return_to_hand(by_id[card_id])
 
     return effect

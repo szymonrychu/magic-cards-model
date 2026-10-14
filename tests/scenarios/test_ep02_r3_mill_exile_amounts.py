@@ -1096,3 +1096,97 @@ def test_anzrags_rampage_with_no_creature_among_the_exiled_cards_asks_nothing():
     scenario = _rampage(library=[LIGHTNING_BOLT, LIGHTNING_BOLT, FOREST])
     scenario.cast_and_resolve("Anzrag's Rampage", *scenario.untapped_sources(*["Mountain"] * 5))
     assert len(scenario.game.exile) == 2
+
+
+# --------------------------------------------------------------------------
+# Kairi, the Swirling Sky: a dies trigger, "choose one" (CR 700.2, CR 603.3c).
+# --------------------------------------------------------------------------
+
+KAIRI = "Kairi, the Swirling Sky"
+KAIRI_BOUNCE = (
+    "Return any number of target nonland permanents with total mana value 6 or less "
+    "to their owners' hands."
+)
+KAIRI_MILL = "Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand."
+
+
+def _kairi_dies(scenario):
+    scenario.game.destroy(scenario.creature(KAIRI, "alice"))
+    scenario.game.put_triggers_on_stack()
+
+
+def test_kairi_bounces_any_number_of_nonland_permanents_within_the_total_mana_value():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=[KAIRI])
+        .player("bob", battlefield=["Grizzly Bears", "Kitchen Finks", "Serra Angel", "Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    finks = scenario.creature("Kitchen Finks", "bob")
+    scenario.will_choose_mode(KAIRI_BOUNCE, username="alice", source=KAIRI)
+    scenario.will_choose_targets(bears, finks, username="alice", source=KAIRI)
+    _kairi_dies(scenario)
+    _settle(scenario)
+    assert sorted(_names(scenario.player("bob").hand)) == ["Grizzly Bears", "Kitchen Finks"]
+    assert "Serra Angel" in scenario.battlefield_names()
+
+
+def test_kairi_bounce_refuses_a_group_over_the_total_mana_value():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=[KAIRI])
+        .player("bob", battlefield=["Kitchen Finks", "Serra Angel"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose_mode(KAIRI_BOUNCE, username="alice", source=KAIRI)
+    scenario.will_choose_targets(
+        scenario.creature("Kitchen Finks", "bob"),
+        scenario.creature("Serra Angel", "bob"),
+        username="alice",
+        source=KAIRI,
+    )
+    with pytest.raises(ValueError, match="total mana value"):
+        _kairi_dies(scenario)
+
+
+def test_kairi_mills_six_then_returns_up_to_two_instants_or_sorceries():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=[KAIRI],
+            graveyard=["Counterspell"],
+            library=[LIGHTNING_BOLT, FOREST, FOREST, "Divination", FOREST, FOREST, SWAMP],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = scenario.find(LIGHTNING_BOLT, Zone.LIBRARY, "alice")
+    divination = scenario.find("Divination", Zone.LIBRARY, "alice")
+    scenario.will_choose_mode(KAIRI_MILL, username="alice", source=KAIRI)
+    scenario.will_choose_cards(bolt, divination, username="alice", source=KAIRI)
+    _kairi_dies(scenario)
+    _settle(scenario)
+    assert sorted(_names(scenario.player("alice").hand)) == ["Divination", LIGHTNING_BOLT]
+    assert len(scenario.player("alice").library) == 1
+    assert "Counterspell" in _names(scenario.player("alice").graveyard)
+    assert KAIRI in _names(scenario.player("alice").graveyard)
+
+
+def test_kairi_mill_mode_returns_none_when_no_instant_or_sorcery_is_in_the_graveyard():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=[KAIRI], library=[FOREST] * 7)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose_mode(KAIRI_MILL, username="alice", source=KAIRI)
+    _kairi_dies(scenario)
+    _settle(scenario)
+    assert scenario.player("alice").hand == []
+    assert len(scenario.player("alice").library) == 1
