@@ -78,10 +78,24 @@ def counting_controller(game: "Game", acting: str, source_id: "str | None", each
     the player the instruction is done to; "they control" is that player's."""
     if source_id is None or _YOU_RE.search(each) is None:
         return acting
+    return source_controller(game, source_id, acting)
+
+
+def source_controller(game: "Game", source_id: "str | None", default: str) -> str:
+    """The controller of the object `source_id` names, or `default` when it names
+    none. A spell is on no zone while it resolves (`Game.resolving`), so it is
+    looked up there as well as among the zones."""
+    if source_id is None:
+        return default
     from uuid import UUID
 
     origin = game.find_by_id(UUID(source_id))
-    return acting if origin is None or origin.controller is None else origin.controller
+    resolving = game.resolving
+    if origin is None and resolving is not None and str(resolving.id) == source_id:
+        from ..models import CardState
+
+        origin = resolving if isinstance(resolving, CardState) else None
+    return default if origin is None or origin.controller is None else origin.controller
 
 
 @functools.cache

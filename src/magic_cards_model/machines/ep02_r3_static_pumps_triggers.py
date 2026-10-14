@@ -65,34 +65,6 @@ def _parse_draw_for_each_board_count(text: str, *, for_spell: bool) -> Any:
     return effect
 
 
-_TOKENS_PER_OPPONENT_RE = re.compile(
-    r"^create a number of (?P<desc>.+?) tokens(?P<tail> with .+?)? "
-    r"equal to the number of opponents you have\.?$",
-    re.IGNORECASE,
-)
-
-
-@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
-def _parse_tokens_per_opponent(text: str, *, for_spell: bool) -> Any:
-    """ "Create a number of `<token>` tokens equal to the number of opponents
-    you have" (CR 102.2, CR 111.2)."""
-    match = _TOKENS_PER_OPPONENT_RE.fullmatch(" ".join(text.strip().split()))
-    if match is None:
-        return None
-    from .effects.tokens import _token_creator_for_count
-
-    create = _token_creator_for_count(match["desc"], match["tail"] or "")
-    if create is None:
-        return None
-
-    def effect(game: "Game", stack_object: Any) -> None:
-        controller = game.controller_of(stack_object).username
-        opponents = [p for p in game.players_in_game if p.username != controller]
-        create(game, stack_object, len(opponents))
-
-    return effect
-
-
 _BASE_PT_COPY_RE = re.compile(
     r"^(?P<may>you may )?have the base power and toughness of (?P<target>target [^.,]+?) "
     r"become equal to this (?:creature|permanent)'s power and toughness until end of turn\.?$",

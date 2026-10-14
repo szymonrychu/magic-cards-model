@@ -4533,7 +4533,6 @@
       "_parse_remove_x_counters_where_x",
       "_parse_twice_n_counters_clause",
       "_parse_draw_for_each_board_count",
-      "_parse_tokens_per_opponent",
       "_parse_return_cards_from_your_graveyard_to_hand_clause",
       "_parse_per_color_graveyard_return",
       "_parse_reveal_hand_clause",

@@ -232,7 +232,12 @@ _RECIPIENT_GRAVEYARD_RE = re.compile(
 )
 
 
-_RECIPIENT_HAND_RE = re.compile(r"\b(?:their|that (?:player|opponent)'s) hand\b", re.IGNORECASE)
+#: Only "their hand" is the recipient's own: "that player's hand" names the
+#: player an earlier instruction or target picked out ("Target player reveals
+#: their hand. You gain life equal to the number of cards in that player's
+#: hand.", Search Warrant), which is not the recipient when the recipient is
+#: "you" - `hand_count_expression` reads that referent.
+_RECIPIENT_HAND_RE = re.compile(r"\btheir hand\b", re.IGNORECASE)
 
 
 def recipient_view(phrase: str) -> tuple[str, bool]:

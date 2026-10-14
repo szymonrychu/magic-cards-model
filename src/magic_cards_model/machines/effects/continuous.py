@@ -2391,6 +2391,12 @@ def _mass_pump_spell_effect(effect_text: str) -> Effect | None:
             )
 
     if remainder and remainder_effect is None:
+        if magnitude_expr is not None and "+x/+x" not in template.lower():
+            # A one-sided "+X/+0" pump with a sentence this reader cannot play
+            # (Tears of Rage's "Sacrifice those creatures at the beginning of
+            # the next end step.") is left to the whole-text amount readers
+            # after this one, which read the delayed instruction too.
+            return None
         return _with_unparsed_remainder(effect, remainder)
     return effect
 

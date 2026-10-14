@@ -51,7 +51,7 @@ from ..delayed import (
     DelayedTrigger,
     NextSpellCannotBeCountered,
 )
-from ..ep02_r1_counted_permanents import counting_controller
+from ..ep02_r1_counted_permanents import counting_controller, source_controller
 from ..ep02_r2_cards_in_zone_counts import parse_half_of_zone_clause
 from ..layers import (
     ContinuousEffect,
@@ -1005,8 +1005,7 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
             elif equal_reader is not None:
                 # CR 701.17a: "cards equal to the number of cards in your hand" -
                 # "your" is the ability's controller, not the player milled.
-                origin = game.find_by_id(UUID(source_id)) if source_id is not None else None
-                base = equal_reader(game, origin.controller if origin else player.username)
+                base = equal_reader(game, source_controller(game, source_id, player.username))
             if mills_that_many:
                 counted = _that_many_or_notice(
                     game, clause, source_id=source_id, source_name=source
