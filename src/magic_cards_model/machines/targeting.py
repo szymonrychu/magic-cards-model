@@ -5954,6 +5954,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     # exactly like a mana-value bound and is not one (see
     # `_COLORS_OF_MANA_SPENT_CONDITION`).
     rest = _COLORS_OF_MANA_SPENT_CONDITION.sub("", rest).strip()
+    rest = _IF_ITS_MANA_VALUE_AT_MOST_COUNT_CONDITION.sub("", rest).strip()
 
     # Same reason, for CR 613.4b's own effect verb rather than a restriction -
     # see `_SETS_BASE_POWER_TOUGHNESS_EFFECT`.
@@ -6700,7 +6701,8 @@ _COMPARISON_CLAUSE = re.compile(
     # Vedalken Shackles: "power less than or equal to the number of Islands
     # you control" - a count of the *caster's* board, carried on as CR
     # 107.3c's "where X is" definition (`comparison_x_definition`).
-    r"|(?P<expr_dir>less|greater) than or equal to (?P<expr>the number of [^,.]+? you control)"
+    r"|(?P<expr_dir>less|greater) than or equal to "
+    r"(?P<expr>the number of [^,.]+? (?:you control|in your (?:graveyard|hand)))"
     r"|less than or equal to\s+(?P<le_num>x|\d+)\b"
     r"|greater than or equal to\s+(?P<ge_num>x|\d+)\b"
     # Vodalian Mindsinger, Unliving Psychopath: "power less than this
@@ -6864,6 +6866,20 @@ _COLORS_OF_MANA_SPENT_CONDITION = re.compile(
     r"\bif its mana value is less than or equal to the number of colors of mana "
     r"spent to cast this spell\b",
     re.IGNORECASE,
+)
+
+
+#: "Destroy target artifact or enchantment **if its mana value is less than or
+#: equal to the number of cards in your hand**" (Rending Vines), "... onto the
+#: battlefield under your control if its mana value is less than or equal to
+#: the number of Allies you control" (Agadeem Occultist): the "if" gates the
+#: instruction as it is followed (CR 608.2c), the count is taken then, and the
+#: target itself is the plain noun phrase (CR 115.1, CR 601.2c) - a
+#: higher-value permanent is a legal target that is simply left alone. Read out
+#: of the way for the reason `_COLORS_OF_MANA_SPENT_CONDITION` is; the
+#: resolving parser re-reads the same clause (`ep02_r3_for_each_cards`).
+_IF_ITS_MANA_VALUE_AT_MOST_COUNT_CONDITION = re.compile(
+    r"\bif its mana value is less than or equal to the number of [^.,]+", re.IGNORECASE
 )
 
 

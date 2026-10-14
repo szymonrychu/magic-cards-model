@@ -56,6 +56,8 @@ LISTED = [
 ]
 
 PROOF = [
+    "Lay Down Arms",
+    "Bortuk Bonerattle",
     "Silent-Chant Zubera",
     "Lightkeeper of Emeria",
     "Stronghold Arena",
@@ -493,3 +495,98 @@ def test_curse_of_surveillance_cannot_draw_for_the_enchanted_player() -> None:
     scenario.pass_until_resolved()
     assert _hand(scenario, "bob") == 0
     assert _hand(scenario, "alice") == 0
+
+
+# ---------------------------------------------------------------------------
+# "if its mana value / toughness is less than or equal to the number of <things>"
+# (CR 202.3, CR 608.2c: the comparison is made as the instruction is followed)
+# ---------------------------------------------------------------------------
+
+
+def _names(scenario, zone: Zone, user: str) -> list[str]:
+    return sorted(s.name for s in scenario.all_card_states() if s.zone is zone and s.owner == user)
+
+
+def test_rending_vines_destroys_a_permanent_within_the_hand_count_and_draws() -> None:
+    scenario = _scenario(
+        [], ["Sol Ring"], hand=["Rending Vines", "Island", "Island"], library=["Forest"] * 5
+    )
+    _cast_all(scenario, "Rending Vines", targets=[scenario.find("Sol Ring", Zone.BATTLEFIELD)])
+    assert _names(scenario, Zone.GRAVEYARD, "bob") == ["Sol Ring"]
+    assert _hand(scenario, "alice") == 3  # the two Islands and the card it drew
+
+
+def test_rending_vines_spares_a_permanent_above_the_hand_count_but_still_draws() -> None:
+    scenario = _scenario([], ["Wurmcoil Engine"], hand=["Rending Vines"], library=["Forest"] * 5)
+    _cast_all(scenario, "Rending Vines", targets=[scenario.find("Wurmcoil Engine", Zone.BATTLEFIELD)])
+    assert _names(scenario, Zone.BATTLEFIELD, "bob").count("Wurmcoil Engine") == 1
+    assert _hand(scenario, "alice") == 1
+
+
+def test_agadeem_occultist_steals_a_creature_within_the_ally_count() -> None:
+    scenario = _scenario(["Agadeem Occultist"], bob_graveyard=["Memnite", "Serra Angel"])
+    occultist = scenario.creature("Agadeem Occultist", "alice")
+    scenario.activate(
+        occultist, targets=[scenario.find("Memnite", Zone.GRAVEYARD, "bob")], auto=True
+    )
+    _resolve_all(scenario)
+    stolen = scenario.find("Memnite", Zone.BATTLEFIELD, "alice")
+    assert (stolen.owner, stolen.controller) == ("bob", "alice")
+
+
+def test_agadeem_occultist_leaves_a_creature_above_the_ally_count() -> None:
+    scenario = _scenario(["Agadeem Occultist"], bob_graveyard=["Memnite", "Serra Angel"])
+    occultist = scenario.creature("Agadeem Occultist", "alice")
+    scenario.activate(
+        occultist, targets=[scenario.find("Serra Angel", Zone.GRAVEYARD, "bob")], auto=True
+    )
+    _resolve_all(scenario)
+    assert "Serra Angel" in _names(scenario, Zone.GRAVEYARD, "bob")
+
+
+def test_squirming_emergence_returns_a_permanent_card_within_the_graveyard_count() -> None:
+    scenario = _scenario(
+        [],
+        hand=["Squirming Emergence"],
+        graveyard=["Grizzly Bears", "Memnite", "Serra Angel", "Island", "Hill Giant"],
+    )
+    _cast_all(
+        scenario, "Squirming Emergence", targets=[scenario.find("Serra Angel", Zone.GRAVEYARD)]
+    )
+    assert "Serra Angel" in _names(scenario, Zone.BATTLEFIELD, "alice")
+
+
+def test_squirming_emergence_cannot_target_a_card_above_the_graveyard_count() -> None:
+    scenario = _scenario(
+        [], hand=["Squirming Emergence"], graveyard=["Serra Angel", "Island"]
+    )
+    with pytest.raises(Exception, match="(?i)mana value"):
+        scenario.cast(
+            "Squirming Emergence", "alice", targets=[scenario.find("Serra Angel", Zone.GRAVEYARD)]
+        )
+
+
+def test_engulf_the_shore_bounces_creatures_with_toughness_up_to_the_island_count() -> None:
+    scenario = _scenario(
+        ["Grizzly Bears", "Serra Angel"], ["Colossal Dreadmaw", "Memnite"], hand=["Engulf the Shore"]
+    )
+    _cast_all(scenario, "Engulf the Shore")
+    assert _names(scenario, Zone.HAND, "alice") == ["Grizzly Bears", "Serra Angel"]
+    assert _names(scenario, Zone.HAND, "bob") == ["Memnite"]
+    assert _names(scenario, Zone.BATTLEFIELD, "bob").count("Colossal Dreadmaw") == 1
+
+
+def test_anticausal_vestige_draws_then_puts_a_permanent_within_the_land_count_onto_the_battlefield() -> None:
+    scenario = _scenario(
+        ["Anticausal Vestige"],
+        hand=["Serra Angel", "Wurmcoil Engine", "Go for the Throat"],
+        library=["Forest"] * 5,
+    )
+    _cast_all(
+        scenario,
+        "Go for the Throat",
+        targets=[scenario.creature("Anticausal Vestige", "alice")],
+    )
+    names = _names(scenario, Zone.BATTLEFIELD, "alice")
+    # 21 lands: both permanent cards are within it; the vestige's trigger lets alice put one
+    assert len([n for n in names if n in ("Serra Angel", "Wurmcoil Engine")]) == 1

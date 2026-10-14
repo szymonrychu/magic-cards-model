@@ -2960,6 +2960,7 @@ _MASS_WITHOUT_COUNTER_RE = re.compile(
 _MASS_MANA_VALUE_RE = re.compile(
     r"^(?P<inner>.+?) with mana value (?:"
     r"equal to (?P<eq>.+)"
+    r"|less than or equal to (?P<le_expr>.+)"
     r"|(?P<n>\d+) or (?P<dir>less|greater)"
     r"|(?P<bare_x>x)"
     r")$",
@@ -2984,7 +2985,8 @@ _MASS_CONTROLLER_DEALT_DAMAGE_RE = re.compile(
 #: (CR 613.1) as the effect is applied (CR 608.2h), so a counter or a pump
 #: in response is seen; an object with no power at all never matches.
 _MASS_POWER_TOUGHNESS_RE = re.compile(
-    r"^(?P<inner>.+?) with (?P<stat>power|toughness) (?P<n>\d+) or (?P<dir>less|greater)$",
+    r"^(?P<inner>.+?) with (?P<stat>power|toughness) (?:(?P<n>\d+) or (?P<dir>less|greater)"
+    r"|less than or equal to (?P<le_expr>.+))$",
     re.IGNORECASE,
 )
 
@@ -3056,6 +3058,24 @@ def _parse_mass_mv_comparison(
     value X" - or `None` for a spell/constant/counter comparison that never
     reads one).
     """
+    if match.group("le_expr") is not None:
+        # "with mana value less than or equal to the number of <things>": the
+        # count is taken once for the clause's controller as it is applied
+        # (CR 608.2h).
+        counted = count_expression(match.group("le_expr").strip())
+        if counted is None:
+            return None
+
+        def at_most_count(
+            game: "Game",
+            chars: Characteristics,
+            source: CardState | None,
+            x_value: int | None = None,
+        ) -> bool:
+            return source is not None and chars.mana_value <= counted(game, source.controller)
+
+        return at_most_count
+
     eq_rhs = match.group("eq")
     if eq_rhs is not None:
         rhs = _parse_mass_mv_rhs(eq_rhs)
@@ -3156,8 +3176,10 @@ def _parse_mass_destroy_predicate(
             return None
         text = controller_match.group("qualifier").strip()
     controller_scope: str | None = None
-    scope_match = _MASS_CONTROLLER_SCOPE_RE.fullmatch(
-        text
+    # A trailing "you control" that closes a count ("... less than or equal to
+    # the number of Islands you control") is the count's, not a scope.
+    scope_match = (
+        None if " the number of " in text else _MASS_CONTROLLER_SCOPE_RE.fullmatch(text)
     ) or _MASS_CONTROLLER_SCOPE_BEFORE_BOUND_RE.fullmatch(text)
     if scope_match is not None:
         controller_scope = scope_match.group("scope").lower()
@@ -3168,13 +3190,22 @@ def _parse_mass_destroy_predicate(
         entered_this_turn = True
         text = entered_match.group("qualifier").strip()
     stat_comparison: Callable[[Characteristics], bool] | None = None
+    stat_at_most_count: tuple[str, Callable[["Game", str], int]] | None = None
     stat_match = _MASS_POWER_TOUGHNESS_RE.fullmatch(text)
     if stat_match is not None:
-        stat_comparison = _mass_stat_comparison(
-            stat_match.group("stat").lower(),
-            int(stat_match.group("n")),
-            at_least=stat_match.group("dir").lower() == "greater",
-        )
+        if stat_match.group("le_expr") is not None:
+            # "with toughness less than or equal to the number of Islands you
+            # control" (Engulf the Shore): counted for the clause's controller.
+            counted = count_expression(stat_match.group("le_expr").strip())
+            if counted is None:
+                return None
+            stat_at_most_count = (stat_match.group("stat").lower(), counted)
+        else:
+            stat_comparison = _mass_stat_comparison(
+                stat_match.group("stat").lower(),
+                int(stat_match.group("n")),
+                at_least=stat_match.group("dir").lower() == "greater",
+            )
         text = stat_match.group("inner").strip()
     mv_comparison = None
     mv_match = _MASS_MANA_VALUE_RE.fullmatch(text)
@@ -3234,6 +3265,11 @@ def _parse_mass_destroy_predicate(
             return False
         if stat_comparison is not None and not stat_comparison(chars):
             return False
+        if stat_at_most_count is not None:
+            stat, counted_for = stat_at_most_count
+            value = chars.power if stat == "power" else chars.toughness
+            if value is None or source is None or value > counted_for(game, source.controller):
+                return False
         if entered_this_turn:
             turn = game.turn
             if turn is None or permanent.turn_entered != turn.turns_taken:
@@ -10267,6 +10303,7 @@ from .amounts import (  # noqa: E402
     _parse_x_magnitude_body,
     _that_many_or_notice,
     amount_expression,
+    count_expression,
 )
 from .continuous import (  # noqa: E402
     _attached_object,

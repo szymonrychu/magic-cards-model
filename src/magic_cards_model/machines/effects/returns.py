@@ -2577,7 +2577,8 @@ def _parse_each_player_returns_from_graveyard_to_hand_clause(
 #: enters trigger. `_RETURN_TARGET_RE`'s verb with no target at all: every
 #: permanent on the battlefield matching the description.
 _MASS_RETURN_TO_HAND_RE = re.compile(
-    r"^return (?:all|each) (?P<rest>.+?) to (?:their owners'? hands|its owner'?s hand)\.?$",
+    r"^return (?:(?:all|each) (?P<rest>.+?) to (?:their owners'? hands|its owner'?s hand)"
+    r"|to (?:their owners'? hands|its owner'?s hand) (?:all|each) (?P<fronted>.+?))\.?$",
     re.IGNORECASE,
 )
 
@@ -2598,7 +2599,7 @@ def _parse_mass_return_to_hand_clause(clause: str, *, for_spell: bool) -> Target
     match = _MASS_RETURN_TO_HAND_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    text = match.group("rest").strip()
+    text = (match.group("rest") or match.group("fronted")).strip()
     from .removal import _parse_mass_destroy_predicate
 
     # The sweep grammar the mass destroy / exile readers share: a controller

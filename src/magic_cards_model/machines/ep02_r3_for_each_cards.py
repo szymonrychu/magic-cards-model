@@ -18,6 +18,7 @@ from uuid import UUID
 
 from ..models.card_state import CardState
 from ..models.player import Player
+from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
 from .effects._chains import FORWARD, MIXED_CLAUSE
 
@@ -387,5 +388,129 @@ def _parse_target_players_each_draw_equal_clause(clause: str, *, for_spell: bool
         for target in game.resolve_targets(stack_object):
             if isinstance(target, Player) and amount > 0:
                 game.draw_cards(target.username, amount)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "<verb> target X if its mana value is less than or equal to the number of <Y>"
+# --------------------------------------------------------------------------
+
+_IF_MV_AT_MOST_COUNT = r"if its mana value is less than or equal to (?P<expr>the number of [^.]+)"
+_DESTROY_IF_MV_RE = re.compile(
+    rf"^destroy (?P<phrase>target [^.]+?) {_IF_MV_AT_MOST_COUNT}$", re.IGNORECASE
+)
+_PUT_ONTO_BATTLEFIELD_IF_MV_RE = re.compile(
+    r"^put (?P<phrase>target [^.]+? card from [^.]+?graveyard) onto the battlefield"
+    rf"(?P<yours> under your control)? {_IF_MV_AT_MOST_COUNT}$",
+    re.IGNORECASE,
+)
+
+
+def _target_within_count(
+    match: "re.Match[str]", *, battlefield_only: bool
+) -> tuple[Callable[["Game", str], int], str] | None:
+    """The count and the target phrase of a `_IF_MV_AT_MOST_COUNT` clause, or
+    `None` when either is not one the engine reads."""
+    from .effects._common import _targets_understood
+    from .effects.amounts import count_expression
+
+    phrase = match.group("phrase")
+    counted = count_expression(match.group("expr"))
+    if counted is None or not _targets_understood(phrase, battlefield_only=battlefield_only):
+        return None
+    return counted, phrase
+
+
+def _targets_within_count(game: "Game", stack_object: Any, counted: Callable[..., int]) -> list:
+    """The resolving object's legal card targets (CR 608.2b) whose mana value
+    (CR 202.3) is within the count, taken once as the instruction is followed
+    (CR 608.2c, CR 608.2h)."""
+    limit = counted(game, game.controller_of(stack_object).username)
+    return [
+        target
+        for target in game.resolve_targets(stack_object)
+        if isinstance(target, CardState) and game.characteristics_of(target).mana_value <= limit
+    ]
+
+
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
+def _parse_destroy_target_if_mana_value_within_count(clause: str, *, for_spell: bool) -> Any:
+    """ "Destroy target artifact or enchantment if its mana value is less than
+    or equal to the number of cards in your hand." (Rending Vines): the target
+    is any artifact or enchantment (CR 115.1); the "if" gates the destruction
+    (CR 701.8a) as it is followed, so a permanent above the count is left
+    alone."""
+    if " if its mana value is less than or equal to the number of " not in clause.lower():
+        return None
+    match = _DESTROY_IF_MV_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    read = None if match is None else _target_within_count(match, battlefield_only=True)
+    if read is None:
+        return None
+    counted, _phrase = read
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        for target in _targets_within_count(game, stack_object, counted):
+            if target.zone is Zone.BATTLEFIELD:
+                game.destroy(target)
+
+    return effect
+
+
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
+def _parse_put_graveyard_card_if_mana_value_within_count(clause: str, *, for_spell: bool) -> Any:
+    """ "Put target creature card from an opponent's graveyard onto the
+    battlefield under your control if its mana value is less than or equal to
+    the number of Allies you control." (Agadeem Occultist): the card enters
+    under the controller's control when the printed words say so (CR 110.2a),
+    else under its owner's."""
+    if " if its mana value is less than or equal to the number of " not in clause.lower():
+        return None
+    match = _PUT_ONTO_BATTLEFIELD_IF_MV_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    read = None if match is None else _target_within_count(match, battlefield_only=False)
+    if read is None:
+        return None
+    counted, _phrase = read
+    yours = match.group("yours") is not None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        controller = game.controller_of(stack_object).username
+        for target in _targets_within_count(game, stack_object, counted):
+            if target.zone is Zone.GRAVEYARD:
+                game.put_onto_battlefield(target, controller if yours else target.owner)
+
+    return effect
+
+
+_RETURN_TO_BATTLEFIELD_FRONTED_RE = re.compile(
+    r"^(?:[a-z][a-z '-]* — |[a-z][a-z '-]* - )?return to the battlefield "
+    r"(?P<phrase>target [^.]+? card in your graveyard(?: with [^.]+)?)$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
+def _parse_return_to_the_battlefield_target_in_your_graveyard(
+    clause: str, *, for_spell: bool
+) -> Any:
+    """ "Return to the battlefield target nonland permanent card in your
+    graveyard with mana value less than or equal to the number of permanent
+    cards in your graveyard." (Squirming Emergence): `_RETURN_FROM_YOUR_
+    GRAVEYARD_TO_BATTLEFIELD_RE`'s verb with the destination fronted. The mana
+    value bound is a targeting restriction (CR 115.1, CR 601.2c) that
+    `targeting.py` enforces, and is checked again as the spell resolves (CR
+    608.2b); the card returns under its owner's control (CR 110.2)."""
+    match = _RETURN_TO_BATTLEFIELD_FRONTED_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    if match is None:
+        return None
+    from .effects._common import _targets_understood
+
+    if not _targets_understood(match.group("phrase"), battlefield_only=False):
+        return None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, CardState) and target.zone is Zone.GRAVEYARD:
+                game.put_onto_battlefield(target, target.owner)
 
     return effect
