@@ -2136,7 +2136,15 @@ def _parse_reveal_top_card_if_quality_clause(text: str, *, for_spell: bool) -> A
     consequence = _parse_mixed_clause(
         match.group("effect").strip().rstrip("."), for_spell=for_spell
     )
-    if consequence is None:
+    # "... you draw cards equal to its power": instructions about the revealed card itself.
+    from ..ep02_r3_life_total_amounts import revealed_card_consequence
+
+    about_revealed = (
+        None
+        if consequence is not None
+        else revealed_card_consequence(match.group("effect").strip())
+    )
+    if consequence is None and about_revealed is None:
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -2149,7 +2157,12 @@ def _parse_reveal_top_card_if_quality_clause(text: str, *, for_spell: bool) -> A
             return
         top = controller.library[0]
         game.reveal(top, source=source_name)
-        if matches(top):
+        if not matches(top):
+            return
+        if about_revealed is not None:
+            about_revealed(game, stack_object, top)
+        else:
+            assert consequence is not None
             consequence(game, stack_object)
 
     return effect

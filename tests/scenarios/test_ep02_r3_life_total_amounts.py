@@ -614,3 +614,78 @@ def test_heliods_intervention_target_player_gains_twice_x_life():
     scenario = _heliods_intervention(2, 3, ["alice"])
     assert _life(scenario) == 26
     assert not scenario.game.mode_notices
+
+
+# --------------------------------------------------------------------------
+# "Scry 5, then reveal the top card of your library. If it's a creature card, you draw cards
+# equal to its power and you gain life equal to its toughness." (Nissa's Revelation)
+# CR 701.22a, 701.20a, 608.2c
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("top", "drawn", "gained"),
+    [("Serra Angel", 4, 4), ("Hill Giant", 3, 3), ("Grizzly Bears", 2, 2), ("Lightning Bolt", 0, 0)],
+)
+def test_nissas_revelation_draws_power_and_gains_toughness_of_a_revealed_creature(
+    top, drawn, gained
+):
+    scenario = _main(
+        _build(["Forest"] * 7, hand=["Nissa's Revelation"], library=[top] + ["Forest"] * 9)
+    )
+    scenario.scry_keeping_everything_on_top()
+    before = len(scenario.player("alice").hand)
+    scenario.cast_and_resolve("Nissa's Revelation", auto=True, username="alice")
+    assert len(scenario.player("alice").hand) == before - 1 + drawn
+    assert _life(scenario) == 20 + gained
+
+
+def test_nissas_revelation_scry_can_change_which_card_is_revealed():
+    scenario = _main(
+        _build(
+            ["Forest"] * 7,
+            hand=["Nissa's Revelation"],
+            library=["Lightning Bolt", "Serra Angel"] + ["Forest"] * 8,
+        )
+    )
+    bolt = scenario.find("Lightning Bolt", Zone.LIBRARY, "alice")
+    scenario.scry_bottoming(bolt)
+    scenario.cast_and_resolve("Nissa's Revelation", auto=True, username="alice")
+    assert _life(scenario) == 24
+
+
+# --------------------------------------------------------------------------
+# "two target players each reveal the top card of their library. They each lose life equal to
+# the mana value of the card revealed by the other player. Then they each put the card they
+# revealed into their hand." (Parker Luck) - CR 701.20a, 119.3, 608.2c, 608.2h
+# --------------------------------------------------------------------------
+
+
+def test_parker_luck_each_target_player_loses_the_others_revealed_mana_value():
+    scenario = _main(
+        _build(
+            ["Parker Luck"],
+            library=["Serra Angel"] + FOREST10,
+            bob_library=["Lightning Bolt"] + FOREST10,
+        )
+    )
+    scenario.will_choose_targets("alice", "bob", source="Parker Luck")
+    _advance_to(scenario, Step.END_STEP)
+    assert _life(scenario) == 20 - 1  # bob revealed Lightning Bolt (mana value 1)
+    assert _life(scenario, "bob") == 20 - 5  # alice revealed Serra Angel (mana value 5)
+    assert [c.name for c in scenario.player("alice").hand] == ["Serra Angel"]
+    assert [c.name for c in scenario.player("bob").hand] == ["Lightning Bolt"]
+
+
+def test_parker_luck_a_revealed_land_costs_the_other_player_nothing():
+    scenario = _main(
+        _build(
+            ["Parker Luck"],
+            library=FOREST10,
+            bob_library=["Serra Angel"] + FOREST10,
+        )
+    )
+    scenario.will_choose_targets("alice", "bob", source="Parker Luck")
+    _advance_to(scenario, Step.END_STEP)
+    assert _life(scenario) == 20 - 5
+    assert _life(scenario, "bob") == 20  # a Forest has mana value 0

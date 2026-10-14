@@ -554,4 +554,119 @@ def _parse_until_end_of_turn_top_of_library_permission(
     return effect
 
 
-__all__ = ["amount_term", "count_term", "for_each_count"]
+# --------------------------------------------------------------------------
+# Two players reveal and lose life by each other's card (Parker Luck)
+# --------------------------------------------------------------------------
+
+_REVEAL_AND_CROSS_LOSE_RE = re.compile(
+    r"^(?P<who>two target players) each reveal the top card of their library\. "
+    r"they each lose life equal to the mana value of the card revealed by the other player\. "
+    r"then they each put the card they revealed into their hand\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_two_players_reveal_and_cross_lose_life(
+    effect_text: str,
+) -> "Callable[..., None] | None":
+    """ "Two target players each reveal the top card of their library. They each lose life
+    equal to the mana value of the card revealed by the other player. Then they each put the
+    card they revealed into their hand." Each reveal is public (CR 701.20a); each loss is read
+    off the other player's revealed card once, before any life moves (CR 608.2h), in the
+    order written (CR 608.2c). A target that became illegal reveals nothing (CR 608.2b), so
+    the other player loses nothing for it."""
+    if "revealed by the other player" not in effect_text.lower():
+        return None
+    match = _REVEAL_AND_CROSS_LOSE_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+    from .effects import _targets_understood
+
+    # Exactly two players: the reveal and loss are written for the pair, so the count is
+    # fixed by the text and the reader itself works out what is left if a target is gone.
+    if not _targets_understood(
+        match.group("who").lower(), allow_player_targets=True, count_agnostic=True
+    ):
+        return None
+
+    def effect(game: "Game", ability: "AbilityOnStack") -> None:
+        players = [t for t in game.resolve_targets(ability) if hasattr(t, "library")][:2]
+        revealed = {}
+        for player in players:
+            if player.library:
+                top = player.library[0]
+                game.reveal(top, source=ability.source_name)
+                revealed[player.username] = top
+        losses = [
+            (player, int(revealed[other.username].card.cmc))
+            for player in players
+            for other in players
+            if other is not player and other.username in revealed
+        ]
+        for player, amount in losses:
+            if amount > 0:
+                game.lose_life(player, amount)
+        for player in players:
+            card = revealed.get(player.username)
+            if card is not None and card.zone is Zone.LIBRARY:
+                player.move(card, Zone.HAND)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# What a revealed card is worth: "you draw cards equal to its power and you gain life equal to
+# its toughness" (Nissa's Revelation)
+# --------------------------------------------------------------------------
+
+_REVEALED_CARD_PART_RE = re.compile(
+    r"^you (?P<verb>draw cards|gain life|lose life) equal to its "
+    r"(?P<stat>power|toughness|mana value)$",
+    re.IGNORECASE,
+)
+
+
+@functools.cache
+def revealed_card_consequence(
+    text: str,
+) -> "Callable[[Game, StackObject, CardState], None] | None":
+    """ "you draw cards | gain life | lose life equal to its power | toughness | mana value",
+    chained with "and": the instruction a reveal-and-check reader (`library`'s "reveal the top
+    card ... If it's a <quality> card, ...") follows for the card it revealed. Every value is
+    read off that card once, as the instruction begins (CR 608.2h), before any part is
+    followed (CR 608.2c, in order)."""
+    parts = []
+    for piece in re.split(r" and (?=you )", " ".join(text.split()).rstrip(".")):
+        match = _REVEALED_CARD_PART_RE.fullmatch(piece.strip())
+        if match is None:
+            return None
+        parts.append((match.group("verb").lower(), match.group("stat").lower()))
+    if not parts:
+        return None
+
+    def stat_of(card: "CardState", stat: str) -> int:
+        if stat == "mana value":
+            return int(card.card.cmc)
+        printed = card.card.power if stat == "power" else card.card.toughness
+        return int(printed) if printed is not None and printed.lstrip("-").isdigit() else 0
+
+    def follow(game: "Game", stack_object: "StackObject", revealed: "CardState") -> None:
+        from .amount_sentences import controller_of
+
+        controller = game.player(controller_of(game, stack_object))
+        amounts = [(verb, stat_of(revealed, stat)) for verb, stat in parts]
+        for verb, amount in amounts:
+            if amount <= 0:
+                continue
+            if verb == "draw cards":
+                game.draw_cards(controller.username, amount)
+            elif verb == "gain life":
+                game.gain_life(controller, amount)
+            else:
+                game.lose_life(controller, amount)
+
+    return follow
+
+
+__all__ = ["amount_term", "count_term", "for_each_count", "revealed_card_consequence"]
