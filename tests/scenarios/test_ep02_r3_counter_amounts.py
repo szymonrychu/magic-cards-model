@@ -6,6 +6,8 @@ this creature's power." The mass pump's "+X" slot may sit in either stat
 affected creatures is fixed when the effect begins).
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.effects.continuous import transform_permanent
 from magic_cards_model.models import Zone
@@ -1326,3 +1328,45 @@ def test_niko_chapter_three_returns_a_foretell_card_from_the_graveyard():
     _settle(scenario)
     assert scenario.find("Saw It Coming", Zone.HAND, "alice")
     assert scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+
+
+# -- Lukka, Bound to Ruin -4: X is the greatest power among creatures you control
+# as you activate, divided as you choose
+
+
+def _lukka_board():
+    scenario = _main_board(
+        "Lukka, Bound to Ruin",
+        "Hill Giant",
+        opponent=["Grizzly Bears", "Savannah Lions"],
+    )
+    lukka = scenario.find("Lukka, Bound to Ruin", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    lions = scenario.creature("Savannah Lions", "bob")
+    return scenario, lukka, bears, lions
+
+
+def test_lukka_minus_four_divides_the_greatest_power_among_your_creatures():
+    scenario, lukka, bears, lions = _lukka_board()
+    scenario.activate(lukka, index=2, targets=[bears, lions], division=[2, 1])
+    scenario.resolve_top()
+    # Hill Giant is 3/3, so X = 3: two to the Bears, one to the Lions.
+    assert bears.zone is Zone.GRAVEYARD
+    assert lions.zone is Zone.GRAVEYARD
+    assert lukka.loyalty == 1
+
+
+def test_lukka_minus_four_x_is_locked_when_activated():
+    scenario, lukka, bears, lions = _lukka_board()
+    giant = scenario.creature("Hill Giant", "alice")
+    scenario.activate(lukka, index=2, targets=[bears, lions], division=[2, 1])
+    scenario.game.destroy(giant)
+    scenario.resolve_top()
+    assert bears.zone is Zone.GRAVEYARD
+    assert lions.zone is Zone.GRAVEYARD
+
+
+def test_lukka_minus_four_refuses_a_division_that_is_not_x():
+    scenario, lukka, bears, lions = _lukka_board()
+    with pytest.raises(ValueError):
+        scenario.activate(lukka, index=2, targets=[bears, lions], division=[2, 2])

@@ -527,8 +527,13 @@ def player_counter_count(
 
 
 _AS_YOU_CAST_SUFFIX = " as you cast this spell"
+#: Lukka, Bound to Ruin's "... as you activate this ability": the activated
+#: ability's twin of the spell wording (CR 602.2b runs CR 601.2d's announcement
+#: for an activation exactly as for a cast).
+_AS_YOU_ACTIVATE_SUFFIX = " as you activate this ability"
 _WHERE_X_AS_YOU_CAST_RE = re.compile(
-    r",?\s*where X is (?P<expr>[^.]+? as you cast this spell)\s*\.", re.IGNORECASE
+    r",?\s*where X is (?P<expr>[^.]+? as you (?:cast this spell|activate this ability))\s*\.",
+    re.IGNORECASE,
 )
 
 
@@ -539,7 +544,10 @@ _FOR_EACH_CONTROLLED_AS_CAST_RE = re.compile(
 
 
 def _locked_or_live(game: "Game", controller: str, live: Callable[["Game", str], int]) -> int:
-    """The X `Casting` recorded for the spell now resolving, else the live count."""
+    """The X `Casting` recorded for the spell now resolving (or the activation
+    that locked an ability's), else the live count."""
+    if isinstance(game.resolving, AbilityOnStack):
+        return game.resolving.x_value
     record = game.cast_record_of(game.resolving)
     return live(game, controller) if record is None else record.x_value
 
@@ -550,7 +558,7 @@ def locked_amount_as_cast(game: "Game", text: str, caster: str) -> int | None:
     definition or the count is one `count_expression` cannot read. Called by
     `Casting` while the spell is being cast (CR 601.2d: the division needs the
     total), the one moment the count is fixed."""
-    if "as you cast this spell" not in text:
+    if "as you cast this spell" not in text and "as you activate this ability" not in text:
         return None
     defined = _WHERE_X_AS_YOU_CAST_RE.search(text)
     if defined is None:
@@ -933,14 +941,22 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             return None
         times = 2 if factor.lower() == "twice" else 3
         return lambda game, controller: times * inner(game, controller)
-    if stripped.lower().endswith(_AS_YOU_CAST_SUFFIX):
+    suffix = next(
+        (
+            sfx
+            for sfx in (_AS_YOU_CAST_SUFFIX, _AS_YOU_ACTIVATE_SUFFIX)
+            if stripped.lower().endswith(sfx)
+        ),
+        None,
+    )
+    if suffix is not None:
         # "... as you cast this spell" (Jaws of Stone, Monstrous Onslaught):
         # the count was fixed while the spell was being cast (CR 601.2d needs it
         # to announce the division) and `Casting` recorded it as the cast's X,
         # so resolution reads that back instead of recounting a board a
         # response may have changed. A spell with no cast record (never cast
         # through a `Casting`) has nothing locked and counts live.
-        live = count_expression(stripped[: -len(_AS_YOU_CAST_SUFFIX)])
+        live = count_expression(stripped[: -len(suffix)])
         if live is None:
             return None
         return lambda game, controller: _locked_or_live(game, controller, live)
