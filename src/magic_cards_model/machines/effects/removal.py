@@ -801,7 +801,12 @@ def _sacrificed_mana_value_search(text: str) -> _SacrificedManaValueSearch | Non
     """
     match = _SEARCH_MV_EQUAL_TO_SACRIFICED_RE.fullmatch(" ".join(text.strip().split()))
     if match is None:
-        return None
+        # Venom's "draw X cards, then you may put a permanent card with mana
+        # value X or less from your hand onto the battlefield": the same
+        # sacrificed-mana-value channel, a different payoff.
+        from ..ep02_r3_library_amounts import sacrificed_value_draw_and_put
+
+        return sacrificed_value_draw_and_put(text)
     quality = match.group("quality")
     if not _search_quality_is_readable(quality):
         return None

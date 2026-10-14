@@ -1449,3 +1449,61 @@ def _parse_pair_graveyard_return_spell(text: str) -> Any:
 @ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
 def _parse_pair_graveyard_return_ability(text: str) -> Any:
     return _pair_graveyard_return(text) if " card and " in text.lower() else None
+
+
+# --------------------------------------------------------------------------
+# "Whenever Venom attacks, you may sacrifice another creature. If you do, draw
+# X cards, then you may put a permanent card with mana value X or less from
+# your hand onto the battlefield, where X is the sacrificed creature's mana
+# value." - the consequence half, run by the conditional-sacrifice reader.
+# --------------------------------------------------------------------------
+
+_DRAW_X_THEN_PUT_RE = re.compile(
+    r"^draw x cards, then you may put an? (?P<quality>.+?) card with mana value x or less "
+    r"from your hand onto the battlefield, where x is the sacrificed "
+    r"(?:creature|permanent|artifact|enchantment)'s mana value\.?$",
+    re.IGNORECASE,
+)
+
+
+def sacrificed_value_draw_and_put(text: str) -> Callable[..., None] | None:
+    """CR 608.2c: draw X (the sacrificed permanent's mana value as it last
+    existed, CR 608.2h), then optionally put one qualifying card of mana value
+    X or less from the hand (including the cards just drawn) onto the
+    battlefield - a put, not a cast (CR 110.2a)."""
+    match = _DRAW_X_THEN_PUT_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None or not _card_description_is_readable(match.group("quality")):
+        return None
+    matches_quality = _quality_matcher(match.group("quality"))
+
+    def run(
+        game: "Game", player: Player, sacrificed: float, source: str, source_id: str | None
+    ) -> None:
+        amount = int(sacrificed)
+        if amount > 0:
+            game.draw_cards(player.username, amount)
+        candidates = [
+            state
+            for state in player.hand
+            if state.mana_value <= sacrificed and matches_quality(state)
+        ]
+        if not candidates:
+            return
+        answer = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt=f"you may put a permanent card with mana value {amount} or less onto the battlefield",
+                source=source,
+                source_id=source_id,
+                amount=1,
+                exact=False,
+                cards=tuple(state.id for state in candidates),
+            )
+        )
+        assert isinstance(answer, tuple)
+        for state in candidates:
+            if state.id in set(answer):
+                game.put_onto_battlefield(state, player.username)
+
+    return run

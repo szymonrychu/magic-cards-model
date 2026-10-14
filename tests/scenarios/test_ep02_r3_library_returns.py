@@ -16,6 +16,7 @@ Rules, each read in full with `mise run rules:find` in this session:
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.decisions import DecisionKind
 from magic_cards_model.models import Zone
 
 from .harness import PlayedScenario, Scenario
@@ -399,3 +400,87 @@ def test_thwart_the_grave_costs_one_less_per_party_member():
     bears = next(s for s in scenario.player("alice").graveyard if s.name == "Grizzly Bears")
     casting.choose_targets([bears])
     assert str(casting.total_cost.mana) == "{2}{B}{B}"
+
+
+# --------------------------------------------------------------------------
+# Venom, Lethal Protector: "Whenever Venom attacks, you may sacrifice another
+# creature. If you do, draw X cards, then you may put a permanent card with
+# mana value X or less from your hand onto the battlefield, where X is the
+# sacrificed creature's mana value."
+# --------------------------------------------------------------------------
+
+EDDIE = "Eddie Brock // Venom, Lethal Protector"
+
+
+def _venom(*, hand=(), library=("Island",) * 8, battlefield=("Grizzly Bears",)):
+    scenario = _board(
+        hand=hand, battlefield=[EDDIE, *battlefield], library=library
+    )
+    scenario.find(EDDIE, Zone.BATTLEFIELD, "alice").transform()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    return scenario
+
+
+def _attack(scenario, *, sacrifice=None, put=None):
+    venom = next(s for s in scenario.game.battlefield if s.name == "Venom, Lethal Protector")
+    scenario.will_take_the_may(sacrifice is not None, username="alice")
+    if sacrifice is not None:
+        scenario.will_choose_cards(sacrifice, username="alice")
+    if put is not None:
+        scenario.will_choose_cards(put, username="alice")
+    scenario.attack_with(venom)
+    _resolve_all(scenario)
+
+
+def _hand_card(scenario, name):
+    return next(s for s in scenario.player("alice").hand if s.name == name)
+
+
+def test_venom_sacrifice_draws_x_then_puts_a_card_with_mana_value_x_or_less():
+    scenario = _venom(hand=["Hill Giant", "Elite Vanguard", "Lightning Bolt"])
+    bears = scenario.creature("Grizzly Bears")
+    vanguard = _hand_card(scenario, "Elite Vanguard")
+    _attack(scenario, sacrifice=bears, put=vanguard)
+    assert bears.zone is Zone.GRAVEYARD
+    assert vanguard.zone is Zone.BATTLEFIELD
+    assert len(scenario.player("alice").hand) == 2 + 2, "Giant, Bolt, and the two drawn Islands"
+    assert _hand_card(scenario, "Hill Giant").zone is Zone.HAND, "mana value 3 exceeds X=2"
+
+
+def test_venom_does_not_offer_cards_above_x_or_noncards_of_the_wrong_kind():
+    scenario = _venom(hand=["Hill Giant", "Lightning Bolt"])
+    bears = scenario.creature("Grizzly Bears")
+    _attack(scenario, sacrifice=bears)
+    offered = [
+        q
+        for q in scenario.questions_asked()
+        if q.kind is DecisionKind.CHOOSE_CARDS and "mana value 2 or less" in q.prompt
+    ]
+    assert len(offered) == 1
+    names = sorted(s.name for s in scenario.all_card_states() if s.id in set(offered[0].cards))
+    assert names == ["Island", "Island"], "neither the Giant (3) nor the Bolt (not a permanent)"
+
+
+def test_venom_may_put_a_card_it_just_drew():
+    scenario = _venom(library=["Elite Vanguard", "Island", "Island"])
+    bears = scenario.creature("Grizzly Bears")
+    vanguard = next(s for s in scenario.player("alice").library if s.name == "Elite Vanguard")
+    _attack(scenario, sacrifice=bears, put=vanguard)
+    assert vanguard.zone is Zone.BATTLEFIELD
+
+
+def test_venom_declining_the_sacrifice_draws_nothing():
+    scenario = _venom(hand=["Hill Giant"])
+    bears = scenario.creature("Grizzly Bears")
+    _attack(scenario, sacrifice=None)
+    assert bears.zone is Zone.BATTLEFIELD
+    assert len(scenario.player("alice").hand) == 1
+
+
+def test_venom_sacrificing_a_mana_value_zero_creature_draws_none_and_may_put_a_land():
+    scenario = _venom(hand=["Forest", "Hill Giant"], battlefield=["Memnite"])
+    memnite = scenario.creature("Memnite")
+    forest = _hand_card(scenario, "Forest")
+    _attack(scenario, sacrifice=memnite, put=forest)
+    assert forest.zone is Zone.BATTLEFIELD
+    assert len(scenario.player("alice").hand) == 1
