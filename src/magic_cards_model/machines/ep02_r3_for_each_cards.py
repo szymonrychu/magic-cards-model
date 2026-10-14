@@ -1,19 +1,29 @@
-"""EP-02 R3 T7: "for each <thing>" and "equal to the number of <things>" counts
-that are not a permanent or card in a zone: a per-turn history, a cast record,
-the Curses attached to a player, the distinct mana values on a board.
+"""EP-02 R3: the one reader of the R3 count terms - "for each <thing>", "the
+number of <things>" and "equal to <expr>" counts read off the players, the
+turn's history, a cast record, or what is attached to an object or a player.
 
-`for_each_cards_counts` is the one reader `amounts._for_each_multiplier` asks
-first; `number_of_cards_counts` is the `(game, controller) -> int` twin
-`amounts.count_expression` asks first. Both only chain the sub-readers listed
-in `_FOR_EACH` / `_NUMBER_OF`, each a `functools.cache`d pure function of the
-phrase that returns `None` for a phrase it does not read - so a phrase
-travels the chain once and the answer is remembered (the classify budget).
+Three entry points, each a `functools.cache`d pure function of the phrase that
+returns `None` for a phrase it does not read:
+
+- `count_term(phrase)`: a `(game, controller) -> int` count that needs no
+  source object, the first rung `amounts.count_expression` asks;
+- `amount_term(phrase)`: a `(game, controller, source, x) -> int` term, the
+  last rung of `amounts._amount_term` - every `count_term` count plus the terms
+  that read the object the ability is on;
+- `for_each_count(phrase)`: a `(game, controller, source_id) -> int` "for each
+  <phrase>" tail, the last rung of `amounts._for_each_multiplier` - the
+  for-each-only wordings, else the phrase read as "the number of <phrase>"
+  through `amounts.amount_expression`.
+
+Every sub-reader below returns a `_Term` (the reader and whether it needs the
+source), so one parse of a wording serves all three entry points. Each count is
+taken once, when the instruction is applied (CR 608.2h).
 """
 
 import re
 from collections.abc import Callable
 from functools import cache
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 from uuid import UUID
 
 from ..models.card import Type
@@ -30,43 +40,38 @@ if TYPE_CHECKING:
 ForEach = Callable[["Game", str, "str | None"], int]
 #: `(game, controller) -> int`: `amounts.count_expression`'s form.
 NumberOf = Callable[["Game", str], int]
+#: `(game, controller, source, x) -> int`: `amounts._amount_term`'s form.
+TermReader = Callable[["Game", str, "CardState | None", int], int]
 
 
-_DIED_SUFFIX = " that died this turn"
+class _Term(NamedTuple):
+    read: TermReader
+    needs_source: bool
 
 
-def _died_this_turn_each(phrase: str) -> ForEach | None:
-    """ "for each creature that died this turn" / "for each Zubera that died
-    this turn": the same count as "the number of creatures that died this
-    turn" (`amounts._COUNT_DIED_THIS_TURN_RE`, read off the turn's
-    "to_graveyard" history, CR 700.4), taken once as the effect applies
-    (CR 608.2h)."""
-    if not phrase.lower().endswith(_DIED_SUFFIX):
-        return None
-    from .effects.amounts import count_expression
+def _sourceless(count: NumberOf) -> _Term:
+    return _Term(lambda game, controller, _source, _x: count(game, controller), False)
 
-    head = phrase[: -len(_DIED_SUFFIX)]
-    counted = count_expression(f"the number of {head}{_DIED_SUFFIX}") or count_expression(
-        f"the number of {head}s{_DIED_SUFFIX}"
-    )
-    if counted is None:
-        return None
-    return lambda game, controller, _source_id: counted(game, controller)
+
+#: "the number of" / "the amount of", optional: a "for each" tail is the bare noun phrase.
+_N = r"^(?:the )?(?:(?:number|amount) of )?"
+
+
+def _norm(phrase: str) -> str:
+    return " ".join(phrase.replace("\u2019", "'").strip().rstrip(".").split())
 
 
 # --------------------------------------------------------------------------
-# Who "target opponent" / "that player" / "they" names while it resolves
+# Who "that player" names while a trigger resolves
 # --------------------------------------------------------------------------
 
 
-def _event_player(game: "Game", controller: str) -> str:
+def _event_player(game: "Game") -> str | None:
     """The player the resolving trigger's event concerns (CR 603.2): "that
-    player" of "At the beginning of enchanted player's upkeep ... that player",
-    else the controller (CR 109.5)."""
+    player" of "At the beginning of enchanted player's upkeep ... that player"
+    or "deals combat damage to a player ... that player controls"."""
     event = getattr(game.resolving, "event", None)
-    if event is not None and event.player is not None:
-        return event.player
-    return controller
+    return None if event is None else event.player
 
 
 def _targeted_player(game: "Game", controller: str) -> str:
@@ -77,23 +82,132 @@ def _targeted_player(game: "Game", controller: str) -> str:
 
 
 # --------------------------------------------------------------------------
-# "cards target opponent discarded this turn" (CR 701.9a)
+# The players: life total, speed, opponents, players (CR 119.1, 702.179f, 102.1, 102.2)
 # --------------------------------------------------------------------------
 
+_PLAYERS_RE = re.compile(
+    r"^(?:the )?number of (?:(?P<opponents>opponents)(?: you have)?|players)$", re.IGNORECASE
+)
+_OPPONENTS_WHO_CONTROL_RE = re.compile(
+    r"^(?:the )?(?:number|amount) of opponents who control (?:an? |)(?P<what>.+)$", re.IGNORECASE
+)
+
+
+def _player_level(text: str) -> _Term | None:
+    lowered = text.lower()
+    if lowered == "your life total":
+        return _sourceless(lambda game, controller: game.player(controller).life)
+    if lowered == "your speed":
+        # CR 702.179f: a player with no speed has speed 0 for an effect that refers to it.
+        return _sourceless(lambda game, controller: game.player(controller).speed or 0)
+    if (players := _PLAYERS_RE.fullmatch(text)) is not None:
+        opponents_only = players.group("opponents") is not None
+        return _sourceless(
+            lambda game, controller: sum(
+                1
+                for player in game.players_in_game
+                if not opponents_only or player.username != controller
+            )
+        )
+    if "opponents who control" in lowered and (who := _OPPONENTS_WHO_CONTROL_RE.fullmatch(text)):
+        return _opponents_who_control(who.group("what").strip())
+    return None
+
+
+def _opponents_who_control(what: str) -> _Term | None:
+    """Each opponent who controls at least one permanent matching the description
+    counts once (CR 102.2)."""
+    from .targeting import permanent_description
+
+    requirement = permanent_description(what)
+    if requirement is None:
+        return None
+
+    def count(game: "Game", controller: str) -> int:
+        board = game.computed_board()
+        return sum(
+            1
+            for opponent in game.players_in_game
+            if opponent.username != controller
+            and any(
+                board.of(permanent).controller == opponent.username
+                and not requirement.rejects(permanent, controller, game)
+                for permanent in game.battlefield
+            )
+        )
+
+    return _sourceless(count)
+
+
+# --------------------------------------------------------------------------
+# The turn's history: died (CR 700.4), entered (CR 603.6a), discarded (CR 701.9a)
+# --------------------------------------------------------------------------
+
+_DIED_RE = re.compile(_N + r"(?P<what>.+?) that died this turn$", re.IGNORECASE)
+_ENTERED_RE = re.compile(
+    _N + r"(?P<what>.+?) that entered the battlefield under your control this turn$",
+    re.IGNORECASE,
+)
 _DISCARDED_RE = re.compile(
-    r"^(?:the )?(?:number of )?cards? (?P<who>target opponent|target player|that player|an opponent"
+    _N + r"cards? (?P<who>target opponent|target player|that player|an opponent"
     r"|each opponent|they) (?:has |have )?discarded this turn$",
     re.IGNORECASE,
 )
 
 
-def _cards_discarded_this_turn(phrase: str) -> NumberOf | None:
+def _ledger(text: str) -> _Term | None:
+    """The turn ledger's "to_graveyard" (a creature that died, CR 700.4, whoever
+    controlled it) or "entered" (under the controller's control, CR 603.6a)
+    entries whose object, as it last existed (CR 603.10a), matches the
+    description; one that has since left still counts. "Nontoken" is read off
+    the entry's characteristics (CR 111.1)."""
+    lowered = text.lower()
+    if not lowered.endswith("this turn"):
+        return None
+    if (entered := _ENTERED_RE.fullmatch(text)) is not None:
+        return _ledger_count("entered", entered.group("what"), yours_only=True)
+    if (died := _DIED_RE.fullmatch(text)) is not None:
+        return _ledger_count("to_graveyard", died.group("what"), yours_only=False)
+    return None
+
+
+def _ledger_count(kind: str, what: str, *, yours_only: bool) -> _Term | None:
+    from .conditions.history import _quality
+
+    token_filter = None
+    words = [word for word in what.split() if word]
+    for index, word in enumerate(words):
+        if word.lower() in ("nontoken", "non-token"):
+            token_filter, words = False, words[:index] + words[index + 1 :]
+            break
+    quality = _quality(" ".join(words))
+    if quality is None:
+        return None
+
+    def count(game: "Game", controller: str) -> int:
+        return sum(
+            1
+            for entry in game.turn_history
+            if entry.kind == kind
+            and (not yours_only or entry.player == controller)
+            and quality(entry)
+            and (
+                token_filter is None
+                or (entry.characteristics is not None)
+                and entry.characteristics.is_token is token_filter
+            )
+        )
+
+    return _sourceless(count)
+
+
+def _cards_discarded_this_turn(text: str) -> _Term | None:
     """The cards a player other than "you" discarded this turn
     (`Game.cards_discarded_this_turn`, cycling counted: CR 702.29a), the
     player the printed words name; "each opponent" is the sum over them."""
     if (
-        "discarded this turn" not in phrase.lower()
-        or (match := _DISCARDED_RE.fullmatch(phrase)) is None
+        "discarded this turn" not in text.lower()
+        or (match := _DISCARDED_RE.fullmatch(text)) is None
     ):
         return None
     who = match.group("who").lower()
@@ -105,64 +219,272 @@ def _cards_discarded_this_turn(phrase: str) -> NumberOf | None:
                 ledger.get(p.username, 0) for p in game.players_in_game if p.username != controller
             )
         if who in ("that player", "they"):
-            return ledger.get(_event_player(game, controller), 0)
+            return ledger.get(_event_player(game) or controller, 0)
         return ledger.get(_targeted_player(game, controller), 0)
 
-    return count
+    return _sourceless(count)
 
 
 # --------------------------------------------------------------------------
-# "Goblins that entered the battlefield under your control this turn"
+# The board: distinct mana values (CR 202.3), names (CR 201.2), unlocked doors (CR 709.5c)
 # --------------------------------------------------------------------------
 
-_ENTERED_RE = re.compile(
-    r"^(?:the )?(?:number of )?(?P<quality>[a-z][a-z ,'-]*?) that entered the battlefield "
-    r"under your control this turn$",
+_DIFFERENT_MV_RE = re.compile(
+    _N + r"different mana values? among (?P<quality>[a-z][a-z ,'-]*?) you control$",
     re.IGNORECASE,
+)
+_DIFFERENTLY_NAMED_RE = re.compile(
+    r"^(?:the )?(?:number|amount) of differently named creature tokens? you control$",
+    re.IGNORECASE,
+)
+_UNLOCKED_DOORS_RE = re.compile(
+    r"^(?:the )?(?:number|amount) of unlocked doors among Rooms you control$", re.IGNORECASE
 )
 
 
-def _entered_under_your_control(phrase: str) -> NumberOf | None:
-    """The permanents of a description that entered the battlefield under the
-    controller's control this turn (CR 603.6a: entering is a fact of the turn,
-    the turn's "entered" history keeps the object as it entered), counting the
-    ones that have since left."""
-    if " that entered the battlefield under your control this turn" not in phrase.lower():
-        return None
-    match = _ENTERED_RE.fullmatch(phrase)
-    if match is None:
-        return None
-    from .conditions.history import _quality
+def _board(text: str) -> _Term | None:
+    lowered = text.lower()
+    if "different mana value" in lowered and (mv := _DIFFERENT_MV_RE.fullmatch(text)):
+        return _different_mana_values(mv.group("quality"))
+    if "differently named" in lowered and _DIFFERENTLY_NAMED_RE.fullmatch(text):
+        return _sourceless(_differently_named_tokens)
+    if "unlocked doors" in lowered and _UNLOCKED_DOORS_RE.fullmatch(text):
+        return _sourceless(_unlocked_doors)
+    return None
 
-    quality = _quality(match.group("quality"))
+
+def _different_mana_values(description: str) -> _Term | None:
+    """How many distinct mana values the permanents of a description the
+    controller controls have, off the computed board (CR 613.5); a permanent
+    with no mana cost is mana value 0 (CR 202.3a)."""
+    from ..models.game import _permanent_quality
+
+    quality = _permanent_quality(description)
     if quality is None:
         return None
-    return lambda game, controller: sum(
-        1
-        for entry in game.turn_history
-        if entry.kind == "entered" and entry.player == controller and quality(entry)
+
+    def count(game: "Game", controller: str) -> int:
+        board = game.computed_board()
+        return len(
+            {
+                int(chars.mana_value)
+                for permanent in game.battlefield
+                if (chars := board.of(permanent)).controller == controller and quality(chars)
+            }
+        )
+
+    return _sourceless(count)
+
+
+def _differently_named_tokens(game: "Game", controller: str) -> int:
+    board = game.computed_board()
+    return len(
+        {
+            chars.name
+            for permanent in game.battlefield
+            if (chars := board.of(permanent)).controller == controller
+            and chars.is_token
+            and Type.CREATURE in chars.types
+        }
+    )
+
+
+def _unlocked_doors(game: "Game", controller: str) -> int:
+    """CR 709.5c: each half of a Room permanent you control that is unlocked."""
+    board = game.computed_board()
+    return sum(
+        len(permanent.unlocked_doors)
+        for permanent in game.battlefield
+        if board.of(permanent).controller == controller
+        and "room" in {subtype.lower() for subtype in board.of(permanent).subtypes}
     )
 
 
 # --------------------------------------------------------------------------
-# "different mana value among nonland permanents you control" (CR 202.3)
+# A cast record: times kicked (CR 702.33d), mana spent (CR 601.2h)
 # --------------------------------------------------------------------------
 
-_DIFFERENT_MV_RE = re.compile(
-    r"^(?:the )?(?:number of )?different mana values? among (?P<quality>[a-z][a-z ,'-]*?) "
-    r"you control$",
+_TIMES_KICKED_RE = re.compile(r"^(?:[Tt]he )?(?:number of )?times? (?P<whose>.+?) was kicked$")
+#: Who "was kicked" names: the source by pronoun, "this <type>" or its own name
+#: ("time Spell Contortion was kicked"), or the spell a cast trigger names.
+_KICKED_SOURCE_RE = re.compile(
+    r"^(?:it|this (?:creature|permanent|artifact|enchantment|spell)|[A-Z][\w',-]*(?: [\w',-]+)*)$"
+)
+_MANA_SPENT_THAT_SPELL_RE = re.compile(
+    r"^(?:the )?(?:number|amount) of mana spent to cast (?:that|the) spell$", re.IGNORECASE
+)
+
+
+def _triggering_spell_record(game: "Game") -> Any:
+    """The cast record of the spell a resolving cast trigger names, kept for a
+    spell that has since resolved or been countered (CR 608.2h)."""
+    event = getattr(game.resolving, "event", None)
+    if event is None or event.subject_id is None:
+        return None
+    spell = game.find_by_id(event.subject_id)
+    record = game.cast_record_of(spell) if isinstance(spell, CardState) else None
+    if record is None and event.subject_stamp is not None:
+        record = game.cast_record_as_last_known(event.subject_stamp)
+    return record
+
+
+def _cast_record(text: str) -> _Term | None:
+    """ "time it was kicked" / "the number of times this creature was kicked":
+    CR 702.33d's count off the cast record of the spell the source was (an
+    ability of the permanent reads it, CR 400.7d), none when it was never cast;
+    "... that spell was kicked" and "the amount of mana spent to cast that
+    spell" (CR 601.2h) read the spell a cast trigger names."""
+    lowered = text.lower()
+    if "kicked" in lowered and (kicked := _TIMES_KICKED_RE.fullmatch(text)) is not None:
+        if kicked.group("whose") == "that spell":
+            return _sourceless(
+                lambda game, _controller: getattr(_triggering_spell_record(game), "kicked", 0)
+            )
+        if _KICKED_SOURCE_RE.fullmatch(kicked.group("whose")) is None:
+            return None
+
+        def times_kicked(game: "Game", _controller: str, source: CardState | None, _x: int) -> int:
+            record = None if source is None else game.cast_record_of(source)
+            return 0 if record is None else record.kicked
+
+        return _Term(times_kicked, True)
+    if "mana spent" in lowered and _MANA_SPENT_THAT_SPELL_RE.fullmatch(text):
+        return _sourceless(
+            lambda game, _controller: getattr(_triggering_spell_record(game), "total_mana_spent", 0)
+        )
+    return None
+
+
+# --------------------------------------------------------------------------
+# What is attached to an object or a player (CR 301.5a, CR 303.4m)
+# --------------------------------------------------------------------------
+
+_ATTACHED_RE = re.compile(
+    _N + r"(?P<kinds>[a-z ,/]+?)(?P<past> you controlled that (?:was|were))? attached to "
+    r"(?P<host>.+)$",
+    re.IGNORECASE,
+)
+_KIND_SPLIT_RE = re.compile(
+    r"\s*(?:,\s*(?:and/or\s+|or\s+|and\s+)?|\s+and/or\s+|\s+or\s+|\s+and\s+)", re.IGNORECASE
+)
+#: The player words of a host: "them" is the player the count is asked for.
+_PLAYER_HOSTS = ("them", "that player", "you", "enchanted player")
+_OBJECT_HOST_RE = re.compile(r"^(?:it|him|her|this [a-z]+|[A-Z][\w',-]*(?: [A-Z][\w',-]*)*)$")
+
+
+class Attached(NamedTuple):
+    """A parsed "<subtypes> [you controlled that was] attached to <host>"."""
+
+    subtypes: tuple[str, ...]
+    """The subtypes counted, lowercased and singular ("aura", "equipment", "curse")."""
+    host: str
+    """The host words as printed ("it", "this creature", "Kellan", "that player")."""
+    past: bool
+    """ "you controlled that was attached to it": the attachments the host had as it
+    last existed (CR 603.10a)."""
+
+
+def attached_phrase(text: str) -> Attached | None:
+    """The one reading of the attached-count wording, shared by the static pump's
+    layer `Count` (`ep02_r3_static_pumps`) and the resolution-time reader below.
+    `None` unless every counted word is a subtype (Aura, Equipment, Curse, ...)."""
+    from ..data.subtypes import subtype_vocabulary
+
+    match = _ATTACHED_RE.fullmatch(_norm(text))
+    if match is None:
+        return None
+    words = [word.lower() for word in _KIND_SPLIT_RE.split(match.group("kinds").strip()) if word]
+    vocabulary = subtype_vocabulary()
+    subtypes = []
+    for word in words:
+        singular = word if word in vocabulary else word.removesuffix("s")
+        if singular not in vocabulary:
+            return None
+        subtypes.append(singular)
+    if not subtypes:
+        return None
+    return Attached(tuple(sorted(set(subtypes))), match.group("host").strip(), bool(match["past"]))
+
+
+def _attached(text: str) -> _Term | None:
+    """How many permanents with one of the subtypes are attached to the host:
+    the object the ability is on (CR 301.5a), a player an Aura enchants
+    (CR 303.4m), or - "you controlled that was attached to it" - the dying
+    permanent as it last existed (CR 603.10a), `CardState.last_known_attachments`."""
+    if " attached to " not in text.lower() or (phrase := attached_phrase(text)) is None:
+        return None
+    wanted = set(phrase.subtypes)
+    host = phrase.host
+
+    def matches(subtypes: Any) -> bool:
+        return any(subtype.lower() in wanted for subtype in subtypes)
+
+    if phrase.past:
+        if host.lower() != "it":
+            return None
+
+        def had(game: "Game", controller: str) -> int:
+            event = getattr(game.resolving, "event", None)
+            dead = (
+                None
+                if event is None or event.subject_id is None
+                else game.find_by_id(event.subject_id)
+            )
+            if not isinstance(dead, CardState):
+                return 0
+            return sum(
+                1
+                for snapshot in dead.last_known_attachments
+                if snapshot.controller == controller and matches(snapshot.subtypes)
+            )
+
+        return _sourceless(had)
+    if host.lower() in _PLAYER_HOSTS:
+        that_player = host.lower() == "that player"
+
+        def on_player(game: "Game", controller: str) -> int:
+            player = (_event_player(game) or controller) if that_player else controller
+            board = game.computed_board()
+            return sum(
+                1
+                for permanent in game.battlefield
+                if permanent.attachment is not None
+                and permanent.attachment.username == player
+                and matches(board.of(permanent).subtypes)
+            )
+
+        return _sourceless(on_player)
+    if _OBJECT_HOST_RE.fullmatch(host) is None:
+        return None
+
+    def on_object(game: "Game", _controller: str, source: CardState | None, _x: int) -> int:
+        if source is None:
+            return 0
+        board = game.computed_board()
+        return sum(
+            1
+            for permanent in game.battlefield
+            if permanent.attached_to == source.id and matches(board.of(permanent).subtypes)
+        )
+
+    return _Term(on_object, True)
+
+
+_YOURS_ON_A_CREATURE_RE = re.compile(
+    _N + r"(?P<quality>[a-z][a-z ,'-]*?) you control that(?:'s| is| are) attached to a creature$",
     re.IGNORECASE,
 )
 
 
-def _different_mana_values_among_permanents(phrase: str) -> NumberOf | None:
-    """How many distinct mana values the permanents of a description the
-    controller controls have, off the computed board (CR 613.5); a permanent
-    with no mana cost is mana value 0 (CR 202.3a)."""
-    if (
-        "different mana value" not in phrase.lower()
-        or (match := _DIFFERENT_MV_RE.fullmatch(phrase)) is None
-    ):
+def _yours_attached_to_a_creature(text: str) -> _Term | None:
+    """ "Aura you control that's attached to a creature" (Sage's Reverie): the
+    controller's permanents of the description attached to a creature (CR 303.4,
+    CR 301.5), off the computed board (CR 613.5) - an Aura that has just entered
+    attached to one counts itself."""
+    if "attached to a creature" not in text.lower():
+        return None
+    match = _YOURS_ON_A_CREATURE_RE.fullmatch(text)
+    if match is None:
         return None
     from ..models.game import _permanent_quality
 
@@ -172,164 +494,49 @@ def _different_mana_values_among_permanents(phrase: str) -> NumberOf | None:
 
     def count(game: "Game", controller: str) -> int:
         board = game.computed_board()
-        values = set()
+        total = 0
         for permanent in game.battlefield:
             chars = board.of(permanent)
-            if chars.controller == controller and quality(chars):
-                values.add(int(chars.mana_value))
-        return len(values)
+            if chars.controller != controller or not quality(chars):
+                continue
+            host = None if permanent.attached_to is None else game.find_by_id(permanent.attached_to)
+            if (
+                isinstance(host, CardState)
+                and host.zone is Zone.BATTLEFIELD
+                and Type.CREATURE in board.of(host).types
+            ):
+                total += 1
+        return total
 
-    return count
-
-
-# --------------------------------------------------------------------------
-# Multikicker: "each time it was kicked", "the number of times that spell was kicked"
-# --------------------------------------------------------------------------
-
-
-def _times_kicked_each(phrase: str) -> ForEach | None:
-    """ "for each time it was kicked" (Bloodhusk Ritualist): CR 702.33d's count
-    off the cast record of the source permanent, which CR 400.7d lets an
-    ability of the permanent read."""
-    if phrase.lower() not in ("time it was kicked", "time this creature was kicked"):
-        return None
-
-    def count(game: "Game", _controller: str, source_id: str | None) -> int:
-        source = None if source_id is None else game.find_by_id(UUID(source_id))
-        record = game.cast_record_of(source) if isinstance(source, CardState) else None
-        return record.kicked if record is not None else 0
-
-    return count
-
-
-_SPELL_KICKED_RE = re.compile(r"^(?:the )?number of times that spell was kicked$", re.IGNORECASE)
-
-
-def _times_that_spell_was_kicked(phrase: str) -> NumberOf | None:
-    """ "the number of times that spell was kicked" (a cast trigger's spell,
-    CR 702.33d), off the record of the spell the cast event names - kept for a
-    spell that has since resolved or been countered (CR 608.2h)."""
-    if "was kicked" not in phrase.lower() or _SPELL_KICKED_RE.fullmatch(phrase) is None:
-        return None
-
-    def count(game: "Game", _controller: str) -> int:
-        event = getattr(game.resolving, "event", None)
-        if event is None or event.subject_id is None:
-            return 0
-        spell = game.find_by_id(event.subject_id)
-        record = game.cast_record_of(spell) if isinstance(spell, CardState) else None
-        if record is None and event.subject_stamp is not None:
-            record = game.cast_record_as_last_known(event.subject_stamp)
-        return record.kicked if record is not None else 0
-
-    return count
+    return _sourceless(count)
 
 
 # --------------------------------------------------------------------------
-# "the number of Curses attached to that player" (CR 303.4m, CR 701.3a)
-# --------------------------------------------------------------------------
-
-_CURSES_RE = re.compile(
-    r"^(?:the )?number of (?P<kind>[A-Za-z]+?)s? attached to (?P<who>them|that player|you|"
-    r"enchanted player)$",
-    re.IGNORECASE,
-)
-
-
-def _auras_attached_to_player(phrase: str) -> NumberOf | None:
-    """How many permanents of a subtype ("Curses") are attached to a player: an
-    Aura enchanting a player is attached to it (CR 303.4m, CR 701.3a). "Them"
-    is the player the reader is asked for (the one an enclosing "deals damage
-    to that player" counts for); "that player" the resolving trigger's."""
-    if " attached to " not in phrase.lower() or (match := _CURSES_RE.fullmatch(phrase)) is None:
-        return None
-    kind = match.group("kind").lower()
-    who = match.group("who").lower()
-
-    def count(game: "Game", controller: str) -> int:
-        player = _event_player(game, controller) if who == "that player" else controller
-        board = game.computed_board()
-        return sum(
-            1
-            for permanent in game.battlefield
-            if permanent.attachment is not None
-            and permanent.attachment.username == player
-            and any(subtype.lower() == kind for subtype in board.of(permanent).subtypes)
-        )
-
-    return count
-
-
-# --------------------------------------------------------------------------
-# "for each Aura you controlled that was attached to it" (CR 603.10a)
-# --------------------------------------------------------------------------
-
-_ATTACHED_TO_IT_EACH_RE = re.compile(
-    r"^(?P<kind>[a-z]+) you controlled that was attached to it$", re.IGNORECASE
-)
-
-
-def _attachments_it_had_each(phrase: str) -> ForEach | None:
-    """ "for each Aura you controlled that was attached to it" (a dies trigger,
-    Hateful Eidolon): the Auras the dying permanent had as it last existed on
-    the battlefield (CR 603.10a), `CardState.last_known_attachments`, that the
-    controller controlled."""
-    if (
-        " that was attached to it" not in phrase.lower()
-        or (match := _ATTACHED_TO_IT_EACH_RE.fullmatch(phrase)) is None
-    ):
-        return None
-    kind = match.group("kind").lower()
-
-    def count(game: "Game", controller: str, _source_id: str | None) -> int:
-        event = getattr(game.resolving, "event", None)
-        if event is None or event.subject_id is None:
-            return 0
-        dead = game.find_by_id(event.subject_id)
-        if not isinstance(dead, CardState):
-            return 0
-        return sum(
-            1
-            for snapshot in dead.last_known_attachments
-            if snapshot.controller == controller
-            and any(subtype.lower() == kind for subtype in snapshot.subtypes)
-        )
-
-    return count
-
-
-# --------------------------------------------------------------------------
-# "the number of red mana symbols in the sacrificed creature's mana cost" (CR 107.4e)
+# Mana symbols in a sacrificed card's cost (CR 107.4e), other attackers (CR 508.4)
 # --------------------------------------------------------------------------
 
 _SACRIFICED_SYMBOLS_RE = re.compile(
-    r"^(?:the )?number of (?P<color>white|blue|black|red|green) mana symbols? in "
+    _N + r"(?P<color>white|blue|black|red|green) mana symbols? in "
     r"the sacrificed (?:creature|permanent)'s mana cost$",
     re.IGNORECASE,
 )
+_OTHER_ATTACKERS_RE = re.compile(
+    r"^(?:the )?(?:number|amount) of other attacking creatures$", re.IGNORECASE
+)
 
 
-def _mana_symbols_in_sacrificed_cost(phrase: str) -> NumberOf | None:
+def _mana_symbols_in_sacrificed_cost(text: str) -> _Term | None:
     """How many mana symbols of one color the mana cost of what the resolving
     object's cost sacrificed has (Fiery Bombardment's Chroma ability). A
     hybrid symbol is also a symbol of each of its colors (CR 107.4e). The
     sacrificed card is read where the cost left it (CR 608.2h); a token has no
     mana cost to count."""
-    if (
-        "mana cost" not in phrase.lower()
-        or (match := _SACRIFICED_SYMBOLS_RE.fullmatch(phrase)) is None
-    ):
+    if "mana cost" not in text.lower() or (match := _SACRIFICED_SYMBOLS_RE.fullmatch(text)) is None:
         return None
     from ..models.card import Color
     from ..models.mana import ManaCost
 
-    color = {
-        "white": Color.WHITE,
-        "blue": Color.BLUE,
-        "black": Color.BLACK,
-        "red": Color.RED,
-        "green": Color.GREEN,
-    }[match.group("color").lower()]
+    color = Color[match.group("color").upper()]
 
     def count(game: "Game", _controller: str) -> int:
         resolving = game.resolving
@@ -346,50 +553,131 @@ def _mana_symbols_in_sacrificed_cost(phrase: str) -> NumberOf | None:
                 )
         return total
 
-    return count
+    return _sourceless(count)
 
 
-_FOR_EACH_READERS = (
-    _died_this_turn_each,
-    _times_kicked_each,
-    _attachments_it_had_each,
-)
-_NUMBER_OF_READERS = (
+def _other_attackers(text: str) -> _Term | None:
+    """Every attacking creature but the source (CR 508.4: a creature put onto
+    the battlefield attacking is one as well)."""
+    if "other attacking" not in text.lower() or _OTHER_ATTACKERS_RE.fullmatch(text) is None:
+        return None
+
+    def count(game: "Game", _controller: str, source: CardState | None, _x: int) -> int:
+        found = (game.find_by_id(attack.attacker_id) for attack in game.combat.attacks)
+        return sum(
+            1
+            for creature in found
+            if isinstance(creature, CardState)
+            and creature.zone is Zone.BATTLEFIELD
+            and (source is None or creature.id != source.id)
+        )
+
+    return _Term(count, True)
+
+
+_TERMS = (
+    _player_level,
+    _ledger,
     _cards_discarded_this_turn,
-    _entered_under_your_control,
-    _different_mana_values_among_permanents,
-    _times_that_spell_was_kicked,
-    _auras_attached_to_player,
+    _board,
+    _cast_record,
+    _yours_attached_to_a_creature,
+    _attached,
     _mana_symbols_in_sacrificed_cost,
+    _other_attackers,
 )
 
 
-def _as_for_each(reader: NumberOf) -> ForEach:
-    return lambda game, controller, _source_id: reader(game, controller)
-
-
 @cache
-def for_each_cards_counts(phrase: str) -> ForEach | None:
-    """The count of "<effect> for each <phrase>", or `None`."""
-    text = " ".join(phrase.split())
-    for reader in _FOR_EACH_READERS:
-        if (count := reader(text)) is not None:
-            return count
-    # The same description counted as "the number of <description>".
-    for number_reader in _NUMBER_OF_READERS:
-        if (counted := number_reader(text) or number_reader(f"the number of {text}")) is not None:
-            return _as_for_each(counted)
+def _term(phrase: str) -> _Term | None:
+    text = _norm(phrase)
+    for reader in _TERMS:
+        if (term := reader(text)) is not None:
+            return term
     return None
 
 
 @cache
-def number_of_cards_counts(phrase: str) -> NumberOf | None:
-    """The count of "the number of <phrase>" / "equal to <phrase>", or `None`."""
-    text = " ".join(phrase.split())
-    for reader in _NUMBER_OF_READERS:
-        if (count := reader(text)) is not None:
-            return count
+def count_term(phrase: str) -> NumberOf | None:
+    """The count of "the number of <phrase>" / "equal to <phrase>" that needs no
+    source object, or `None`."""
+    term = _term(phrase)
+    if term is None or term.needs_source:
+        return None
+    read = term.read
+    return lambda game, controller: read(game, controller, None, 0)
+
+
+@cache
+def amount_term(phrase: str) -> TermReader | None:
+    """One `amounts.amount_expression` term this module reads, or `None`."""
+    term = _term(phrase)
+    return None if term is None else term.read
+
+
+# --------------------------------------------------------------------------
+# "for each <phrase>"
+# --------------------------------------------------------------------------
+
+_EACH_PLAYER_RE = re.compile(r"^players?$", re.IGNORECASE)
+_ATTACKING_YOU_RE = re.compile(r"^creatures? attacking you$", re.IGNORECASE)
+_THAT_PLAYER_CONTROLS_RE = re.compile(r"^(?P<what>.+?) that player controls$", re.IGNORECASE)
+
+
+def _for_each_only(text: str) -> ForEach | None:
+    """The wordings only a "for each" tail prints: "player" (CR 102.1), "creature
+    attacking you" (CR 506.2: the attacks whose defender is the controller, not a
+    planeswalker or battle they control) and "<quality> that player controls"
+    (the trigger event's player, CR 603.2)."""
+    lowered = text.lower()
+    if _EACH_PLAYER_RE.fullmatch(text):
+        return lambda game, _controller, _source: len(game.players_in_game)
+    if "attacking you" in lowered and _ATTACKING_YOU_RE.fullmatch(text):
+        return lambda game, controller, _source: sum(
+            1
+            for attack in game.combat.attacks
+            if attack.defender.username == controller and attack.defender.card_id is None
+        )
+    if "that player controls" in lowered and (match := _THAT_PLAYER_CONTROLS_RE.fullmatch(text)):
+        from .effects.amounts import _for_each_multiplier
+
+        counted = _for_each_multiplier(f"{match.group('what')} you control")
+        if counted is None:
+            return None
+
+        def controlled_by_that_player(game: "Game", _controller: str, source: str | None) -> int:
+            player = _event_player(game)
+            return 0 if player is None else counted(game, player, source)
+
+        return controlled_by_that_player
     return None
+
+
+@cache
+def for_each_count(phrase: str) -> ForEach | None:
+    """The count of a "for each <phrase>" tail: a for-each-only wording, else the
+    phrase as "the number of <phrase>" with the ability's source as the object."""
+    text = _norm(phrase)
+    if (each := _for_each_only(text)) is not None:
+        return each
+    from .effects.amounts import amount_expression
+
+    reader = amount_expression(f"the number of {text}")
+    if reader is None:
+        return None
+
+    def count(game: "Game", controller: str, source_id: str | None) -> int:
+        # A resolving spell is `game.resolving`, not found on the stack, so it
+        # is asked before the board.
+        resolving = game.resolving
+        if isinstance(resolving, CardState) and str(resolving.id) == source_id:
+            found = resolving
+        else:
+            found = None if source_id is None else game.find_by_id(UUID(str(source_id)))
+        source = found if isinstance(found, CardState) else None
+        return int(reader(game, controller, source, 0))
+
+    return count
 
 
 # --------------------------------------------------------------------------

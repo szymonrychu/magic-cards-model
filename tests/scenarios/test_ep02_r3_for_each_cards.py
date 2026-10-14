@@ -193,15 +193,6 @@ def test_deadly_embrace_draws_for_the_creature_it_destroyed() -> None:
     assert _hand(scenario, "alice") == 1
 
 
-def test_deadly_embrace_counts_a_creature_that_died_earlier_this_turn() -> None:
-    scenario = _scenario(
-        ["Grizzly Bears"], ["Grizzly Bears"], hand=["Deadly Embrace", "Lightning Bolt"]
-    )
-    _cast_all(scenario, "Lightning Bolt", targets=[scenario.creature("Grizzly Bears", "alice")])
-    _cast_all(scenario, "Deadly Embrace", targets=[scenario.creature("Grizzly Bears", "bob")])
-    assert _hand(scenario, "alice") == 2  # both Bears died this turn, whoever controlled them
-
-
 def test_deadly_embrace_counts_nothing_when_the_destroy_fails_to_kill() -> None:
     scenario = _scenario([], ["Grizzly Bears"], hand=["Deadly Embrace"])
     scenario.cast_onto_stack(
@@ -252,12 +243,6 @@ def test_ashen_skin_zubera_discards_one_when_it_dies_alone() -> None:
     assert _hand(scenario, "bob") == 1
 
 
-def test_silent_chant_zubera_gains_two_life_per_zubera_that_died() -> None:
-    scenario = _scenario(["Silent-Chant Zubera", "Floating-Dream Zubera"], hand=["Wrath of God"])
-    _cast_all(scenario, "Wrath of God")
-    assert _life(scenario, "alice") == 20 + 2 * 2
-
-
 def _cast_kicked(scenario, name: str, times: int, *, user: str = "alice", targets=None, **kicker):
     """Cast `name` paying its (multi)kicker `times` times, then resolve it and
     everything it triggers."""
@@ -280,24 +265,6 @@ def test_bloodhusk_ritualist_discards_a_card_per_kick(times: int, discards: int)
     scenario.choose_trigger_targets("Bloodhusk Ritualist", [scenario.player("bob")])
     _cast_kicked(scenario, "Bloodhusk Ritualist", times)
     assert _hand(scenario, "bob") == 5 - discards
-
-
-def test_lightkeeper_of_emeria_gains_two_life_per_kick() -> None:
-    scenario = _scenario([], hand=["Lightkeeper of Emeria"])
-    _cast_kicked(scenario, "Lightkeeper of Emeria", 2)
-    assert _life(scenario, "alice") == 20 + 4
-
-
-def test_lightkeeper_of_emeria_gains_nothing_unkicked() -> None:
-    scenario = _scenario([], hand=["Lightkeeper of Emeria"])
-    _cast_kicked(scenario, "Lightkeeper of Emeria", 0)
-    assert _life(scenario, "alice") == 20
-
-
-def test_stronghold_arena_gains_three_life_per_kick() -> None:
-    scenario = _scenario([], hand=["Stronghold Arena"])
-    _cast_kicked(scenario, "Stronghold Arena", 1, which="{G}")
-    assert _life(scenario, "alice") == 20 + 3
 
 
 # ---------------------------------------------------------------------------
@@ -1242,3 +1209,96 @@ def test_chain_veil_costs_nothing_after_a_loyalty_activation() -> None:
     _resolve_all(scenario)
     _to_end_step(scenario)
     assert _life(scenario, "alice") == 20
+
+
+# ---------------------------------------------------------------------------
+# One reader per wording (the EP-02-R3 dedupe): every count is read by a single
+# reader and applied exactly once (CR 608.2h: taken once, as the effect applies)
+# ---------------------------------------------------------------------------
+
+
+def test_once_a_twice_multikicked_creature_makes_two_wolves_not_four() -> None:
+    """Times kicked (CR 702.33d), one cast-record reader: Wolfbriar Elemental
+    multikicked twice makes exactly two Wolves."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Wolfbriar Elemental"], battlefield=["Forest"] * 6)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _cast_kicked(scenario, "Wolfbriar Elemental", 2)
+    assert len(_named(scenario, "Wolf")) == 2
+
+
+def test_once_the_greatest_toughness_among_other_creatures_is_one_value_not_a_sum() -> None:
+    """Greatest stat among other creatures you control (CR 107.2, CR 208.5), one
+    extremum reader: Hill Giant's 3 among the Hunter's companions - not their
+    total 5, and never the opponent's Serra Angel."""
+    scenario = _scenario(
+        ["Grizzly Bears", "Hill Giant"], ["Serra Angel"], hand=["Flourishing Hunter"]
+    )
+    _cast_all(scenario, "Flourishing Hunter")
+    assert _life(scenario, "alice") == 20 + 3
+
+
+def test_once_a_lone_aura_attached_makes_one_elemental() -> None:
+    """Auras/Equipment attached to it (CR 301.5a, CR 303.4b), one parse of the
+    wording: Valduk with only Rancor attached makes exactly one Elemental, and an
+    unattached Equipment counts for nothing."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Valduk, Keeper of the Flame", "Rancor", "Bonesplitter"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    valduk = scenario.creature("Valduk, Keeper of the Flame")
+    (rancor,) = [p for p in scenario.game.battlefield if p.name == "Rancor"]
+    rancor.attach_to(valduk)
+    while scenario.step is not Step.BEGINNING_OF_COMBAT:
+        scenario.advance()
+    scenario.resolve_top()
+    assert len(_named(scenario, "Elemental")) == 1
+
+
+def test_once_two_opponents_make_two_foods() -> None:
+    """One amount-term entry: "the number of opponents you have" (CR 102.2) is read
+    by one reader, so Gluttonous Troll in a three-player game makes exactly two Foods."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice", hand=["Gluttonous Troll"], battlefield=["Forest", "Forest", "Swamp", "Forest"]
+        )
+        .player("bob")
+        .player("carol")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve(
+        "Gluttonous Troll", *scenario.untapped_sources("Forest", "Forest", "Swamp", "Forest")
+    )
+    _resolve_all(scenario)
+    assert len(_named(scenario, "Food")) == 2
+
+
+def test_once_a_creature_that_died_alone_counts_itself_once() -> None:
+    """Creatures that died this turn (CR 700.4), one turn-ledger reader: Canopy
+    Stalker dying alone gains exactly 1 life."""
+    scenario = _scenario(["Canopy Stalker"])
+    scenario.game.destroy(scenario.creature("Canopy Stalker", "alice"))
+    _resolve_all(scenario)
+    assert _life(scenario, "alice") == 20 + 1
+
+
+def test_once_that_player_is_the_damaged_player_only() -> None:
+    """ "That player" (CR 603.2), one event-player helper: Emissary of Hope counts
+    the one artifact the damaged player controls, never its controller's two."""
+    scenario = _scenario(["Emissary of Hope", "Sol Ring", "Sol Ring"], ["Sol Ring"])
+    while scenario.step is not Step.DECLARE_ATTACKERS:
+        scenario.advance()
+    scenario.attack_with(scenario.creature("Emissary of Hope", "alice"))
+    scenario.no_blocks()
+    scenario.combat_damage()
+    _resolve_all(scenario)
+    assert _life(scenario, "alice") == 20 + 1

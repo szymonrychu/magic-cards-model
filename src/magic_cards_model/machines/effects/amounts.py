@@ -3,7 +3,6 @@ from collections.abc import Callable, Sequence
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ...data.subtypes import canonical_subtype
 from ...models.card import Color, Layout, Supertype, Type
 from ...models.card_state import (
     DEVOTION_BONUS_TEXT,
@@ -76,7 +75,6 @@ from ..ep02_r2_cards_in_zone_counts import (
     parse_search_target_library_and_exile,
 )
 from ..ep02_r2_devotion_domain_party import up_to_x_targets, where_x_pump_text_normalised
-from ..ep02_r3_life_total_amounts import amount_term, count_term, for_each_count
 from ..layers import (
     BASIC_LAND_TYPES,
     Characteristics,
@@ -423,9 +421,15 @@ _COUNT_CARDS_IN_YOUR_GRAVEYARD_UNFILTERED_RE = re.compile(
 #: counting shapes above.
 #: Armor Wars' "the greatest mana value among artifacts you control" (One with
 #: the Machine's own amount) is the same extremum over CR 202.3's mana value.
+#: The one reader of the wording: "total" sums instead (Betor's "the total
+#: toughness of creatures you control"), "power and/or toughness" takes the
+#: larger of the two (Freelance Muscle), "permanents" filters nothing (Boon of
+#: Boseiju), and "other attacking creatures" counts the attackers but the
+#: source, whoever controls them (Ghalta and Mavren).
 _GREATEST_CHARACTERISTIC_AMONG_RE = re.compile(
-    r"^(?:the )?greatest (?P<characteristic>power|toughness|mana value) among "
-    r"(?P<other>other )?(?P<qualifier>[a-z]+) you control$",
+    r"^(?:the )?(?P<which>greatest|total) "
+    r"(?P<characteristic>power and/or toughness|power|toughness|mana value) (?:among|of) "
+    r"(?P<other>other )?(?P<attacking>attacking )?(?P<qualifier>[a-z]+)(?P<yours> you control)?$",
     re.IGNORECASE,
 )
 #: "different power among creatures you control" - Loot, the Nexus's own
@@ -657,13 +661,6 @@ _GREATEST_SHARED_CREATURE_TYPE_RE = re.compile(
     r"(?:have|share) a creature type in common$",
     re.IGNORECASE,
 )
-#: "the number of creatures that died this turn" (Spymaster's Vault), "the
-#: number of nontoken creatures that died this turn", "the number of Zubera
-#: that died this turn" (Ember-Fist Zubera): whoever controlled them.
-_COUNT_DIED_THIS_TURN_RE = re.compile(
-    r"^(?:the )?number of (?:(?P<nontoken>nontoken) )?(?P<qualifier>[a-z]+) that died this turn$",
-    re.IGNORECASE,
-)
 #: "the number of creatures that were exiled under your opponents' control this
 #: turn" (Vren, the Relentless): permanents that left the battlefield for exile,
 #: by who controlled them as they went.
@@ -701,13 +698,6 @@ _EVENT_SUBJECT_STAT_RE = re.compile(
 #: "creature it's blocking" / "creature blocking it" (see `_for_each_multiplier`).
 _CREATURES_BLOCKING_RE = re.compile(
     r"^creatures? (?:it['’]s blocking|(?P<blocked_by_it>blocking it))$", re.IGNORECASE
-)
-#: "the number of times it was kicked" (Deathforge Shaman's "twice ..."): CR
-#: 702.33d's count, read off the cast record of the spell the permanent was.
-_TIMES_KICKED_RE = re.compile(
-    r"^(?:the )?number of times (?:it|this (?:creature|permanent|artifact|enchantment|spell)) "
-    r"was kicked$",
-    re.IGNORECASE,
 )
 
 #: A count that may need the resolving source ("other than this creature").
@@ -818,42 +808,6 @@ def _greatest_shared_creature_type_count(phrase: str) -> Callable[["Game", str],
     return greatest_shared
 
 
-def _died_this_turn_count(phrase: str) -> Callable[["Game", str], int] | None:
-    """The turn's graveyard arrivals from the battlefield (CR 700.4) that were
-    `<qualifier>` as they last existed (CR 603.10a), `Game.turn_history`'s
-    "to_graveyard" entries - whoever controlled them, tokens included unless
-    "nontoken"."""
-    match = _COUNT_DIED_THIS_TURN_RE.fullmatch(phrase)
-    if match is None:
-        return None
-    card_type = _singular_card_type(match.group("qualifier"))
-    subtype = (
-        None
-        if card_type is not None
-        else _singular_subtype_for_count_expression(match.group("qualifier"))
-    )
-    if card_type is None and subtype is None:
-        return None
-    nontoken = match.group("nontoken") is not None
-
-    def died_this_turn(game: "Game", _controller: str) -> int:
-        found = 0
-        for entry in game.turn_history:
-            chars = entry.characteristics
-            if entry.kind != "to_graveyard" or chars is None:
-                continue
-            if card_type is not None and card_type not in chars.types:
-                continue
-            if subtype is not None and not any(word.lower() == subtype for word in chars.subtypes):
-                continue
-            if nontoken and chars.is_token:
-                continue
-            found += 1
-        return found
-
-    return died_this_turn
-
-
 def _exiled_under_control_count(phrase: str) -> Callable[["Game", str], int] | None:
     """The turn's battlefield-to-exile departures (CR 406.2, CR 614.1a's "exile
     it instead" included) that were `<qualifier>` as they last existed (CR
@@ -936,8 +890,6 @@ def _nw06_counted_term(stripped: str) -> Callable[["Game", str], int] | None:
             return lambda game, controller: counted(game, controller, None)
     if "in common" in lowered:
         return _greatest_shared_creature_type_count(stripped)
-    if "died this turn" in lowered:
-        return _died_this_turn_count(stripped)
     if "were exiled under" in lowered:
         return _exiled_under_control_count(stripped)
     if "mana symbol" in lowered:
@@ -952,36 +904,45 @@ def _nw06_counted_term(stripped: str) -> Callable[["Game", str], int] | None:
 def _greatest_among_reader(
     match: "re.Match[str]",
 ) -> Callable[["Game", str, UUID | None], int] | None:
-    """`_GREATEST_CHARACTERISTIC_AMONG_RE`'s extremum as a reader of
+    """`_GREATEST_CHARACTERISTIC_AMONG_RE`'s extremum (or total) as a reader of
     `(game, controller, excluded permanent id)`, `None` for a qualifier that is
-    neither a card type nor a creature subtype. "Other" (Arni Brokenbrow's "1
-    plus the greatest power among other creatures you control") is the caller
-    passing the source's id as the excluded one."""
-    card_type = _singular_card_type(match.group("qualifier"))
-    subtype = (
-        None
-        if card_type is not None
-        else _singular_subtype_for_count_expression(match.group("qualifier"))
-    )
-    if card_type is None and subtype is None:
+    neither "permanents", a card type nor a creature subtype, or a group that is
+    neither "you control" nor attacking. "Other" (Arni Brokenbrow's "1 plus the
+    greatest power among other creatures you control") is the caller passing the
+    source's id as the excluded one."""
+    qualifier = match.group("qualifier")
+    yours = match.group("yours") is not None
+    attacking = match.group("attacking") is not None
+    if not (yours or attacking):
         return None
-    wants_power = match.group("characteristic").lower() == "power"
-    wants_mana_value = match.group("characteristic").lower() == "mana value"
+    card_type = subtype = None
+    if qualifier.lower() not in ("permanent", "permanents"):
+        card_type = _singular_card_type(qualifier)
+        subtype = (
+            None if card_type is not None else _singular_subtype_for_count_expression(qualifier)
+        )
+        if card_type is None and subtype is None:
+            return None
+    characteristic = match.group("characteristic").lower()
+    total = match.group("which").lower() == "total"
 
     def greatest_among(game: "Game", controller: str, exclude: UUID | None) -> int:
         board = game.computed_board()
+        attackers = {attack.attacker_id for attack in game.combat.attacks} if attacking else None
         values: list[int] = []
         for permanent in game.battlefield:
             if permanent.id == exclude:
                 continue
+            if attackers is not None and permanent.id not in attackers:
+                continue
             chars = board.of(permanent)
-            if chars.controller != controller:
+            if yours and chars.controller != controller:
                 continue
             if card_type is not None and card_type not in chars.types:
                 continue
             if subtype is not None and not any(word.lower() == subtype for word in chars.subtypes):
                 continue
-            if wants_mana_value:
+            if characteristic == "mana value":
                 values.append(int(permanent.mana_value))  # CR 202.3
                 continue
             # CR 208.5: "If a creature somehow has no value for its power,
@@ -989,7 +950,14 @@ def _greatest_among_reader(
             # printing whose characteristic-defining ability nothing has
             # defined counts as 0, not as absent, which is exactly what
             # `numeric_power`/`numeric_toughness` already answer.
-            values.append(chars.numeric_power if wants_power else chars.numeric_toughness)
+            if characteristic == "power":
+                values.append(chars.numeric_power)
+            elif characteristic == "toughness":
+                values.append(chars.numeric_toughness)
+            else:
+                values.append(max(chars.numeric_power, chars.numeric_toughness))
+        if total:
+            return sum(values)
         # CR 107.2: "If anything needs to use a number that can't be
         # determined, either as a result or in a calculation, it uses 0
         # instead" - an empty group is not an error, it is X = 0.
@@ -1038,12 +1006,10 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     the function itself.
     """
     stripped = phrase.strip().rstrip(".")
-    if (player_level := count_term(stripped)) is not None:
-        return player_level
-    from ..ep02_r3_for_each_cards import number_of_cards_counts
+    from ..ep02_r3_for_each_cards import count_term
 
-    if (r3_number := number_of_cards_counts(stripped)) is not None:
-        return r3_number
+    if (r3_count := count_term(stripped)) is not None:
+        return r3_count
     if stripped.lower().startswith(("twice the number of ", "three times the number of ")):
         # "twice the number of Blood tokens you control" (Bloodtithe Harvester): the
         # same count, doubled (or tripled) - the multiplier is arithmetic on the
@@ -1095,9 +1061,7 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
 
     if (history_count := counter_history_count(stripped)) is not None:
         return history_count
-    if ("greatest" in stripped or " minus " in stripped) and (
-        r3_amount := r3_controller_amount(stripped)
-    ) is not None:
+    if " minus " in stripped and (r3_amount := r3_controller_amount(stripped)) is not None:
         return r3_amount
     if "counters on" in stripped.lower() and (
         counters_held := _COUNTERS_ON_YOUR_PERMANENTS_RE.fullmatch(stripped)
@@ -1563,10 +1527,8 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     if match := _GREATEST_CHARACTERISTIC_AMONG_RE.fullmatch(stripped):
         if match.group("other"):
             return None  # "other" needs the source: `_amount_term` reads it
-        read = _greatest_among_reader(match)
-        if read is None:
-            return None
-        return lambda game, controller: read(game, controller, None)
+        if (read := _greatest_among_reader(match)) is not None:
+            return lambda game, controller: read(game, controller, None)
 
     if match := _DIFFERENT_CHARACTERISTIC_AMONG_RE.fullmatch(stripped):
         card_type = _singular_card_type(match.group("qualifier"))
@@ -1733,17 +1695,6 @@ def _colors_spent_on_resolving(game: "Game", _controller: str) -> int:
     if resolving is not None and is_ability(resolving):
         resolving = resolving.source_or_last_known(game)
     return colors_of_mana_spent(game, resolving)
-
-
-#: "the number of Equipment attached to him" (Whiplash, Vengeful Engineer;
-#: Shagrat, Loot Bearer's "... attached to Shagrat", its name already
-#: "this permanent") - a count of one subtype attached to the object the
-#: expression is evaluated for (CR 301.5a: an Equipment is attached to the
-#: creature it equips), read as the effect applies (CR 608.2h).
-_OBJECT_ATTACHED_COUNT_RE = re.compile(
-    r"^the number of (?P<subtype>[A-Za-z]+) attached to (?:it|him|her|this [a-z]+)$",
-    re.IGNORECASE,
-)
 
 
 #: "instant and sorcery card exiled with it" (Murktide Regent) - CR 607.2q's
@@ -1961,10 +1912,11 @@ def _amount_term(term: str) -> AmountReader | None:
         return _card_types_among_term(types)
     if "outlaws" in lowered and _OUTLAWS_YOU_CONTROL_RE.fullmatch(text):
         return _count_outlaws
-    if "greatest" in lowered and (other := _GREATEST_CHARACTERISTIC_AMONG_RE.fullmatch(text)):
-        greatest = _greatest_among_reader(other)
-        if greatest is None:
-            return None
+    if (
+        ("greatest" in lowered or "total" in lowered)
+        and (other := _GREATEST_CHARACTERISTIC_AMONG_RE.fullmatch(text))
+        and (greatest := _greatest_among_reader(other)) is not None
+    ):
         has_other = bool(other.group("other"))
         return lambda game, controller, obj, _x: greatest(
             game, controller, obj.id if has_other and obj is not None else None
@@ -1995,18 +1947,6 @@ def _amount_term(term: str) -> AmountReader | None:
         return read_object_counters
     if lowered == "x":
         return lambda _game, _controller, _object, x: x
-    if "times" in lowered and _TIMES_KICKED_RE.fullmatch(text):
-
-        def read_times_kicked(
-            game: "Game", _controller: str, obj: CardState | None, _x: int
-        ) -> int:
-            # CR 702.33d, read as the object last existed (CR 608.2h): the cast
-            # record of the spell this permanent was (CR 400.7d), none when it
-            # was never cast.
-            record = None if obj is None else game.cast_record_of(obj)
-            return 0 if record is None else record.kicked
-
-        return read_times_kicked
     if any(marker in lowered for marker in _FILTERED_PERMANENT_COUNT_MARKERS) and (
         filtered := _filtered_permanent_count(text)
     ):
@@ -2146,25 +2086,6 @@ def _amount_term(term: str) -> AmountReader | None:
         # answers this once `Game._carry_cast_record` has re-keyed it from
         # the spell that resolved into it (CR 400.7a/400.7b).
         return lambda game, _controller, obj, _x: colors_of_mana_spent(game, obj)
-    if match := _OBJECT_ATTACHED_COUNT_RE.fullmatch(text):
-        attached_subtype = canonical_subtype(match.group("subtype"))
-        if attached_subtype is None:
-            return None
-
-        def read_attached_count(
-            game: "Game", _controller: str, obj: CardState | None, _x: int
-        ) -> int:
-            if obj is None:
-                return 0
-            board = game.computed_board()
-            return sum(
-                1
-                for permanent in game.battlefield
-                if permanent.attached_to == obj.id
-                and attached_subtype in {word.lower() for word in board.of(permanent).subtypes}
-            )
-
-        return read_attached_count
     if match := _AMOUNT_TWICE_RE.fullmatch(text):
         factor = parse_multiplier(match.group("multiplier"))
         inner = _amount_term(match.group("term"))
@@ -2279,9 +2200,9 @@ def _amount_term(term: str) -> AmountReader | None:
     counted = count_expression(text) or _devotion_count(text)
     if counted is not None:
         return lambda game, controller, _object, _x: counted(game, controller)
-    from ..ep02_r3_token_counts import amount_term as token_amount_term
+    from ..ep02_r3_for_each_cards import amount_term
 
-    return amount_term(text) or token_amount_term(text)
+    return amount_term(text)
 
 
 def amount_expression(phrase: str) -> AmountReader | None:
@@ -3395,7 +3316,6 @@ _FORETOLD_IN_EXILE_EACH_RE = re.compile(r"^foretold card you own in exile$", re.
 _CAVE_MANA_SPENT_EACH_RE = re.compile(
     r"^mana from an? (?P<kind>[A-Za-z]+) spent to cast (?:it|this spell)$", re.IGNORECASE
 )
-_TIME_KICKED_EACH_RE = re.compile(r"^time (?:it|this spell|[A-Z][^.]*?) was kicked$")
 _LEFT_UNDER_YOUR_CONTROL_EACH_RE = re.compile(
     r"^(?P<quality>[a-z -]+?) that left the battlefield under your control this turn$",
     re.IGNORECASE,
@@ -3422,10 +3342,6 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
         # Vehicle" says what "other Mount or Vehicle you control" says - the
         # source itself is the one left out (CR 608.2h counts once).
         stripped = f"other {other_than_this.group('what').replace('and/or', 'or')} you control"
-    from ..ep02_r3_for_each_cards import for_each_cards_counts
-
-    if (r3_count := for_each_cards_counts(stripped)) is not None:
-        return r3_count
     if _TREASURE_MANA_SPENT_EACH_RE.fullmatch(stripped):
         # Fixed as the spell was cast (CR 601.2h), never the Treasures still
         # on the board as it resolves.
@@ -3487,21 +3403,6 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
             return 0 if record is None else record.cave_mana_spent
 
         return count_cave_mana
-    if _TIME_KICKED_EACH_RE.fullmatch(stripped):
-        # Spell Contortion: "Draw a card for each time Spell Contortion was
-        # kicked" - CR 702.33d's count of multikicker payments, read off the
-        # cast record of the spell (or the permanent it became, CR 400.7d)
-        # whose effect is resolving (CR 608.2h).
-        def count_kicks(game: "Game", _controller: str, source_id: str | None) -> int:
-            resolving = game.resolving
-            if isinstance(resolving, CardState) and str(resolving.id) == source_id:
-                obj = resolving
-            else:
-                obj = None if source_id is None else game.find_by_id(UUID(source_id))
-            record = None if obj is None else game.cast_record_of(obj)
-            return 0 if record is None else record.kicked
-
-        return count_kicks
     types_among = card_types_among_spells_cast_reader(stripped)
     if types_among is not None:
         # CR 608.2h: counted once, as the effect applies.
@@ -3633,13 +3534,12 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
     if generic is not None:
         return lambda game, controller, _source_id: generic(game, controller)
     from ..ep02_r1_counted_permanents import counted_group_reader
-    from ..ep02_r3_token_counts import for_each_count as token_for_each_count
+    from ..ep02_r3_for_each_cards import for_each_count
 
     return (
         counted_group_reader(stripped)
         or _for_each_described_count(stripped)
         or for_each_count(stripped)
-        or token_for_each_count(stripped)
     )
 
 
@@ -4664,12 +4564,10 @@ def _parse_variable_count_token_clause(clause: str, *, for_spell: bool) -> Targe
     # Equipment you control"). CR 608.2h takes it once, as the instruction is applied.
     amount = None
     if counted is None:
-        from ..ep02_r3_token_counts import amount_term as token_amount_term
+        from ..ep02_r3_for_each_cards import amount_term
 
-        amount = (
-            amount_term(expression)
-            or token_amount_term(expression)
-            or (amount_expression(expression) if _AMOUNT_OPERATOR_RE.search(expression) else None)
+        amount = amount_term(expression) or (
+            amount_expression(expression) if _AMOUNT_OPERATOR_RE.search(expression) else None
         )
         if amount is None:
             return None

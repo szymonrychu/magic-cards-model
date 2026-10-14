@@ -85,9 +85,6 @@ _ARTIFACT_CREATURE_RE = re.compile(
 
 # -- counts -------------------------------------------------------------------
 
-_ATTACHED_RE = re.compile(
-    r"^(?P<kinds>(?:aura|equipment)(?: and (?:aura|equipment))?) attached to (?P<host>.+)$"
-)
 _SELF_HOSTS = {"it", "him", "her", "them"}
 _COLOR_WORD = {
     "white": Color.WHITE,
@@ -168,14 +165,20 @@ def _board_count(each: str, source: CardState) -> "Count | None":
     )
 
 
-def _attached_count(match: re.Match[str], source: CardState, host_is_asking: bool) -> "Count":
+def _attached_count(text: str, source: CardState) -> "Count | None":
+    """ "Aura and Equipment attached to it / to this creature / to <name>"
+    (CR 301.5a, CR 303.4): the shared reading of the wording
+    (`ep02_r3_for_each_cards.attached_phrase`) as a layer `Count`, live on every
+    computation - of the creature the pump lands on for "it", else of the source."""
+    from .ep02_r3_for_each_cards import attached_phrase
     from .layers.model import CountAttachedWithAnySubtype
 
-    host = match["host"].strip()
-    asking = host in _SELF_HOSTS
+    phrase = attached_phrase(text)
+    if phrase is None or phrase.past:
+        return None
     return CountAttachedWithAnySubtype(
-        subtypes=tuple(sorted(set(re.findall(r"aura|equipment", match["kinds"])))),
-        host=None if asking else source.id,
+        subtypes=phrase.subtypes,
+        host=None if phrase.host in _SELF_HOSTS else source.id,
     )
 
 
@@ -257,8 +260,8 @@ def count_for(
         return CountByObjectId(counts=tuple(context.attack_count_by_id.items()))
     if text in ("card exiled with it", "card exiled with this creature"):
         return FixedCount(value=len(context.cards_exiled_with(source)))
-    if (match := _ATTACHED_RE.fullmatch(text)) is not None:
-        return _attached_count(match, source, host_is_asking=True)
+    if " attached to " in text and (attached := _attached_count(text, source)) is not None:
+        return attached
     if (counted := _graveyard_and_board_count(text, source, context)) is not None:
         return counted
     if (zoned := _zone_count(text, source, context)) is not None:

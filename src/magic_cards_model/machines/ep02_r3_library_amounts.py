@@ -800,11 +800,7 @@ def _criteria(text: str) -> _Crit | None:
 def _where_x_amount(where_x: str | None) -> Callable[["Game", Any, Player], int] | None:
     if where_x is None:
         return None
-    expr = where_x.strip().rstrip(".").lower()
-    if expr == "your speed":
-        # CR 702.179b: a player without speed has none; the count is 0.
-        return lambda _game, _obj, controller: controller.speed or 0
-    counted = count_expression(expr)
+    counted = count_expression(where_x.strip().rstrip(".").lower())
     if counted is None:
         return None
     return lambda game, _obj, controller: counted(game, controller.username)
