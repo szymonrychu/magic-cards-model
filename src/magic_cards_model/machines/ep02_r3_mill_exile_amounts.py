@@ -459,3 +459,91 @@ def parse_exile_top_amount_antecedent(clause: str) -> "tuple[Callable[..., list[
         return exiled
 
     return exile_top, True
+
+
+# --------------------------------------------------------------------------
+# Amounts read off the cards a mill just moved
+# --------------------------------------------------------------------------
+
+_MILLED_AGGREGATE = (
+    r"(?:the (?P<agg>greatest) mana value among the milled cards"
+    r"|the (?P<tot>total) mana value of (?:those|the milled) cards)"
+)
+
+
+def _milled_mana_value(text: str) -> "Callable[[list[CardState]], int] | None":
+    match = re.fullmatch(_MILLED_AGGREGATE, text, re.IGNORECASE)
+    if match is None:
+        return None
+    if match.group("agg"):
+        return lambda cards: max((int(card.mana_value) for card in cards), default=0)
+    return lambda cards: sum(int(card.mana_value) for card in cards)
+
+
+_CHOOSE_ANY_TARGET_MILL_DAMAGE_RE = re.compile(
+    r"^choose any target, then mill (?P<n>\w+) cards\. this \w+ deals damage to that "
+    r"(?:permanent or player|creature or player|target) equal to (?P<amount>.+)$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s8")
+def _parse_mill_then_damage_by_milled_clause(effect_text: str) -> "AbilityEffect | None":
+    """CR 701.17a mill, then CR 120.3 damage equal to an aggregate of the
+    cards just milled (CR 608.2c), dealt by the source (CR 120.7) to the
+    target chosen on activation. Heretic's Punishment: "greatest mana value
+    among the milled cards"."""
+    match = _CHOOSE_ANY_TARGET_MILL_DAMAGE_RE.fullmatch(clean(effect_text))
+    count = None if match is None else parse_count(match.group("n"))
+    aggregate = None if match is None else _milled_mana_value(match.group("amount"))
+    if match is None or count is None or aggregate is None:
+        return None
+
+    def effect(game: "Game", ability: Any) -> None:
+        from .effects.library import _mill
+
+        milled = _mill(game, game.player(controller_of(game, ability)), count)
+        source = ability.source_or_last_known(game)
+        for target in game.resolve_targets(ability):
+            game.deal_damage(target, aggregate(milled), source=source)
+
+    return effect
+
+
+_MAY_HAVE_YOU_DRAW_OR_MILL_RE = re.compile(
+    r"^target opponent may have you draw (?P<d>\w+) cards\. if the player doesn'?t, you mill "
+    r"(?P<m>\w+) cards, then this \w+ deals damage to that player equal to (?P<amount>.+)$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s8")
+def _parse_opponent_may_have_you_draw_else_mill_damage(effect_text: str) -> "AbilityEffect | None":
+    """Combustible Gearhulk: the target opponent chooses (CR 608.2d) whether
+    the controller draws; if not, the controller mills and the source deals
+    damage to that opponent equal to the milled cards' total mana value."""
+    match = _MAY_HAVE_YOU_DRAW_OR_MILL_RE.fullmatch(clean(effect_text))
+    if match is None:
+        return None
+    draw_count, mill_count = parse_count(match.group("d")), parse_count(match.group("m"))
+    aggregate = _milled_mana_value(match.group("amount"))
+    if draw_count is None or mill_count is None or aggregate is None:
+        return None
+
+    def effect(game: "Game", ability: Any) -> None:
+        from .effects.library import _mill
+
+        controller = game.player(controller_of(game, ability))
+        for opponent in [t for t in game.resolve_targets(ability) if isinstance(t, Player)]:
+            if game.may(
+                opponent,
+                f"have {controller.username} draw {draw_count} cards",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+            ):
+                game.draw_cards(controller, draw_count)
+                continue
+            milled = _mill(game, controller, mill_count)
+            game.deal_damage(opponent, aggregate(milled), source=ability.source_or_last_known(game))
+
+    return effect

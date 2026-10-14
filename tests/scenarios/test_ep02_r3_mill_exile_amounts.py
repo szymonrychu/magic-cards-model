@@ -617,3 +617,85 @@ def test_dead_man_chests_exiles_cards_equal_to_the_dead_creatures_power():
     assert len(scenario.player("bob").library) == 3  # Hill Giant's power is 3
     permissions = _permissions(scenario)
     assert len(permissions) == 3 and all(p.any_type_mana for p in permissions)
+
+
+# --------------------------------------------------------------------------
+# Part 8 - amounts read off the cards a mill just moved (Heretic's
+# Punishment, Combustible Gearhulk). CR 701.17a mills; CR 608.2c carries
+# "the milled cards" into the next instruction; CR 202.3 mana value.
+# --------------------------------------------------------------------------
+
+
+def test_heretics_punishment_deals_damage_equal_to_the_greatest_milled_mana_value():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Heretic's Punishment"] + ["Mountain"] * 4,
+            library=["Island", "Hill Giant", "Lightning Bolt", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    punishment = scenario.find("Heretic's Punishment", Zone.BATTLEFIELD)
+    scenario.activate(
+        punishment, *scenario.untapped_sources(*["Mountain"] * 4), index=0, targets=["bob"]
+    )
+    scenario.resolve_top()
+    assert _graveyard(scenario, "alice") == 3
+    assert scenario.player("bob").life == 16  # Hill Giant, mana value 4
+
+
+def test_heretics_punishment_with_only_lands_milled_deals_no_damage():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Heretic's Punishment"] + ["Mountain"] * 4,
+            library=["Island"] * 4,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    punishment = scenario.find("Heretic's Punishment", Zone.BATTLEFIELD)
+    scenario.activate(
+        punishment, *scenario.untapped_sources(*["Mountain"] * 4), index=0, targets=["bob"]
+    )
+    scenario.resolve_top()
+    assert scenario.player("bob").life == 20
+
+
+def _gearhulk():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Combustible Gearhulk"],
+            library=["Hill Giant", "Grizzly Bears", "Island", "Island", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.choose_trigger_targets("Combustible Gearhulk", ["bob"])
+    return scenario
+
+
+def test_combustible_gearhulk_opponent_declines_so_alice_mills_and_bob_takes_the_total():
+    scenario = _gearhulk()
+    scenario.will_take_the_may(False, username="bob", source="Combustible Gearhulk")
+    scenario.put_onto_battlefield("Combustible Gearhulk", "alice")
+    scenario.pass_until_resolved()
+    assert _graveyard(scenario, "alice") == 3
+    assert scenario.player("bob").life == 14  # 4 + 2 + 0
+
+
+def test_combustible_gearhulk_opponent_accepts_so_alice_draws_three():
+    scenario = _gearhulk()
+    scenario.will_take_the_may(True, username="bob", source="Combustible Gearhulk")
+    scenario.put_onto_battlefield("Combustible Gearhulk", "alice")
+    scenario.pass_until_resolved()
+    assert len(scenario.player("alice").hand) == 3
+    assert scenario.player("bob").life == 20
