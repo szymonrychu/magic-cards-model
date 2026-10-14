@@ -1107,7 +1107,10 @@ KAIRI_BOUNCE = (
     "Return any number of target nonland permanents with total mana value 6 or less "
     "to their owners' hands."
 )
-KAIRI_MILL = "Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand."
+KAIRI_MILL = (
+    "Mill six cards, then return up to two instant and/or sorcery cards from your graveyard "
+    "to your hand."
+)
 
 
 def _kairi_dies(scenario):
@@ -1462,7 +1465,7 @@ def test_lukka_plus_one_permission_lasts_only_while_a_lukka_planeswalker_is_cont
     assert scenario.game.play_permission_for(bears, "alice") is None
 
 
-def test_lukka_minus_two_exiles_the_creature_and_puts_a_greater_mana_value_creature_onto_the_battlefield():
+def test_lukka_minus_two_puts_a_greater_mana_value_creature_onto_the_battlefield():
     scenario, lukka = _lukka(
         [FOREST, LIGHTNING_BOLT, "Kitchen Finks", "Serra Angel"], battlefield=["Grizzly Bears"]
     )
@@ -1625,3 +1628,179 @@ def test_jasper_effect_ends_when_control_returns_to_the_owner():
     assert "Mercenary" in _subtypes(scenario, bears)
     bears.controller = "bob"
     assert "Mercenary" not in _subtypes(scenario, bears)
+
+
+# --------------------------------------------------------------------------
+# Second-printing proofs: each reader added or widened for the listed cards,
+# exercised on another real Modern/Pioneer/Standard card carrying the same
+# template (none of them a listed card).
+# --------------------------------------------------------------------------
+
+
+def test_proof_bond_of_insight_returns_up_to_two_instants_or_sorceries_after_everyone_mills():
+    """The up-to-N graveyard-to-hand clause (Kairi's second mode) on a spell."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Bond of Insight"],
+            battlefield=["Island"] * 4,
+            library=[LIGHTNING_BOLT, "Divination", FOREST, FOREST, FOREST],
+        )
+        .player("bob", library=[SWAMP] * 6)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = scenario.find(LIGHTNING_BOLT, Zone.LIBRARY, "alice")
+    divination = scenario.find("Divination", Zone.LIBRARY, "alice")
+    scenario.will_choose_cards(bolt, divination, username="alice", source="Bond of Insight")
+    scenario.cast_and_resolve("Bond of Insight", *scenario.untapped_sources(*["Island"] * 4))
+    assert sorted(_names(scenario.player("alice").hand)) == ["Divination", LIGHTNING_BOLT]
+    assert _graveyard(scenario, "bob") == 4
+    assert "Bond of Insight" in _names(scenario.game.exile)
+
+
+def test_proof_mythos_of_brokkos_returns_up_to_two_permanent_cards():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Mythos of Brokkos"],
+            battlefield=["Forest"] * 4,
+            graveyard=["Grizzly Bears", FOREST, LIGHTNING_BOLT],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    forest = scenario.find(FOREST, Zone.GRAVEYARD, "alice")
+    scenario.will_choose_cards(bears, forest, username="alice", source="Mythos of Brokkos")
+    scenario.cast_and_resolve("Mythos of Brokkos", *scenario.untapped_sources(*["Forest"] * 4))
+    assert sorted(_names(scenario.player("alice").hand)) == [FOREST, "Grizzly Bears"]
+    assert LIGHTNING_BOLT in _names(scenario.player("alice").graveyard)
+
+
+def test_proof_curse_of_the_bloody_tome_mills_the_enchanted_player_at_their_upkeep():
+    """The "enchanted player" recipient (Fraying Sanity) on a second Curse."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Curse of the Bloody Tome"], library=[SWAMP] * 6)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.UNTAP)
+    scenario.find("Curse of the Bloody Tome", Zone.BATTLEFIELD, "alice").attach_to("alice")
+    scenario.advance()
+    scenario.pass_until_resolved()
+    assert _graveyard(scenario, "alice") == 2
+
+
+def test_proof_fleet_swallower_mills_half_the_targeted_library_rounded_up():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Fleet Swallower"])
+        .player("bob", library=[SWAMP] * 7)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    swallower = scenario.creature("Fleet Swallower", "alice")
+    swallower.summoning_sick = False
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.will_choose_targets("bob", username="alice", source="Fleet Swallower")
+    scenario.attack_with(swallower)
+    _settle(scenario)
+    assert _graveyard(scenario, "bob") == 4
+
+
+def test_proof_lord_xander_mills_half_the_defending_players_library_rounded_down():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Lord Xander, the Collector"])
+        .player("bob", library=[SWAMP] * 9)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    xander = scenario.creature("Lord Xander, the Collector", "alice")
+    xander.summoning_sick = False
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(xander)
+    _settle(scenario)
+    assert _graveyard(scenario, "bob") == 4
+
+
+def test_proof_prime_speaker_zegana_enters_with_counters_equal_to_the_greatest_other_power():
+    """ "greatest power among other creatures you control" (Arni's amount)."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Prime Speaker Zegana"],
+            battlefield=["Island"] * 3 + ["Forest"] * 3 + ["Kitchen Finks", "Serra Angel"],
+        )
+        .player("bob", battlefield=["Juggernaut"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve(
+        "Prime Speaker Zegana",
+        *scenario.untapped_sources(*["Island"] * 3, *["Forest"] * 3),
+    )
+    # Fixed by the 1/1 itself: its +1/+1 counters equal the greatest *other*
+    # power (Serra Angel, 4), never counting itself or the opponent's creature.
+    zegana = scenario.creature("Prime Speaker Zegana", "alice")
+    assert zegana.counters.as_dict().get("+1/+1") == 4
+
+
+def test_proof_pupu_ufo_sets_its_base_power_to_the_number_of_towns():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["PuPu UFO", "Adventurer's Inn", "Island", "Island", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ufo = scenario.creature("PuPu UFO", "alice")
+    scenario.activate(ufo, *scenario.untapped_sources("Island", "Island", "Island"), index=1)
+    scenario.resolve_top()
+    assert scenario.game.characteristics_of(ufo).power == 1  # one Town
+    assert scenario.game.characteristics_of(ufo).toughness == 4  # toughness untouched
+
+
+def test_proof_jessica_jones_exiles_cards_equal_to_her_power_and_lets_you_play_them():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Jessica Jones, Private Eye"], library=[FOREST] * 5)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    jessica = scenario.creature("Jessica Jones, Private Eye", "alice")
+    jessica.summoning_sick = False
+    scenario.activate(jessica, index=0)
+    scenario.resolve_top()
+    assert len(scenario.player("alice").library) == 3  # her power is 2
+    assert len(_permissions(scenario)) == 2
+
+
+def test_proof_altar_of_the_goyf_counts_card_types_among_all_graveyards():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Altar of the Goyf", "Grizzly Bears"],
+            graveyard=[LIGHTNING_BOLT],
+        )
+        .player("bob", graveyard=["Mind Stone"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.summoning_sick = False
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears)
+    _settle(scenario)
+    assert scenario.game.characteristics_of(bears).power == 4  # 2 + instant + artifact
