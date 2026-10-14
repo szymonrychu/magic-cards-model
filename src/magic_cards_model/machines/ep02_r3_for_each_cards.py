@@ -16,6 +16,7 @@ from functools import cache
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
+from ..models.card import Type
 from ..models.card_state import CardState
 from ..models.player import Player
 from ..models.zone import Zone
@@ -1066,3 +1067,48 @@ def _parse_destroy_targets_then_each_controller_creates_a_token(
             create_tokens(game, definition, username, 1)
 
     return [effect]
+
+
+# --------------------------------------------------------------------------
+# "For each planeswalker you control, you may activate one of its loyalty
+# abilities once this turn as though none of its loyalty abilities have been
+# activated this turn." (The Chain Veil, CR 606.3)
+# --------------------------------------------------------------------------
+
+_EXTRA_LOYALTY_ACTIVATION_RE = re.compile(
+    r"^for each planeswalker you control, you may activate one of its loyalty abilities once "
+    r"this turn as though none of its loyalty abilities have been activated this turn$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
+def _parse_each_planeswalker_may_activate_a_loyalty_ability_again(
+    clause: str, *, for_spell: bool
+) -> Any:
+    """The Chain Veil. CR 606.3 allows one loyalty activation per planeswalker
+    each turn, counted on `Game.loyalty_activations`; "as though none of its
+    loyalty abilities have been activated this turn" frees exactly one more
+    activation (the text says "once"), for each planeswalker the controller
+    controls as the ability resolves (CR 608.2h). Nothing is written for a
+    planeswalker whose limit is not used up, and the "may" is the controller's
+    to leave unused - the permission costs nothing to hold."""
+    if for_spell or _EXTRA_LOYALTY_ACTIVATION_RE.fullmatch(" ".join(clause.split()).rstrip(".")) is None:
+        return None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        from .equip_block_statics import loyalty_activation_limit
+
+        controller = game.controller_of(stack_object).username
+        for walker in game.permanents_controlled_by(controller):
+            if Type.PLANESWALKER not in game.characteristics_of(walker).types:
+                continue
+            limit = max(
+                game._loyalty_activations_allowed(walker),  # noqa: SLF001
+                loyalty_activation_limit(game, controller),
+            )
+            key = str(walker.id)
+            used = game.loyalty_activations.get(key, 0)
+            game.loyalty_activations[key] = min(used, limit - 1)
+
+    return effect

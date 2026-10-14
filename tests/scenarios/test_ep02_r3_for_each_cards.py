@@ -18,6 +18,7 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Counter
 from magic_cards_model.support import HANDLED, classify_clauses
 from tests.cards import card
 from tests.scenarios.harness import Scenario
@@ -1059,3 +1060,96 @@ def test_tapping_a_creature_for_mana_needs_the_abilitys_permission() -> None:
     payment, bears = _open_payment("{2}", permitted=False)
     with pytest.raises(ValueError, match="(?i)does not let"):
         tap_creature_for_mana(payment, bears)
+
+
+# ---------------------------------------------------------------------------
+# The Chain Veil: "{4}, {T}: For each planeswalker you control, you may activate one
+# of its loyalty abilities once this turn as though none of its loyalty abilities have
+# been activated this turn." (CR 606.3) and the end-step gate "if you didn't activate a
+# loyalty ability of a planeswalker this turn, you lose 2 life."
+# ---------------------------------------------------------------------------
+
+
+def _veil_board(*walkers: str):
+    scenario = _scenario(["The Chain Veil", *walkers], library=["Forest"] * 6)
+    return scenario, scenario.find("The Chain Veil", Zone.BATTLEFIELD, "alice")
+
+
+def _mana_plus(scenario, walker: str):
+    """Activate the walker's `+1: Add {R}{R}` (loyalty ability index 1)."""
+    return scenario.activate(scenario.find(walker, Zone.BATTLEFIELD, "alice"), index=1, auto=True)
+
+
+def _walker_refusal(scenario, walker: str) -> str | None:
+    return scenario.why_cannot_activate(scenario.find(walker, Zone.BATTLEFIELD, "alice"), 1)
+
+
+def test_chain_veil_lets_a_planeswalker_activate_a_second_loyalty_ability() -> None:
+    scenario, veil = _veil_board("Chandra, Torch of Defiance")
+    _mana_plus(scenario, "Chandra, Torch of Defiance")
+    _resolve_all(scenario)
+    assert "already been activated" in (_walker_refusal(scenario, "Chandra, Torch of Defiance") or "")
+    scenario.activate(veil, auto=True)
+    _resolve_all(scenario)
+    assert _walker_refusal(scenario, "Chandra, Torch of Defiance") is None
+    _mana_plus(scenario, "Chandra, Torch of Defiance")
+    _resolve_all(scenario)
+    assert scenario.find("Chandra, Torch of Defiance", Zone.BATTLEFIELD, "alice").counter_count(
+        Counter.LOYALTY
+    ) == 6
+
+
+def test_chain_veil_gives_one_extra_activation_per_planeswalker_not_two() -> None:
+    scenario, veil = _veil_board("Chandra, Torch of Defiance")
+    _mana_plus(scenario, "Chandra, Torch of Defiance")
+    _resolve_all(scenario)
+    scenario.activate(veil, auto=True)
+    _resolve_all(scenario)
+    _mana_plus(scenario, "Chandra, Torch of Defiance")
+    _resolve_all(scenario)
+    assert "already been activated" in (_walker_refusal(scenario, "Chandra, Torch of Defiance") or "")
+
+
+def test_chain_veil_covers_every_planeswalker_the_controller_has() -> None:
+    scenario, veil = _veil_board("Chandra, Torch of Defiance", "Nissa, Who Shakes the World")
+    _mana_plus(scenario, "Chandra, Torch of Defiance")
+    _resolve_all(scenario)
+    scenario.activate(scenario.find("Nissa, Who Shakes the World", Zone.BATTLEFIELD, "alice"), index=0, auto=True)
+    _resolve_all(scenario)
+    scenario.activate(veil, auto=True)
+    _resolve_all(scenario)
+    assert _walker_refusal(scenario, "Chandra, Torch of Defiance") is None
+    assert (
+        scenario.why_cannot_activate(scenario.find("Nissa, Who Shakes the World", Zone.BATTLEFIELD, "alice"), 0)
+        is None
+    )
+
+
+def test_chain_veil_does_nothing_for_an_opponents_planeswalker() -> None:
+    scenario = _scenario(["The Chain Veil"], ["Chandra, Torch of Defiance"], library=["Forest"] * 4)
+    chandra = scenario.find("Chandra, Torch of Defiance", Zone.BATTLEFIELD, "bob")
+    scenario.game.loyalty_activations[str(chandra.id)] = 1
+    scenario.activate(scenario.find("The Chain Veil", Zone.BATTLEFIELD, "alice"), auto=True)
+    _resolve_all(scenario)
+    assert scenario.game.loyalty_activations[str(chandra.id)] == 1
+
+
+def _to_end_step(scenario) -> None:
+    while scenario.step is not Step.END_STEP:
+        scenario.advance()
+        scenario.game.put_triggers_on_stack()
+        _resolve_all(scenario)
+
+
+def test_chain_veil_costs_two_life_at_the_end_step_without_a_loyalty_activation() -> None:
+    scenario, _veil = _veil_board("Chandra, Torch of Defiance")
+    _to_end_step(scenario)
+    assert _life(scenario, "alice") == 18
+
+
+def test_chain_veil_costs_nothing_after_a_loyalty_activation() -> None:
+    scenario, _veil = _veil_board("Chandra, Torch of Defiance")
+    _mana_plus(scenario, "Chandra, Torch of Defiance")
+    _resolve_all(scenario)
+    _to_end_step(scenario)
+    assert _life(scenario, "alice") == 20
