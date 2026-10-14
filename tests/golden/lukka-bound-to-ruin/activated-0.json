@@ -1,0 +1,107 @@
+{
+  "ability": "+1: Add {R}{G}. Spend this mana only to cast creature spells or activate abilities of creatures.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Lukka, Bound to Ruin@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Lukka, Bound to Ruin"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Lukka, Bound to Ruin",
+  "delta": {
+    "created": {},
+    "decisions": [],
+    "fields_changed": [],
+    "notices": {},
+    "objects": {},
+    "players": {
+      "alice": {
+        "mana_pool": [
+          {},
+          {
+            "floating": {
+              "G": 1,
+              "R": 1
+            },
+            "restricted": [
+              {
+                "amounts": {
+                  "G": 1,
+                  "R": 1
+                },
+                "restriction": {
+                  "clauses": [
+                    {
+                      "class_level": false,
+                      "colorless": false,
+                      "excluded_types": [],
+                      "joined": false,
+                      "min_mana_value": null,
+                      "purpose": "cast_spell",
+                      "requires_foretell": false,
+                      "requires_x_in_cost": false,
+                      "subtypes": [],
+                      "supertypes": [],
+                      "types": ["creature"],
+                      "zone": null
+                    },
+                    {
+                      "class_level": false,
+                      "colorless": false,
+                      "excluded_types": [],
+                      "joined": false,
+                      "min_mana_value": null,
+                      "purpose": "activate_ability",
+                      "requires_foretell": false,
+                      "requires_x_in_cost": false,
+                      "subtypes": [],
+                      "supertypes": [],
+                      "types": ["creature"],
+                      "zone": null
+                    }
+                  ],
+                  "text": "Spend this mana only to cast creature spells or activate abilities of creatures."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "stack": []
+  },
+  "family": "activated",
+  "format": 1,
+  "kind": "activated",
+  "number": 0,
+  "recipe": {
+    "enters": false,
+    "off_zone": false,
+    "variant": "quiet"
+  }
+}
