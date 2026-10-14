@@ -463,3 +463,77 @@ def test_herald_second_upkeep_is_sacrificed_when_too_few_lands_are_left():
     _resolve_stack(scenario)
     # Two age counters need two lands; Bob controls only the Swamp (CR 118.3).
     assert herald.zone is Zone.GRAVEYARD
+
+
+# -- Lumbering Battlement: exile any number of other nontoken creatures you control until it
+# leaves the battlefield; +2/+2 for each card exiled with it
+
+
+def _battlement_board(extra=("Grizzly Bears", "Llanowar Elves")):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Lumbering Battlement", "Raise the Alarm"],
+            battlefield=["Plains"] * 7 + list(extra),
+            library=["Island"] * 4,
+        )
+        .player("bob", battlefield=["Grizzly Bears"], library=["Forest"] * 4)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _cast_battlement(scenario, *chosen):
+    scenario.will_choose_cards(*chosen, username="alice")
+    scenario.cast_and_resolve(
+        "Lumbering Battlement", *scenario.untapped_sources(*["Plains"] * 5, username="alice")
+    )
+    _resolve_stack(scenario)
+    return scenario.find("Lumbering Battlement", Zone.BATTLEFIELD, "alice")
+
+
+def test_battlement_exiles_the_chosen_creatures_and_grows_for_each():
+    scenario = _battlement_board()
+    bears = scenario.creature("Grizzly Bears", "alice")
+    elves = scenario.creature("Llanowar Elves", "alice")
+    battlement = _cast_battlement(scenario, bears, elves)
+    assert bears.zone is Zone.EXILE and elves.zone is Zone.EXILE
+    assert _pt(scenario, battlement) == (8, 9)
+
+
+def test_battlement_exiling_nothing_leaves_it_unpumped():
+    scenario = _battlement_board()
+    battlement = _cast_battlement(scenario)
+    assert _pt(scenario, battlement) == (4, 5)
+
+
+def test_battlement_returns_the_creatures_when_it_leaves():
+    scenario = _battlement_board()
+    bears = scenario.creature("Grizzly Bears", "alice")
+    battlement = _cast_battlement(scenario, bears)
+    assert bears.zone is Zone.EXILE
+    scenario.game.destroy(battlement)
+    scenario.game.put_triggers_on_stack()
+    _resolve_stack(scenario)
+    returned = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    assert returned.zone is Zone.BATTLEFIELD
+
+
+def test_battlement_cannot_exile_tokens_other_players_creatures_or_itself():
+    scenario = _battlement_board()
+    scenario.cast_and_resolve(
+        "Raise the Alarm", *scenario.untapped_sources(*["Plains"] * 2, username="alice")
+    )
+    _resolve_stack(scenario)
+    scenario.will_choose_cards(username="alice")
+    scenario.cast_and_resolve(
+        "Lumbering Battlement", *scenario.untapped_sources(*["Plains"] * 5, username="alice")
+    )
+    _resolve_stack(scenario)
+    offered = [d for d in scenario.questions_asked() if d.kind.name == "CHOOSE_CARDS"][-1].cards
+    names = sorted(scenario.game.find_by_id(card_id).name for card_id in offered)
+    assert names == ["Grizzly Bears", "Llanowar Elves"]
+    bob_bears = scenario.creature("Grizzly Bears", "bob")
+    assert bob_bears.id not in offered

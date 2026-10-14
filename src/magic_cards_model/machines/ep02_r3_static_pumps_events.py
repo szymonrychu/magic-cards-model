@@ -11,6 +11,7 @@
 import re
 from typing import TYPE_CHECKING, Any
 
+from ..models.zone import Zone
 from .effects._chains import ABILITY_TEXT
 
 if TYPE_CHECKING:
@@ -69,5 +70,48 @@ def _parse_each_player_regains_what_they_own(text: str) -> Any:
                 ),
                 game,
             )
+
+    return effect
+
+
+_EXILE_ANY_NUMBER_UNTIL_RE = re.compile(
+    r"^exile any number of other (?P<desc>nontoken [a-z]+s|[a-z]+s) you control until "
+    r"(?:it|this (?:creature|permanent|artifact|enchantment)) leaves the battlefield\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_exile_any_number_until_leaves(text: str) -> Any:
+    """ "Exile any number of other nontoken creatures you control until this
+    creature leaves the battlefield" (Lumbering Battlement): the controller
+    chooses zero up to all of them as it resolves (CR 107.1c, CR 608.2d); each is
+    exiled linked to the source (CR 607.2a) and returns when it leaves
+    (CR 610.3). CR 610.3b: a source that already left exiles nothing."""
+    match = _EXILE_ANY_NUMBER_UNTIL_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    from .ep02_r2_chosen_amounts import _permanent_matcher
+
+    permanent = _permanent_matcher(match["desc"])
+    if permanent is None:
+        return None
+    _untapped, _other, predicate = permanent
+
+    def effect(game: "Game", ability: Any) -> None:
+        from .ep02_r2_chosen_amounts import choose_any_number
+        from .linked_exile import exile_linked_until_leaves
+
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        player = game.controller_of(ability)
+        candidates = [
+            permanent
+            for permanent in game.permanents_controlled_by(player.username)
+            if permanent.id != source.id and predicate(game, player.username, permanent)
+        ]
+        chosen = choose_any_number(game, ability, player, candidates, text.strip().rstrip("."))
+        exile_linked_until_leaves(game, source, chosen, player.username)
 
     return effect
