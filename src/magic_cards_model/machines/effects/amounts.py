@@ -3226,6 +3226,9 @@ _OTHER_THAN_THIS_TAIL_RE = re.compile(
     r"(?:[a-z]+)$",
     re.IGNORECASE,
 )
+_FORETOLD_IN_EXILE_EACH_RE = re.compile(
+    r"^foretold card you own in exile$", re.IGNORECASE
+)
 _TIME_KICKED_EACH_RE = re.compile(r"^time (?:it|this spell|[A-Z][^.]*?) was kicked$")
 _LEFT_UNDER_YOUR_CONTROL_EACH_RE = re.compile(
     r"^(?P<quality>[a-z -]+?) that left the battlefield under your control this turn$",
@@ -3291,6 +3294,12 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
                 and entry.player == controller
                 and quality(entry)
             )
+    if _FORETOLD_IN_EXILE_EACH_RE.fullmatch(stripped):
+        # Niko Defies Destiny I: foretold cards (CR 702.143a, CR 406.3) in
+        # exile this player owns, counted as the effect applies (CR 608.2h).
+        return lambda game, controller, _source_id: game.foretold_in_exile_counts().get(
+            controller, 0
+        )
     if _TIME_KICKED_EACH_RE.fullmatch(stripped):
         # Spell Contortion: "Draw a card for each time Spell Contortion was
         # kicked" - CR 702.33d's count of multikicker payments, read off the

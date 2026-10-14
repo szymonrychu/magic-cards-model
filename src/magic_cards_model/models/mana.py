@@ -549,8 +549,13 @@ class SpendPurpose(StrEnum):
     #: carries it is `machines/keywords._cumulative_upkeep_effect`'s payment
     #: (`ManaSpend.paying_cumulative_upkeep`).
     PAY_CUMULATIVE_UPKEEP = "pay_cumulative_upkeep"
+    #: Niko Defies Destiny's "Spend this mana only to foretell cards": the {2}
+    #: of the CR 116.2h special action, which is neither a cast nor an
+    #: activation (`ManaSpend.foretelling`).
+    FORETELL = "foretell"
 
 
+_FORETELL_LINE_RE = re.compile(r"^Foretell\b", re.MULTILINE)
 _CANT_SPEND_MANA_RE = re.compile(r"^You can't spend mana to cast this spell\.$", re.MULTILINE)
 
 
@@ -679,6 +684,9 @@ class ManaSpend(EngineModel):
     is paid). `None` for an activation, which has no spell to ask about."""
     x_in_cost: bool = False
     """Whether the spell being cast has an {X} in its mana cost."""
+    has_foretell: bool = False
+    """Whether the spell being cast has foretell (CR 702.143a) - Niko Defies
+    Destiny's "cast spells that have foretell"."""
     no_mana: bool = False
     """The spell says "You can't spend mana to cast this spell." (Hogaak,
     Arisen Necropolis): no mana of any kind may pay for it, only the objects
@@ -745,6 +753,8 @@ class ManaSpend(EngineModel):
             update={
                 "mana_value": float(base) + x_count * x_value,
                 "x_in_cost": x_count > 0,
+                "has_foretell": _FORETELL_LINE_RE.search(getattr(card, "oracle_text", "") or "")
+                is not None,
                 "snow_any_color": snow_any_color,
                 "no_mana": reads_cant_spend_mana_line(getattr(card, "oracle_text", "") or ""),
                 "only_from": spend_only_from(getattr(card, "oracle_text", "") or ""),
@@ -771,6 +781,12 @@ class ManaSpend(EngineModel):
         """
         spend = cls._of(SpendPurpose.ACTIVATE_ABILITY, card, None, any_color=any_color)
         return spend.model_copy(update={"class_level": True}) if class_level else spend
+
+    @classmethod
+    def foretelling(cls, card: "HasCharacteristics") -> "ManaSpend":
+        """Mana spent on the {2} of foretelling `card` (CR 116.2h, CR 702.143a),
+        which is a special action - neither a cast nor an activation."""
+        return cls._of(SpendPurpose.FORETELL, card, None)
 
     @classmethod
     def paying_cumulative_upkeep(cls, card: "HasCharacteristics") -> "ManaSpend":
@@ -847,6 +863,8 @@ class SpendClause(EngineModel):
     the spell's CR 202.3 mana value must reach this. `None` asks nothing."""
     requires_x_in_cost: bool = False
     """Helga's "creature spells with {X} in their mana costs"."""
+    requires_foretell: bool = False
+    """Niko Defies Destiny's "cast spells that have foretell"."""
     class_level: bool = False
     """Sorcerer Class's "to gain a Class level": only a CR 716.2a level bar's
     activation (`ManaSpend.class_level`)."""
@@ -872,6 +890,8 @@ class SpendClause(EngineModel):
         if self.requires_x_in_cost and not spend.x_in_cost:
             return False
         if self.class_level and not spend.class_level:
+            return False
+        if self.requires_foretell and not spend.has_foretell:
             return False
         # CR 109.2: every negated type must be absent, independently of
         # `joined` and of whatever the positive qualities below ask - "not

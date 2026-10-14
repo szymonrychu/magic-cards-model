@@ -5690,7 +5690,13 @@ class MarkedExile(EngineModel):
     def begin_paying(self) -> CostPayment:
         """Open the payment for the special action's cost (CR 601.2h shape)."""
         if self.payment is None:
-            self.payment = CostPayment.for_total(self.cost, game=self.game, payer=self.player)
+            self.payment = CostPayment.for_total(
+                self.cost,
+                game=self.game,
+                payer=self.player,
+                # CR 106.6: foretelling's {2} is a spend a restriction may name.
+                spend=ManaSpend.foretelling(self.card) if self.marker is ExileMarker.FORETOLD else None,
+            )
         return self.payment
 
     def take(self) -> CardState:

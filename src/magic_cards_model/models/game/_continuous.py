@@ -1046,7 +1046,7 @@ class ContinuousMixin:
             },
             # CR 702.143a: Alrund, God of the Cosmos' "each foretold card you own
             # in exile" - a shared zone's cards, counted per owner.
-            foretold_in_exile_by_player=self._foretold_in_exile_counts(),
+            foretold_in_exile_by_player=self.foretold_in_exile_counts(),
             # CR 401.1: Living Conundrum's "As long as there are no cards in
             # your library" reads a library size, no more a characteristic
             # than a hand size is.
@@ -1934,7 +1934,7 @@ class ContinuousMixin:
 
         return increases, decreases, floor
 
-    def _foretold_in_exile_counts(self: "Game") -> dict[str, int]:
+    def foretold_in_exile_counts(self: "Game") -> dict[str, int]:
         """Foretold cards (CR 702.143a) in exile, per owner."""
         counts: dict[str, int] = {}
         for card in self.exile:

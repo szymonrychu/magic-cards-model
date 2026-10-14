@@ -1243,3 +1243,86 @@ def test_winged_temple_of_orazca_gives_flying_and_plus_its_power():
     # Bears are 2/2, so X = 2.
     assert _characteristics(scenario, bears) == (4, 4)
     assert scenario.game.computed_board().of(bears).has_ability("Flying")
+
+
+# -- Niko Defies Destiny: I life per foretold card, II foretell-only mana, III
+# return a foretell card from the graveyard
+
+
+def _niko_board(**alice):
+    scenario = (
+        Scenario()
+        .player("alice", library=["Forest"] * 8, **alice)
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_niko_chapter_one_gains_two_life_per_foretold_card():
+    from magic_cards_model.machines.casting import MarkedExile
+
+    scenario = _niko_board(
+        hand=["Niko Defies Destiny", "Lupine Harbingers", "Lupine Harbingers"],
+        battlefield=["Forest"] * 5 + ["Plains", "Island"],
+    )
+    for _ in range(2):
+        harbingers = scenario.find("Lupine Harbingers", Zone.HAND, "alice")
+        action = MarkedExile.foretell(scenario.game, harbingers, "alice")
+        scenario.pay_with(action.begin_paying(), *scenario.untapped_sources("Forest", "Forest"))
+        action.take()
+    before = scenario.player("alice").life
+    scenario.cast_and_resolve(
+        "Niko Defies Destiny", *scenario.untapped_sources("Plains", "Island", "Forest")
+    )
+    _settle(scenario)
+    assert scenario.player("alice").life == before + 4
+
+
+def _niko_chapter_two(battlefield=(), **alice):
+    scenario = _niko_board(battlefield=["Niko Defies Destiny", *battlefield], **alice)
+    saga = scenario.find("Niko Defies Destiny", Zone.BATTLEFIELD, "alice")
+    _advance_saga(scenario, saga)
+    return scenario, saga
+
+
+def test_niko_chapter_two_mana_pays_for_a_spell_with_foretell():
+    scenario, _ = _niko_chapter_two(hand=["Skull Raid"], battlefield=["Swamp", "Swamp"])
+    spell = scenario.cast_onto_stack(
+        "Skull Raid",
+        *scenario.untapped_sources("Swamp", "Swamp"),
+        targets=[scenario.player("bob")],
+    )
+    assert spell.zone is Zone.STACK
+
+
+def test_niko_chapter_two_mana_pays_to_foretell():
+    from magic_cards_model.machines.casting import MarkedExile
+
+    scenario, _ = _niko_chapter_two(hand=["Lupine Harbingers"])
+    harbingers = scenario.find("Lupine Harbingers", Zone.HAND, "alice")
+    action = MarkedExile.foretell(scenario.game, harbingers, "alice")
+    scenario.pay_with(action.begin_paying())
+    action.take()
+    assert harbingers.zone is Zone.EXILE
+
+
+def test_niko_chapter_two_mana_cannot_cast_a_spell_without_foretell():
+    scenario, _ = _niko_chapter_two(hand=["Opt"])
+    try:
+        scenario.cast_onto_stack("Opt")
+    except Exception:
+        return
+    raise AssertionError("restricted mana paid for a spell without foretell")
+
+
+def test_niko_chapter_three_returns_a_foretell_card_from_the_graveyard():
+    scenario = _niko_board(
+        battlefield=["Niko Defies Destiny"], graveyard=["Saw It Coming", "Grizzly Bears"]
+    )
+    saga = scenario.find("Niko Defies Destiny", Zone.BATTLEFIELD, "alice")
+    scenario.game.add_counters(saga, Counter.LORE, 2)
+    _settle(scenario)
+    assert scenario.find("Saw It Coming", Zone.HAND, "alice")
+    assert scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
