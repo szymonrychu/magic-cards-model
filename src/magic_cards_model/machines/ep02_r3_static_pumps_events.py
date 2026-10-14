@@ -1,4 +1,3 @@
-"""EP-02 R3 T1: the non-static clauses of the static-for-each-pump cards (events)."""
 """EP-02 R3 T1: the event-driven clauses of the static-for-each-pump cards.
 
 - "each player gains control of each land they own that you control" (Herald of
@@ -137,8 +136,8 @@ def _parse_additional_combat_then_untap(text: str) -> Any:
     untaps = match["rider"] is not None
 
     def effect(game: "Game", ability: Any) -> None:
-        from .delayed import DelayedTrigger, UntapAllCreaturesForController
         from .abilities import TriggerEvent
+        from .delayed import DelayedTrigger, UntapAllCreaturesForController
         from .turn import COMBAT_PHASE_STEPS, Step
 
         assert game.turn is not None

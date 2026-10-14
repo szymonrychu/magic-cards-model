@@ -1205,7 +1205,11 @@ def colors_among_now(
     from ..vivid import colors_among, parse_colors_among_qualifier
 
     qualifier = parse_colors_among_qualifier(ability.each_color_among)
-    return [] if qualifier is None else sorted(colors_among(game, controller, qualifier, source=source))
+    return (
+        []
+        if qualifier is None
+        else sorted(colors_among(game, controller, qualifier, source=source))
+    )
 
 
 def counted_mana_options(

@@ -29,7 +29,8 @@ def _pt(scenario, card):
     return chars.power, chars.toughness
 
 
-# -- Behold the Unspeakable, chapter I: "Creatures you don't control get -2/-0 until your next turn."
+# -- Behold the Unspeakable, chapter I:
+# "Creatures you don't control get -2/-0 until your next turn."
 
 
 def _behold_board(bob=("Grizzly Bears", "Grizzly Bears"), alice=(), bob_hand=()):

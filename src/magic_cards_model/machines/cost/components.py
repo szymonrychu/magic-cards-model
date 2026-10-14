@@ -1229,8 +1229,13 @@ class CostComponent(EngineModel):
                 self._remember(card)
                 game.put_into_graveyard(card)
         elif self.kind is ComponentKind.GAIN_CONTROL:
-            from ..layers import ContinuousEffect, Duration, Layer, only_this_incarnation
-            from ..layers import set_controller
+            from ..layers import (
+                ContinuousEffect,
+                Duration,
+                Layer,
+                only_this_incarnation,
+                set_controller,
+            )
 
             store = game.continuous_effects
             timestamp = store.tick()

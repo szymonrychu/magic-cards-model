@@ -39,7 +39,8 @@ def board_count_now(game: "Game", source: "CardState", phrase: str) -> int | Non
 
 
 _DRAW_FOR_EACH_RE = re.compile(
-    r"^draw a card for each (?P<each>(?:[a-z-]+ )*aura you control that's attached to a creature)\.?$",
+    r"^draw a card for each "
+    r"(?P<each>(?:[a-z-]+ )*aura you control that's attached to a creature)\.?$",
     re.IGNORECASE,
 )
 
@@ -65,7 +66,8 @@ def _parse_draw_for_each_board_count(text: str, *, for_spell: bool) -> Any:
 
 
 _TOKENS_PER_OPPONENT_RE = re.compile(
-    r"^create a number of (?P<desc>.+?) tokens(?P<tail> with .+?)? equal to the number of opponents you have\.?$",
+    r"^create a number of (?P<desc>.+?) tokens(?P<tail> with .+?)? "
+    r"equal to the number of opponents you have\.?$",
     re.IGNORECASE,
 )
 
