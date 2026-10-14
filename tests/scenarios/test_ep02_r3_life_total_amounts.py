@@ -13,6 +13,7 @@ from magic_cards_model.machines import Step, payability
 from magic_cards_model.machines.combat import has_keyword
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color
+from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
 
 FOREST10 = ["Forest"] * 10
@@ -879,3 +880,111 @@ def test_azors_gateway_repeated_mana_values_do_not_count_twice():
         _activate_gateway(scenario, gateway)
     assert not gateway.transformed
     assert _life(scenario) == 20
+
+
+@pytest.mark.parametrize("life", [1, 7, 23])
+def test_sanctum_of_the_sun_adds_mana_of_one_color_equal_to_your_life_total(life):
+    scenario, gateway = _azors_gateway(FOREST10)
+    gateway.transformed = True
+    scenario.player("alice").life = life
+    scenario.activate(gateway, index=0, color=Color.RED)
+    pool = scenario.player("alice").mana_pool
+    assert sum(pool.floating.values()) == life
+    assert pool.floating.get(Color.RED) == life  # all of it one color
+
+
+# --------------------------------------------------------------------------
+# Proof printings: the readers this task widened, on legal cards that are not on the task's list
+# --------------------------------------------------------------------------
+
+
+def _loyalty(scenario, name, loyalty):
+    walker = next(c for c in scenario.game.battlefield if c.name == name)
+    delta = loyalty - walker.counter_count(Counter.LOYALTY)
+    if delta >= 0:
+        walker.add_counters(Counter.LOYALTY, delta)
+    else:
+        walker.remove_counters(Counter.LOYALTY, -delta)
+    return walker
+
+
+@pytest.mark.parametrize("life", [1, 7, 20])
+def test_proof_ajani_caller_of_the_pride_makes_a_cat_per_point_of_life(life):
+    """"X 2/2 white Cat creature tokens, where X is your life total" (the Storm Herd reader)."""
+    scenario = _main(_build(["Ajani, Caller of the Pride"], life=life))
+    ajani = _loyalty(scenario, "Ajani, Caller of the Pride", 8)
+    scenario.activate(ajani, index=2)
+    scenario.pass_until_resolved()
+    assert len(_tokens(scenario, "Cat Token")) == life
+
+
+def test_proof_huatli_the_suns_heart_gains_the_greatest_toughness_among_your_creatures():
+    scenario = _main(
+        _build(["Huatli, the Sun's Heart", "Grizzly Bears", "Serra Angel", "Hill Giant"])
+    )
+    huatli = _loyalty(scenario, "Huatli, the Sun's Heart", 5)
+    scenario.activate(huatli, index=0)
+    scenario.pass_until_resolved()
+    assert _life(scenario) == 24  # Serra Angel's toughness 4
+
+
+def test_proof_huatli_warrior_poet_gains_the_greatest_power_among_your_creatures():
+    scenario = _main(_build(["Huatli, Warrior Poet", "Grizzly Bears", "Hill Giant"]))
+    huatli = _loyalty(scenario, "Huatli, Warrior Poet", 3)
+    scenario.activate(huatli, index=0)
+    scenario.pass_until_resolved()
+    assert _life(scenario) == 23  # Hill Giant's power 3
+
+
+@pytest.mark.parametrize(("dead_before", "damage"), [(0, 1), (2, 3)])
+def test_proof_ember_fist_zubera_counts_the_zubera_that_died_this_turn(dead_before, damage):
+    others = ["Silent-Chant Zubera"] * dead_before
+    scenario = _main(_build(["Ember-Fist Zubera", *others], ["Serra Angel"]))
+    for zubera in scenario.creatures(*others, username="alice"):
+        scenario.game.destroy(zubera)
+    _settle(scenario)
+    scenario.will_choose_targets("bob", source="Ember-Fist Zubera", times=None)
+    scenario.game.destroy(scenario.creature("Ember-Fist Zubera", "alice"))
+    _settle(scenario)
+    assert _life(scenario, "bob") == 20 - damage
+
+
+@pytest.mark.parametrize(("speed", "lands"), [(1, 1), (3, 3)])
+def test_proof_point_the_way_fetches_basic_lands_equal_to_your_speed(speed, lands):
+    scenario = _main(_build(["Point the Way", "Forest"] * 1 + ["Plains"] * 3, library=["Forest"] * 6))
+    scenario.player("alice").speed = speed
+    way = next(c for c in scenario.game.battlefield if c.name == "Point the Way")
+    scenario.will_choose_cards(*scenario.top_of_library(lands), source="Point the Way", times=None)
+    scenario.activate(way, *scenario.untapped_sources("Plains", "Plains", "Plains", "Forest"), index=0)
+    scenario.pass_until_resolved()
+    on_battlefield = [c for c in scenario.game.battlefield if c.name == "Forest"]
+    assert len(on_battlefield) == 1 + lands
+
+
+def test_proof_biorhythm_sets_each_life_total_to_the_creatures_that_player_controls():
+    scenario = _main(
+        _build(
+            ["Forest"] * 8 + ["Grizzly Bears"] * 2,
+            ["Hill Giant"] * 5,
+            hand=["Biorhythm"],
+        )
+    )
+    scenario.cast_and_resolve("Biorhythm", auto=True, username="alice")
+    assert _life(scenario) == 2
+    assert _life(scenario, "bob") == 5
+
+
+def test_proof_repay_in_kind_sets_every_life_total_to_the_lowest():
+    scenario = _main(_build(["Swamp"] * 7, hand=["Repay in Kind"], life=14))
+    scenario.player("bob").life = 3
+    scenario.cast_and_resolve("Repay in Kind", auto=True, username="alice")
+    assert _life(scenario) == 3
+    assert _life(scenario, "bob") == 3
+
+
+def test_proof_vraska_relic_seeker_sets_the_targets_life_total_to_one():
+    scenario = _main(_build(["Vraska, Relic Seeker"]))
+    vraska = _loyalty(scenario, "Vraska, Relic Seeker", 10)
+    scenario.activate(vraska, index=2, targets=["bob"])
+    scenario.pass_until_resolved()
+    assert _life(scenario, "bob") == 1
