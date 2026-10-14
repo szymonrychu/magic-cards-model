@@ -1986,7 +1986,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 169
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 174
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2342,6 +2342,16 @@ class Game(
     #: hand size." are read off the battlefield, and a Crew N ability is
     #: once-per-turn; an older dump would resolve each of these as a no-op.
     #: EP-02-R2: T2, T4, T5 and T7 each reserved 164; the round lands as one version, 169.
+    #: 174 (EP02-R3-T5, reserved: 169 + task 5): `Game` gained
+    #: `loyalty_activation_allowance` (Kaito, Dancing Shadow's "activate loyalty abilities of
+    #: Kaito twice this turn", CR 606.3); `ExileMarker` gained `HAUNTING` (CR 702.55b) and
+    #: `TriggerEvent` gained `RESOLVED_INTO_GRAVEYARD` (CR 702.55a), both reachable through a
+    #: haunting card in exile and a pending trigger's event; the layer modification union gained
+    #: `SetToughness` (CR 613.4b, an exchanged life total); `delayed.SacrificeSubject` gained
+    #: `max_mana_value` (Angrath, the Flame-Chained's "if it has mana value 3 or less") and
+    #: `TargetRequirement.comparison_count` gained `CONTROLLER_LIFE` (Blazing Hope). An older
+    #: dump would decode a haunting card as an ordinary exiled one, and a second loyalty
+    #: activation, a toughness exchange or a conditional sacrifice as the plain one.
     #: 169 (EP02-R2-T2): `Player` gained `cannot_cast_spells_for_rest_of_game`
     #: and `CardState` gained `epic_suppressed` (epic, CR 702.50a/b), and
     #: `DelayedEffectSpec` gained the variant `epic_copy_spell`; a pending

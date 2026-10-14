@@ -818,6 +818,7 @@
     "harnessed",
     "power_up_restricted_turns",
     "loyalty_activations",
+    "loyalty_activation_allowance",
     "text_change_originals",
     "forecast_activations",
     "once_per_turn_triggers",

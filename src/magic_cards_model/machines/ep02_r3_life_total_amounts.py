@@ -210,7 +210,9 @@ _LIFE_WHO = frozenset(
 )
 
 
-@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+@MIXED_CLAUSE.rung(
+    "s26", for_spell=FORWARD, after=["life._parse_each_player_life_per_group_they_control_clause"]
+)
 def _parse_life_amount_clause(clause: str, *, for_spell: bool) -> "Callable[..., None] | None":
     """ "<who> gains/loses twice X life | life equal to <expr> | N life for each <count> |
     X life, where X is <expr>" - the one life-sentence reader (`amount_sentences`) run as a
@@ -727,7 +729,7 @@ def _parse_return_one_of_them_then_loyalty_twice(
 ) -> "Callable[..., None] | None":
     """After a batched "one or more creatures you control deal combat damage to a player"
     trigger (CR 603.2c): the controller may return one of the creatures that dealt it to its
-    owner's hand (CR 701.19a); if they do, the source planeswalker's loyalty abilities may be
+    owner's hand; if they do, the source planeswalker's loyalty abilities may be
     activated twice this turn (CR 606.3 raised for the turn, `Game.loyalty_activation_allowance`).
     "Them" is the batch the trigger counted (`batched_combat_damage_sources`)."""
     if "loyalty abilities of" not in effect_text.lower():
