@@ -1266,3 +1266,81 @@ def test_sanity_grinding_bottom_order_is_the_casters_choice():
         "Counterspell",
         SWAMP,
     ]
+
+
+# --------------------------------------------------------------------------
+# Breach the Multiverse: CR 101.4 (APNAP choices), CR 701.17a, CR 205.3
+# (creature types), CR 611.2c (a continuous effect from a resolving spell
+# affects only the objects it found).
+# --------------------------------------------------------------------------
+
+
+def _breach(alice_library, bob_library, alice_battlefield=(), alice_hand=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Breach the Multiverse", *alice_hand],
+            battlefield=["Swamp"] * 7 + list(alice_battlefield),
+            library=list(alice_library),
+        )
+        .player("bob", library=list(bob_library))
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _subtypes(scenario, card):
+    return scenario.game.characteristics_of(card).subtypes
+
+
+def test_breach_the_multiverse_reanimates_one_card_per_graveyard_under_your_control():
+    scenario = _breach(
+        ["Serra Angel", *[FOREST] * 11],
+        ["Kitchen Finks", *[FOREST] * 11],
+        alice_battlefield=["Grizzly Bears"],
+    )
+    serra = scenario.find("Serra Angel", Zone.LIBRARY, "alice")
+    finks = scenario.find("Kitchen Finks", Zone.LIBRARY, "bob")
+    scenario.will_choose_cards(serra, username="alice", source="Breach the Multiverse")
+    scenario.will_choose_cards(finks, username="alice", source="Breach the Multiverse")
+    scenario.cast_and_resolve("Breach the Multiverse", *scenario.untapped_sources(*["Swamp"] * 7))
+    assert serra.zone is Zone.BATTLEFIELD and finks.zone is Zone.BATTLEFIELD
+    assert serra.controller == "alice" and finks.controller == "alice"
+    assert _graveyard(scenario, "alice") == 10 - 1 + 1  # ten milled, Serra left, the spell arrived
+    assert _graveyard(scenario, "bob") == 9
+    bears = scenario.creature("Grizzly Bears", "alice")
+    for creature in (serra, finks, bears):
+        assert "Phyrexian" in _subtypes(scenario, creature)
+
+
+def test_breach_the_multiverse_phyrexian_applies_only_to_creatures_present_as_it_resolves():
+    """CR 611.2c: the set is fixed when the effect begins."""
+    scenario = _breach(
+        ["Serra Angel", *[FOREST] * 11], [FOREST] * 12, alice_hand=["Grizzly Bears"]
+    )
+    serra = scenario.find("Serra Angel", Zone.LIBRARY, "alice")
+    scenario.will_choose_cards(serra, username="alice", source="Breach the Multiverse")
+    scenario.cast_and_resolve("Breach the Multiverse", *scenario.untapped_sources(*["Swamp"] * 7))
+    later = scenario.put_onto_battlefield("Grizzly Bears", "alice")
+    assert "Phyrexian" in _subtypes(scenario, serra)
+    assert "Phyrexian" not in _subtypes(scenario, later)
+
+
+def test_breach_the_multiverse_can_take_a_planeswalker_which_is_not_a_phyrexian():
+    scenario = _breach(
+        [*[FOREST] * 12], ["Jace, the Mind Sculptor", *[FOREST] * 11]
+    )
+    jace = scenario.find("Jace, the Mind Sculptor", Zone.LIBRARY, "bob")
+    scenario.will_choose_cards(jace, username="alice", source="Breach the Multiverse")
+    scenario.cast_and_resolve("Breach the Multiverse", *scenario.untapped_sources(*["Swamp"] * 7))
+    assert jace.zone is Zone.BATTLEFIELD and jace.controller == "alice"
+    assert "Phyrexian" not in _subtypes(scenario, jace)
+
+
+def test_breach_the_multiverse_with_no_creature_or_planeswalker_card_asks_nothing():
+    scenario = _breach([FOREST] * 12, [FOREST] * 12)
+    scenario.cast_and_resolve("Breach the Multiverse", *scenario.untapped_sources(*["Swamp"] * 7))
+    assert _graveyard(scenario, "alice") == 11
+    assert _graveyard(scenario, "bob") == 10

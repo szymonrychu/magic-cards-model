@@ -1024,3 +1024,84 @@ def _parse_reveal_top_mill_per_color_symbol(
             controller.move(state, Zone.LIBRARY)
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# Breach the Multiverse: everyone mills, one card per graveyard is taken
+# --------------------------------------------------------------------------
+
+_EACH_PLAYER_MILLS_THEN_TAKES_ONE_PER_GRAVEYARD_RE = re.compile(
+    r"^each player mills (?P<n>\w+) cards\. for each player, choose an? (?P<quality>[a-z ]+?) "
+    r"card in that player'?s graveyard\. put those cards onto the battlefield under your "
+    r"control\. then each creature you control becomes an? (?P<subtype>[a-z]+) in addition "
+    r"to its other types$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s14")
+def _parse_each_player_mills_then_takes_one_card_from_each_graveyard(
+    spell_text: str,
+) -> "Callable[[Game, CardState], None] | None":
+    """Each player mills N (CR 701.17a); for each player in APNAP order
+    (CR 101.4) the controller chooses a matching card in that player's
+    graveyard (CR 608.2d), all chosen cards enter together under the
+    controller's control, then every creature the controller then controls
+    gains the creature type in addition (CR 205.3, layer 4) - the set fixed
+    as the spell resolves (CR 611.2c)."""
+    from .effects._common import _players_in_apnap_order, _quality_matcher
+
+    match = _EACH_PLAYER_MILLS_THEN_TAKES_ONE_PER_GRAVEYARD_RE.fullmatch(clean(spell_text))
+    count = None if match is None else parse_count(match.group("n"))
+    if match is None or not count:
+        return None
+    matches = _quality_matcher(match.group("quality"))
+    subtype = match.group("subtype").title()
+
+    def effect(game: "Game", spell: CardState) -> None:
+        from ..models.card import Type
+        from .effects.continuous import continuous_effects
+        from .layers import AddSubtype
+
+        controller = controller_of(game, spell)
+        players = _players_in_apnap_order(game)
+        mill_players(game, players, [count] * len(players))
+        chosen: list[CardState] = []
+        for player in players:
+            candidates = [state for state in player.cards_in(Zone.GRAVEYARD) if matches(state)]
+            if not candidates:
+                continue
+            picked = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller,
+                    prompt=f"choose a card in {player.username}'s graveyard to put onto the battlefield",
+                    source=spell.name,
+                    source_id=source_id_of(spell),
+                    amount=1,
+                    cards=tuple(state.id for state in candidates),
+                    card_labels=tuple(state.name for state in candidates),
+                )
+            )
+            by_id = {state.id: state for state in candidates}
+            chosen.extend(by_id[card_id] for card_id in picked)
+        with game.entering_together():
+            for state in chosen:
+                game.put_onto_battlefield(state, controller)
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        for permanent in game.permanents_controlled_by(controller):
+            if Type.CREATURE not in game.characteristics_of(permanent).types:
+                continue
+            store.add(
+                ContinuousEffect(
+                    description=f"{spell.name}: {permanent.name} becomes a {subtype}",
+                    layer=Layer.TYPE,
+                    timestamp=timestamp,
+                    duration=Duration.INDEFINITE,
+                    selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
+                    modification=AddSubtype(subtype=subtype),
+                )
+            )
+
+    return effect
