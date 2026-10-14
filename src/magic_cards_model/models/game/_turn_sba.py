@@ -1749,17 +1749,18 @@ class TurnSbaMixin:
         # by `_dies_to_state_based_action`, so an indestructible permanent is not
         # in this list for either of them - and an indestructible 0/0 is, which
         # is the point of the distinction.
-        for state in leaving:
-            # CR 704.5g and CR 704.5h are destructions (CR 701.8b), so a
-            # destruction-replacement - regeneration, umbra armor - gets its
-            # say before the move. Everything else in `leaving` is "put into
-            # its owner's graveyard" and cannot be replaced that way; CR 704.5f
-            # states it outright ("Regeneration can't replace this event").
-            if self._destroyed_by_state_based_action(state, board) and not self.destruction_happens(
-                state
-            ):
-                continue
-            self.put_into_graveyard(state)
+        with self.dying_together():  # CR 704.3: one simultaneous event
+            for state in leaving:
+                # CR 704.5g and CR 704.5h are destructions (CR 701.8b), so a
+                # destruction-replacement - regeneration, umbra armor - gets its
+                # say before the move. Everything else in `leaving` is "put into
+                # its owner's graveyard" and cannot be replaced that way; CR 704.5f
+                # states it outright ("Regeneration can't replace this event").
+                if self._destroyed_by_state_based_action(
+                    state, board
+                ) and not self.destruction_happens(state):
+                    continue
+                self.put_into_graveyard(state)
 
         # CR 704.5n, after the round that killed the host: an Equipment whose
         # creature has just left becomes unattached and *stays on the
@@ -2548,6 +2549,7 @@ class TurnSbaMixin:
             self.permanents_left_battlefield_this_turn = {}
             self.lands_entered_this_turn = {}
             self.attacked_this_turn = set()
+            self.attack_count_this_turn = {}
             self.exerted_this_turn = set()
             self.attacked_players_this_turn = {}
             self.became_tapped_count_this_turn = {}

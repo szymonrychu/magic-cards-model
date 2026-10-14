@@ -285,9 +285,6 @@ def parse_exile_all_until_leaves_clause(clause: str) -> AbilityEffect | None:
         return None
 
     def effect(game: Game, ability: AbilityOnStack) -> None:
-        from ..models.card_state import ExileAnnotation, ExileMarker
-        from .effects import _watch_for_departure_and_return_exiled_card
-
         source = ability.source(game)
         if source is None or source.zone is not Zone.BATTLEFIELD:
             return  # CR 610.3b
@@ -297,20 +294,36 @@ def parse_exile_all_until_leaves_clause(clause: str) -> AbilityEffect | None:
             for permanent in list(game.battlefield)
             if permanent is not source and predicate(game, permanent, controller)
         ]
-        for permanent in chosen:
-            exiled = game.exile_permanent(permanent)
-            if exiled.zone is not Zone.EXILE:
-                continue  # CR 111.8: a token does not come back
-            exiled.exile_annotation = ExileAnnotation(
-                marker=ExileMarker.LINKED,
-                owner=exiled.owner,
-                turn_exiled=game.turn.turns_taken if game.turn is not None else None,
-                linked_permanent_id=source.id,
-                linked_permanent_stamp=source.zone_change_stamp,
-            )
-            _watch_for_departure_and_return_exiled_card(game, source, exiled, controller)
+        exile_linked_until_leaves(game, source, chosen, controller)
 
     return effect
+
+
+def exile_linked_until_leaves(
+    game: Game, source: CardState, chosen: list[CardState], controller: str
+) -> list[CardState]:
+    """Exile `chosen` permanents linked to `source` (CR 607.1, so "cards exiled
+    with this creature" finds them) and watch for `source` leaving (CR 610.3),
+    returning each under its owner's control (CR 610.3c). Returns what really
+    went to exile; a token does not (CR 111.8)."""
+    from ..models.card_state import ExileAnnotation, ExileMarker
+    from .effects import _watch_for_departure_and_return_exiled_card
+
+    exiled_cards: list[CardState] = []
+    for permanent in chosen:
+        exiled = game.exile_permanent(permanent)
+        if exiled.zone is not Zone.EXILE:
+            continue  # CR 111.8: a token does not come back
+        exiled.exile_annotation = ExileAnnotation(
+            marker=ExileMarker.LINKED,
+            owner=exiled.owner,
+            turn_exiled=game.turn.turns_taken if game.turn is not None else None,
+            linked_permanent_id=source.id,
+            linked_permanent_stamp=source.zone_change_stamp,
+        )
+        _watch_for_departure_and_return_exiled_card(game, source, exiled, controller)
+        exiled_cards.append(exiled)
+    return exiled_cards
 
 
 _PUT_LINKED_INTO_GRAVEYARD_THEN_TOKENS_RE = re.compile(

@@ -132,6 +132,8 @@ def printed_characteristics(
             attached_to=state.attached_to,
             paired_with=state.paired_with,
             transformed=state.transformed,
+            owner=state.owner,
+            tapped=state.tapped,
         )
     # CR 712.8d/712.8e/712.8f: a double-faced permanent has only the
     # characteristics of the face that is up - the front face by default
@@ -188,6 +190,8 @@ def printed_characteristics(
         attached_to=state.attached_to,
         paired_with=state.paired_with,
         transformed=state.transformed,
+        owner=state.owner,
+        tapped=state.tapped,
     )
 
 
@@ -2005,7 +2009,7 @@ _MASS_PUMP_UNTIL_EOT_RE = re.compile(
     # the quoted ability are layer 6 grants (CR 613.1f, CR 113.10).
     r"|gain (?:(?P<keywords_granted>[a-z][a-z0-9,'\- ]*?),? and )?"
     r'"(?P<granted_only>[^"]+)"'
-    r") until end of turn\.?$",
+    r") (?P<duration>until end of turn|until your next turn)\.?$",
     re.IGNORECASE,
 )
 
@@ -4968,7 +4972,11 @@ def _anthem_and_keyword_grant_builder(
 
 
 def _mass_pump_until_eot_builder(
-    power: int | None, toughness: int | None, keywords: list[str]
+    power: int | None,
+    toughness: int | None,
+    keywords: list[str],
+    *,
+    until_next_turn: bool = False,
 ) -> EffectBuilder:
     """ "[Other] creatures [you control|your opponents control] [gain <keyword(s)>
     and ]get +N/+N until end of turn." (CR 611.2) - or, with `power`/
@@ -4997,6 +5005,8 @@ def _mass_pump_until_eot_builder(
         context: LayerContext,
     ) -> list[ContinuousEffect]:
         effects: list[ContinuousEffect] = []
+        duration = Duration.UNTIL_YOUR_NEXT_TURN if until_next_turn else Duration.UNTIL_END_OF_TURN
+        until_next_turn_of = source.controller if until_next_turn else None
         for target in targets:
             if power is not None and toughness is not None:
                 effects.append(
@@ -5005,7 +5015,8 @@ def _mass_pump_until_eot_builder(
                         layer=Layer.POWER_TOUGHNESS,
                         sublayer=Sublayer.MODIFY,
                         timestamp=timestamp,
-                        duration=Duration.UNTIL_END_OF_TURN,
+                        duration=duration,
+                        until_next_turn_of=until_next_turn_of,
                         selector=only_this_incarnation(target, target.zone_change_stamp),
                         modification=modify_power_toughness(power, toughness),
                     )
@@ -5016,7 +5027,8 @@ def _mass_pump_until_eot_builder(
                         description=f"{source.name}: {target.name} gains {keyword}",
                         layer=Layer.ABILITY,
                         timestamp=timestamp,
-                        duration=Duration.UNTIL_END_OF_TURN,
+                        duration=duration,
+                        until_next_turn_of=until_next_turn_of,
                         selector=only_this_incarnation(target, target.zone_change_stamp),
                         modification=grant_keyword(keyword),
                     )
@@ -11536,6 +11548,7 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     "during your turn" template, the attached compound grant, and the gated
     self static."""
     from ..attacking_statics import parse_gated_self_static
+    from ..ep02_r3_static_pumps import parse_static_pump
     from .conditional_statics import parse_conditional_static
 
     return (
@@ -11545,6 +11558,7 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         or parse_conditional_static(sentence)
         or parse_attached_compound_grant(sentence)
         or parse_gated_self_static(sentence)
+        or parse_static_pump(sentence)
     )
 
 
@@ -11972,7 +11986,12 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
             return None
         power = int(power_text) if power_text is not None else None
         toughness = int(toughness_text) if toughness_text is not None else None
-        return _mass_pump_until_eot_builder(power, toughness, keywords)
+        return _mass_pump_until_eot_builder(
+            power,
+            toughness,
+            keywords,
+            until_next_turn=match.group("duration").lower() == "until your next turn",
+        )
     if match := _DURING_YOUR_TURN_MULTI_TYPE_KEYWORD_GRANT_RE.fullmatch(sentence):
         card_type1 = _card_type_word(match.group("type1"))
         card_type2 = _card_type_word(match.group("type2"))

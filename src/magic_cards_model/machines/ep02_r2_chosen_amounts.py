@@ -599,7 +599,10 @@ def _parse_then_that_many_ability(text: str) -> Any:
 
 #: The trigger event's own amount (CR 603.2c): "that damage", "the damage
 #: dealt", "the amount of damage dealt" after a damage trigger (CR 120.3a).
-_EVENT_AMOUNT = r"(?:that damage|the damage dealt|the damage|the amount of damage dealt)"
+_EVENT_AMOUNT = (
+    r"(?:that damage|the damage dealt|the damage|the amount of damage dealt"
+    r"|the amount of damage (?:it|this creature|that creature) dealt(?: to (?:that player|it))?)"
+)
 _EVENT_AMOUNT_RE = re.compile(rf"^{_EVENT_AMOUNT}$", re.IGNORECASE)
 
 #: Each rewrite: a printed amount that names the trigger's own amount, and

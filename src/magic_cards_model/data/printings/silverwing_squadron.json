@@ -1,0 +1,152 @@
+{
+  "object": "card",
+  "id": "4f674d39-e437-4efb-843b-30b18b567e98",
+  "oracle_id": "ba968a1e-c946-4cbe-9727-160c73cde3f4",
+  "multiverse_ids": [
+    612455
+  ],
+  "mtgo_id": 110862,
+  "tcgplayer_id": 491674,
+  "cardmarket_id": 705618,
+  "name": "Silverwing Squadron",
+  "lang": "en",
+  "released_at": "2023-04-21",
+  "uri": "https://api.scryfall.com/cards/4f674d39-e437-4efb-843b-30b18b567e98",
+  "scryfall_uri": "https://scryfall.com/card/moc/207/silverwing-squadron?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:32:57Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/f/4f674d39-e437-4efb-843b-30b18b567e98.jpg?1783917177",
+    "normal": "https://cards.scryfall.io/normal/front/4/f/4f674d39-e437-4efb-843b-30b18b567e98.jpg?1783917177",
+    "large": "https://cards.scryfall.io/large/front/4/f/4f674d39-e437-4efb-843b-30b18b567e98.jpg?1783917177",
+    "png": "https://cards.scryfall.io/png/front/4/f/4f674d39-e437-4efb-843b-30b18b567e98.png?1783917177",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/f/4f674d39-e437-4efb-843b-30b18b567e98.jpg?1783917177",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/f/4f674d39-e437-4efb-843b-30b18b567e98.jpg?1783917177",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/f/4f674d39-e437-4efb-843b-30b18b567e98.webp?1783917177",
+    "grid": "https://cards.scryfall.io/grid/front/4/f/4f674d39-e437-4efb-843b-30b18b567e98.webp?1783917177",
+    "display": "https://cards.scryfall.io/display/front/4/f/4f674d39-e437-4efb-843b-30b18b567e98.webp?1783917177",
+    "art": "https://cards.scryfall.io/art/front/4/f/4f674d39-e437-4efb-843b-30b18b567e98.webp?1783917177",
+    "crop": "https://cards.scryfall.io/crop/front/4/f/4f674d39-e437-4efb-843b-30b18b567e98.webp?1783917177"
+  },
+  "mana_cost": "{5}{W}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Human Knight",
+  "oracle_text": "Flying, vigilance\nSilverwing Squadron's power and toughness are each equal to the number of creatures you control.\nWhenever this creature attacks, create a number of 2/2 white Knight creature tokens with vigilance equal to the number of opponents you have.",
+  "power": "*",
+  "toughness": "*",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Flying",
+    "Vigilance"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "52cf8f6b-2334-4881-8f58-4e11745c8851",
+      "component": "token",
+      "name": "Knight",
+      "type_line": "Token Creature \u2014 Knight",
+      "uri": "https://api.scryfall.com/cards/52cf8f6b-2334-4881-8f58-4e11745c8851"
+    },
+    {
+      "object": "related_card",
+      "id": "4f674d39-e437-4efb-843b-30b18b567e98",
+      "component": "combo_piece",
+      "name": "Silverwing Squadron",
+      "type_line": "Creature \u2014 Human Knight",
+      "uri": "https://api.scryfall.com/cards/4f674d39-e437-4efb-843b-30b18b567e98"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "6bba5de9-5afb-42af-a7eb-24ac854bf671",
+  "set": "moc",
+  "set_name": "March of the Machine Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/6bba5de9-5afb-42af-a7eb-24ac854bf671",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amoc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/moc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/4f674d39-e437-4efb-843b-30b18b567e98/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aba968a1e-c946-4cbe-9727-160c73cde3f4&unique=prints",
+  "collector_number": "207",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Johannes Voss",
+  "artist_ids": [
+    "3593dd7e-c547-4a32-81cd-7da725f60118"
+  ],
+  "illustration_id": "c9cb832a-6e48-4044-bb09-8b6277884567",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 5123,
+  "prices": {
+    "usd": "0.43",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.40",
+    "eur_foil": null,
+    "tix": "0.40"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=612455&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSilverwing%2BSquadron",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSilverwing%2BSquadron",
+    "edhrec": "https://edhrec.com/route/?cc=Silverwing+Squadron"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F491674%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=705618&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/110862?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

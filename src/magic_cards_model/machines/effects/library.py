@@ -5895,9 +5895,10 @@ def _parse_explores_then_conditional_mass_destroy(text: str) -> AbilityEffect | 
             for permanent in list(game.battlefield)
             if type_matches(board.of(permanent)) and not (others_only and permanent.id == source.id)
         ]
-        for permanent in doomed:
-            if permanent.zone is Zone.BATTLEFIELD:
-                game.destroy(permanent)
+        with game.dying_together():  # CR 608.2f: one simultaneous event
+            for permanent in doomed:
+                if permanent.zone is Zone.BATTLEFIELD:
+                    game.destroy(permanent)
 
     return effect
 

@@ -903,6 +903,11 @@ class LayerContext(EngineModel):
     #: physical-state-not-characteristic reasoning `attacking` is carried for.
     tapped_ids: frozenset[UUID] = frozenset()
 
+    #: `Game.attack_count_this_turn`: how many times each creature has attacked
+    #: this turn (CR 508.1), by id - Moraug, Fury of Akoum's "for each time it
+    #: has attacked this turn".
+    attack_count_by_id: Mapping[UUID, int] = Field(default_factory=dict)
+
     #: A per-turn, per-player *count* ledger - `Game.turn_counts`, carried the
     #: same way `turn_facts` already is, for a static ability that counts
     #: "how many" rather than asking "did you": Kinbinding's "Creatures you

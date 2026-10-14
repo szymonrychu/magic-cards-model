@@ -1722,7 +1722,21 @@ def _earlier_batch_member_matched(
     event: GameEvent,
 ) -> bool:
     """Whether a member entering ahead of `event`'s own subject in the same
-    batch already matched this batched entry condition (CR 603.2c)."""
+    batch already matched this batched entry or death condition (CR 603.2c)."""
+    if (
+        ability.event is TriggerEvent.DIES
+        and len(event.died_together) > 1
+        and _ONE_OR_MORE_WORDS.search(ability.condition.lower())
+    ):
+        # "whenever one or more nontoken creatures you control die": the
+        # simultaneous deaths (`Game.dying_together`) are one event, so only
+        # the first member that matches the condition triggers it.
+        for member in event.died_together:
+            if member.subject_id == event.subject_id:
+                return False
+            if _condition_matches(game, ability, source, controller, member):
+                return True
+        return False
     if (
         ability.event is not TriggerEvent.ENTERS_THE_BATTLEFIELD
         or len(event.entered_together) < 2

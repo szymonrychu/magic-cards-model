@@ -1170,12 +1170,21 @@ _EACH_COLOR_AMONG_RE = re.compile(
 )
 
 
+_CRAFT_MATERIALS_RE = re.compile(
+    r"^the exiled cards used to craft this (?:creature|permanent|artifact)$", re.IGNORECASE
+)
+
+
 def _parse_effect(effect: str, *, cost_announces_x: bool = False) -> ManaAbility | None:
     each_color = _EACH_COLOR_AMONG_RE.fullmatch(effect.strip().rstrip("."))
     if each_color is not None:
         from .vivid import parse_colors_among_qualifier
 
         qualifier = each_color.group("qualifier").strip()
+        if _CRAFT_MATERIALS_RE.fullmatch(qualifier):
+            from .vivid import CRAFT_MATERIALS_QUALIFIER
+
+            return ManaAbility(options=[[Color.WHITE]], each_color_among=CRAFT_MATERIALS_QUALIFIER)
         stripped = qualifier.removesuffix(" you control")
         if qualifier.endswith(" you control") and parse_colors_among_qualifier(stripped):
             return ManaAbility(options=[[Color.WHITE]], each_color_among=stripped)
@@ -3046,8 +3055,26 @@ def self_normalized_effect_text(card_name: str, effect_text: str, *, legendary: 
     normalized = effect_text
     for name in self_reference_names(card_name, legendary=legendary):
         if name in normalized:
+            if name != card_name and _short_name_is_a_type_word(name, normalized):
+                continue
             normalized = self_reference_re(name).sub("this permanent", normalized)
     return normalized
+
+
+_TYPE_WORD_USE_RE = re.compile(r"\b(?P<word>[A-Z][a-z]+)s?(?: creatures?\b| on the battlefield\b)")
+
+
+def _short_name_is_a_type_word(name: str, text: str) -> bool:
+    """Whether the bare short form of a legendary name ("Sliver" for Sliver
+    Legion) is, in `text`, a creature type naming a group ("All Sliver
+    creatures", "each other Sliver on the battlefield", CR 205.3m) rather than
+    the card using its own name (CR 201.5): a short name that is also a
+    creature type must not turn the group word into "this permanent"."""
+    from ..data.subtypes import subtype_vocabulary
+
+    if " " in name or name.lower() not in subtype_vocabulary():
+        return False
+    return any(match["word"] == name for match in _TYPE_WORD_USE_RE.finditer(text))
 
 
 #: A legendary card's own gendered subject pronoun opening an effect

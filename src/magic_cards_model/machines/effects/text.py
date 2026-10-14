@@ -1996,13 +1996,14 @@ def _parse_all_of_target_player_then_referent_pair(
             if requirement.rejects(permanent, player.username, game) is None
         ]
         moved = 0
-        for permanent in group:
-            if is_destroy:
-                game.destroy(permanent)
-            else:
-                game.exile_permanent(permanent)
-            if permanent.zone is not Zone.BATTLEFIELD:
-                moved += 1
+        with game.dying_together():  # CR 608.2f: one simultaneous event
+            for permanent in group:
+                if is_destroy:
+                    game.destroy(permanent)
+                else:
+                    game.exile_permanent(permanent)
+                if permanent.zone is not Zone.BATTLEFIELD:
+                    moved += 1
         game.record_count(moved)
         second_clause(game, player, None, source, source_id_of(stack_object))
 

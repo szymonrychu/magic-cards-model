@@ -173,6 +173,11 @@ class ComponentKind(StrEnum):
     #: exile zone, were exiled with `link_to_permanent_id`, and leave through
     #: `Game.put_into_graveyard`.
     PUT_EXILED_INTO_GRAVEYARD = "put_exiled_into_graveyard"
+    #: "Gain control of a land you don't control" as a cost (Herald of
+    #: Leshrac's cumulative upkeep, CR 702.24a; CR 118.3): the chosen permanents
+    #: are controlled by someone else now, and paying gives the payer control
+    #: of each with no duration (a layer 2 effect, CR 613.1b, CR 611.2a).
+    GAIN_CONTROL = "gain_control"
 
 
 _OBJECT_KINDS = frozenset(
@@ -189,6 +194,7 @@ _OBJECT_KINDS = frozenset(
         ComponentKind.REVEAL,
         ComponentKind.BEHOLD,
         ComponentKind.PUT_EXILED_INTO_GRAVEYARD,
+        ComponentKind.GAIN_CONTROL,
     }
 )
 
@@ -643,8 +649,23 @@ class CostComponent(EngineModel):
             ComponentKind.REVEAL: self._why_not_reveal,
             ComponentKind.BEHOLD: self._why_not_behold,
             ComponentKind.PUT_EXILED_INTO_GRAVEYARD: self._why_not_exiled_with,
+            ComponentKind.GAIN_CONTROL: self._why_not_gain_control,
         }
         return checks[self.kind](game)
+
+    def _why_not_gain_control(self, _game: Any) -> str | None:
+        """CR 118.3: only a permanent on the battlefield that someone else
+        controls can be taken, and one object is taken only once (CR 109.1)."""
+        seen: set[UUID] = set()
+        for card in self.cards:
+            if card.id in seen:
+                return f"{card.name} is named more than once (CR 109.1, CR 118.3)"
+            seen.add(card.id)
+            if card.zone is not Zone.BATTLEFIELD:
+                return f"{card.name} is not a permanent, so control of it cannot be gained"
+            if self.payer is not None and card.controller == self.payer:
+                return f"{self.payer} already controls {card.name}"
+        return None
 
     def _why_not_exiled_with(self, _game: Any) -> str | None:
         """CR 607.2a: only a card in exile that was exiled with the linked
@@ -1207,6 +1228,30 @@ class CostComponent(EngineModel):
             for card in self.cards:
                 self._remember(card)
                 game.put_into_graveyard(card)
+        elif self.kind is ComponentKind.GAIN_CONTROL:
+            from ..layers import (
+                ContinuousEffect,
+                Duration,
+                Layer,
+                only_this_incarnation,
+                set_controller,
+            )
+
+            store = game.continuous_effects
+            timestamp = store.tick()
+            for card in self.cards:
+                self._remember(card)
+                store.add(
+                    ContinuousEffect(
+                        description=f"{self.payer} gains control of {card.name}",
+                        layer=Layer.CONTROL,
+                        timestamp=timestamp,
+                        duration=Duration.INDEFINITE,
+                        selector=only_this_incarnation(card, card.zone_change_stamp),
+                        modification=set_controller(self.payer),
+                    ),
+                    game,
+                )
         elif self.kind is ComponentKind.UNTAP:
             for card in self.cards:
                 self._remember(card)
@@ -1810,6 +1855,23 @@ def return_to_hand_cost(
     is the check."""
     return CostComponent(
         kind=ComponentKind.RETURN_TO_HAND,
+        cards=list(cards),
+        required=len(cards) if required is None else required,
+        payer=payer,
+        description=description,
+    )
+
+
+def gain_control_cost(
+    *cards: CardState,
+    payer: str | None = None,
+    required: int | None = None,
+    description: str = "",
+) -> CostComponent:
+    """Gain control of permanents as a cost (Herald of Leshrac's cumulative
+    upkeep, CR 118.3); `_why_not_gain_control` is the check."""
+    return CostComponent(
+        kind=ComponentKind.GAIN_CONTROL,
         cards=list(cards),
         required=len(cards) if required is None else required,
         payer=payer,

@@ -57,6 +57,13 @@ class ColorsAmongQualifier:
     excludes_self: bool = False
     #: "monocolored permanents" (Tarnation Vista): only objects of exactly one color count.
     monocolored: bool = False
+    #: "the exiled cards used to craft this creature" (Sunbird Effigy; CR 702.167c): the
+    #: cards recorded on the source as it was crafted, not permanents anyone controls.
+    crafted: bool = False
+
+
+#: `ManaAbility.each_color_among`'s qualifier for CR 702.167c's craft materials.
+CRAFT_MATERIALS_QUALIFIER = "exiled cards used to craft this"
 
 
 def parse_colors_among_qualifier(phrase: str) -> ColorsAmongQualifier | None:
@@ -72,6 +79,8 @@ def parse_colors_among_qualifier(phrase: str) -> ColorsAmongQualifier | None:
     """
     from .effects import _singular_card_type, _singular_subtype_for_count_expression
 
+    if phrase.strip().lower() == CRAFT_MATERIALS_QUALIFIER:
+        return ColorsAmongQualifier(crafted=True)
     words = phrase.strip().lower().split()
     if not words:
         return None
@@ -122,6 +131,13 @@ def colors_among(
 
     board = game.computed_board()
     colors: set[Color] = set()
+    if qualifier.crafted:
+        # CR 702.167c: the exiled cards used to craft the source, each colour once (CR 105.1).
+        for card_id in () if source is None else source.crafted_with:
+            used = game.find_by_id(card_id)
+            if used is not None:
+                colors.update(color for color in used.colors if color is not Color.COLORLESS)
+        return frozenset(colors)
     for permanent in game.battlefield:
         chars = board.of(permanent)
         if chars.controller != controller:

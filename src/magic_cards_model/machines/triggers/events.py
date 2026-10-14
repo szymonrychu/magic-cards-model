@@ -682,6 +682,20 @@ class GameEvent(EngineModel):
     condition. Empty when the permanent entered on its own - then "them" is
     `subject_id` alone."""
 
+    subject_power: int | None = None
+    """For a `TriggerEvent.DIES` event, `subject_id`'s power as it last existed
+    on the battlefield (CR 603.10a's look-back, CR 208.1) - what "the total
+    power of those creatures" (The Skullspore Nexus) adds up. `None` for a
+    creature with no power and for every event this was never populated for."""
+
+    died_together: tuple["GameEvent", ...] = ()
+    """For a `TriggerEvent.DIES` event raised inside `Game.dying_together` with
+    more than one creature in it, every dies event of that one simultaneous
+    event (CR 704.3's state-based actions, CR 608.2f's "destroy all") - what a
+    "whenever one or more ... die" trigger (CR 603.2c) reads its "those
+    creatures" off: the members that match the ability's own condition. Empty
+    when the creature died on its own."""
+
 
 class TargetingNoticeKind(StrEnum):
     """Why a triggered ability went on the stack with no targets chosen."""

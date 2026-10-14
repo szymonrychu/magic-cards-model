@@ -3289,11 +3289,13 @@ def _destroy_matching(
     value X"); `None` for a spell or an ability whose cost carries none.
     """
     destroyed = 0
-    for permanent in [p for p in list(game.battlefield) if predicate(game, p, source, x_value)]:
-        if permanent.zone is Zone.BATTLEFIELD:
-            game.destroy(permanent)
-            if permanent.zone is not Zone.BATTLEFIELD:
-                destroyed += 1
+    doomed = [p for p in list(game.battlefield) if predicate(game, p, source, x_value)]
+    with game.dying_together():  # CR 608.2f: simultaneous, so one dies event
+        for permanent in doomed:
+            if permanent.zone is Zone.BATTLEFIELD:
+                game.destroy(permanent)
+                if permanent.zone is not Zone.BATTLEFIELD:
+                    destroyed += 1
     return destroyed
 
 
@@ -10089,9 +10091,10 @@ def _parse_destroy_all_dealt_damage_this_turn_text(text: str) -> AbilityEffect |
             and (not creatures_only or board.of(permanent).is_creature)
             and dealt(game, permanent, None)
         ]
-        for permanent in group:
-            if permanent.zone is Zone.BATTLEFIELD:
-                game.destroy(permanent)
+        with game.dying_together():  # CR 608.2f: one simultaneous event
+            for permanent in group:
+                if permanent.zone is Zone.BATTLEFIELD:
+                    game.destroy(permanent)
 
     return effect
 

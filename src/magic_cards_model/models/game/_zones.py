@@ -3068,6 +3068,20 @@ class ZonesMixin:
             elif event.destination is Zone.EXILE:
                 card_state.move_to(Zone.EXILE)
                 self.exile.append(card_state)
+                if was_on_battlefield and left_battlefield_chars is not None:
+                    # CR 614.6: "exile it instead" - it never died, but it did
+                    # go from the battlefield to exile under its controller
+                    # (Vren, the Relentless counts these), and no leaves-to-exile
+                    # event is raised for this move to record it from.
+                    self.turn_history.append(
+                        TurnHistoryEntry(
+                            kind="to_exile",
+                            player=left_battlefield_chars.controller or card_state.controller,
+                            owner=card_state.owner,
+                            object_id=card_state.id,
+                            characteristics=left_battlefield_chars,
+                        )
+                    )
                 if event.exile_marker is not None:
                     # CR 715.3d: the controller exiled it, and may play it.
                     annotate_exile(card_state, event.exile_marker, card_state.controller, self)
@@ -3131,35 +3145,59 @@ class ZonesMixin:
                                 )
                                 + 1
                             )
-                self.emit(
-                    GameEvent(
-                        event=TriggerEvent.DIES,
-                        subject_id=card_state.id,
-                        subject_name=card_state.name,
-                        # CR 603.10a: who controlled it as it died - layer 2
-                        # (a borrowed creature, CR 613.1b), not the stored
-                        # controller the zone change reset.
-                        subject_controller=(
-                            left_battlefield_chars.controller or card_state.controller
-                        ),
-                        subject_card=card_state.card,
-                        # CR 603.10a: dies is a look-back event - the
-                        # snapshot taken above, while the permanent was still
-                        # on the battlefield, is that look-back: a live
-                        # `characteristics_of` here would `KeyError` on an
-                        # object `_take_out_of_every_zone` has already moved.
-                        subject_types=left_battlefield_chars.types,
-                        subject_subtypes=left_battlefield_chars.subtypes,
-                        player=card_state.controller,
-                        # CR 400.7e: the incarnation this move just minted
-                        # (`Player.add` above already ran `CardState.move_to`,
-                        # which stamped a fresh one), so a dead-self reader
-                        # resolving later can tell this exact object apart
-                        # from one that has since moved again.
-                        zone_change_stamp=card_state.zone_change_stamp,
-                    )
+                dies_event = GameEvent(
+                    event=TriggerEvent.DIES,
+                    subject_id=card_state.id,
+                    subject_name=card_state.name,
+                    # CR 603.10a: who controlled it as it died - layer 2
+                    # (a borrowed creature, CR 613.1b), not the stored
+                    # controller the zone change reset.
+                    subject_controller=(left_battlefield_chars.controller or card_state.controller),
+                    subject_card=card_state.card,
+                    # CR 603.10a: dies is a look-back event - the
+                    # snapshot taken above, while the permanent was still
+                    # on the battlefield, is that look-back: a live
+                    # `characteristics_of` here would `KeyError` on an
+                    # object `_take_out_of_every_zone` has already moved.
+                    subject_types=left_battlefield_chars.types,
+                    subject_subtypes=left_battlefield_chars.subtypes,
+                    player=card_state.controller,
+                    # CR 400.7e: the incarnation this move just minted
+                    # (`Player.add` above already ran `CardState.move_to`,
+                    # which stamped a fresh one), so a dead-self reader
+                    # resolving later can tell this exact object apart
+                    # from one that has since moved again.
+                    zone_change_stamp=card_state.zone_change_stamp,
+                    subject_power=left_battlefield_chars.power,
                 )
+                if self._dying_together is not None:
+                    self._dying_together.append(dies_event)
+                else:
+                    self.emit(dies_event)
             return card_state
+
+    @contextmanager
+    def dying_together(self: "Game") -> Iterator[None]:
+        """Every creature that dies inside the block dies as one event.
+
+        CR 704.3: state-based actions are performed simultaneously as a single
+        event; CR 608.2f: "destroy all" is processed simultaneously. CR 603.2c:
+        a "whenever one or more creatures die" ability triggers once for that
+        one event, so each dies event is held back until the last creature has
+        left and then raised carrying all of them (`GameEvent.died_together`),
+        which the batched condition (`_earlier_batch_member_matched`) dedupes
+        and "those creatures" reads. A nested block joins the outer one."""
+        if self._dying_together is not None:
+            yield
+            return
+        self._dying_together = []
+        try:
+            yield
+        finally:
+            held, self._dying_together = self._dying_together, None
+        batch = tuple(held) if len(held) > 1 else ()
+        for event in held:
+            self.emit(event.model_copy(update={"died_together": batch}) if batch else event)
 
     def graveyard_arrival_of(self: "Game", card_id: UUID) -> GraveyardArrival | None:
         """The *latest* arrival of `card_id` in a graveyard this turn, or None

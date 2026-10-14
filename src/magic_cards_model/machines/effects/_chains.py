@@ -232,6 +232,8 @@ FAMILIES = (
     "ep02_r2_counter_amounts",
     "ep02_r2_revealed_this_way",
     "ep02_r2_chosen_amounts",
+    "ep02_r3_static_pumps_triggers",
+    "ep02_r3_static_pumps_events",
 )
 
 ABILITY_TEXT = Chain(
