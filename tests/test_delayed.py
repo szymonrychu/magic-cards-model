@@ -230,6 +230,8 @@ def test_goryos_vengeance_third_sentence_end_to_end_through_the_real_end_step():
             "return_to_battlefield",
         ),
         ("Destroy that creature at end of combat.", Step.END_OF_COMBAT, "destroy"),
+        # EP-02-R3-T6: "your next end step" is read, scoped to its controller's own turn.
+        ("Exile it at the beginning of your next end step.", Step.END_STEP, "exile"),
         (
             "Tap it at the beginning of the next turn's upkeep.",
             Step.UPKEEP,
@@ -252,7 +254,7 @@ def test_the_printed_shapes_this_primitive_reads(clause, step, verb):
         # No timing phrase at all - an ordinary instruction, not a delayed one.
         "Exile it.",
         # A timing phrase this primitive does not read.
-        "Exile it at the beginning of your next end step.",
+        "Exile it at the beginning of the next combat.",
         # A verb this primitive does not read: refusing is the point, so the
         # caller keeps failing closed rather than doing half the paragraph.
         "Shuffle it into its owner's library at the beginning of the next end step.",

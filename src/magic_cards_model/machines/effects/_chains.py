@@ -239,6 +239,7 @@ FAMILIES = (
     "ep02_r3_library_amounts",
     "ep02_r3_board_amounts",
     "ep02_r3_life_total_amounts",
+    "ep02_r3_token_counts",
 )
 
 ABILITY_TEXT = Chain(

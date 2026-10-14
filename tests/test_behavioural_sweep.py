@@ -5361,6 +5361,14 @@ class DriverGap:
 
 
 SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
+    # EP02-R3-T6: Edward Kenway's second trigger watches a Vehicle dealing combat
+    # damage to a player; the combat probes are creatures, and a Vehicle needs
+    # crewing first. Proven by tests/scenarios/test_ep02_r3_token_counts.py.
+    DriverGap(
+        kind="deals_damage",
+        event="a crewed Vehicle of the controller's dealing combat damage to a player",
+        precondition=r"a vehicle you control deals combat damage to a player",
+    ),
     # EP02-R2-T3: Kiora, Sovereign of the Deep's cast trigger names a list of
     # creature types (Kraken, Leviathan, Octopus or Serpent) for a spell cast
     # from the hand, which the cast-probe finder (`support._probe_cards`) does

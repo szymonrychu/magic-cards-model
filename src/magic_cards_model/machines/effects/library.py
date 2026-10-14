@@ -2060,7 +2060,7 @@ _LOOK_TOP_CARD_KIND = (
 _LOOK_TOP_CARD_CONDITIONAL_RE = re.compile(
     r"^(?P<verb>look at|reveal) the top card of your library\. "
     rf"if it's an? (?P<kind>{_LOOK_TOP_CARD_KIND}(?: or {_LOOK_TOP_CARD_KIND})*)"
-    r" card, (?P<may>you may )?put it "
+    r" card(?: with mana value (?P<mv>\d+) or (?P<cmp>less|greater))?, (?P<may>you may )?put it "
     r"(?P<dest>onto the battlefield tapped|onto the battlefield|into your hand"
     r"|into your graveyard)(?:\.|$)"
     r"(?:\s*(?:otherwise, (?P<else_may>you may )?put (?:it|that card|the card)"
@@ -2415,8 +2415,8 @@ def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
     ]
     if any(kind is None for kind in kinds):
         return None
-    bound = int(match.group("mv")) if trailing and match.group("mv") else None
-    at_most = trailing and (match.group("cmp") or "").lower() == "less"
+    bound = int(match.group("mv")) if match.group("mv") else None
+    at_most = (match.group("cmp") or "").lower() == "less"
 
     def predicate(state: CardState) -> bool:
         if not any(kind(state) for kind in kinds if kind is not None):

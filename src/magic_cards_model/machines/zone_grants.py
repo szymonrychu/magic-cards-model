@@ -381,7 +381,30 @@ def zone_grant_lines(game: Game | None, card: CardState) -> tuple[str, ...]:
         return ()
     if card.zone is Zone.BATTLEFIELD:
         return _battlefield_granted_lines(game, card)
-    return tuple(line for _source, grant in _grants_for(game, card) for line in grant.lines)
+    return (
+        *(line for _source, grant in _grants_for(game, card) for line in grant.lines),
+        *_resolution_granted_lines(game, card),
+    )
+
+
+def _resolution_granted_lines(game: Game, card: CardState) -> tuple[str, ...]:
+    """The keyword lines a resolved effect handed this one object with a
+    duration - Cursecloth Wrappings' "Target creature card in your graveyard gains
+    embalm until end of turn." (CR 611.2, CR 613.1f). The store keeps them as
+    layer 6 grants selecting the object's incarnation (CR 400.7); the layer engine
+    only computes the battlefield, so this reads them for an object elsewhere and
+    the duration ends them (CR 514.2)."""
+    from .layers.model import printed_characteristics
+
+    effects = [
+        effect
+        for effect in game.continuous_effects.effects
+        if effect.modification.kind == "grant_ability"
+    ]
+    if not effects:
+        return ()
+    chars = printed_characteristics(card)
+    return tuple(effect.modification.text for effect in effects if effect.selector(chars, {}))
 
 
 def _battlefield_granted_lines(game: Game, card: CardState) -> tuple[str, ...]:

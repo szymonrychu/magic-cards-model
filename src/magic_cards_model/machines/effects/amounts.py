@@ -2241,7 +2241,9 @@ def _amount_term(term: str) -> AmountReader | None:
     counted = count_expression(text) or _devotion_count(text)
     if counted is not None:
         return lambda game, controller, _object, _x: counted(game, controller)
-    return amount_term(text)
+    from ..ep02_r3_token_counts import amount_term as token_amount_term
+
+    return amount_term(text) or token_amount_term(text)
 
 
 def amount_expression(phrase: str) -> AmountReader | None:
@@ -3583,6 +3585,7 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
     if generic is not None:
         return lambda game, controller, _source_id: generic(game, controller)
     from ..ep02_r1_counted_permanents import counted_group_reader
+    from ..ep02_r3_token_counts import for_each_count
 
     return (
         counted_group_reader(stripped)
@@ -4603,12 +4606,24 @@ def _parse_variable_count_token_clause(clause: str, *, for_spell: bool) -> Targe
         if name is not None:
             definition = definition.model_copy(update={"name": name.strip()})
 
-    counted = count_expression(match.group("expr"))
+    expression = match.group("expr").strip()
+    counted = count_expression(expression)
     # A player-level term `count_expression` has no row for - "your life total" (Storm Herd),
-    # "your speed" - is an `amount_expression` term.
-    amount = None if counted is not None else amount_term(match.group("expr").strip())
-    if counted is None and amount is None:
-        return None
+    # "your speed" - is an `amount_expression` term; so is a count that reads the resolving
+    # object itself ("the number of other attacking creatures": other than the source), and
+    # a sum or difference of counts ("the number of Vehicles you control plus the number of
+    # Equipment you control"). CR 608.2h takes it once, as the instruction is applied.
+    amount = None
+    if counted is None:
+        from ..ep02_r3_token_counts import amount_term as token_amount_term
+
+        amount = (
+            amount_term(expression)
+            or token_amount_term(expression)
+            or (amount_expression(expression) if _AMOUNT_OPERATOR_RE.search(expression) else None)
+        )
+        if amount is None:
+            return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object).username
@@ -4616,10 +4631,11 @@ def _parse_variable_count_token_clause(clause: str, *, for_spell: bool) -> Targe
             count = counted(game, controller)
         else:
             assert amount is not None
-            source = (
-                stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
-            )
-            count = amount(game, controller, source, 0)
+            if isinstance(stack_object, AbilityOnStack):
+                source, x_value = stack_object.source_or_last_known(game), stack_object.x_value
+            else:
+                source, x_value = stack_object, 0
+            count = amount(game, controller, source, x_value)
         if count > 0:
             create_tokens(game, definition, controller, count, tapped=tapped)
 

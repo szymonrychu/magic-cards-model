@@ -7007,6 +7007,20 @@ _GRAVEYARD_CARD_COUNT_GATED_SELF_STATIC_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: A self pump/grant gated on the unlocked doors among its controller's Rooms
+#: (CR 709.5c) - Rampaging Soulrager's "This creature gets +3/+0 as long as there
+#: are two or more unlocked doors among Rooms you control." CR 604.2: active only
+#: while the condition holds; CR 611.3a re-reads the count on every computation
+#: (`LayerContext.unlocked_doors_by_player`).
+_UNLOCKED_DOORS_GATED_SELF_STATIC_TRAILING_RE = re.compile(
+    r"^this (?:creature|permanent|token) "
+    r"(?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<rest>(?: and has [^.]+?)?)"
+    r"|(?P<grant_only>has .+?))"
+    r" as long as there (?:is|are) (?P<count>[a-z]+|\d+) or more unlocked doors among "
+    r"rooms you control\.?$",
+    re.IGNORECASE,
+)
+
 #: "Lands your opponents control with the chosen name lose all land types and
 #: abilities, and they gain "{T}: Add one mana of any color."" (Alpine Moon) -
 #: a group of permanents picked by the name chosen as the source entered (CR
@@ -13091,6 +13105,34 @@ def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             if word.strip()
         )
         return _devotion_gated_not_a_creature_builder(colors, threshold, line=sentence)
+    if match := _UNLOCKED_DOORS_GATED_SELF_STATIC_TRAILING_RE.fullmatch(sentence):
+        threshold = parse_count(match.group("count"), article=False)
+        if threshold is None:
+            return None
+        grant_only = match.group("grant_only")
+        if grant_only is not None:
+            granted = _split_gated_grants(grant_only)
+            power = toughness = 0
+        else:
+            granted = _split_gated_grants(match.group("rest") or "")
+            power = int(match.group("power"))
+            toughness = int(match.group("toughness"))
+        if granted is None:
+            return None
+
+        def enough_doors(
+            source: CardState, context: LayerContext, threshold: int = threshold
+        ) -> bool:
+            return context.unlocked_doors_by_player.get(source.controller or "", 0) >= threshold
+
+        return _context_gated_self_pump_builder(
+            enough_doors,
+            power,
+            toughness,
+            granted,
+            line=sentence,
+            description=f"while its controller has {threshold} or more unlocked doors",
+        )
     if match := _GRAVEYARD_CARD_COUNT_GATED_SELF_STATIC_RE.fullmatch(sentence):
         threshold = parse_count(match.group("count"), article=False)
         if threshold is None:

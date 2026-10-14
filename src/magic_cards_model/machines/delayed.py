@@ -3178,7 +3178,18 @@ ANAPHORIC_TIMING_STEPS: dict[str, Step] = {
     "end of combat": Step.END_OF_COMBAT,
 }
 
-_TIMING_PATTERN = "|".join(re.escape(phrase) for phrase in ANAPHORIC_TIMING_STEPS)
+#: A step of the creating ability's controller's own turn (CR 500.1, CR 513.1: each
+#: turn has one end step, and "your next end step" is the one of a turn that player
+#: is the active player of). Read only here, by the anaphoric clause, which then
+#: scopes its trigger to that player's turn (`DelayedTrigger.only_when_active`);
+#: kept out of `ANAPHORIC_TIMING_STEPS`, whose other readers would drop the scope.
+OWN_TURN_TIMING_STEPS: dict[str, Step] = {
+    "the beginning of your next end step": Step.END_STEP,
+}
+
+_TIMING_PATTERN = "|".join(
+    re.escape(phrase) for phrase in (*ANAPHORIC_TIMING_STEPS, *OWN_TURN_TIMING_STEPS)
+)
 
 #: "At <timing>, <instruction>." - Phelia, Exuberant Shepherd's word order.
 _TIMING_LEADING_RE = re.compile(
@@ -3367,6 +3378,12 @@ class AnaphoricDelayedClause(EngineModel):
         return _ANAPHORIC_VERBS[self.verb][1]
 
     @property
+    def own_turn_player(self) -> bool:
+        """Whether the timing is "your next ..." - only the controller's own turn
+        counts (`DelayedTrigger.only_when_active`)."""
+        return any(phrase in self.text.lower() for phrase in OWN_TURN_TIMING_STEPS)
+
+    @property
     def plural(self) -> bool:
         """Whether the pronoun names several objects ("them", "those
         tokens") - one ability about all of them, `ActOnEachSubject`."""
@@ -3411,6 +3428,7 @@ class AnaphoricDelayedClause(EngineModel):
                     controller=controller,
                     source_id=source_id,
                     source_name=source_name,
+                    only_when_active=controller if self.own_turn_player else None,
                     effect=ActOnEachSubject(
                         action=_PLURAL_ACTIONS[self.verb],
                         subjects=tuple(
@@ -3473,6 +3491,7 @@ class AnaphoricDelayedClause(EngineModel):
             subject_id=subject.id,
             expected_zone=self.expected_zone,
             expected_stamp=subject.zone_change_stamp,
+            only_when_active=controller if self.own_turn_player else None,
             effect=self.effect,
         )
 
@@ -3499,7 +3518,8 @@ def parse_anaphoric_delayed_clause(clause: str) -> AnaphoricDelayedClause | None
     match = _TIMING_LEADING_RE.fullmatch(clause) or _TIMING_TRAILING_RE.fullmatch(clause)
     if match is None:
         return None
-    step = ANAPHORIC_TIMING_STEPS.get(match.group("timing").lower())
+    timing = match.group("timing").lower()
+    step = ANAPHORIC_TIMING_STEPS.get(timing) or OWN_TURN_TIMING_STEPS.get(timing)
     if step is None:
         return None
     instruction = match.group("instruction").strip().rstrip(".")

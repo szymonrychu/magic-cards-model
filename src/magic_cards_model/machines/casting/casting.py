@@ -471,6 +471,8 @@ def why_cannot_cast_now(
     condition = conditional_flash_condition(spell.oracle_text or "")
     if condition is not None and cast_condition_holds(game, caster, condition, spell):
         return None  # Bard's Company's own conditional flash grant
+    if flash_surcharge(spell.oracle_text or "") is not None:
+        return None  # Asinine Antics: flash if the extra cost is paid (`_own_flash_surcharge`)
     if has_quality_flash_grant(game, caster, spell):
         return None  # Vivien, Champion of the Wilds' "creature spells ... flash"
     if game.has_first_spell_flash_grant(caster, spell):
@@ -831,6 +833,10 @@ class Casting(EngineModel):
     """CR 117.1a refusals set aside at the proposal because an alternative cost
     grants flash (`flash_grant_sources`), keyed like `face_cast_refusals`;
     `cast()` raises them unless that alternative cost is the one paid."""
+    flash_surcharge_owed: bool = False
+    """Whether the spell's own "cast this spell as though it had flash if you pay
+    {2} more" is what lets it be cast now: judged at the proposal, before CR 601.2a
+    puts the spell on the stack and the stack stops being empty (`_own_flash_surcharge`)."""
     timing_refusals_unless_window: dict[str, str] = Field(default_factory=dict)
     """CR 117.1a refusals `model_post_init` set aside because a keyword whose
     own timing is a window (`CastTiming.OWN_DECLARE_BLOCKERS`, CR 702.190a's
@@ -1211,6 +1217,12 @@ class Casting(EngineModel):
         refusal = why_cannot_cast_a_land(self.spell)
         if refusal is not None:
             raise ValueError(refusal)
+        self.flash_surcharge_owed = (
+            self.game is not None
+            and flash_surcharge(self.spell.oracle_text or "") is not None
+            and not self.game.can_cast_sorcery(self.caster)
+            and Type.INSTANT not in self.spell.types_as_a_spell(types_being_cast(self.spell.card))
+        )
         options = castable_faces(self.spell.card) if self.face is None else (self.face,)
         refusals: dict[str, str] = {}
         # CR 712.11c: a card cast transformed is evaluated as its back face.
@@ -4104,6 +4116,7 @@ class Casting(EngineModel):
             # "Kicker {X}") is the X announced for the spell.
             *(extra.mana.with_x(self.x_value) for extra in extras),
             self._own_cost_increase_for_targets(),
+            self._own_flash_surcharge(),
             *(
                 [self.permission_used.cost_increase]
                 if self.permission_used is not None and self.permission_used.cost_increase
@@ -4219,6 +4232,16 @@ class Casting(EngineModel):
                 "is refused rather than cast without it (CR 601.2f)"
             )
         return ManaCost(symbols=per_target.symbols * extra_targets)
+
+    def _own_flash_surcharge(self) -> ManaCost:
+        """ "You may cast this spell as though it had flash if you pay {2} more to
+        cast it." (CR 702.8a, CR 601.2f): the extra cost is owed exactly when the
+        cast needs the flash - the spell is not an instant and the caster could
+        not cast a sorcery right now - and never at sorcery timing."""
+        text = flash_surcharge(self.spell.oracle_text or "")
+        if text is None or not self.flash_surcharge_owed:
+            return ManaCost()
+        return ManaCost.parse(text)
 
     def _own_cost_reduction(self) -> ManaCost:
         """What this spell's own text takes off its own cost right now
@@ -5962,6 +5985,7 @@ from .permissions import (  # noqa: E402
     conditional_flash_condition,
     conditional_free_cast_condition,
     conditional_free_cast_unavailable,
+    flash_surcharge,
     granted_cast_options,
     has_flash,
     has_quality_flash_grant,

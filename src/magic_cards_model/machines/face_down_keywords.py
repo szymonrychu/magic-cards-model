@@ -68,8 +68,11 @@ def token_copy_keyword_activation(
     has already left the graveyard when the ability resolves."""
     from .cost import ComponentKind, total_cost_for_phrase
     from .keywords import KeywordActivation, _synthetic_ability, statically_priced
+    from .zone_grants import effective_card
 
-    abilities = token_copy_keyword_abilities(card.card)
+    # A granted embalm (Cursecloth Wrappings) is a line of the effective card, the
+    # same printing `off_zone_abilities` numbered its abilities from.
+    abilities = token_copy_keyword_abilities(effective_card(game, card))
     if index < 0 or index >= len(abilities):
         raise ValueError(f"{card.name} has no embalm or eternalize ability number {index}")
     ability = abilities[index]
