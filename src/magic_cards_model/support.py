@@ -499,6 +499,12 @@ def executed_keywords(printing: Card) -> dict[str, str]:
         # Scryfall lists Beacon Bolt's one jump-start (CR 702.133a) as two
         # keywords, "Jump" and "Jump-start"; the first is the second's own alias.
         found["jump"] = found["jump-start"]
+    if "cipher" in printed:
+        # CR 702.99a: encoded as the spell resolves (`encode_cipher`), cast through the
+        # `CipherCopyAndCast` delayed trigger.
+        found["cipher"] = (
+            "machines/ep02_r3_damage_cost_amounts_casts.py (encode_cipher, CR 702.99a)"
+        )
     if found.get("mutate") == "machines/casting.py":
         # CR 702.140a's cost is a cast option; CR 702.140b-d's merge as the
         # spell resolves is `face_down_keywords.resolve_mutating_spell`.

@@ -3793,7 +3793,17 @@ class Casting(EngineModel):
         cast of the same card.
         """
         if (self.keyword_used or "").lower() != "harmonize":
-            raise ValueError(f"{self.spell.name} is not being cast using harmonize (CR 702.180a)")
+            granted = (
+                usable_play_permission(self.game, self._as_announced, self.caster)
+                if self.permission_used is None and self.game is not None
+                else self.permission_used
+            )
+            if granted is None or not granted.harmonize:
+                raise ValueError(
+                    f"{self.spell.name} is not being cast using harmonize (CR 702.180a)"
+                )
+            if self.permission_used is None:
+                self.use_permission()  # a granted harmonize is announced like any permission
         if creature is None:
             return self.step
         if not creature.is_creature or creature.tapped or creature.zone is not Zone.BATTLEFIELD:
@@ -4926,6 +4936,8 @@ class Casting(EngineModel):
         """
         if self.permission_used is not None and self.permission_used.flashback:
             return "Flashback"
+        if self.permission_used is not None and self.permission_used.harmonize:
+            return "Harmonize"  # CR 702.180a's third ability reads the same record
         return None
 
     def cast(self) -> CardState:

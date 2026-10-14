@@ -2308,7 +2308,7 @@ class CastingMixin:
                 casting.pay_extra_mana_for_counters(extra_mana_counters)
             if blight is not None:
                 casting.pay_blight(blight)
-            if (keyword or "").lower() == "harmonize":
+            if (keyword or "").lower() == "harmonize" or harmonize_creature is not None:
                 casting.pay_harmonize(harmonize_creature)
             if pay_life_for_additional_cost:
                 life_halves = life_or_mana_additional_costs(card.card)

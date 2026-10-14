@@ -1433,6 +1433,7 @@ class ContinuousMixin:
         until_next_turn_of: str | None = None,
         expires_end_of_next_turn: bool = False,
         flashback: bool = False,
+        harmonize: bool = False,
         any_type_mana: bool = False,
         condition: str | None = None,
         exile_instead_of_graveyard: bool = False,
@@ -1502,6 +1503,7 @@ class ContinuousMixin:
                 action=action,
                 pays_mana_cost=pays_mana_cost,
                 flashback=flashback,
+                harmonize=harmonize,
                 source_name=source_name,
                 rule=rule,
                 until_end_of_turn=until_end_of_turn

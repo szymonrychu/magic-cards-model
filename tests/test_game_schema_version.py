@@ -2565,3 +2565,29 @@ def test_a_snapshot_written_before_expend_and_once_grants_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP02_R2_T7_EXPEND}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before EP02-R3-T8: `PlayPermission.harmonize` (a graveyard card that
+#: "gains harmonize", Songcrafter Mage) and the `CipherCopyAndCast` delayed-effect variant
+#: (an encoded card's trigger, Whispering Madness). The last shape without them is 169.
+_SCHEMA_VERSION_BEFORE_EP02_R3_T8_HARMONIZE = 169
+
+
+def test_a_snapshot_written_before_granted_harmonize_is_refused() -> None:
+    """A version-169 dump cannot say that a permission is a harmonize grant, so a
+    decode as current would cast the card without its tap discount and without exiling
+    it afterwards: refused instead."""
+    from magic_cards_model.machines.casting import PlayPermission
+    from magic_cards_model.machines.delayed import CipherCopyAndCast
+
+    assert "harmonize" in PlayPermission.model_fields
+    assert CipherCopyAndCast.model_fields["kind"].default == "cipher_copy_and_cast"
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_EP02_R3_T8_HARMONIZE
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_EP02_R3_T8_HARMONIZE
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP02_R3_T8_HARMONIZE}",
+    ):
+        Game.model_validate(dumped)

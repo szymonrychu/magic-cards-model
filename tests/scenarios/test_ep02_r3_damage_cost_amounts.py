@@ -61,7 +61,25 @@ LISTED = [
 # No other Modern/Pioneer/Standard card prints "where X is the greatest mana value among
 # permanents you control", "7 minus ...", "you may have target creature get +X/+X, where X ...",
 # "the power of the exiled card" or "the number of times this ability has resolved" (bulk scan).
-PROOF: list[str] = ["Rubblebelt Rioters"]
+# Earthshaker Khenra, Gurgling Anointer ("mana value / power less than or equal to this creature's
+# power"), Torrential Gearhulk, Daring Waverider ("you may cast target ... card from your graveyard
+# without paying its mana cost. If that spell would be put into your graveyard, exile it instead"),
+# Radical Idea (the "Jump" + "Jump-start" keyword pair) and Hands of Binding (cipher) are second
+# printings of the readers below (Scryfall legalities checked 2026-10-14, none in the api decks).
+# No other Modern/Pioneer/Standard card prints "cast up to two instant and/or sorcery spells with
+# total mana value 6 or less", "draw a card. If you have nine or more cards in hand, flip", "when it
+# deals excess damage this way, destroy", "deals damage equal to its power divided as you choose",
+# "may sacrifice a nonland permanent ... or discard a card. Then ... deals damage" or "gains
+# harmonize" (Scryfall oracle search): the listed card is the only printing of each.
+PROOF: list[str] = [
+    "Rubblebelt Rioters",
+    "Hands of Binding",
+    "Earthshaker Khenra",
+    "Gurgling Anointer",
+    "Torrential Gearhulk",
+    "Daring Waverider",
+    "Radical Idea",
+]
 
 LANDS = ["Plains"] * 6 + ["Swamp"] * 4 + ["Island"] * 4 + ["Forest"] * 3 + ["Mountain"] * 4
 
@@ -963,3 +981,286 @@ def test_osseous_sticktwister_damages_an_opponent_with_nothing_to_give() -> None
     scenario = _scenario(["Osseous Sticktwister"], graveyard=FOUR_TYPES)
     _to_end_step(scenario)  # bob has only lands and no hand: no choice to offer
     assert scenario.player("bob").life == 20 - 2
+
+
+# ---------------------------------------------------------------------------
+# "Draw a card. If you have nine or more cards in hand, flip this creature":
+# Jushi Apprentice // Tomoya the Revealer (CR 710)
+# ---------------------------------------------------------------------------
+
+JUSHI = "Jushi Apprentice // Tomoya the Revealer"
+
+
+def _jushi_board(hand_size: int):
+    scenario = _scenario([JUSHI], hand=["Island"] * hand_size)
+    jushi = scenario.creature("Jushi Apprentice", "alice")
+    jushi.summoning_sick = False
+    return scenario, jushi
+
+
+def test_jushi_apprentice_flips_when_the_draw_makes_nine_cards() -> None:
+    scenario, jushi = _jushi_board(8)
+    _activate_all(scenario, jushi)
+    assert len(scenario.player("alice").hand) == 9
+    assert jushi.flipped and jushi.name == "Tomoya the Revealer"
+
+
+def test_jushi_apprentice_stays_unflipped_below_nine_cards() -> None:
+    scenario, jushi = _jushi_board(7)
+    _activate_all(scenario, jushi)
+    assert len(scenario.player("alice").hand) == 8
+    assert not jushi.flipped
+
+
+def test_jushi_apprentice_counts_the_hand_after_the_draw() -> None:
+    scenario, jushi = _jushi_board(9)  # already nine, ten after the draw
+    _activate_all(scenario, jushi)
+    assert jushi.flipped
+
+
+def test_tomoya_the_revealer_draws_as_many_cards_as_the_controllers_hand() -> None:
+    scenario, jushi = _jushi_board(3)
+    jushi.flip()
+    target_hand = len(scenario.player("bob").hand)
+    _activate_all(scenario, jushi, targets=["bob"])
+    assert len(scenario.player("bob").hand) == target_hand + 3  # the caster's hand, not bob's
+
+
+# ---------------------------------------------------------------------------
+# A granted harmonize (CR 702.180): Songcrafter Mage
+# ---------------------------------------------------------------------------
+
+
+def _songcrafter_grants(graveyard: list[str], target: str | None = "Think Twice", extra=None):
+    scenario = _scenario(extra or [], hand=["Songcrafter Mage"], graveyard=graveyard)
+    if target is not None:
+        scenario.choose_trigger_targets(
+            "Songcrafter Mage", [scenario.find(target, Zone.GRAVEYARD, "alice")]
+        )
+    _cast_all(scenario, "Songcrafter Mage")
+    return scenario
+
+
+def _harmonize_cast(scenario, name: str, creature=None) -> int:
+    """Cast `name` from the graveyard with the granted harmonize; the lands tapped to pay."""
+    before = _tapped_lands(scenario)
+    casting = scenario.cast(name, from_zone=Zone.GRAVEYARD)
+    casting.use_permission()
+    if creature is not None:
+        casting.pay_harmonize(creature)
+    scenario.auto_pay(casting.begin_paying())
+    scenario.put_on_stack(casting)
+    paid = _tapped_lands(scenario) - before
+    _resolve_all(scenario)
+    return paid
+
+
+def test_a_permission_can_be_a_granted_harmonize() -> None:
+    from magic_cards_model.machines.casting import PlayPermission
+
+    assert "harmonize" in PlayPermission.model_fields
+
+
+def test_songcrafter_mage_grants_harmonize_at_the_mana_cost() -> None:
+    scenario = _songcrafter_grants(["Think Twice"])
+    think = scenario.find("Think Twice", Zone.GRAVEYARD, "alice")
+    # {G}{U}{R} for the Mage itself is spent: only the graveyard cast is measured now.
+    assert _harmonize_cast(scenario, "Think Twice") == 2  # {1}{U}
+    assert think.zone is Zone.EXILE  # CR 702.180a: exiled instead of the graveyard
+
+
+def test_songcrafter_mage_harmonize_taps_a_creature_to_pay_its_power_in_generic() -> None:
+    scenario = _songcrafter_grants(["Think Twice"], extra=["Hill Giant"])
+    giant = scenario.creature("Hill Giant", "alice")
+    think = scenario.find("Think Twice", Zone.GRAVEYARD, "alice")
+    paid = _harmonize_cast(scenario, "Think Twice", creature=giant)
+    assert paid == 1  # {1}{U} less Hill Giant's power of 3 generic leaves {U}
+    assert giant.tapped
+    assert think.zone is Zone.EXILE
+
+
+def test_songcrafter_mage_grants_nothing_to_a_creature_card() -> None:
+    scenario = _songcrafter_grants(["Grizzly Bears"], target=None)
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    assert scenario.game.play_permission_for(bears, "alice") is None
+
+
+def test_a_card_without_the_grant_cannot_be_harmonized() -> None:
+    scenario = _scenario([], graveyard=["Think Twice"])
+    with pytest.raises(ValueError):
+        casting = scenario.cast("Think Twice", from_zone=Zone.GRAVEYARD)
+        casting.pay_harmonize(None)
+
+
+# ---------------------------------------------------------------------------
+# Cipher (CR 702.99): Whispering Madness, with Hands of Binding as the second printing
+# ---------------------------------------------------------------------------
+
+
+def _hands_encoded(*, bob=("Hill Giant",)):
+    """Hands of Binding resolved onto Grizzly Bears, encoded."""
+    scenario = _scenario(["Grizzly Bears"], list(bob), hand=["Hands of Binding"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.will_take_the_may(True, source="Hands of Binding")
+    scenario.will_choose_cards(bears)
+    _cast_all(scenario, "Hands of Binding", targets=[giant])
+    return scenario, bears, giant
+
+
+def test_cipher_exiles_the_resolved_spell_encoded_on_a_creature() -> None:
+    scenario, bears, giant = _hands_encoded()
+    hands = scenario.find("Hands of Binding", Zone.EXILE, "alice")
+    assert hands.zone is Zone.EXILE
+    assert giant.tapped  # the spell's own text resolved first (CR 608.2c)
+
+
+def test_cipher_may_be_declined_and_the_card_goes_to_the_graveyard() -> None:
+    scenario = _scenario(["Grizzly Bears"], ["Hill Giant"], hand=["Hands of Binding"])
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.will_take_the_may(False, source="Hands of Binding")
+    _cast_all(scenario, "Hands of Binding", targets=[giant])
+    assert scenario.find("Hands of Binding", Zone.GRAVEYARD, "alice").zone is Zone.GRAVEYARD
+
+
+def test_cipher_needs_a_creature_to_encode_onto() -> None:
+    scenario = _scenario([], ["Hill Giant"], hand=["Hands of Binding"])
+    giant = scenario.creature("Hill Giant", "bob")
+    _cast_all(scenario, "Hands of Binding", targets=[giant])  # no question is asked
+    assert scenario.find("Hands of Binding", Zone.GRAVEYARD, "alice").zone is Zone.GRAVEYARD
+
+
+def _hit_bob_with(scenario, bears):
+    scenario.advance()  # declare attackers
+    scenario.attack_with(bears)
+    scenario.no_blocks()
+    scenario.combat_damage()
+
+
+def test_cipher_casts_a_copy_free_when_the_encoded_creature_hits_a_player() -> None:
+    scenario, bears, _giant = _hands_encoded(bob=("Hill Giant", "Serra Angel"))
+    bears.summoning_sick = False
+    scenario.start_at(Step.BEGINNING_OF_COMBAT)
+    angel = scenario.creature("Serra Angel", "bob")
+    scenario.will_take_the_may(True, source="Hands of Binding")
+    scenario.will_choose_targets(angel)
+    _hit_bob_with(scenario, bears)
+    _resolve_all(scenario)
+    assert scenario.player("bob").life == 20 - 2
+    assert angel.tapped  # the copy was cast without paying {1}{U}
+    exiled = [c for c in scenario.game.exile if c.name == "Hands of Binding"]
+    assert len(exiled) == 1 and not exiled[0].is_copy  # the card stays encoded; no copy lingers
+
+
+def test_cipher_does_not_trigger_when_the_creature_is_blocked() -> None:
+    scenario, bears, giant = _hands_encoded()
+    bears.summoning_sick = False
+    giant.tapped = False
+    scenario.start_at(Step.BEGINNING_OF_COMBAT)
+    scenario.advance()
+    scenario.attack_with(bears)
+    scenario.block(bears, giant)
+    scenario.combat_damage()
+    _resolve_all(scenario)
+    assert scenario.player("bob").life == 20
+
+
+def test_cipher_is_lost_when_the_encoded_creature_leaves_the_battlefield() -> None:
+    scenario, bears, _giant = _hands_encoded(bob=("Hill Giant", "Serra Angel"))
+    scenario.game.return_to_hand(bears)
+    scenario.put_onto_battlefield("Grizzly Bears")  # a new object (CR 400.7)
+    again = scenario.creature("Grizzly Bears", "alice")
+    again.summoning_sick = False
+    scenario.start_at(Step.BEGINNING_OF_COMBAT)
+    _hit_bob_with(scenario, again)
+    _resolve_all(scenario)
+    assert scenario.player("bob").life == 20 - 2  # combat damage only: no free copy was offered
+
+
+def test_whispering_madness_discards_every_hand_and_draws_the_greatest() -> None:
+    scenario = _scenario(
+        [],
+        hand=["Whispering Madness", "Island"],
+        bob_hand=["Island", "Island", "Island"],
+        library=["Mountain"] * 12,
+    )
+    _cast_all(scenario, "Whispering Madness")
+    assert len(scenario.player("alice").hand) == 3  # one discarded, three drawn
+    assert len(scenario.player("bob").hand) == 3  # three discarded, three drawn
+
+
+def test_whispering_madness_may_be_encoded_on_a_creature_you_control() -> None:
+    scenario = _scenario(["Grizzly Bears"], hand=["Whispering Madness"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.will_take_the_may(True, source="Whispering Madness")
+    scenario.will_choose_cards(bears)
+    _cast_all(scenario, "Whispering Madness")
+    assert scenario.find("Whispering Madness", Zone.EXILE, "alice").zone is Zone.EXILE
+
+
+# ---------------------------------------------------------------------------
+# Second printings: "less than or equal to this creature's power", the free cast from the
+# graveyard, and jump-start's Scryfall keyword pair
+# ---------------------------------------------------------------------------
+
+
+def test_earthshaker_khenra_targets_a_creature_with_power_up_to_its_own() -> None:
+    scenario = _scenario([], ["Grizzly Bears", "Hill Giant"], hand=["Earthshaker Khenra"])
+    bears, giant = scenario.creature("Grizzly Bears", "bob"), scenario.creature("Hill Giant", "bob")
+    scenario.will_choose_targets(giant)  # power 3 > the Khenra's 2
+    with pytest.raises(ValueError):
+        _cast_all(scenario, "Earthshaker Khenra")
+    scenario = _scenario([], ["Grizzly Bears", "Hill Giant"], hand=["Earthshaker Khenra"])
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.will_choose_targets(bears)  # power 2 is equal: legal (CR 601.2c)
+    _cast_all(scenario, "Earthshaker Khenra")
+    assert scenario.find("Earthshaker Khenra", Zone.BATTLEFIELD, "alice").zone is Zone.BATTLEFIELD
+
+
+def test_gurgling_anointer_returns_a_creature_card_up_to_its_last_known_power() -> None:
+    scenario = _scenario(
+        ["Gurgling Anointer"], graveyard=["Grizzly Bears", "Serra Angel"], step=Step.PRECOMBAT_MAIN
+    )
+    anointer = scenario.creature("Gurgling Anointer", "alice")
+    anointer.add_counters("+1/+1", 1)  # power 2
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    scenario.will_choose_targets(bears)
+    scenario.game.destroy(anointer)
+    _resolve_all(scenario)
+    assert bears.zone is Zone.BATTLEFIELD  # mana value 2 <= power 2
+    assert scenario.find("Serra Angel", Zone.GRAVEYARD, "alice").zone is Zone.GRAVEYARD
+
+
+def test_torrential_gearhulk_casts_an_instant_free_and_exiles_it() -> None:
+    scenario = _scenario([], hand=["Torrential Gearhulk"], graveyard=["Lightning Bolt"])
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    scenario.choose_trigger_targets("Torrential Gearhulk", [bolt])
+    scenario.will_take_the_may(True, source="Torrential Gearhulk")
+    scenario.will_choose_targets("bob")
+    _cast_all(scenario, "Torrential Gearhulk")
+    assert _life(scenario, "bob") == 17
+    assert bolt.zone is Zone.EXILE
+
+
+def test_daring_waverider_casts_a_spell_of_mana_value_four_or_less_free() -> None:
+    scenario = _scenario([], hand=["Daring Waverider"], graveyard=["Divination", "Day of Judgment"])
+    divination = scenario.find("Divination", Zone.GRAVEYARD, "alice")
+    scenario.choose_trigger_targets("Daring Waverider", [divination])
+    scenario.will_take_the_may(True, source="Daring Waverider")
+    hand = len(scenario.player("alice").hand)
+    _cast_all(scenario, "Daring Waverider")
+    assert divination.zone is Zone.EXILE
+    assert len(scenario.player("alice").hand) == hand - 1 + 2  # the Waverider left, two drawn
+
+
+def test_radical_idea_is_cast_with_jump_start() -> None:
+    scenario = _scenario([], hand=["Island"], graveyard=["Radical Idea"])
+    island = scenario.find("Island", Zone.HAND, "alice")
+    radical = scenario.find("Radical Idea", Zone.GRAVEYARD, "alice")
+    casting = scenario.cast("Radical Idea", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Jump-start", choosing=[island])
+    scenario.auto_pay(casting.begin_paying())
+    scenario.put_on_stack(casting)
+    _resolve_all(scenario)
+    assert island.zone is Zone.GRAVEYARD and radical.zone is Zone.EXILE
+    assert len(scenario.player("alice").hand) == 1  # drew a card

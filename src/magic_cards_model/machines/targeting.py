@@ -1939,7 +1939,10 @@ class TargetRequirement(EngineModel):
                 return None
             chars = characteristics_of(source)
             return _numeric(chars.power if power else chars.toughness)
-        return source.last_known_power if power else source.last_known_toughness
+        # The snapshot keeps only what a continuous effect contributed; the printing plus the
+        # counters it left with is the rest (`CardState.last_known_power_toughness`).
+        last_power, last_toughness = source.last_known_power_toughness()
+        return _numeric(last_power if power else last_toughness)
 
     def _defined_x(self, game: Any, caster: str | None) -> int | None:
         """`comparison_x_definition` counted for `caster` right now (CR 107.3c),

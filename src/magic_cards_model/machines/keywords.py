@@ -6095,6 +6095,12 @@ def has_rebound_now(card_state: CardState) -> bool:
 # --------------------------------------------------------------------------
 
 
+def has_cipher(card: Card) -> bool:
+    """CR 702.99a: "Cipher appears on some instants and sorceries." Read off Scryfall's own
+    `keywords` list, as `has_paradigm` is."""
+    return any(keyword.lower() == "cipher" for keyword in card.keywords)
+
+
 def has_paradigm(card: Card) -> bool:
     """CR 702.192a: "Paradigm represents two spell abilities ... 'Exile this
     spell.'" Read off Scryfall's own `keywords` list, the same way `has_

@@ -503,6 +503,74 @@ class ParadigmCopyAndCast(DelayedEffectSpecBase):
             game.exile.remove(copy)
 
 
+class CipherCopyAndCast(DelayedEffectSpecBase):
+    """CR 702.99a's second ability: "For as long as this card is encoded on that
+    creature, that creature has 'Whenever this creature deals combat damage to a player,
+    you may copy the encoded card and you may cast the copy without paying its mana
+    cost.'" - a delayed trigger kept for the encoding's whole life (`remaining=None`),
+    watching the creature (`DelayedTrigger.subject_id`, with its zone and stamp, CR 400.7).
+
+    CR 702.99c: the card stays encoded while it stays exiled and the creature stays on
+    the battlefield, whoever controls the creature - so the ability is its current
+    controller's (not the trigger's creating controller's), and a card that has left
+    exile, or a creature that is a new object, ends the trigger the next time it is
+    asked. The copy is made in exile (CR 707.12) and ceases to exist if it is not cast
+    (CR 707.10a).
+    """
+
+    kind: Literal["cipher_copy_and_cast"] = "cipher_copy_and_cast"
+    card_id: UUID
+    """The exiled card the creature has encoded."""
+    card_stamp: UUID
+    """Its `zone_change_stamp` in exile: a card that left and came back is a new object."""
+
+    matches_against_the_game: ClassVar[bool] = True
+
+    def _encoded_card(self, game: "Game") -> CardState | None:
+        found = game.find_by_id(self.card_id)
+        if (
+            isinstance(found, CardState)
+            and found.zone is Zone.EXILE
+            and found.zone_change_stamp == self.card_stamp
+        ):
+            return found
+        return None
+
+    def event_matches(self, game: "Game", trigger: "DelayedTrigger", event: GameEvent) -> bool:
+        if trigger.still_affects(game) is not None and self._encoded_card(game) is not None:
+            return True
+        trigger.remaining = 0  # CR 702.99c: no longer encoded, so nothing is left to watch
+        return False
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        creature = trigger.still_affects(game)
+        card = self._encoded_card(game)
+        if creature is None or card is None:
+            return
+        caster = game.controller_of(creature).username
+        with game._id_allocator_scope():
+            copy = CardState(
+                card=card.card,
+                zone=Zone.EXILE,
+                controller=caster,
+                owner=caster,
+                is_copy=True,
+            )
+            game.exile.append(copy)
+        cast = game.may_cast_during_resolution(
+            copy,
+            caster,
+            prompt=f"cast a copy of {copy.name} without paying its mana cost",
+            source=copy.name,
+            source_id=source_id_of(ability),
+            source_name=f"{copy.name}'s cipher",
+            rule="CR 702.99a",
+            keyword="Cipher",
+        )
+        if cast is None and copy in game.exile:
+            game.exile.remove(copy)  # CR 704.5e/707.10a: a copy not cast does not persist
+
+
 class CopyEpicSpell(DelayedEffectSpecBase):
     """CR 702.50a's second spell ability: "At the beginning of each of your
     upkeeps for the rest of the game, copy this spell except for its epic
@@ -2676,6 +2744,7 @@ DelayedEffectSpec = Annotated[
     | ReturnSubjectToHand
     | ReboundRecast
     | ParadigmCopyAndCast
+    | CipherCopyAndCast
     | CopyEpicSpell
     | DrawACardForController
     | AddManaAmountForController
