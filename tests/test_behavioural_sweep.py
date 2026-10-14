@@ -3170,6 +3170,20 @@ def _other_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
 
             yield token
 
+    if "cast" in (ability.intervening_if or "").lower():
+        # "Whenever an Aura you control enters, if you cast it" (Light-Paws,
+        # Emperor's Voice; CR 603.4): the other object is cast and resolves, so
+        # it enters as a cast spell. After every put above, so each recorded
+        # attempt index stays put.
+        for probe in _probes(case, ability, entering=True):
+
+            def cast_other(probe: str = probe) -> tuple[PlayedScenario, Any]:
+                scenario, source_id = _home(case, ability, hand=(probe,))
+                _cast(scenario, probe)
+                return scenario, source_id
+
+            yield cast_other
+
 
 #: How each "leaves the battlefield" event is caused, in the engine's own
 #: words: the method that performs the move is the one that emits the event.
