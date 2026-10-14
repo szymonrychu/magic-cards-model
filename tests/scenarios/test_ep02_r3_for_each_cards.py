@@ -722,3 +722,77 @@ def test_fiery_bombardment_deals_nothing_for_a_creature_without_red_symbols() ->
     )
     _resolve_all(scenario)
     assert _life(scenario, "bob") == 20
+
+
+# ---------------------------------------------------------------------------
+# Biomantic Mastery: "Draw a card for each creature target player controls, then
+# draw a card for each creature another target player controls." (CR 608.2c)
+# ---------------------------------------------------------------------------
+
+
+def test_biomantic_mastery_draws_for_each_creature_both_players_control() -> None:
+    scenario = _scenario(
+        ["Grizzly Bears", "Memnite"],
+        ["Serra Angel", "Hill Giant", "Llanowar Elves"],
+        hand=["Biomantic Mastery"],
+        library=["Forest"] * 12,
+    )
+    _cast_all(scenario, "Biomantic Mastery", targets=[scenario.player("alice"), scenario.player("bob")])
+    assert _hand(scenario, "alice") == 5
+
+
+def test_biomantic_mastery_counts_the_chosen_players_not_the_casters() -> None:
+    scenario = _scenario(
+        ["Grizzly Bears"],
+        ["Serra Angel", "Hill Giant"],
+        hand=["Biomantic Mastery"],
+        library=["Forest"] * 12,
+    )
+    _cast_all(scenario, "Biomantic Mastery", targets=[scenario.player("bob"), scenario.player("alice")])
+    assert _hand(scenario, "alice") == 3
+    assert _hand(scenario, "bob") == 0
+
+
+def test_biomantic_mastery_cannot_name_the_same_player_twice() -> None:
+    scenario = _scenario(["Grizzly Bears"], hand=["Biomantic Mastery"])
+    with pytest.raises(ValueError, match="CR 115.3"):
+        scenario.cast(
+            "Biomantic Mastery", "alice", targets=[scenario.player("alice"), scenario.player("alice")]
+        )
+
+
+# ---------------------------------------------------------------------------
+# Blinkmoth Urn: "At the beginning of each player's first main phase, if this
+# artifact is untapped, that player adds {C} for each artifact they control."
+# ---------------------------------------------------------------------------
+
+
+def _first_main_of(scenario, who: str) -> None:
+    """Advance to `who`'s precombat main phase, resolving what triggers."""
+    while not (scenario.step is Step.PRECOMBAT_MAIN and scenario.turn.active_player == who):
+        scenario.advance()
+        scenario.game.put_triggers_on_stack()
+        _resolve_all(scenario)
+
+
+def test_blinkmoth_urn_adds_mana_for_the_active_players_artifacts() -> None:
+    scenario = _scenario(["Blinkmoth Urn", "Sol Ring"], ["Ornithopter", "Memnite"], step=Step.UPKEEP)
+    _first_main_of(scenario, "alice")
+    assert scenario.player("alice").mana_pool.total == 2  # the urn and Sol Ring
+
+
+def test_blinkmoth_urn_gives_the_mana_to_the_opponent_for_their_artifacts() -> None:
+    scenario = _scenario(
+        ["Blinkmoth Urn"], ["Ornithopter", "Sol Ring", "Wurmcoil Engine"], step=Step.UPKEEP
+    )
+    _first_main_of(scenario, "bob")
+    assert scenario.player("bob").mana_pool.total == 3
+    assert scenario.player("alice").mana_pool.total == 0
+
+
+def test_blinkmoth_urn_adds_nothing_while_tapped() -> None:
+    scenario = _scenario(["Blinkmoth Urn", "Sol Ring"], step=Step.UPKEEP)
+    scenario.find("Blinkmoth Urn", Zone.BATTLEFIELD, "alice").tapped = True
+    scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")  # Sol Ring stays untapped
+    _first_main_of(scenario, "alice")
+    assert scenario.player("alice").mana_pool.total == 0

@@ -612,7 +612,7 @@ def cards_for_each_pattern(
 # --------------------------------------------------------------------------
 
 _ADD_MANA_FOR_EACH_RE = re.compile(
-    r"^(?:then )?add (?P<symbols>(?:\{[wubrgc]\})+|\{[wubrgc]\}(?: or \{[wubrgc]\})+)"
+    r"^(?:then )?(?:(?P<who>that player) adds?|add) (?P<symbols>(?:\{[wubrgc]\})+|\{[wubrgc]\}(?: or \{[wubrgc]\})+)"
     r" for each (?P<each>.+)$",
     re.IGNORECASE,
 )
@@ -623,6 +623,17 @@ def parse_add_mana_for_each(text: str) -> tuple[str, str] | None:
     """`(symbols, counted phrase)` of "add {M} for each <each>", or `None`."""
     match = _ADD_MANA_FOR_EACH_RE.fullmatch(clean(text))
     return None if match is None else (match.group("symbols"), match.group("each"))
+
+
+def adding_player(game: "Game", stack_object: Any, text: str) -> str:
+    """Who adds the mana of an "add {M} for each ..." sentence: the resolving
+    trigger's event player for "that player adds" (Blinkmoth Urn, CR 603.2),
+    else the controller (CR 109.5)."""
+    match = _ADD_MANA_FOR_EACH_RE.fullmatch(clean(text))
+    event = getattr(stack_object, "event", None)
+    if match is not None and match.group("who") and event is not None and event.player is not None:
+        return event.player
+    return controller_of(game, stack_object)
 
 
 def add_mana_for_each_effect(text: str) -> "Callable[[Game, Any], None] | None":
@@ -641,7 +652,7 @@ def add_mana_for_each_effect(text: str) -> "Callable[[Game, Any], None] | None":
         return None
 
     def effect(game: "Game", stack_object: Any) -> None:
-        controller = controller_of(game, stack_object)
+        controller = adding_player(game, stack_object, text)
         add_mana_times(
             game,
             controller,

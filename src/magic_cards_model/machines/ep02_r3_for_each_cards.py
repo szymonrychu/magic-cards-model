@@ -810,3 +810,52 @@ def _parse_player_creates_tokens_then_pump_per_their_kind(text: str, *, for_spel
                 _pump_until_end_of_turn(game, stack_object, target, power * count, toughness * count)
 
     return [effect]
+
+
+# --------------------------------------------------------------------------
+# "Draw a card for each creature target player controls, then draw a card for each
+# creature another target player controls." (Biomantic Mastery, CR 608.2c)
+# --------------------------------------------------------------------------
+
+_DRAW_FOR_EACH_TARGET_PLAYERS_RE = re.compile(
+    r"^draw a card for each (?P<first>[a-z][a-z ]*?) (?P<one>target player) controls, "
+    r"then draw a card for each (?P<second>[a-z][a-z ]*?) (?P<other>another target player) controls$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_draw_for_each_thing_two_target_players_control(text: str, *, for_spell: bool) -> Any:
+    """Biomantic Mastery. Two different player targets (CR 115.3: "another"),
+    in the order the text names them (CR 601.2c). The controller draws, one
+    card for each thing the first player controls, then one for each thing the
+    second controls - each count taken as that draw is performed (CR 608.2c,
+    CR 608.2h). A player no longer a legal target contributes nothing (CR
+    608.2b)."""
+    match = _DRAW_FOR_EACH_TARGET_PLAYERS_RE.fullmatch(" ".join(text.split()).rstrip("."))
+    if match is None:
+        return None
+    from .effects._common import _targets_understood
+    from .effects.amounts import count_expression
+
+    if not (
+        _targets_understood("target player", allow_player_targets=True)
+        and _targets_understood("another target player", allow_player_targets=True)
+    ):
+        return None
+    counts = [
+        count_expression(f"the number of {match.group(group)}s you control")
+        for group in ("first", "second")
+    ]
+    if any(counted is None for counted in counts):
+        return None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        drawer = game.controller_of(stack_object).username
+        for counted, reference in zip(counts, stack_object.targets, strict=False):
+            player = game.legal_target(stack_object, reference)
+            if isinstance(player, Player):
+                game.draw_cards(drawer, counted(game, player.username))
+                game.announce_batched_events()  # CR 603.2c: one event per instruction
+
+    return [effect]
