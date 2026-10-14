@@ -187,3 +187,148 @@ def test_sages_reverie_ignores_auras_other_players_control():
     pacifism = scenario.find("Pacifism", Zone.BATTLEFIELD, "bob")
     pacifism.attach_to(scenario.creature("Grizzly Bears", "alice"))
     assert _cast_reverie(scenario) == 1
+
+
+# -- Desmond Miles: surveil X, where X is the amount of damage it dealt to that player
+
+
+def _desmond_board(alice_extra=(), graveyard=(), blockers=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Desmond Miles", *alice_extra],
+            graveyard=list(graveyard),
+            library=["Island", "Swamp", "Forest", "Mountain", "Plains", "Island"],
+        )
+        .player("bob", battlefield=list(blockers), library=["Forest"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    return scenario
+
+
+def test_desmond_miles_surveils_for_the_damage_it_dealt():
+    scenario = _desmond_board()
+    desmond = scenario.creature("Desmond Miles", "alice")
+    top = scenario.top_of_library(3, "alice")
+    scenario.surveil_to_graveyard(top[0], username="alice")
+    scenario.attack_with(desmond, defending="bob")
+    scenario.no_blocks()
+    scenario.combat_damage()
+    scenario.pass_until_resolved()
+    assert scenario.player("bob").life == 19
+    # one damage -> surveil 1: only the top card was offered
+    assert [c.name for c in scenario.player("alice").graveyard] == [top[0].name]
+    assert len(scenario.player("alice").library) == 5
+
+
+def test_desmond_miles_surveil_is_as_large_as_the_pumped_damage():
+    # +1/+0 for each other Assassin (CR 613.4c) and each Assassin card in the graveyard.
+    scenario = _desmond_board(
+        alice_extra=["Silumgar Assassin"], graveyard=["Silumgar Assassin", "Silumgar Assassin"]
+    )
+    desmond = scenario.creature("Desmond Miles", "alice")
+    assert scenario.game.computed_board().of(desmond).power == 4
+    top = scenario.top_of_library(4, "alice")
+    scenario.surveil_to_graveyard(*top, username="alice")
+    scenario.attack_with(desmond, defending="bob")
+    scenario.no_blocks()
+    scenario.combat_damage()
+    scenario.pass_until_resolved()
+    assert scenario.player("bob").life == 16
+    graveyard = [c.name for c in scenario.player("alice").graveyard]
+    assert len(graveyard) == 2 + 4
+    assert len(scenario.player("alice").library) == 2
+
+
+def test_desmond_miles_does_not_surveil_when_blocked():
+    scenario = _desmond_board(blockers=["Grizzly Bears", "Grizzly Bears"])
+    desmond = scenario.creature("Desmond Miles", "alice")
+    scenario.attack_with(desmond, defending="bob")
+    scenario.block(desmond, *scenario.creatures("Grizzly Bears", "Grizzly Bears", username="bob"))
+    scenario.combat_damage()
+    scenario.pass_until_resolved()
+    # Desmond died to the blockers; nothing was surveiled.
+    assert [c.name for c in scenario.player("alice").graveyard] == ["Desmond Miles"]
+    assert len(scenario.player("alice").library) == 6
+
+
+# -- Exuberant Wolfbear: base P/T of target Human you control becomes equal to this creature's P/T
+
+
+def _wolfbear_board(extra=(), bob=()):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Exuberant Wolfbear", *extra], library=["Island"] * 4)
+        .player("bob", battlefield=list(bob), library=["Forest"] * 4)
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    return scenario
+
+
+def test_wolfbear_sets_the_humans_base_power_and_toughness_to_its_own():
+    scenario = _wolfbear_board(extra=["Elite Vanguard"])
+    wolf = scenario.creature("Exuberant Wolfbear", "alice")
+    human = scenario.creature("Elite Vanguard", "alice")
+    scenario.will_take_the_may(True, username="alice")
+    scenario.will_choose_targets(human, username="alice")
+    scenario.attack_with(wolf, defending="bob")
+    scenario.pass_until_resolved()
+    assert _pt(scenario, human) == (4, 4)
+
+
+def test_wolfbear_copies_its_current_pumped_size_and_later_modifiers_still_apply():
+    # CR 613.4b: the set is sublayer 7b, so a +1/+1 counter (7d) still adds on top.
+    scenario = _wolfbear_board(extra=["Elite Vanguard"])
+    wolf = scenario.creature("Exuberant Wolfbear", "alice")
+    human = scenario.creature("Elite Vanguard", "alice")
+    scenario.game.add_counters(human, "+1/+1", 1)
+    scenario.game.add_counters(wolf, "+1/+1", 2)
+    scenario.will_take_the_may(True, username="alice")
+    scenario.will_choose_targets(human, username="alice")
+    scenario.attack_with(wolf, defending="bob")
+    scenario.pass_until_resolved()
+    assert _pt(scenario, wolf) == (6, 6)
+    assert _pt(scenario, human) == (7, 7)
+
+
+def test_wolfbear_may_decline():
+    scenario = _wolfbear_board(extra=["Elite Vanguard"])
+    wolf = scenario.creature("Exuberant Wolfbear", "alice")
+    human = scenario.creature("Elite Vanguard", "alice")
+    scenario.will_take_the_may(False, username="alice")
+    scenario.will_choose_targets(human, username="alice")
+    scenario.attack_with(wolf, defending="bob")
+    scenario.pass_until_resolved()
+    assert _pt(scenario, human) == (2, 1)
+
+
+def test_wolfbear_effect_ends_at_end_of_turn():
+    scenario = _wolfbear_board(extra=["Elite Vanguard"])
+    wolf = scenario.creature("Exuberant Wolfbear", "alice")
+    human = scenario.creature("Elite Vanguard", "alice")
+    scenario.will_take_the_may(True, username="alice")
+    scenario.will_choose_targets(human, username="alice")
+    scenario.attack_with(wolf, defending="bob")
+    scenario.pass_until_resolved()
+    _advance_until(scenario, lambda s: s.turn.active_player == "bob")
+    assert _pt(scenario, human) == (2, 1)
+
+
+@pytest.mark.parametrize("bad", ["Savannah Lions", "bobs Elite Vanguard"])
+def test_wolfbear_cannot_target_a_non_human_or_an_opponents_human(bad):
+    scenario = _wolfbear_board(extra=["Savannah Lions"], bob=["Elite Vanguard"])
+    wolf = scenario.creature("Exuberant Wolfbear", "alice")
+    target = (
+        scenario.creature("Savannah Lions", "alice")
+        if bad == "Savannah Lions"
+        else scenario.creature("Elite Vanguard", "bob")
+    )
+    scenario.will_take_the_may(True, username="alice")
+    scenario.will_choose_targets(target, username="alice")
+    before = _pt(scenario, target)
+    scenario.attack_with(wolf, defending="bob")
+    scenario.pass_until_resolved()
+    assert _pt(scenario, target) == before

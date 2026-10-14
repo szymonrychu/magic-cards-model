@@ -15,7 +15,8 @@ counts) or a plain game count, at the moment the instruction is applied
 import re
 from typing import TYPE_CHECKING, Any
 
-from .effects._chains import FORWARD, MIXED_CLAUSE
+from ..models.zone import Zone
+from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE
 
 if TYPE_CHECKING:
     from ..models.card_state import CardState
@@ -86,5 +87,75 @@ def _parse_tokens_per_opponent(text: str, *, for_spell: bool) -> Any:
         controller = game.controller_of(stack_object).username
         opponents = [p for p in game.players_in_game if p.username != controller]
         create(game, stack_object, len(opponents))
+
+    return effect
+
+
+_BASE_PT_COPY_RE = re.compile(
+    r"^(?P<may>you may )?have the base power and toughness of (?P<target>target [^.,]+?) "
+    r"become equal to this (?:creature|permanent)'s power and toughness until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_base_pt_becomes_source_pt(text: str) -> Any:
+    """ "[You may] have the base power and toughness of target `<creature>`
+    become equal to this creature's power and toughness until end of turn"
+    (Exuberant Wolfbear): the source's power and toughness are read once as the
+    instruction is applied (CR 608.2h, last known information if it has left,
+    CR 603.10a) and set as the target's base (CR 613.4b, sublayer 7b), lasting
+    until the cleanup step (CR 514.2)."""
+    match = _BASE_PT_COPY_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    from .effects._common import _targets_understood
+
+    if not _targets_understood(match["target"]):
+        return None
+    optional = match["may"] is not None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        from .effects.continuous import continuous_effects
+        from .layers.model import (
+            ContinuousEffect,
+            Duration,
+            Layer,
+            Sublayer,
+            only_this_incarnation,
+            set_power_toughness,
+        )
+
+        source = stack_object.source_or_last_known(game)
+        controller = game.controller_of(stack_object)
+        if source is None:
+            return
+        if optional and not game.may(
+            controller,
+            f"Have the base power and toughness of the target become {source.name}'s?",
+            source=source.name,
+            source_id=str(source.id),
+        ):
+            return
+        power, toughness = game.computed_board().of(source).power_toughness
+        if power is None or toughness is None:
+            return
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, type(source)) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            store.add(
+                ContinuousEffect(
+                    description=f"{source.name}: {target.name} has base power and toughness "
+                    f"{power}/{toughness}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.SET,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=set_power_toughness(power, toughness),
+                )
+            )
 
     return effect
