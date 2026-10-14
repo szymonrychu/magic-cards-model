@@ -3226,6 +3226,7 @@ _OTHER_THAN_THIS_TAIL_RE = re.compile(
     r"(?:[a-z]+)$",
     re.IGNORECASE,
 )
+_TIME_KICKED_EACH_RE = re.compile(r"^time (?:it|this spell|[A-Z][^.]*?) was kicked$")
 _LEFT_UNDER_YOUR_CONTROL_EACH_RE = re.compile(
     r"^(?P<quality>[a-z -]+?) that left the battlefield under your control this turn$",
     re.IGNORECASE,
@@ -3288,6 +3289,21 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
                 for entry in game.turn_history
                 if entry.kind == "left_battlefield" and entry.player == controller and quality(entry)
             )
+    if kicks := _TIME_KICKED_EACH_RE.fullmatch(stripped):
+        # Spell Contortion: "Draw a card for each time Spell Contortion was
+        # kicked" - CR 702.33d's count of multikicker payments, read off the
+        # cast record of the spell (or the permanent it became, CR 400.7d)
+        # whose effect is resolving (CR 608.2h).
+        def count_kicks(game: "Game", _controller: str, source_id: str | None) -> int:
+            resolving = game.resolving
+            if isinstance(resolving, CardState) and str(resolving.id) == source_id:
+                obj = resolving
+            else:
+                obj = None if source_id is None else game.find_by_id(UUID(source_id))
+            record = None if obj is None else game.cast_record_of(obj)
+            return 0 if record is None else record.kicked
+
+        return count_kicks
     types_among = card_types_among_spells_cast_reader(stripped)
     if types_among is not None:
         # CR 608.2h: counted once, as the effect applies.

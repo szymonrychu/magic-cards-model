@@ -2291,15 +2291,18 @@ class CastingMixin:
             # has the gift decide whether a promised-only target is chosen.
             if gift is not None:
                 casting.pay_gift(gift)
-            if targets:
-                casting.choose_targets(list(targets))
-            for card_id in splice or ():
-                casting.splice_by_id(card_id)
             if kicker:
+                # CR 601.2b: kicker is announced before CR 601.2c's targets
+                # (`add_additional_cost` refuses once they are chosen - Spell
+                # Contortion's multikicker on a targeted spell).
                 casting.pay_kicker(kicker)
             for cost in kicker_costs or ():
                 # CR 702.33b: a card with two kicker costs names each one paid.
                 casting.pay_kicker(1, which=cost)
+            if targets:
+                casting.choose_targets(list(targets))
+            for card_id in splice or ():
+                casting.splice_by_id(card_id)
             if replicate:
                 casting.pay_replicate(replicate)
             if offspring:

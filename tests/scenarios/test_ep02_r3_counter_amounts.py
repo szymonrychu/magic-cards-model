@@ -1046,3 +1046,52 @@ def test_lethal_exploit_count_is_fixed_as_it_is_cast():
     scenario.resolve_top()
     scenario.state_based_actions()
     assert giant.zone is Zone.GRAVEYARD
+
+
+# -- Spell Contortion: "Draw a card for each time Spell Contortion was kicked"
+# (multikicker, CR 702.33c/d)
+
+
+def _kick_contortion(kicks):
+    """Alice casts Shock, then Spell Contortion (kicked `kicks` times) on it,
+    with no mana left to pay the {2}."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Shock", "Spell Contortion"],
+            battlefield=["Mountain"] + ["Island"] * (3 + 2 * kicks),
+            library=["Forest"] * 8,
+        )
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    shock = scenario.cast_onto_stack("Shock", *scenario.untapped_sources("Mountain"), targets=["bob"])
+    spell = scenario.find("Spell Contortion", Zone.HAND, "alice")
+    hand_before = len(scenario.player("alice").hand)
+    scenario.game.cast(
+        spell,
+        "alice",
+        kicker=kicks,
+        targets=[shock],
+        mana_sources=scenario.untapped_sources(*["Island"] * (3 + 2 * kicks)),
+    )
+    scenario.resolve_top()
+    assert shock.zone is Zone.GRAVEYARD, "the Shock was countered"
+    return scenario, hand_before
+
+
+def test_spell_contortion_unkicked_draws_nothing():
+    scenario, before = _kick_contortion(0)
+    assert len(scenario.player("alice").hand) == before - 1
+
+
+def test_spell_contortion_kicked_twice_draws_two():
+    scenario, before = _kick_contortion(2)
+    assert len(scenario.player("alice").hand) == before - 1 + 2
+
+
+def test_spell_contortion_kicked_once_draws_one():
+    scenario, before = _kick_contortion(1)
+    assert len(scenario.player("alice").hand) == before - 1 + 1
