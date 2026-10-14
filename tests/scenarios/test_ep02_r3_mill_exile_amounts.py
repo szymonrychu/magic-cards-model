@@ -233,9 +233,7 @@ def test_cut_down_destroys_a_creature_whose_stats_total_five_or_less():
     scenario = _cut_down_board("Grizzly Bears")
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "bob")
-    scenario.cast_and_resolve(
-        "Cut Down", *scenario.untapped_sources(SWAMP), targets=[bears]
-    )
+    scenario.cast_and_resolve("Cut Down", *scenario.untapped_sources(SWAMP), targets=[bears])
     assert "Grizzly Bears" not in scenario.battlefield_names()
 
 
@@ -243,9 +241,7 @@ def test_cut_down_total_exactly_five_is_legal():
     scenario = _cut_down_board("Kird Ape", "Forest")
     scenario.start_at(Step.PRECOMBAT_MAIN)
     ape = scenario.creature("Kird Ape", "bob")
-    scenario.cast_and_resolve(
-        "Cut Down", *scenario.untapped_sources(SWAMP), targets=[ape]
-    )
+    scenario.cast_and_resolve("Cut Down", *scenario.untapped_sources(SWAMP), targets=[ape])
     assert "Kird Ape" not in scenario.battlefield_names()
 
 
@@ -455,7 +451,10 @@ def _resonance(host_name, host_owner="alice"):
 
     scenario = (
         Scenario()
-        .player("alice", battlefield=["Elemental Resonance"] + ([host_name] if host_owner == "alice" else []))
+        .player(
+            "alice",
+            battlefield=["Elemental Resonance"] + ([host_name] if host_owner == "alice" else []),
+        )
         .player("bob", battlefield=[host_name] if host_owner == "bob" else [])
         .build()
     )
@@ -525,7 +524,9 @@ def test_loot_exiles_one_card_per_card_type_among_other_nonland_permanents():
 def test_loot_with_no_other_nonland_permanents_exiles_nothing():
     scenario = (
         Scenario()
-        .player("alice", battlefield=["Loot, the Key to Everything", "Forest"], library=["Island"] * 3)
+        .player(
+            "alice", battlefield=["Loot, the Key to Everything", "Forest"], library=["Island"] * 3
+        )
         .player("bob")
         .build()
     )
@@ -546,9 +547,7 @@ def _vault(sacrificed):
     scenario.start_at(Step.PRECOMBAT_MAIN)
     vault = scenario.find("Memorial Vault", Zone.BATTLEFIELD)
     vault.summoning_sick = False
-    scenario.activate(
-        vault, index=0, sacrificing=[scenario.find(sacrificed, Zone.BATTLEFIELD)]
-    )
+    scenario.activate(vault, index=0, sacrificing=[scenario.find(sacrificed, Zone.BATTLEFIELD)])
     scenario.resolve_top()
     return scenario
 
@@ -602,7 +601,9 @@ def test_rakdos_the_muscle_exiles_cards_equal_to_the_sacrificed_creatures_mana_v
 def test_dead_man_chests_exiles_cards_equal_to_the_dead_creatures_power():
     scenario = (
         Scenario()
-        .player("alice", hand=["Go for the Throat"], battlefield=["Dead Man's Chest", "Swamp", "Swamp"])
+        .player(
+            "alice", hand=["Go for the Throat"], battlefield=["Dead Man's Chest", "Swamp", "Swamp"]
+        )
         .player("bob", battlefield=["Hill Giant"], library=["Island"] * 6)
         .build()
     )
@@ -743,3 +744,50 @@ def test_increasing_confusion_cast_from_hand_mills_x():
 def test_increasing_confusion_flashed_back_mills_twice_x():
     scenario = _confusion(Zone.GRAVEYARD, 3)
     assert _graveyard(scenario, "bob") == 6
+
+
+# --------------------------------------------------------------------------
+# Part 10 - "At the beginning of each end step, enchanted player mills X
+# cards, where X is the number of cards put into their graveyard from
+# anywhere this turn." (Fraying Sanity). CR 303.4m enchanted player; the
+# graveyard-arrival ledger is CR 400.6's.
+# --------------------------------------------------------------------------
+
+
+def _fraying(active="alice"):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Lightning Bolt"],
+            battlefield=["Fraying Sanity", "Mountain"],
+        )
+        .player("bob", battlefield=["Grizzly Bears"], library=[SWAMP] * 6)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.find("Fraying Sanity", Zone.BATTLEFIELD, "alice").attach_to("bob")
+    return scenario
+
+
+def test_fraying_sanity_mills_the_enchanted_player_per_card_put_into_their_graveyard():
+    scenario = _fraying()
+    scenario.cast_and_resolve(
+        "Lightning Bolt",
+        *scenario.untapped_sources("Mountain"),
+        targets=[scenario.creature("Grizzly Bears", "bob")],
+    )
+    before = _graveyard(scenario, "bob")
+    assert before == 1
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    scenario.advance()
+    scenario.pass_until_resolved()
+    assert _graveyard(scenario, "bob") == before + 1  # X was 1 as the trigger resolved
+
+
+def test_fraying_sanity_with_nothing_put_into_a_graveyard_mills_nothing():
+    scenario = _fraying()
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    scenario.advance()
+    scenario.pass_until_resolved()
+    assert _graveyard(scenario, "bob") == 0

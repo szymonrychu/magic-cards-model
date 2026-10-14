@@ -920,9 +920,7 @@ def _greatest_among_reader(
                 continue
             if card_type is not None and card_type not in chars.types:
                 continue
-            if subtype is not None and not any(
-                word.lower() == subtype for word in chars.subtypes
-            ):
+            if subtype is not None and not any(word.lower() == subtype for word in chars.subtypes):
                 continue
             if wants_mana_value:
                 values.append(int(permanent.mana_value))  # CR 202.3
@@ -939,7 +937,6 @@ def _greatest_among_reader(
         return max(values) if values else 0
 
     return greatest_among
-
 
 
 def count_expression(phrase: str) -> Callable[["Game", str], int] | None:

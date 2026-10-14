@@ -32,13 +32,12 @@ import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
-from ..models.card_state import CardState
 from ..models.card import Color
-from ..models.player import Player
+from ..models.card_state import CardState
 from ..models.mana import ManaCost, SymbolKind
+from ..models.player import Player
 from ..models.zone import Zone
 from ..numbers import halve, parse_count
-from .ep02_r1_referenced_stat import default_referent, parse_stat_phrase, stat_value
 from .amount_sentences import (
     Amount,
     apply_mill,
@@ -50,6 +49,7 @@ from .amount_sentences import (
 )
 from .decisions import source_id_of
 from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
+from .ep02_r1_referenced_stat import default_referent, parse_stat_phrase, stat_value
 from .layers import ContinuousEffect, Duration, Layer, Sublayer, only_this_incarnation
 from .layers.model import SetPower
 
@@ -63,7 +63,7 @@ if TYPE_CHECKING:
 
 _SUBJECT_RE = re.compile(
     r"^(?:(?P<quantity>up to one|any number of) )?(?P<who>target (?:player|opponent)s?)"
-    r"(?: each)?$|^(?P<plain>you|each player|each opponent|that player|they)(?: each)?$",
+    r"(?: each)?$|^(?P<plain>you|each player|each opponent|that player|they|enchanted player)(?: each)?$",
     re.IGNORECASE,
 )
 _HALF_LIBRARY_RE = re.compile(
@@ -107,11 +107,13 @@ def parse_mill_amount(text: str) -> tuple[str, Amount, bool] | None:
 
         return named[0], half_library, named[1]
     clause = parse_mill_clause(sentence)
-    if clause is None or clause.kind == "x" or clause.subject is None:
+    if clause is None or clause.subject is None:
         return None
     named = _recipients_word(clause.subject)
     if named is None:
         return None
+    if clause.kind == "x" and clause.expr is None:
+        return None  # an announced X is the spell's own, read by the plain mill reader
     if clause.kind == "fixed":
         fixed = clause.n
 
@@ -427,7 +429,9 @@ _EXILE_TOP_AMOUNT_RE = re.compile(
 )
 
 
-def parse_exile_top_amount_antecedent(clause: str) -> "tuple[Callable[..., list[CardState]], bool] | None":
+def parse_exile_top_amount_antecedent(
+    clause: str,
+) -> "tuple[Callable[..., list[CardState]], bool] | None":
     """The exile half of an exile-then-play instruction whose count is an
     amount reading the resolving object (see `stack_amount`). The cards stay
     owned by their library's owner (CR 108.3); a library shorter than the
@@ -563,7 +567,9 @@ _MILL_X_DOUBLED_FROM_GRAVEYARD_RE = re.compile(
 
 
 @SPELL_TEXT.rung("s14")
-def _parse_mill_x_doubled_from_graveyard(spell_text: str) -> "Callable[[Game, CardState], None] | None":
+def _parse_mill_x_doubled_from_graveyard(
+    spell_text: str,
+) -> "Callable[[Game, CardState], None] | None":
     """CR 107.3a X milled (CR 701.17a); the cast record's origin zone
     (CR 601.2a) says whether it was cast from a graveyard (flashback,
     CR 702.34a), in which case the multiple replaces the plain amount."""

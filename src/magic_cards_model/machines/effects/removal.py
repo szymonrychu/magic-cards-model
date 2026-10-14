@@ -36,7 +36,6 @@ from ...numbers import (
     where_x_pattern,
 )
 from .. import combat as combat_rules
-from ..ep02_r3_mill_exile_amounts import parse_exile_top_amount_antecedent
 from ..abilities import (
     TriggerEvent,
 )
@@ -58,6 +57,7 @@ from ..delayed import (
     anaphoric_delayed_trigger,
     sacrificed_by_its_controller,
 )
+from ..ep02_r3_mill_exile_amounts import parse_exile_top_amount_antecedent
 from ..layers import (
     Characteristics,
 )
