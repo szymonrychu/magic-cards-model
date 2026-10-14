@@ -40,6 +40,7 @@ if TYPE_CHECKING:
 Amount = Callable[["Game", Any, Player], int]
 
 
+@functools.lru_cache(maxsize=65536)
 def clean(sentence: str) -> str:
     """`sentence` with straight apostrophes, single spaces and no closing full
     stop - case kept."""

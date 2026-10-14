@@ -695,11 +695,12 @@ def _parse_exile_top_loop_then_tokens_per_nonland(
     card exiled is not a land (CR 406.2 exile, CR 701.20a face up), then a
     token per nonland card exiled this way (CR 111.2). A library that runs
     out ends the process."""
-    from .effects.tokens import _parse_generic_token_descriptor
-
     match = _EXILE_TOP_LOOP_RE.fullmatch(clean(spell_text))
     if match is None:
         return None
+
+    from .effects.tokens import _parse_generic_token_descriptor
+
     batch_size = match.group("exiles").lower().count("exile the top card")
     definition = _parse_generic_token_descriptor(match.group("desc").split(), None)
     if definition is None:
@@ -826,6 +827,10 @@ def _parse_destroy_all_then_exile_top_x_put_one_onto_battlefield(
     type onto the battlefield with a keyword, and return it to hand at the
     beginning of the next end step (CR 603.7a, CR 603.7c: only if it is still
     the same object)."""
+    match = _DESTROY_ALL_NOT_YOURS_THEN_EXILE_RE.fullmatch(clean(spell_text))
+    if match is None:
+        return None
+
     from ..models.card import Type
     from .abilities import TriggerEvent
     from .delayed import DelayedTrigger, return_subject_to_hand
@@ -833,9 +838,6 @@ def _parse_destroy_all_then_exile_top_x_put_one_onto_battlefield(
     from .layers.group_grants import parse_group
     from .turn import Step
 
-    match = _DESTROY_ALL_NOT_YOURS_THEN_EXILE_RE.fullmatch(clean(spell_text))
-    if match is None:
-        return None
     spec = parse_group(match.group("group"))
     kind = parse_group(match.group("kind") + "s")
     if (
@@ -1311,11 +1313,12 @@ def _parse_sacrifice_any_number_exile_top_total_power_cast_free(
     paying its mana cost (CR 118.9, CR 608.2g), any of the exiled spells of the
     named type - each cast is its own yes/no, legal only when a legal cast
     exists (CR 608.2d)."""
-    from .effects._common import _quality_matcher
-
     match = _SACRIFICE_ANY_NUMBER_EXILE_TOP_CAST_FREE_RE.fullmatch(clean(effect_text))
     if match is None:
         return None
+
+    from .effects._common import _quality_matcher
+
     matches = _quality_matcher(match.group("quality").replace("and/or", "or"))
 
     def effect(game: "Game", ability: Any) -> None:

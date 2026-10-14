@@ -121,11 +121,12 @@ def _singular(word: str) -> str:
 
 
 def _board_count(each: str, source: CardState) -> "Count | None":
-    from .layers.model import CountBoardWhere
-
     match = _BOARD_RE.fullmatch(each)
     if match is None:
         return None
+
+    from .layers.model import CountBoardWhere
+
     noun = _singular(match["noun"])
     fields: dict[str, Any] = {}
     adjectives = match["adjectives"].split()
@@ -355,11 +356,12 @@ def _effect(source, timestamp, line, selector, layer, sublayer, modification, de
 
 @functools.cache
 def _pump_builder(sentence: str) -> "EffectBuilder | None":
-    from .layers.model import Layer, Sublayer, modify_power_toughness_per
-
     match = _PUMP_RE.fullmatch(sentence.strip())
     if match is None:
         return None
+
+    from .layers.model import Layer, Sublayer, modify_power_toughness_per
+
     subject = match["subject"].strip()
     clauses = []
     for piece in _CLAUSE_SPLIT_RE.split(match["rest"]):

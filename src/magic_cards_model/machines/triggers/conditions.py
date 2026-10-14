@@ -239,19 +239,34 @@ def _required_types(condition: str) -> tuple[set[Type], set[Type]]:
     word_pattern`) - "one or more creatures die" is exactly as much a
     creature-type restriction as "a creature dies" is.
     """
-    lowered = condition.lower()
-    forbidden = {
+    required, forbidden = _required_types_of(condition.lower())
+    return set(required), set(forbidden)
+
+
+@cache
+def _required_types_of(lowered: str) -> tuple[frozenset[Type], frozenset[Type]]:
+    forbidden = frozenset(
+        card_type for card_type, non_re, _ in _type_word_res() if non_re.search(lowered)
+    )
+    required = frozenset(
         card_type
-        for word, card_type in _TYPE_WORDS.items()
-        if re.search(rf"\bnon-?{_plural_type_word_pattern(word)}\b", lowered)
-    }
-    required = {
-        card_type
-        for word, card_type in _TYPE_WORDS.items()
-        if card_type not in forbidden
-        and re.search(rf"\b{_plural_type_word_pattern(word)}\b", lowered)
-    }
+        for card_type, _, word_re in _type_word_res()
+        if card_type not in forbidden and word_re.search(lowered)
+    )
     return required, forbidden
+
+
+@cache
+def _type_word_res() -> tuple[tuple[Type, re.Pattern[str], re.Pattern[str]], ...]:
+    """Each `_TYPE_WORDS` entry's "non-<type>" and "<type>" patterns, compiled once."""
+    return tuple(
+        (
+            card_type,
+            re.compile(rf"\bnon-?{_plural_type_word_pattern(word)}\b"),
+            re.compile(rf"\b{_plural_type_word_pattern(word)}\b"),
+        )
+        for word, card_type in _TYPE_WORDS.items()
+    )
 
 
 def _types_match(types: tuple[Type, ...] | None, condition: str) -> bool:
