@@ -961,3 +961,88 @@ def test_expand_the_sphere_rest_go_to_the_bottom_of_the_library():
     assert len(library) == library_before - 2
     assert [c.name for c in library[:4]] == ["Island"] * 4
     assert [c.name for c in library[4:]] == ["Grizzly Bears"] * 4
+
+
+# -- Lethal Exploit: -2/-2, an additional -1/-1 per modified creature you
+# controlled as you cast it (CR 700.9, CR 601.2i)
+
+
+def _exploit_board(*, modified=0, equipped=False):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Lethal Exploit"],
+            battlefield=["Swamp", "Swamp", "Grizzly Bears", "Savannah Lions", "Memnite"]
+            + (["Bonesplitter"] if equipped else []),
+            library=["Forest"] * 8,
+        )
+        .player("bob", battlefield=["Hill Giant"], library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    for name in ["Grizzly Bears", "Savannah Lions", "Memnite"][:modified]:
+        scenario.creature(name, "alice").add_counters(Counter.PLUS_ONE, 1)
+    return scenario
+
+
+def _giant(scenario):
+    return scenario.creature("Hill Giant", "bob")
+
+
+def test_lethal_exploit_with_no_modified_creature_is_just_minus_two():
+    scenario = _exploit_board()
+    giant = _giant(scenario)
+    scenario.cast_and_resolve("Lethal Exploit", *scenario.untapped_sources("Swamp", "Swamp"), targets=[giant])
+    assert scenario.game.power_of(giant) == 1
+    assert giant.zone is Zone.BATTLEFIELD
+
+
+def test_lethal_exploit_one_modified_creature_adds_minus_one():
+    scenario = _exploit_board(modified=1)
+    giant = _giant(scenario)
+    scenario.cast_and_resolve("Lethal Exploit", *scenario.untapped_sources("Swamp", "Swamp"), targets=[giant])
+    scenario.state_based_actions()
+    assert giant.zone is Zone.GRAVEYARD
+
+
+def test_lethal_exploit_counts_each_modified_creature_once():
+    scenario = _exploit_board(modified=2)
+    giant = _giant(scenario)
+    giant.add_counters(Counter.PLUS_ONE, 2)  # 5/5, two modified creatures: -4/-4
+    scenario.cast_and_resolve(
+        "Lethal Exploit", *scenario.untapped_sources("Swamp", "Swamp"), targets=[giant]
+    )
+    assert scenario.game.power_of(giant) == 1
+    assert giant.zone is Zone.BATTLEFIELD
+
+
+def test_lethal_exploit_three_modified_creatures_kill_a_five_five():
+    scenario = _exploit_board(modified=3)
+    giant = _giant(scenario)
+    giant.add_counters(Counter.PLUS_ONE, 2)
+    scenario.cast_and_resolve(
+        "Lethal Exploit", *scenario.untapped_sources("Swamp", "Swamp"), targets=[giant]
+    )
+    scenario.state_based_actions()
+    assert giant.zone is Zone.GRAVEYARD
+
+
+def test_lethal_exploit_counts_equipment_as_a_modification():
+    scenario = _exploit_board(equipped=True)
+    equipment = scenario.find("Bonesplitter", Zone.BATTLEFIELD, "alice")
+    equipment.attach_to(scenario.creature("Grizzly Bears", "alice"))
+    giant = _giant(scenario)
+    scenario.cast_and_resolve("Lethal Exploit", *scenario.untapped_sources("Swamp", "Swamp"), targets=[giant])
+    scenario.state_based_actions()
+    assert giant.zone is Zone.GRAVEYARD
+
+
+def test_lethal_exploit_count_is_fixed_as_it_is_cast():
+    scenario = _exploit_board(modified=1)
+    giant = _giant(scenario)
+    scenario.cast_onto_stack("Lethal Exploit", *scenario.untapped_sources("Swamp", "Swamp"), targets=[giant])
+    scenario.creature("Grizzly Bears", "alice").remove_counters(Counter.PLUS_ONE, 1)
+    scenario.resolve_top()
+    scenario.state_based_actions()
+    assert giant.zone is Zone.GRAVEYARD

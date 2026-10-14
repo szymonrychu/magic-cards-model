@@ -532,6 +532,12 @@ _WHERE_X_AS_YOU_CAST_RE = re.compile(
 )
 
 
+_FOR_EACH_CONTROLLED_AS_CAST_RE = re.compile(
+    r"for each (?P<what>modified creature) you controlled as you cast this spell",
+    re.IGNORECASE,
+)
+
+
 def _locked_or_live(game: "Game", controller: str, live: Callable[["Game", str], int]) -> int:
     """The X `Casting` recorded for the spell now resolving, else the live count."""
     record = game.cast_record_of(game.resolving)
@@ -548,7 +554,15 @@ def locked_amount_as_cast(game: "Game", text: str, caster: str) -> int | None:
         return None
     defined = _WHERE_X_AS_YOU_CAST_RE.search(text)
     if defined is None:
-        return None
+        # Lethal Exploit: "... for each modified creature you controlled as you
+        # cast this spell" defines no X, but its count is fixed at casting all
+        # the same (CR 601.2i), so it rides the cast record's X (the spell has
+        # no {X} of its own).
+        each = _FOR_EACH_CONTROLLED_AS_CAST_RE.search(text)
+        if each is None:
+            return None
+        reader = count_expression(f"the number of {each.group('what')}s you control")
+        return None if reader is None else reader(game, caster)
     reader = count_expression(defined.group("expr"))
     return None if reader is None else reader(game, caster)
 

@@ -543,3 +543,50 @@ def _parse_look_put_lands_then_proliferate_for_shortfall(
         proliferate_times(game, stack_object, max(limit - arrived, 0))
 
     return [effect]
+
+
+# -- "Target creature gets -2/-2 until end of turn. It gets an additional -1/-1
+# until end of turn for each modified creature you controlled as you cast this
+# spell."
+
+_ADDITIONAL_PER_AS_CAST_RE = re.compile(
+    rf"^target (?P<what>creature) gets (?P<sign>[+-])(?P<a>\d+)/(?P=sign)(?P=a) until end of turn\."
+    rf"\s+it gets an additional (?P<sign2>[+-])(?P<b>\d+)/(?P=sign2)(?P=b) until end of turn "
+    r"for each modified creature you controlled as you cast this spell\.?"
+    r"(?:\s*\([^)]*\))?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_pump_plus_additional_per_modified_as_cast(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """Lethal Exploit. The count is what the cast fixed (CR 601.2i; modified
+    is CR 700.9) - `amounts.locked_amount_as_cast` stored it as the spell's
+    cast X - and the two sentences are one pump of the single target for the
+    summed amount (CR 611.2a, CR 608.2c), registered for what is still a legal
+    target as the spell resolves (CR 608.2b). A copy was never cast
+    (CR 707.10), so it counts none."""
+    if "as you cast this spell" not in text.lower() or "an additional" not in text.lower():
+        return None
+    match = _ADDITIONAL_PER_AS_CAST_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None or match.group("sign") != match.group("sign2"):
+        return None
+    base, extra, sign = int(match.group("a")), int(match.group("b")), match.group("sign")
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        from .effects import continuous_effects, layer_context_for
+
+        record = game.cast_record_of(stack_object)
+        counted = 0 if record is None else record.x_value
+        total = base + extra * counted
+        continuous_effects(game).create(
+            stack_object,
+            targets=game.resolve_card_targets(stack_object),
+            context=layer_context_for(game, game.controller_of(stack_object)),
+            ability_text=f"Target creature gets {sign}{total}/{sign}{total} until end of turn.",
+            game=game,
+        )
+
+    return [effect]
