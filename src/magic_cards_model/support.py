@@ -59,6 +59,7 @@ from magic_cards_model.machines.casting import (
     TIMING_KEYWORDS,
     adventure_face,
     conditional_flash_condition,
+    flash_surcharge,
     has_split_second,
     hexproof_abilities_in,
     keyword_cast_options,
@@ -2256,6 +2257,10 @@ def _static_ability_category(
     if flash_condition is not None and condition_is_readable(flash_condition):
         # CR 702.8a: `casting.why_cannot_cast_now` reads this exact line off
         # the spell's own text and asks `Game.condition_holds`.
+        return HANDLED
+    if flash_surcharge(text) is not None:
+        # CR 702.8a: `casting.why_cannot_cast_now` offers the flash and
+        # `Casting._own_flash_surcharge` charges the extra cost.
         return HANDLED
     if reads_printed_zone_permission_line(printing, text):
         # CR 604.6: `casting._printed_zone_permissions` offers the keyword.

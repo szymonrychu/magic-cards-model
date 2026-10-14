@@ -1958,6 +1958,49 @@ def _token_sentence_needs_whole_reading(sentence: str, *, has_riders: bool) -> b
     )
 
 
+def apply_token_riders(
+    game: "Game",
+    stack_object: "StackObject",
+    created: list[CardState],
+    grants: list[tuple[list[str], str | None]],
+    delayed: list[Any],
+    *,
+    for_spell: bool,
+) -> None:
+    """Every anaphoric rider that follows a token sentence, applied to exactly
+    the permanents it put onto the battlefield (CR 608.2c: "They"/"It" is the
+    token(s) just created).
+
+    `grants` are CR 613.1f layer-6 keyword grants and `delayed` are CR 603.7a
+    delayed triggered abilities about those objects, in the order printed.
+    Nothing is created when no token was (CR 101.3).
+    """
+    if not created:
+        return
+    controller = game.controller_of(stack_object).username
+    source_id, source_name = _permanent_id_and_name(stack_object, for_spell=for_spell)
+    for keywords, duration in grants:
+        for permanent in created:
+            _grant_keywords_to(
+                game,
+                permanent,
+                keywords,
+                duration,
+                controller=controller,
+                source_name=source_name,
+            )
+    for clause in delayed:
+        triggers = clause.triggers_for_all(
+            created,
+            controller=controller,
+            source_id=source_id,
+            source_name=source_name,
+            game=game,
+        )
+        for trigger in triggers or []:
+            game.create_delayed_trigger(trigger)
+
+
 def _token_rider_clause(
     token_clause: TargetedClause,
     grants: list[tuple[list[str], str | None]],
@@ -1966,44 +2009,17 @@ def _token_rider_clause(
     for_spell: bool,
 ) -> TargetedClause:
     """`token_clause`, then every anaphoric rider the sentences after it
-    carried, applied to exactly the permanents it put onto the battlefield
-    (CR 608.2c: "They"/"It" is the token(s) just created; CR 400.7: a before/
-    after diff on the zone-change stamp names them, whatever the descriptor).
-
-    `grants` are CR 613.1f layer-6 keyword grants and `delayed` are CR 603.7a
-    delayed triggered abilities about those objects, in the order printed.
-    """
+    carried (`apply_token_riders`), applied to the permanents it created
+    (CR 400.7: a before/after diff on the zone-change stamp names them,
+    whatever the descriptor)."""
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        controller = game.controller_of(stack_object).username
-        source_id, source_name = _permanent_id_and_name(stack_object, for_spell=for_spell)
         before = {(state.id, state.zone_change_stamp) for state in game.battlefield}
         token_clause(game, stack_object)
         created = [
             state for state in game.battlefield if (state.id, state.zone_change_stamp) not in before
         ]
-        if not created:
-            return  # CR 101.3: nothing was produced for the pronoun to name.
-        for keywords, duration in grants:
-            for permanent in created:
-                _grant_keywords_to(
-                    game,
-                    permanent,
-                    keywords,
-                    duration,
-                    controller=controller,
-                    source_name=source_name,
-                )
-        for clause in delayed:
-            triggers = clause.triggers_for_all(
-                created,
-                controller=controller,
-                source_id=source_id,
-                source_name=source_name,
-                game=game,
-            )
-            for trigger in triggers or []:
-                game.create_delayed_trigger(trigger)
+        apply_token_riders(game, stack_object, created, grants, delayed, for_spell=for_spell)
 
     return effect
 

@@ -3157,6 +3157,29 @@ def conditional_flash_condition(text: str) -> str | None:
     return None
 
 
+#: "You may cast this spell as though it had flash if you pay {2} more to cast
+#: it." (Asinine Antics): CR 702.8a's flash for a price - the permission is
+#: always on offer, and the extra cost (CR 601.2f, CR 118.8) is owed only when
+#: the cast needs the flash, i.e. when the spell is not being cast at sorcery
+#: timing.
+_FLASH_FOR_EXTRA_COST_RE = re.compile(
+    r"^you may cast this (?:spell|creature) as though it had flash if you pay "
+    r"(?P<cost>(?:\{[^}]+\})+) more to cast it\.?$",
+    re.IGNORECASE,
+)
+
+
+def flash_surcharge(text: str) -> str | None:
+    """The cost of a "You may cast this spell as though it had flash if you pay
+    `<cost>` more to cast it." line printed on this spell's own text, or `None`."""
+    for line in (text or "").split("\n"):
+        stripped, _ability_word = strip_ability_word(_REMINDER_TEXT_RE.sub("", line))
+        match = _FLASH_FOR_EXTRA_COST_RE.fullmatch(stripped)
+        if match is not None:
+            return match.group("cost")
+    return None
+
+
 def conditional_free_cast_condition(text: str) -> str | None:
     """Qasali Ambusher's "If `<condition>`, you may cast this creature without
     paying its mana cost and as though it had flash." - the condition, or

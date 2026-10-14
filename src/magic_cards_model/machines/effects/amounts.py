@@ -4394,7 +4394,24 @@ def _parse_variable_count_token_clause(clause: str, *, for_spell: bool) -> Targe
 
     reader = count_expression(match.group("expr"))
     if reader is None:
-        return None
+        # A count that reads the resolving object itself ("the number of other
+        # attacking creatures": other than the source) is an `amount_expression`
+        # term - CR 608.2h takes it once, as the instruction is applied.
+        sourced = amount_expression(match.group("expr"))
+        if sourced is None:
+            return None
+
+        def effect_of_source(game: "Game", stack_object: "StackObject") -> None:
+            controller = game.controller_of(stack_object).username
+            if isinstance(stack_object, AbilityOnStack):
+                source, x_value = stack_object.source_or_last_known(game), stack_object.x_value
+            else:
+                source, x_value = stack_object, 0
+            count = sourced(game, controller, source, x_value)
+            if count > 0:
+                create_tokens(game, definition, controller, count, tapped=tapped)
+
+        return effect_of_source
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object).username

@@ -187,6 +187,15 @@ EFFECTS: dict[str, Effect] = {
 #: own un-worded shape, ahead of every spell's own dispatch.
 _CAST_TIMING_RESTRICTION_RE = re.compile(r"\s*\bcast this spell only [^.]*\.\s*", re.IGNORECASE)
 
+#: "You may cast this spell as though it had flash if you pay {2} more to cast
+#: it." - a casting permission (`casting.flash_surcharge`), not an instruction
+#: of the resolution (CR 608.2c).
+_FLASH_FOR_EXTRA_COST_SENTENCE_RE = re.compile(
+    r"(?:^|(?<=[.)\n]))[ \t]*you may cast this (?:spell|creature) as though it had flash if "
+    r"you pay (?:\{[^}]+\})+ more to cast it\.[ \t]*",
+    re.IGNORECASE,
+)
+
 
 def effect_for(
     card_name: str, effect_text: str | None = None, *, x_value: int | None = None
@@ -302,6 +311,8 @@ def spell_resolution_text(card_name: str, effect_text: str) -> str:
     if "has split second" in effect_text:
         effect_text = _CONDITIONAL_SPLIT_SECOND_SENTENCE_RE.sub(" ", effect_text)
     effect_text = strip_x_restrictions(effect_text)
+    if "as though it had flash if you pay" in effect_text:
+        effect_text = _FLASH_FOR_EXTRA_COST_SENTENCE_RE.sub(" ", effect_text)
     return _CAST_TIMING_RESTRICTION_RE.sub(" ", effect_text).strip()
 
 
