@@ -1414,3 +1414,107 @@ def test_daxos_with_a_land_on_top_gains_nothing_and_exiles_it():
     scenario = _daxos([FOREST, FOREST, FOREST])
     assert scenario.player("alice").life == 10
     assert len(scenario.player("bob").library) == 2
+
+
+# --------------------------------------------------------------------------
+# Lukka, Coppercoat Outcast: CR 606 (loyalty abilities), CR 406.2 (exile),
+# CR 601.3 (a cast permission from exile), CR 611.2b (for as long as you
+# control a Lukka planeswalker), CR 608.2h (last known mana value).
+# --------------------------------------------------------------------------
+
+LUKKA = "Lukka, Coppercoat Outcast"
+
+
+def _lukka(library, battlefield=(), bob_life=20):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=[LUKKA, "Forest", "Forest", *battlefield],
+            library=list(library),
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario, scenario.find(LUKKA, Zone.BATTLEFIELD, "alice")
+
+
+def test_lukka_plus_one_lets_you_cast_exiled_creature_cards_while_you_control_a_lukka():
+    scenario, lukka = _lukka(["Grizzly Bears", FOREST, LIGHTNING_BOLT, SWAMP])
+    scenario.activate(lukka, index=0)
+    scenario.resolve_top()
+    assert len(scenario.player("alice").library) == 1
+    bears = scenario.find("Grizzly Bears", Zone.EXILE)
+    assert scenario.game.play_permission_for(bears, "alice") is not None
+    for other in (FOREST, LIGHTNING_BOLT):
+        assert scenario.game.play_permission_for(scenario.find(other, Zone.EXILE), "alice") is None
+    casting = scenario.cast("Grizzly Bears", from_zone=Zone.EXILE)
+    casting.use_permission()
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Forest", "Forest"))
+    scenario.put_on_stack(casting)
+    assert scenario.resolve_top().zone is Zone.BATTLEFIELD
+
+
+def test_lukka_plus_one_permission_lasts_only_while_a_lukka_planeswalker_is_controlled():
+    scenario, lukka = _lukka(["Grizzly Bears", FOREST, LIGHTNING_BOLT, SWAMP])
+    scenario.activate(lukka, index=0)
+    scenario.resolve_top()
+    bears = scenario.find("Grizzly Bears", Zone.EXILE)
+    assert scenario.game.play_permission_for(bears, "alice") is not None
+    scenario.game.destroy(lukka)
+    scenario.game.check_state_based_actions()
+    assert scenario.game.play_permission_for(bears, "alice") is None
+
+
+def test_lukka_minus_two_exiles_the_creature_and_puts_a_greater_mana_value_creature_onto_the_battlefield():
+    scenario, lukka = _lukka(
+        [FOREST, LIGHTNING_BOLT, "Kitchen Finks", "Serra Angel"], battlefield=["Grizzly Bears"]
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.activate(lukka, index=1, targets=[bears])
+    scenario.resolve_top()
+    assert bears.zone is Zone.EXILE
+    assert "Kitchen Finks" in scenario.battlefield_names()
+    library = scenario.player("alice").library
+    assert library[0].name == "Serra Angel"
+    assert sorted(_names(library[1:])) == [FOREST, LIGHTNING_BOLT]
+
+
+def test_lukka_minus_two_skips_creatures_that_do_not_have_greater_mana_value():
+    scenario, lukka = _lukka(
+        ["Llanowar Elves", "Grizzly Bears", "Kitchen Finks"], battlefield=["Grizzly Bears"]
+    )
+    target = scenario.creature("Grizzly Bears", "alice")
+    scenario.activate(lukka, index=1, targets=[target])
+    scenario.resolve_top()
+    assert "Kitchen Finks" in scenario.battlefield_names()
+    assert sorted(_names(scenario.player("alice").library)) == ["Grizzly Bears", "Llanowar Elves"]
+
+
+def test_lukka_minus_two_with_no_greater_creature_reveals_everything_and_puts_nothing():
+    scenario, lukka = _lukka([FOREST, "Llanowar Elves"], battlefield=["Grizzly Bears"])
+    target = scenario.creature("Grizzly Bears", "alice")
+    scenario.activate(lukka, index=1, targets=[target])
+    scenario.resolve_top()
+    assert target.zone is Zone.EXILE
+    assert "Llanowar Elves" not in scenario.battlefield_names()
+    assert sorted(_names(scenario.player("alice").library)) == [FOREST, "Llanowar Elves"]
+
+
+def test_lukka_minus_seven_has_each_creature_deal_damage_equal_to_its_power_to_each_opponent():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=[LUKKA, "Grizzly Bears", "Kitchen Finks"])
+        .player("bob")
+        .player("carol")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    lukka = scenario.find(LUKKA, Zone.BATTLEFIELD, "alice")
+    scenario.game.add_counters(lukka, "loyalty", 2)
+    scenario.activate(lukka, index=2)
+    scenario.resolve_top()
+    assert scenario.player("bob").life == 15  # 2 + 3
+    assert scenario.player("carol").life == 15
+    assert scenario.player("alice").life == 20

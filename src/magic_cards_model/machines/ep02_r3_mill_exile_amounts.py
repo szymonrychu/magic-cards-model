@@ -28,6 +28,7 @@ the classify budget.
 """
 
 import functools
+import random
 import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
@@ -1146,5 +1147,146 @@ def _parse_exile_that_players_top_gain_life_cast_with_any_color(
                 zone=card.zone,
                 any_color_mana=True,
             )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# Lukka, Coppercoat Outcast
+# --------------------------------------------------------------------------
+
+_EXILE_TOP_CREATURES_CAST_WHILE_CONTROLLING_RE = re.compile(
+    r"^exile the top (?P<n>\w+) cards of your library\. (?P<kind>creature) cards exiled this "
+    r"way gain \"you may cast this card from exile as long as you control an? "
+    r"(?P<subtype>[a-z]+) planeswalker\.?\"$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s8")
+def _parse_exile_top_cards_that_gain_cast_while_controlling_planeswalker(
+    effect_text: str,
+) -> "AbilityEffect | None":
+    """Exile the top N cards (CR 406.2); the exiled cards of a type gain
+    "you may cast this card from exile as long as you control a `<subtype>`
+    planeswalker" (CR 611.2b) - a cast permission (CR 601.3) usable only
+    while the controller controls any planeswalker of that type
+    (`PlayPermission.while_controlling` = `planeswalker_subtype_key`), not
+    ending with the turn."""
+    from ..models.card import Type
+    from .casting.permissions import planeswalker_subtype_key
+
+    match = _EXILE_TOP_CREATURES_CAST_WHILE_CONTROLLING_RE.fullmatch(clean(effect_text))
+    count = None if match is None else parse_count(match.group("n"))
+    if match is None or not count:
+        return None
+    card_type = Type(match.group("kind").lower())
+    key = planeswalker_subtype_key(match.group("subtype").title())
+
+    def effect(game: "Game", ability: Any) -> None:
+        controller = controller_of(game, ability)
+        player = game.player(controller)
+        exiled = [game.exile_permanent(state) for state in list(player.library[:count])]
+        for card in exiled:
+            if card_type in card.types:
+                game.grant_play_permission(
+                    card,
+                    controller,
+                    source_name=ability.source_name,
+                    rule="CR 601.3",
+                    zone=card.zone,
+                    until_end_of_turn=False,
+                    while_controlling=key,
+                )
+
+    return effect
+
+
+_EXILE_TARGET_THEN_REVEAL_UNTIL_GREATER_RE = re.compile(
+    r"^exile (?P<phrase>target creature you control), then reveal cards from the top of your "
+    r"library until you reveal a creature card with greater mana value\. put that card onto "
+    r"the battlefield and the rest on the bottom of your library in a random order$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s8")
+def _parse_exile_target_then_reveal_until_greater_creature(
+    effect_text: str,
+) -> "AbilityEffect | None":
+    """Exile the target (CR 406.2), then reveal from the top (CR 701.20a)
+    until a creature card with greater mana value than the exiled creature's
+    (last known information, CR 608.2h) - that card enters the battlefield and
+    the rest go to the bottom in a random order, seeded off the game's
+    shuffle seed so a replay reproduces it."""
+    from .effects._common import _targets_understood
+
+    match = _EXILE_TARGET_THEN_REVEAL_UNTIL_GREATER_RE.fullmatch(clean(effect_text))
+    if match is None or not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+
+    def effect(game: "Game", ability: Any) -> None:
+        from ..models.card import Type
+
+        targets = [t for t in game.resolve_targets(ability) if isinstance(t, CardState)]
+        if not targets:
+            return
+        exiled_value = int(targets[0].mana_value)
+        game.exile_permanent(targets[0])
+        controller = controller_of(game, ability)
+        player = game.player(controller)
+        revealed: list[CardState] = []
+        hit: CardState | None = None
+        for state in list(player.library):
+            game.reveal(state, source=ability.source_name)
+            if Type.CREATURE in state.types and state.mana_value > exiled_value:
+                hit = state
+                break
+            revealed.append(state)
+        if hit is not None:
+            game.put_onto_battlefield(hit, controller)
+        random.Random(f"{game.shuffle_seed}:{game.shuffles_performed}:reveal-until").shuffle(
+            revealed
+        )
+        if revealed:
+            game.shuffles_performed += 1
+        for state in revealed:
+            player.move(state, Zone.LIBRARY)
+
+    return effect
+
+
+_EACH_CREATURE_DEALS_POWER_TO_EACH_OPPONENT_RE = re.compile(
+    r"^each creature you control deals damage equal to its power to each opponent$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s8")
+def _parse_each_creature_deals_damage_equal_to_its_power_to_each_opponent(
+    effect_text: str,
+) -> "AbilityEffect | None":
+    """Every creature the controller controls as the ability resolves
+    deals damage equal to its own power (CR 120.3, CR 208.1) to each
+    opponent; each creature is its own damage source (CR 120.7)."""
+    if _EACH_CREATURE_DEALS_POWER_TO_EACH_OPPONENT_RE.fullmatch(clean(effect_text)) is None:
+        return None
+
+    def effect(game: "Game", ability: Any) -> None:
+        from ..models.card import Type
+
+        controller = controller_of(game, ability)
+        creatures = [
+            permanent
+            for permanent in game.permanents_controlled_by(controller)
+            if Type.CREATURE in game.characteristics_of(permanent).types
+        ]
+        opponents = [p for p in game.players if p.username != controller]
+        for creature in creatures:
+            power = game.power_of(creature) or 0
+            if power <= 0:
+                continue
+            for opponent in opponents:
+                game.deal_damage(opponent, power, source=creature)
 
     return effect

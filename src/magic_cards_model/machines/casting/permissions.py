@@ -805,6 +805,16 @@ _EXILE_SPELLS_CAST_THIS_WAY_ANY = re.compile(
 )
 
 
+#: The `PlayPermission.while_controlling` key prefix for "for as long as you
+#: control a `<subtype>` planeswalker" (any one of them, not a particular
+#: object): the key is `"planeswalker:<subtype>"`.
+PLANESWALKER_SUBTYPE_KEY = "planeswalker"
+
+
+def planeswalker_subtype_key(subtype: str) -> str:
+    return f"{PLANESWALKER_SUBTYPE_KEY}:{subtype}"
+
+
 def once_per_turn_key(permanent: CardState) -> str:
     """The granting permanent as that object (CR 400.7)."""
     return f"{permanent.id}:{permanent.zone_change_stamp}"
@@ -2855,6 +2865,18 @@ def _controls_that_object(game: Any, player: str, key: str) -> bool:
     (CR 400.7)."""
     if game is None:
         return False
+    kind, _, subtype = key.partition(":")
+    if kind == PLANESWALKER_SUBTYPE_KEY:
+        # "as long as you control a Lukka planeswalker": any permanent that is a
+        # planeswalker of that subtype (CR 205.3j planeswalker types), judged
+        # on the computed board (CR 613.5).
+        return any(
+            Type.PLANESWALKER in chars.types and subtype.lower() in map(str.lower, chars.subtypes)
+            for chars in (
+                game.characteristics_of(permanent)
+                for permanent in game.permanents_controlled_by(player)
+            )
+        )
     for permanent in game.permanents_controlled_by(player):
         if once_per_turn_key(permanent) == key:
             return True
