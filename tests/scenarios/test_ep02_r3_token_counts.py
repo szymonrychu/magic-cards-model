@@ -924,3 +924,236 @@ def test_cloudspire_coordinator_with_nothing_entered_makes_no_pilot():
     scenario.resolve_top()
 
     assert tokens(scenario, "Pilot Token") == []
+
+
+# -- look at the top card, exile it face down, and play it while it stays exiled -----------
+
+
+def edward_scenario(bob_library):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Edward Kenway", "Smuggler's Copter", "Grizzly Bears", "Mountain"],
+        )
+        .player("bob", library=bob_library)
+        .build()
+    )
+    scenario.start_at(Step.BEGINNING_OF_COMBAT)
+    return scenario
+
+
+def hit_with_the_copter(scenario):
+    from magic_cards_model.machines.keywords import crew_activation
+
+    copter = scenario.find("Smuggler's Copter", Zone.BATTLEFIELD, "alice")
+    activation = crew_activation(
+        scenario.game, copter, [scenario.creature("Grizzly Bears", "alice")], "alice"
+    )
+    activation.begin_paying()
+    activation.payment.pay()
+    activation.activate()
+    scenario.pass_until_resolved()
+    scenario.advance()
+    assert scenario.step is Step.DECLARE_ATTACKERS
+    scenario.will_take_the_may(False, source="Smuggler's Copter")
+    scenario.attack_with(copter)
+    scenario.resolve_top()  # the Copter's own loot trigger, declined
+    scenario.advance()
+    while scenario.step is not Step.COMBAT_DAMAGE:
+        scenario.advance()
+    return copter
+
+
+def test_edward_kenway_exiles_the_top_card_of_the_damaged_players_library_face_down():
+    scenario = edward_scenario(["Mountain", "Island", "Island"])
+    top = scenario.player("bob").library[0]
+    hit_with_the_copter(scenario)
+    scenario.resolve_top()
+
+    assert top.zone is Zone.EXILE and not top.face_up
+    assert len(scenario.player("bob").library) == 2
+    reach(scenario, Step.POSTCOMBAT_MAIN)
+    land = scenario.play_land("Mountain", "alice", from_zone=Zone.EXILE)  # CR 305.2a via the grant
+    assert land.zone is Zone.BATTLEFIELD
+
+
+def test_the_exiled_card_cannot_be_played_by_its_owner():
+    scenario = edward_scenario(["Mountain", "Island", "Island"])
+    top = scenario.player("bob").library[0]
+    hit_with_the_copter(scenario)
+    scenario.resolve_top()
+
+    assert top.zone is Zone.EXILE
+    from magic_cards_model.machines.casting import usable_play_permission, PlayAction
+
+    assert usable_play_permission(scenario.game, top, "bob", PlayAction.PLAY) is None
+    assert usable_play_permission(scenario.game, top, "alice", PlayAction.PLAY) is not None
+
+
+# -- Kellan, Daring Traveler // Journey On ------------------------------------------------
+
+
+def test_journey_on_makes_a_map_for_one_plus_each_opponent_who_controls_an_artifact():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Kellan, Daring Traveler"], battlefield=["Forest"])
+        .player("bob", battlefield=["Mind Stone"])
+        .player("carol", battlefield=["Mind Stone"])
+        .player("dave", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Kellan, Daring Traveler")
+    casting.cast_as_adventure()
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Forest"))
+    adventure = scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert len(tokens(scenario, "Map Token")) == 3  # one plus two opponents with an artifact
+    assert adventure.zone is Zone.EXILE  # CR 715.4: on an adventure, ready to cast the creature
+
+
+def test_journey_on_with_no_opposing_artifact_makes_a_single_map():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Kellan, Daring Traveler"], battlefield=["Forest"])
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Kellan, Daring Traveler")
+    casting.cast_as_adventure()
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Forest"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert len(tokens(scenario, "Map Token")) == 1
+
+
+def kellan_attacks(library):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Kellan, Daring Traveler"], library=library)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Kellan, Daring Traveler"))
+    return scenario
+
+
+def test_kellan_puts_a_revealed_cheap_creature_into_your_hand():
+    scenario = kellan_attacks(["Grizzly Bears", "Island"])
+    scenario.resolve_top()
+
+    assert [s.name for s in scenario.player("alice").hand] == ["Grizzly Bears"]
+
+
+def test_kellan_does_not_take_a_revealed_creature_with_mana_value_four():
+    scenario = kellan_attacks(["Serra Angel", "Island"])
+    scenario.will_take_the_may(False, source="Kellan, Daring Traveler")
+    scenario.resolve_top()
+
+    assert scenario.player("alice").hand == []
+    assert scenario.player("alice").library[0].name == "Serra Angel"  # stays on top
+
+
+def test_kellan_may_put_a_revealed_noncreature_into_the_graveyard():
+    scenario = kellan_attacks(["Island", "Island"])
+    scenario.will_take_the_may(True, source="Kellan, Daring Traveler")
+    scenario.resolve_top()
+
+    assert [s.name for s in scenario.player("alice").graveyard] == ["Island"]
+    assert scenario.player("alice").hand == []
+
+
+# -- "Target creature card in your graveyard gains embalm until end of turn" ----------------
+
+
+def embalm_it(scenario, card, *sources):
+    from magic_cards_model.machines.keywords import off_zone_activation
+
+    from .harness import mana_from
+
+    activation = off_zone_activation(scenario.game, card, "alice", 0)
+    payment = activation.begin_paying()
+    for source in sources:
+        payment.tap_for_mana(source, mana_from(source))
+    payment.pay()
+    activation.activate()
+    return activation
+
+
+def cursecloth_scenario(graveyard):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            graveyard=graveyard,
+            battlefield=["Cursecloth Wrappings", "Mountain", "Mountain", "Mountain", "Mountain"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_cursecloth_wrappings_gives_a_graveyard_creature_embalm_at_its_own_mana_cost():
+    scenario = cursecloth_scenario(["Hill Giant"])
+    giant = scenario.find("Hill Giant", Zone.GRAVEYARD, "alice")
+    scenario.activate(
+        scenario.find("Cursecloth Wrappings", Zone.BATTLEFIELD, "alice"), targets=[giant]
+    )
+    scenario.resolve_top()
+
+    embalm_it(scenario, giant, *scenario.untapped_sources(*(["Mountain"] * 4))).resolve()
+
+    assert giant.zone is Zone.EXILE  # exiled as the cost
+    (zombie,) = tokens(scenario, "Hill Giant")
+    characteristics = scenario.game.computed_board().of(zombie)
+    assert "Zombie" in characteristics.subtypes and characteristics.colors == (Color.WHITE,)
+    assert size(scenario, zombie) == (4, 4)  # Hill Giant 3/3 and Zombies get +1/+1
+
+
+def test_without_the_grant_a_graveyard_creature_has_no_embalm():
+    from magic_cards_model.machines.keywords import off_zone_activation
+
+    scenario = cursecloth_scenario(["Hill Giant"])
+    giant = scenario.find("Hill Giant", Zone.GRAVEYARD, "alice")
+
+    with pytest.raises(ValueError, match="no activated ability functioning off the battlefield"):
+        off_zone_activation(scenario.game, giant, "alice", 0)
+
+
+def test_the_embalm_grant_ends_with_the_turn():
+    from magic_cards_model.machines.keywords import off_zone_activation
+
+    scenario = cursecloth_scenario(["Hill Giant"])
+    giant = scenario.find("Hill Giant", Zone.GRAVEYARD, "alice")
+    scenario.activate(
+        scenario.find("Cursecloth Wrappings", Zone.BATTLEFIELD, "alice"), targets=[giant]
+    )
+    scenario.resolve_top()
+    scenario.game.continuous_effects.end_the_turn()  # CR 514.2: "until end of turn" ends
+
+    with pytest.raises(ValueError, match="no activated ability functioning off the battlefield"):
+        off_zone_activation(scenario.game, giant, "alice", 0)
+
+
+def test_the_grant_is_for_that_one_card_only():
+    from magic_cards_model.machines.keywords import off_zone_activation
+
+    scenario = cursecloth_scenario(["Hill Giant", "Grizzly Bears"])
+    giant = scenario.find("Hill Giant", Zone.GRAVEYARD, "alice")
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    scenario.activate(
+        scenario.find("Cursecloth Wrappings", Zone.BATTLEFIELD, "alice"), targets=[giant]
+    )
+    scenario.resolve_top()
+
+    off_zone_activation(scenario.game, giant, "alice", 0)  # the chosen card has embalm
+    with pytest.raises(ValueError, match="no activated ability functioning off the battlefield"):
+        off_zone_activation(scenario.game, bears, "alice", 0)

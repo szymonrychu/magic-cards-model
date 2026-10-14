@@ -945,3 +945,111 @@ def _parse_token_sequence_ability(text: str) -> Any:
 def _parse_token_sequence_spell(text: str) -> Any:
     """A spell whose token paragraph is one of this module's sequences."""
     return _sequence(text, True)
+
+
+# ====================================================================================
+# "Look at the top card of <whose> library, then exile it face down. You may play it."
+# ====================================================================================
+
+_LOOK_EXILE_MAY_PLAY_RE = re.compile(
+    r"^look at the top card of (?P<whose>your|target opponent'?s|target player'?s|that player'?s) "
+    r"library, then exile it face down\.\s*"
+    r"you may (?P<verb>play|cast) that card for as long as it remains exiled\.?$",
+    re.IGNORECASE,
+)
+
+
+def _look_exile_may_play(text: str, *, for_spell: bool) -> Any:
+    """The peek-exile-play template (CR 701.20e looks, CR 406.3 face down, CR 607.2a
+    linked to the source). The grant (CR 601.3, CR 305.2a for a land) names this one
+    object and ends when it leaves exile (CR 400.7); nobody else may play it."""
+    lowered = text.lower()
+    if "look at the top card" not in lowered or "face down" not in lowered:
+        return None
+    match = _LOOK_EXILE_MAY_PLAY_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    whose = match.group("whose").lower()
+    verb = match.group("verb").lower()
+
+    def effect(game: "Game", ability: Any) -> None:
+        from .casting import PlayAction
+        from .exile_top_marked import _owners, exiled_by_top_of_library, mark_exiled
+
+        controller = game.controller_of(ability).username
+        owners = _owners(game, ability, whose)
+        if not owners or not owners[0].library:
+            return
+        game.look(owners[0].library[0], controller, source=ability.source_name)
+        for card in exiled_by_top_of_library(game, ability, owners[:1], 1):
+            mark_exiled(game, ability, card, face_down=True, looker=controller)
+            if card.zone is Zone.EXILE:
+                game.grant_play_permission(
+                    card,
+                    controller,
+                    action=PlayAction.PLAY if verb == "play" else PlayAction.CAST,
+                    source_name=ability.source_name,
+                    rule="CR 601.3",
+                    zone=Zone.EXILE,
+                    until_end_of_turn=False,
+                )
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_look_exile_may_play_ability(text: str) -> Any:
+    return _look_exile_may_play(text, for_spell=False)
+
+
+# ====================================================================================
+# "Target creature card in your graveyard gains embalm until end of turn."
+# ====================================================================================
+
+_GRANT_TOKEN_COPY_KEYWORD_RE = re.compile(
+    r"^(?P<phrase>target creature card in your graveyard) gains (?P<keyword>embalm|eternalize) "
+    r"until end of turn\.\s*the (?P=keyword) cost is equal to its mana cost\.?$",
+    re.IGNORECASE,
+)
+
+
+def _grant_token_copy_keyword(text: str) -> Any:
+    """CR 702.128a / CR 702.129a granted for a turn (CR 611.2, CR 613.1f): the card
+    gains the keyword line with its own mana cost as the cost (CR 202.1), which the
+    off-zone ability machinery then offers like a printed one - sorcery timing and
+    exiling the card are part of the keyword's own activation."""
+    if "gains" not in text.lower() or "mana cost" not in text.lower():
+        return None
+    match = _GRANT_TOKEN_COPY_KEYWORD_RE.fullmatch(" ".join(text.split()))
+    if match is None or not _targets_understood(match.group("phrase"), battlefield_only=False):
+        return None
+    keyword = match.group("keyword").title()
+
+    def effect(game: "Game", ability: Any) -> None:
+        from .effects.continuous import continuous_effects
+        from .layers import ContinuousEffect, Duration, Layer, grant_ability, only_this_incarnation
+
+        store = continuous_effects(game)
+        for target in game.resolve_targets(ability):
+            if not isinstance(target, CardState) or target.zone is not Zone.GRAVEYARD:
+                continue
+            if not target.card.mana_cost:
+                continue  # no mana cost, no cost to be equal to (CR 202.1)
+            store.add(
+                ContinuousEffect(
+                    description=f"{ability.source_name}: {target.name} gains {keyword.lower()}",
+                    layer=Layer.ABILITY,
+                    timestamp=store.tick(),
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=grant_ability(f"{keyword} {target.card.mana_cost}"),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                ),
+                game,
+            )
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_grant_token_copy_keyword_ability(text: str) -> Any:
+    return _grant_token_copy_keyword(text)
