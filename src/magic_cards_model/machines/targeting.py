@@ -5001,7 +5001,11 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     for position, match in enumerate(scan):
         # Each "target" is read on its own, so "target creature and target
         # land" is two requirements rather than one confused one.
-        requirement = _read_phrase(text[: match.start()], text[match.end() :])
+        # A count word is read off the prefix, so a keyword line's own number
+        # ("Casualty 2" once its reminder text is stripped) on the line above
+        # must never reach a "Target player" on the next one (CR 702.153a,
+        # CR 115.1): the phrase's prefix is its own line only.
+        requirement = _read_phrase(text[: match.start()].rsplit("\n", 1)[-1], text[match.end() :])
         if requirement is None:
             return TargetingProfile(requirements=tuple(requirements), understood=False)
         # CR 115.9a's "with a single target" belongs to the requirement it was
