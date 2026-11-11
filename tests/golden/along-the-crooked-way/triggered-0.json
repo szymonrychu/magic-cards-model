@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["known_carries"],
+    "fields_changed": ["known_carries", "turn_counts"],
     "notices": {},
     "objects": {
       "Grizzly Bears@alice#2": {
@@ -44,7 +44,7 @@
       }
     },
     "players": {},
-    "stack": []
+    "stack": ["ability of Along the Crooked Way@alice#1: Whenever a creature card leaves your graveyard, amass Goblins 1."]
   },
   "family": "triggered",
   "format": 1,

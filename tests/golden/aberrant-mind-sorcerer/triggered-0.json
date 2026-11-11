@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["coin_flips_performed", "known_carries"],
+    "fields_changed": ["coin_flips_performed", "known_carries", "turn_counts"],
     "notices": {},
     "objects": {
       "Lightning Bolt@alice#2": {
