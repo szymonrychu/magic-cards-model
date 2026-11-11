@@ -3632,7 +3632,26 @@ def _unreadable_conditional_clause(text: str, *, for_spell: bool) -> str | None:
         if _parse_conditional_sacrifice_clause(text, for_spell=for_spell) is not None:
             return None
         return whole
-    return _unreadable_end_the_turn_clause(whole)
+    return _unreadable_end_the_turn_clause(whole) or _unreadable_search_rider_clause(whole)
+
+
+#: "When you search your library this way, `<consequence>`." - Prishe's
+#: Wanderings' rider. No reader takes it, so a search that does read ("a basic
+#: land card or Town card") must not leave it silently dropped: the spell
+#: ends in a `ConditionalClauseNotice` naming the rider instead.
+_SEARCH_RIDER_RE = re.compile(r"^when you search your library this way,", re.IGNORECASE)
+
+
+def _unreadable_search_rider_clause(whole: str) -> str | None:
+    """The "when you search your library this way" clause inside `whole`, if
+    there is one (see `_SEARCH_RIDER_RE`)."""
+    clauses = _prepare_effect_clauses(whole)
+    if clauses is None:
+        return None
+    for clause in clauses:
+        if _SEARCH_RIDER_RE.match(clause.strip()):
+            return clause.strip()
+    return None
 
 
 #: "If it's your turn, end the turn." - Day's Undoing's second sentence, read

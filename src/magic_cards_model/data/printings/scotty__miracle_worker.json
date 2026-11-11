@@ -1,0 +1,129 @@
+{
+  "object": "card",
+  "id": "42f77f9e-5e56-45ac-aa93-36353c92bca9",
+  "oracle_id": "8e5057ae-165c-4fe4-b712-a638b7eea038",
+  "multiverse_ids": [],
+  "resource_id": "85AFCB53F96B321D75C89D714EFDD8CED2D02EB54B029515D34520AA200372AC",
+  "mtgo_id": 158298,
+  "tcgplayer_id": 725841,
+  "cardmarket_id": 918894,
+  "name": "Scotty, Miracle Worker",
+  "lang": "en",
+  "released_at": "2026-11-13",
+  "uri": "https://api.scryfall.com/cards/42f77f9e-5e56-45ac-aa93-36353c92bca9",
+  "scryfall_uri": "https://scryfall.com/card/trk/79/scotty-miracle-worker?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-10-26T11:10:54Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/2/42f77f9e-5e56-45ac-aa93-36353c92bca9.jpg?1793013054",
+    "normal": "https://cards.scryfall.io/normal/front/4/2/42f77f9e-5e56-45ac-aa93-36353c92bca9.jpg?1793013054",
+    "large": "https://cards.scryfall.io/large/front/4/2/42f77f9e-5e56-45ac-aa93-36353c92bca9.jpg?1793013054",
+    "png": "https://cards.scryfall.io/png/front/4/2/42f77f9e-5e56-45ac-aa93-36353c92bca9.png?1793013054",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/2/42f77f9e-5e56-45ac-aa93-36353c92bca9.jpg?1793013054",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/2/42f77f9e-5e56-45ac-aa93-36353c92bca9.jpg?1793013054",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/2/42f77f9e-5e56-45ac-aa93-36353c92bca9.webp?1793013054",
+    "grid": "https://cards.scryfall.io/grid/front/4/2/42f77f9e-5e56-45ac-aa93-36353c92bca9.webp?1793013054",
+    "display": "https://cards.scryfall.io/display/front/4/2/42f77f9e-5e56-45ac-aa93-36353c92bca9.webp?1793013054",
+    "art": "https://cards.scryfall.io/art/front/4/2/42f77f9e-5e56-45ac-aa93-36353c92bca9.webp?1793013054",
+    "crop": "https://cards.scryfall.io/crop/front/4/2/42f77f9e-5e56-45ac-aa93-36353c92bca9.webp?1793013054",
+    "jpeg": "https://cards.scryfall.io/normal/front/4/2/42f77f9e-5e56-45ac-aa93-36353c92bca9.jpg?1793013054"
+  },
+  "mana_cost": "{1}{U}{U}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Human Artificer",
+  "oracle_text": "During your main phase, each card in your graveyard has beam me up. The beam me up cost is equal to that spell's mana cost. Scotty can't be beamed up to cast a spell this way. (Only instant and sorcery spells can be cast this way. You may cast a card from your graveyard for its beam me up cost if you also return another creature you control to its owner's hand. Then exile that spell.)",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set": "trk",
+  "set_name": "Star Trek",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atrk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/trk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/42f77f9e-5e56-45ac-aa93-36353c92bca9/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A8e5057ae-165c-4fe4-b712-a638b7eea038&unique=prints",
+  "collector_number": "79",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "7728937a-fcc9-4ed4-a225-c73a51c66e42"
+  ],
+  "illustration_id": "69e23996-5d9f-46ec-a67e-baa3fe7ce17c",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 30084,
+  "preview": {
+    "source": "TCGplayer",
+    "source_uri": "https://www.tcgplayer.com/content/article/Check-Out-Our-EXCLUSIVE-Magic-The-Gathering-Star-Trek-Preview-Card/de3e6d42-6b71-4f66-bdb7-014fb3426462/",
+    "previewed_at": "2026-10-23"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DScotty%252C%2BMiracle%2BWorker",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DScotty%252C%2BMiracle%2BWorker",
+    "edhrec": "https://edhrec.com/route/?cc=Scotty%2C+Miracle+Worker"
+  }
+}

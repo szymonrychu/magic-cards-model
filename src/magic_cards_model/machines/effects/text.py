@@ -1449,7 +1449,24 @@ def _strip_non_effect_preamble(text: str) -> str:
     text = _strip_ability_word_labels(text)
     if "each of your opponents" in text.lower():
         text = _EACH_OF_YOUR_OPPONENTS_RE.sub("each opponent", text)
+    if _BOTTOM_WITHOUT_LIBRARY_RE.search(text) and not _OTHER_LIBRARY_RE.search(text):
+        text = _BOTTOM_WITHOUT_LIBRARY_RE.sub(
+            r"on the bottom of your library in \g<order> order", text
+        )
     return text
+
+
+#: The current template's "Put the rest on the bottom in a random order."
+#: (There's Coffee in that Nebula) names no library: CR 401.1's library is the
+#: one the cards were looked at in. Spelled out as the older "on the bottom of
+#: your library" every reader already reads, only when the text looks at no
+#: other player's library.
+_BOTTOM_WITHOUT_LIBRARY_RE = re.compile(
+    r"\bon the bottom in (?P<order>a random|any) order\b", re.IGNORECASE
+)
+_OTHER_LIBRARY_RE = re.compile(
+    r"\b(?:their|that player's|target player's|its owner's) library\b", re.IGNORECASE
+)
 
 
 #: A plain sentence boundary - a full stop (or ! or ?) followed by

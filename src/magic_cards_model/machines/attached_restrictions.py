@@ -26,13 +26,15 @@ if TYPE_CHECKING:
 
 _SUBJECT = r"(?:enchanted (?:creature|permanent|artifact|land)|equipped creature|it)"
 #: One thing an attachment can forbid: CR 508.1c, CR 509.1b, CR 701.27 (a
-#: transform) and CR 702.122a (crewing a Vehicle).
-_ITEM = r"(?:attack|block|transform|crew vehicles)"
+#: transform), CR 702.122a (crewing a Vehicle) and CR 702.196b (being returned
+#: for a beam me up cost - Marooned's "can't be beamed up").
+_ITEM = r"(?:attack|block|transform|crew vehicles|be beamed up)"
 _RESTRICTION_RE = re.compile(
     r"^(?P<cond>as long as another player controls enchanted creature, )?"
     rf"(?P<subject>{_SUBJECT})"
     r"(?: is an? (?P<becomes>[a-z]+) and)?"
     r"(?: gets [+-]\d+/[+-]\d+ and)?"
+    r"(?: doesn't untap during its controller's untap step and)?"
     rf" can't (?P<what>{_ITEM}(?:(?:, or | or |, | and )(?:{_ITEM}))*)"
     r"(?P<tail>.*?)\.?$",
     re.IGNORECASE,
@@ -78,6 +80,7 @@ class AttachedRestriction:
     block: bool = False
     transform: bool = False
     crew: bool = False
+    beam: bool = False
     deactivate: bool = False
     mana_exempt: bool = False
     #: "unless its controller pays <cost>" - the cost text, enforced by
@@ -158,6 +161,7 @@ def parse_attached(sentence: str) -> AttachedRestriction | None:
         block="block" in what,
         transform="transform" in what,
         crew="crew" in what,
+        beam="beamed up" in what,
         needs_other_controller=match["cond"] is not None,
     )
     if not tail.strip():
@@ -181,6 +185,18 @@ def attached_crew_refusal(game: "Game", creature: "CardState") -> str | None:
             return (
                 f"{creature.name} can't crew Vehicles: {source.name} says "
                 f'"{restriction.sentence}" (CR 702.122d)'
+            )
+    return None
+
+
+def attached_beam_refusal(game: "Game", creature: "CardState") -> str | None:
+    """Why an attachment's "can't be beamed up" stops `creature` being
+    returned to pay a beam me up cost (CR 702.196b), or None."""
+    for source, restriction in _attached_restrictions(game, creature):
+        if restriction.beam:
+            return (
+                f'{creature.name} can\'t be beamed up: {source.name} says "{restriction.sentence}" '
+                "(CR 702.196b)"
             )
     return None
 
@@ -476,7 +492,7 @@ def _reads_sentence(sentence: str) -> bool:
     found = parse_attached(sentence)
     if found is not None:
         if _UNTAP_AND_DEACTIVATE_RE.fullmatch(sentence) or re.search(
-            r"\b(?:gets|has) ", sentence, re.IGNORECASE
+            r"\b(?:gets|has|doesn't untap) ", sentence, re.IGNORECASE
         ):
             # the untap half is the layer system's grant
             from .layers import _parse_layer_sentence

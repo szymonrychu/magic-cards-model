@@ -155,6 +155,19 @@ class KeywordCastOption(EngineModel):
     its owner's hand" (CR 702.188a's web-slinging): unavailable while the
     caster controls no tapped creature, and the chosen creature is checked
     as it is chosen (CR 601.2b)."""
+    beam_me_up: bool = False
+    """True for CR 702.196a's beam me up: cast from the graveyard "if the
+    resulting spell is an instant or sorcery spell by paying [cost] and
+    returning a creature you control to its owner's hand rather than paying
+    its mana cost". `cost` carries the `ComponentKind.RETURN_TO_HAND`
+    component; `why_not` refuses a spell that is not an instant or sorcery
+    and a caster with no creature that can be beamed up (CR 702.196b,
+    `beamable_creatures`), and `Casting._check_beamed_up_creature` checks the
+    one chosen."""
+    unbeamable_ids: tuple[str, ...] = ()
+    """Permanents a granted beam me up says can't be beamed up to cast a spell
+    *this way* - Scotty, Miracle Worker's "Scotty can't be beamed up to cast a
+    spell this way." (CR 702.196b), the granting permanent's id."""
     freerunning: bool = False
     """True for CR 702.173a's freerunning: the alternative cost is available
     only "if a player was dealt combat damage this turn by a creature that, at
@@ -393,6 +406,25 @@ class KeywordCastOption(EngineModel):
                 f"{caster} controls no tapped creature to return to its owner's hand, so "
                 f"{spell.name} cannot be cast with {self.keyword} ({self.rule})"
             )
+        if self.beam_me_up:
+            # CR 702.196a: "if the resulting spell is an instant or sorcery
+            # spell" - a granted beam me up (Scotty, Miracle Worker) reaches
+            # every card in the graveyard, and casts only these.
+            if not ({Type.INSTANT, Type.SORCERY} & set(spell.types)):
+                return (
+                    f"{self.keyword} casts only instant and sorcery spells, and "
+                    f"{spell.name} is neither ({self.rule})"
+                )
+            if (
+                not cost_paid
+                and game is not None
+                and not beamable_creatures(game, caster, self.unbeamable_ids)
+            ):
+                return (
+                    f"{caster} controls no creature that can be beamed up to return to its "
+                    f"owner's hand, so {spell.name} cannot be cast with {self.keyword} "
+                    f"({self.rule}, CR 702.196b)"
+                )
         if (
             self.surge
             and game is not None
@@ -442,6 +474,65 @@ class KeywordCastOption(EngineModel):
                 f"CR 509.1h)"
             )
         return None
+
+
+def beam_me_up_option(
+    keyword: str, printed: str | None, unbeamable_ids: tuple[str, ...] = ()
+) -> KeywordCastOption:
+    """CR 702.196a's graveyard half: "You may cast this card from your
+    graveyard if the resulting spell is an instant or sorcery spell by paying
+    [cost] and returning a creature you control to its owner's hand rather
+    than paying its mana cost." An alternative cost (CR 118.9) from the
+    graveyard - flashback's zone - whose return half is web-slinging's
+    `ComponentKind.RETURN_TO_HAND` with any creature you control. The stack
+    half (exile it any time it would leave the stack) is
+    `replacement/model.py`'s, off `CastRecord.keyword`."""
+    from ..cost import CardRequirement
+
+    mana = total_cost_for_phrase(printed) if printed else None
+    cost = None
+    if mana is not None:
+        returning = return_to_hand_cost(
+            required=1, description="Return a creature you control to its owner's hand"
+        )
+        returning.requirement = CardRequirement(types=[Type.CREATURE], description="creature")
+        cost = TotalCost(mana=mana.mana, components=[*mana.components, returning])
+    return KeywordCastOption(
+        keyword=keyword,
+        rule="CR 702.196a",
+        zone=Zone.GRAVEYARD,
+        cost=cost,
+        pays_mana_cost=False,
+        beam_me_up=True,
+        unbeamable_ids=unbeamable_ids,
+        understood=cost is not None,
+    )
+
+
+def beam_refusal(
+    game: Any, creature: CardState, unbeamable_ids: tuple[str, ...] = ()
+) -> str | None:
+    """Why `creature` can't be returned for a beam me up cost (CR 702.196b),
+    or None: an attachment's "can't be beamed up" (Marooned), or the
+    granting permanent's own "can't be beamed up to cast a spell this way"."""
+    if creature.id in unbeamable_ids:
+        return f"{creature.name} can't be beamed up to cast a spell this way (CR 702.196b)"
+    from ..attached_restrictions import attached_beam_refusal
+
+    return attached_beam_refusal(game, creature)
+
+
+def beamable_creatures(
+    game: Any, caster: str, unbeamable_ids: tuple[str, ...] = ()
+) -> list[CardState]:
+    """The creatures `caster` controls that may be returned for a beam me up
+    cost right now (CR 702.196a/b)."""
+    return [
+        permanent
+        for permanent in game.permanents_controlled_by(caster)
+        if game.characteristics_of(permanent).is_creature
+        and beam_refusal(game, permanent, unbeamable_ids) is None
+    ]
 
 
 def _describe_keyword_cost(option: KeywordCastOption) -> str:
@@ -1003,6 +1094,9 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             returns_tapped_creature=True,
             understood=cost is not None,
         )
+
+    if canonical == "beam me up":
+        return beam_me_up_option(ability.canonical, printed)
 
     if canonical == "warp":
         # CR 702.185a: warp is two static abilities that function while the card

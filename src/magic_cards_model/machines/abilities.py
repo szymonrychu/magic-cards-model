@@ -3753,6 +3753,7 @@ def _parse_line(raw: str, keywords: list[str], face: str) -> list[Ability]:
     if keyword_abilities:
         return keyword_abilities
 
+    common_before_word = common
     ability_word: str | None = None
     word_match = _ABILITY_WORD.match(text)
     if word_match:
@@ -3781,6 +3782,17 @@ def _parse_line(raw: str, keywords: list[str], face: str) -> list[Ability]:
     if text.endswith(".") or text.endswith('."'):
         # CR 604.1: static abilities "are written as statements".
         return [StaticAbility(**common)]
+
+    # A keyword line the printing's own Scryfall `keywords` list leaves out
+    # (preview data does: Energize prints "Beam me up {3}{U}" with an empty
+    # list): retried against CR 702's own keyword names, as `parse_abilities`
+    # already does for a station striation, before giving up on the line.
+    known_lower = {keyword.lower() for keyword in keywords}
+    vocabulary = [name.capitalize() for name in KEYWORD_ABILITY_NAMES if name not in known_lower]
+    if vocabulary:
+        retried = _parse_keywords(common_before_word["text"], vocabulary, common_before_word)
+        if retried and all(isinstance(ability, KeywordAbility) for ability in retried):
+            return retried
 
     return [UnparsedAbility(**common)]
 
@@ -5429,6 +5441,8 @@ KEYWORD_ABILITY_NAMES: frozenset[str] = frozenset(
         "banding",
         "bargain",
         "battle cry",
+        # CR 702.196, added by the CR effective 2026-11-06 (Star Trek).
+        "beam me up",
         "bestow",
         "blitz",
         "bloodthirst",

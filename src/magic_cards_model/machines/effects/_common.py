@@ -555,7 +555,10 @@ def _quality_matcher(quality: str) -> Callable[[CardState], bool]:
 #: Shepherd's "a basic Plains card or a creature card with mana value 1 or
 #: less". The article is what tells it apart from a list of types inside one
 #: description ("a Mountain or Plains card"), which never repeats it.
-_SEARCH_DESCRIPTION_JOIN_RE = re.compile(r"\s+or\s+an?\s+", re.IGNORECASE)
+#: Final Frontier's "a basic land card or Planet card" repeats "card" with no
+#: second article: an "or" right after the word "card" joins two whole
+#: descriptions the same way.
+_SEARCH_DESCRIPTION_JOIN_RE = re.compile(r"\s+or\s+an?\s+|(?<=\bcard)\s+or\s+", re.IGNORECASE)
 
 
 def _card_description_is_readable(quality: str) -> bool:

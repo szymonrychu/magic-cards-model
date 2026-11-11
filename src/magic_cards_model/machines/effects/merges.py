@@ -4737,6 +4737,31 @@ _PUT_REST_ON_BOTTOM_ANY_ORDER_RE = re.compile(
 )
 
 
+def _reveal_quality_matcher(quality: str, max_mv: str | None) -> Callable[[CardState], bool] | None:
+    """The "you may reveal a `<quality>` card [with mana value N or less]"
+    predicate. Two whole descriptions joined by "card or" - There's Coffee in
+    that Nebula's "a Plains card or nonland permanent card with mana value 3
+    or less" - match a card meeting either one, the trailing mana value bound
+    belonging to the last description alone; a half no reader reads fails
+    the whole clause closed rather than matching nothing (the reveal itself is
+    CR 701.20a's)."""
+    halves = _SEARCH_DESCRIPTION_JOIN_RE.split(f"{quality.strip()} card")
+    if len(halves) == 1:
+        return _bounded_quality_matcher(quality, max_mv)
+    matchers: list[Callable[[CardState], bool]] = []
+    for position, half in enumerate(halves):
+        half_quality = re.sub(r"\s+card$", "", half.strip(), flags=re.IGNORECASE)
+        if not half_quality or not _card_description_is_readable(half_quality):
+            return None
+        bound = max_mv if position == len(halves) - 1 else None
+        matchers.append(_bounded_quality_matcher(half_quality, bound))
+
+    def matches_either(state: CardState) -> bool:
+        return any(matcher(state) for matcher in matchers)
+
+    return matches_either
+
+
 def _merge_look_top_reveal_to_hand_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
@@ -4784,9 +4809,11 @@ def _merge_look_top_reveal_to_hand_clauses(
         noun_phrase_singular = f"card that's {rel_quality.strip()}"
         noun_phrase_plural = f"cards that are {rel_quality.strip()}"
     else:
-        matches = _bounded_quality_matcher(
+        matches = _reveal_quality_matcher(
             reveal_match.group("quality"), reveal_match.group("max_mv")
         )
+        if matches is None:
+            return None
         quality_description = reveal_match.group("quality").strip()
         noun_phrase_singular = f"{quality_description} card"
         noun_phrase_plural = f"{quality_description} cards"
@@ -6302,6 +6329,7 @@ from ._common import (  # noqa: E402
     _EXILE_UNTIL_QUALITY_THIRD_PERSON_RE,
     _PLAY_PERMISSION_RE,
     _RETURN_TARGET_RE,
+    _SEARCH_DESCRIPTION_JOIN_RE,
     _SELECT_FROM_TOP_KINDS,
     _SURVEIL_RE,
     _TOKENS_EQUAL_TO_ITS_STAT_RE,
