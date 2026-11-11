@@ -1724,6 +1724,7 @@ class ZonesMixin:
         count: int = 1,
         reveal: bool = False,
         tapped: bool = False,
+        counters: Mapping[str, int] | None = None,
         source: str | None = None,
         source_id: str | None = None,
         caused_by: str | None = None,
@@ -1788,7 +1789,9 @@ class ZonesMixin:
                     self.reveal(state, source=source)
             for state in found:
                 if destination is Zone.BATTLEFIELD:
-                    self.put_onto_battlefield(state, player.username, tapped=tapped)
+                    self.put_onto_battlefield(
+                        state, player.username, tapped=tapped, counters=counters
+                    )
                 elif destination is Zone.GRAVEYARD:
                     # CR 400.6/614.1a: this is an ordinary "put into a
                     # graveyard" - Enroot's own "search your library for a

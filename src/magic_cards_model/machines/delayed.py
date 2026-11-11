@@ -830,6 +830,37 @@ class TapSubject(DelayedEffectSpecBase):
             game.tap_permanent(permanent)
 
 
+class GainControlUntapHasteOfSubject(DelayedEffectSpecBase):
+    """ "At the beginning of the next combat this turn, gain control of that
+    creature until end of turn. Untap it. It gains haste until end of turn." -
+    The Wrath of Khan's chapter I. Threaten's three instructions
+    (`effects.continuous._untap_and_apply_control_sentences`) run when the
+    delayed trigger resolves, on the creature the trigger was created about;
+    CR 603.7c: one that has left the battlefield since (the 4 damage may have
+    killed it) is not affected."""
+
+    kind: Literal["gain_control_untap_haste_of_subject"] = "gain_control_untap_haste_of_subject"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .effects.continuous import _untap_and_apply_control_sentences
+
+        permanent = trigger.still_affects(game)
+        if permanent is None:
+            return
+        found = game.find_by_id(trigger.source_id)
+        source = found if isinstance(found, CardState) else permanent
+        _untap_and_apply_control_sentences(
+            game,
+            source,
+            game.player(trigger.controller),
+            [permanent],
+            (
+                "gain control of it until end of turn.",
+                "target creature gains haste until end of turn.",
+            ),
+        )
+
+
 class TransformSubject(DelayedEffectSpecBase):
     """ "Transform `<this>` at the beginning of the next upkeep" - Aang, at the
     Crossroads' and Archangel Avacyn's own delayed trigger (CR 603.7,
@@ -1354,13 +1385,19 @@ class CombatDamageToPlayerDraw(DelayedEffectSpecBase):
 
     kind: Literal["combat_damage_to_player_draw"] = "combat_damage_to_player_draw"
 
+    that_many: bool = False
+    """ "you draw that many cards" (The Inner Light's chapter II): the count is the
+    combat damage the event reports (`GameEvent.amount`), not one."""
+
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
         event = ability.event
         if event is None or not event.combat or event.player is None:
             return
         if not game.is_in_game(trigger.controller):
             return
-        game.draw_cards(trigger.controller, 1)
+        count = (event.amount or 0) if self.that_many else 1
+        if count > 0:
+            game.draw_cards(trigger.controller, count)
 
 
 class CopyNextSpellYouCast(DelayedEffectSpecBase):
@@ -2785,6 +2822,7 @@ DelayedEffectSpec = Annotated[
     | DestroySubject
     | TapSubject
     | TransformSubject
+    | GainControlUntapHasteOfSubject
     | ReturnEarthbentLand
     | DevourerOfDestinyFirstUpkeep
     | StaticPrisonReturn

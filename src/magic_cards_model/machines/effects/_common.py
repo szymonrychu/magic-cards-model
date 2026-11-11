@@ -426,6 +426,10 @@ _SEARCH_AND_PUT_RE = re.compile(
     r"(?P<reveal>, reveal (?:it|them|that card|those cards))?"
     r", put (?:it|them|that card|those cards) "
     r"(?P<dest>into your hand|into your graveyard|onto the battlefield(?P<tapped> tapped)?)"
+    # "... onto the battlefield with seven charge counters on it" (Captain
+    # Jean-Luc Picard): CR 122.6 counters it enters with, placed as it enters.
+    rf"(?: with (?P<with_n>{COUNT}) (?P<with_kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
+    r"(?:it|them))?"
     r"(?:, then shuffle)?\.?",
     re.IGNORECASE,
 )

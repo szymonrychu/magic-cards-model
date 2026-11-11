@@ -2460,12 +2460,17 @@ class Game(
     #: counts ("for each <type> card in your graveyard", "card types among
     #: cards in your graveyard", "that player's graveyard") now resolve where
     #: an older dump would have resolved the same text as a no-op.
+<<<<<<< HEAD
     #: 177 (T-110 B4): `TurnMachine` gained `extra_turns_begun_by` (CR 500.7,
     #: "haven't begun an extra turn this game"), `ReplaceableEvent` gained
     #: `attacking` (CR 508.4), and a decoded game's permanents now read honorific
     #: short names (CR 201.5c), "a card leaves your graveyard", the phasing lock,
     #: a group destroy replacement, abilities granted to exiled cards and The
     #: Holodeck's outside-the-game permission; an older dump could not say so.
+=======
+    #: 177 (T-110 B6): `Player` gained `spells_cast_this_game` ("the first spell you've
+    #: cast this game"); an older dump could not say how many spells a player had cast.
+>>>>>>> 3e0aae8c7 (feat(trk): simple-tier trk cards, part 2 (T-110 B6))
     #: 176 (EP02-R3-T8): `PlayPermission` gained `harmonize` (CR 702.180a), so a graveyard
     #: card that "gains harmonize" (Songcrafter Mage) is cast with the tap-a-creature discount
     #: and exiled instead of going to the graveyard; and `DelayedEffectSpec` gained the

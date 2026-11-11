@@ -3827,7 +3827,7 @@ def _parse_create_copies_of_self_attacking_clause(
 
 
 _CREATE_TOKEN_COPY_OF_TARGET_RE = re.compile(
-    r"^create a token that['’]?s a copy of "
+    r"^create a (?P<tapped_token>tapped )?token that['’]?s a copy of "
     r"(?P<phrase>(?:another )?target (?:(?:attacking|blocking|nonlegendary|nontoken) )?"
     r"[a-z]+(?: or [a-z]+)?(?: you control)?)"
     r"(?:, except (?P<except>[^.]+?))?"
@@ -3946,6 +3946,7 @@ def _parse_create_token_copy_of_target_clause(
     tapped_and_attacking = (
         match.group("attacking") is not None or match.group("enters_attacking") is not None
     )
+    enters_tapped = match.group("tapped_token") is not None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         from ..dies_this_turn import source_id_of_object
@@ -3960,6 +3961,8 @@ def _parse_create_token_copy_of_target_clause(
             options = (
                 _token_copy_tapped_and_attacking(game, target, controller.username)
                 if tapped_and_attacking
+                else {"tapped": True}
+                if enters_tapped
                 else {}
             )
             created = token_copy_of(
@@ -4003,6 +4006,177 @@ def _parse_create_token_copy_of_target_clause(
                     )
                     if trigger is not None:
                         game.create_delayed_trigger(trigger)
+
+    return effect
+
+
+def _token_copy_except_options(except_text: str | None) -> dict[str, Any] | None:
+    """`token_copy_of`'s keyword arguments for a copy clause's ", except `<tail>`"
+    (CR 707.9b), read in the same order `_parse_create_token_copy_of_target_clause`
+    reads it: a card type, a replacing P/T/colour/type, a legal-ness or subtype
+    list, then a single keyword/quoted ability. `{}` for no tail, `None` for a
+    tail none of them reads."""
+    if except_text is None:
+        return {}
+    card_type = _EXCEPT_ADDED_CARD_TYPE_RE.fullmatch(except_text.strip())
+    if card_type is not None:
+        return {"added_card_type": card_type.group("card_type").title()}
+    replacing = _read_token_copy_replacing_except(except_text)
+    if replacing is not None:
+        power, toughness, colors, creature_types = replacing
+        return {
+            "power": power,
+            "toughness": toughness,
+            "colors": colors,
+            "creature_types": creature_types,
+        }
+    listed = _read_copy_exception_list(except_text)
+    if listed is not None:
+        return {
+            "added_abilities": listed.added_abilities,
+            "power": listed.power,
+            "toughness": listed.toughness,
+            "added_creature_type": listed.added_creature_type,
+            "not_legendary": listed.not_legendary,
+        }
+    exception = _read_token_copy_except(except_text)
+    if exception is None:
+        return None
+    added, power, toughness, added_type = exception
+    return {
+        "added_abilities": added,
+        "power": power,
+        "toughness": toughness,
+        "added_creature_type": added_type,
+    }
+
+
+#: T-110 B6: "Choose X target creatures your opponents control. For each of
+#: them, create a token that's a copy of that creature, except it has
+#: changeling. Those tokens gain haste. Exile those tokens at the beginning of
+#: the next end step." - Dominion Infiltration. The X targets are announced as
+#: the spell is cast (CR 601.2c, `machines/targeting.py`), so this reads
+#: whatever of them is still legal as it resolves (CR 608.2b); one token per
+#: target (CR 707.2), each with CR 707.9b's exception, all granted haste
+#: (CR 613.1f) and exiled together by one delayed ability about every one of
+#: them (CR 603.7a, `AnaphoricDelayedClause.triggers_for_all`).
+_CHOOSE_X_TARGETS_COPY_TOKENS_RE = re.compile(
+    r"^choose x target (?:creatures|artifacts|permanents) "
+    r"(?:your opponents control|you control)\.\s*"
+    r"for each of them, create a token that['’]?s a copy of that (?:creature|artifact|permanent)"
+    r"(?:, except (?P<except>[^.]+?))?\.\s*"
+    r"(?P<haste>those tokens gain haste\.\s*)?"
+    r"(?P<end_step>(?:exile|sacrifice) those tokens at the beginning of the next end step\.)?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s13")
+def _parse_choose_x_targets_copy_tokens_text(text: str) -> Effect | None:
+    """`_CHOOSE_X_TARGETS_COPY_TOKENS_RE`'s shape - see the banner above."""
+    match = _CHOOSE_X_TARGETS_COPY_TOKENS_RE.fullmatch(
+        collapsed(_strip_non_effect_preamble(text).strip())
+    )
+    if match is None:
+        return None
+    options = _token_copy_except_options(match.group("except"))
+    if options is None:
+        return None
+    end_step = match.group("end_step")
+    if end_step is not None and parse_anaphoric_delayed_clause(end_step) is None:
+        return None
+    haste = match.group("haste") is not None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        tokens: list[CardState] = []
+        for target in game.resolve_targets(spell):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            tokens.extend(token_copy_of(game, target, controller.username, **options))
+        tokens = [token for token in tokens if token.zone is Zone.BATTLEFIELD]
+        store = continuous_effects(game)
+        for token in tokens:
+            if haste:
+                store.add(
+                    ContinuousEffect(
+                        description=f"{spell.name}: {token.name} gains haste",
+                        layer=Layer.ABILITY,
+                        timestamp=store.tick(),
+                        selector=only_this_incarnation(token, token.zone_change_stamp),
+                        modification=grant_ability("Haste"),
+                    ),
+                    game,
+                )
+        if end_step is not None and tokens:
+            clause = parse_anaphoric_delayed_clause(end_step)
+            assert clause is not None
+            for trigger in (
+                clause.triggers_for_all(
+                    tokens,
+                    controller=controller.username,
+                    source_id=spell.id,
+                    source_name=spell.name,
+                    game=game,
+                )
+                or []
+            ):
+                game.create_delayed_trigger(trigger)
+
+    return effect
+
+
+#: T-110 B6: "Create a token that's a copy of target creature an opponent
+#: controls, except it has menace. If this spell was kicked, instead for each
+#: creature target opponent controls, create a token that's a copy of that
+#: creature, except it has menace." - Mirror Universe Intrusion. Which target is
+#: announced depends on the kicker (CR 601.2b, CR 601.2c,
+#: `targeting.kicked_instead_target_text`): the creature unkicked, the opponent
+#: kicked. Resolution reads the one that was announced (CR 702.33d,
+#: `CastRecord.kicked`), and "instead" means the unkicked half does nothing
+#: when kicked (CR 608.2c).
+_TOKEN_COPY_TARGET_OR_KICKED_EACH_RE = re.compile(
+    r"^create a token that['’]?s a copy of target creature an opponent controls"
+    r"(?:, except (?P<except>[^.]+?))?\.\s*"
+    r"if this spell was kicked, instead for each creature target opponent controls, "
+    r"create a token that['’]?s a copy of that creature(?:, except (?P<kicked_except>[^.]+?))?\.?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s13")
+def _parse_token_copy_target_or_kicked_each_text(text: str) -> Effect | None:
+    """`_TOKEN_COPY_TARGET_OR_KICKED_EACH_RE`'s shape - see the banner above."""
+    match = _TOKEN_COPY_TARGET_OR_KICKED_EACH_RE.fullmatch(
+        collapsed(_strip_non_effect_preamble(text).strip())
+    )
+    if match is None:
+        return None
+    options = _token_copy_except_options(match.group("except"))
+    kicked_options = _token_copy_except_options(match.group("kicked_except"))
+    if options is None or kicked_options is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        targets = game.resolve_targets(spell)
+        kicked = game.cast_record(spell).kicked > 0
+        if not kicked:
+            creature = next((t for t in targets if isinstance(t, CardState)), None)
+            if creature is not None and creature.zone is Zone.BATTLEFIELD:
+                token_copy_of(game, creature, controller.username, **options)
+            return
+        opponent = next((t for t in targets if isinstance(t, Player)), None)
+        if opponent is None:
+            return
+        board = game.computed_board()
+        for creature in [
+            permanent
+            for permanent in game.battlefield
+            if board.of(permanent).controller == opponent.username
+            and Type.CREATURE in board.of(permanent).types
+        ]:
+            token_copy_of(game, creature, controller.username, **kicked_options)
 
     return effect
 
