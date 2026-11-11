@@ -1266,6 +1266,7 @@ _CR_KEYWORD_HEADINGS: tuple[str, ...] = (
     "Heal",
     "Recruit",
     "Empower Jace",
+    "Assimilate",
     "Deathtouch",
     "Defender",
     "Double Strike",

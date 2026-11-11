@@ -2832,6 +2832,30 @@ def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
 
         yield put
 
+    if re.search(r"\btarget attacking(?: or blocking)? creature\b", ability.effect or "", re.I):
+        # "target attacking or blocking creature an opponent controls" (Saavik,
+        # Stoic Student; CR 506.3): the source enters during the opponent's
+        # attack, where such a creature exists.
+
+        def during_an_attack() -> tuple[PlayedScenario, Any]:
+            scenario = _board(
+                hand=(card.name,),
+                bob_battlefield=("Memnite",),
+                active=BOB,
+                step=Step.DECLARE_ATTACKERS,
+            )
+            scenario.attack_with(_staged(scenario, "Memnite", BOB), defending=ALICE)
+            scenario.no_blocks()
+            source = _last(scenario, card.name, Zone.HAND, ALICE)
+            try:
+                entered = scenario.game.put_onto_battlefield(source, ALICE, transformed=transformed)
+            except ValueError as error:
+                raise _Unavailable(str(error)) from error
+            _prime(scenario, entered, ability)
+            return scenario, None
+
+        yield during_an_attack
+
     if "from your graveyard" in lowered or "from a graveyard" in lowered:
         # "if it entered from your graveyard" (CR 603.4, CR 603.6a), and
         # Breathless Knight's "that creature entered from a graveyard": the
