@@ -39,7 +39,6 @@
         "R"
       ],
       "defense": "5",
-      "artist": "Daarken",
       "artist_id": "e607a0d4-fc12-4c01-9e3f-501f5269b9cb",
       "illustration_id": "a36cf391-3903-4fc7-aad5-f72ee53b3287",
       "image_uris": {
@@ -70,7 +69,6 @@
       ],
       "power": "4",
       "toughness": "4",
-      "artist": "Daarken",
       "artist_id": "e607a0d4-fc12-4c01-9e3f-501f5269b9cb",
       "illustration_id": "f1e1a000-c854-4dd9-baa8-1eb3b8e9c082",
       "image_uris": {
@@ -142,7 +140,6 @@
   "collector_number": "148",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Daarken",
   "artist_ids": [
     "e607a0d4-fc12-4c01-9e3f-501f5269b9cb"
   ],
@@ -154,23 +151,10 @@
   "story_spotlight": false,
   "edhrec_rank": 15021,
   "penny_rank": 4809,
-  "prices": {
-    "usd": "0.21",
-    "usd_foil": "0.30",
-    "usd_etched": null,
-    "eur": "0.08",
-    "eur_foil": "0.17",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607191&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BRegatha%2B%252F%252F%2BDisciples%2Bof%2Bthe%2BInferno",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BRegatha%2B%252F%252F%2BDisciples%2Bof%2Bthe%2BInferno",
     "edhrec": "https://edhrec.com/route/?cc=Invasion+of+Regatha"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F491196%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704375&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/110154?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

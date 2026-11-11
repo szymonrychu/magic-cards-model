@@ -95,9 +95,7 @@
   "collector_number": "45",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "The Sunstar Free Company is not swayed by profit. Sunstar is their faith, the prism through which they cast light across Sothera.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Chris Rallis",
   "artist_ids": [
     "a8e7b854-b15a-421a-b66d-6e68187ae285"
   ],
@@ -109,22 +107,9 @@
   "booster": true,
   "story_spotlight": false,
   "edhrec_rank": 17264,
-  "prices": {
-    "usd": "0.11",
-    "usd_foil": "0.24",
-    "usd_etched": null,
-    "eur": "0.05",
-    "eur_foil": "0.09",
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DZealous%2BDisplay",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DZealous%2BDisplay",
     "edhrec": "https://edhrec.com/route/?cc=Zealous+Display"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F644631%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=836778&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/142703?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

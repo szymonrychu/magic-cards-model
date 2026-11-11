@@ -54,7 +54,6 @@
       "oracle_text": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\nAs long as an opponent was dealt noncombat damage this turn, this creature has flying and haste.",
       "power": "3",
       "toughness": "3",
-      "artist": "Anastasia Ovchinnikova",
       "artist_id": "3605d81f-5c97-4958-9dcc-d44a85e10305",
       "illustration_id": "3d41b63e-9a49-4419-879f-ee656d42f51c"
     },
@@ -64,7 +63,6 @@
       "mana_cost": "{B/R}",
       "type_line": "Sorcery",
       "oracle_text": "Vicious Verse deals 1 damage to target opponent.",
-      "artist": "Anastasia Ovchinnikova",
       "artist_id": "3605d81f-5c97-4958-9dcc-d44a85e10305"
     }
   ],
@@ -123,7 +121,6 @@
   "digital": false,
   "rarity": "common",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Anastasia Ovchinnikova",
   "artist_ids": [
     "3605d81f-5c97-4958-9dcc-d44a85e10305"
   ],
@@ -135,22 +132,9 @@
   "booster": false,
   "story_spotlight": false,
   "edhrec_rank": 29040,
-  "prices": {
-    "usd": "0.42",
-    "usd_foil": "0.46",
-    "usd_etched": null,
-    "eur": "0.09",
-    "eur_foil": "0.17",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWhiplash%2BWordsmith%2B%252F%252F%2BVicious%2BVerse",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWhiplash%2BWordsmith%2B%252F%252F%2BVicious%2BVerse",
     "edhrec": "https://edhrec.com/route/?cc=Whiplash+Wordsmith"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F716704%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908817&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/156034?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

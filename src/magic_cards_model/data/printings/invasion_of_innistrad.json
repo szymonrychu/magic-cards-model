@@ -37,7 +37,6 @@
         "B"
       ],
       "defense": "5",
-      "artist": "Alexey Kruglov",
       "artist_id": "15c28181-aa07-4386-8657-0ca5ee6951e2",
       "illustration_id": "f9e67f63-016e-42c0-83d3-5bc6c99edfb1",
       "image_uris": {
@@ -66,8 +65,6 @@
       "color_indicator": [
         "B"
       ],
-      "flavor_text": "The eerie magic animating Innistrad's zombies rendered them immune to phyresis, making them crucial to the plane's defense.",
-      "artist": "Alexey Kruglov",
       "artist_id": "15c28181-aa07-4386-8657-0ca5ee6951e2",
       "illustration_id": "0d6f057c-4797-409c-a0df-633646e35b5f",
       "image_uris": {
@@ -156,7 +153,6 @@
   "collector_number": "120",
   "digital": false,
   "rarity": "rare",
-  "artist": "Alexey Kruglov",
   "artist_ids": [
     "15c28181-aa07-4386-8657-0ca5ee6951e2"
   ],
@@ -176,23 +172,10 @@
     "source_uri": "",
     "previewed_at": "2024-12-03"
   },
-  "prices": {
-    "usd": "0.37",
-    "usd_foil": "0.41",
-    "usd_etched": null,
-    "eur": "0.19",
-    "eur_foil": "0.64",
-    "tix": "0.10"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=685952&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BInnistrad%2B%252F%252F%2BDeluge%2Bof%2Bthe%2BDead",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BInnistrad%2B%252F%252F%2BDeluge%2Bof%2Bthe%2BDead",
     "edhrec": "https://edhrec.com/route/?cc=Invasion+of+Innistrad"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F600470%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=802804&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/135636?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

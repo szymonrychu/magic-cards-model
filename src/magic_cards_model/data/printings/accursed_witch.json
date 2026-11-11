@@ -40,7 +40,6 @@
       ],
       "power": "4",
       "toughness": "2",
-      "artist": "Wesley Burt",
       "artist_id": "b98c9d94-8bdb-49af-871d-7bac92274535",
       "illustration_id": "e648ea98-8935-4b00-b3d9-d4d1e98026d8",
       "image_uris": {
@@ -69,7 +68,6 @@
       "color_indicator": [
         "B"
       ],
-      "artist": "Wesley Burt",
       "artist_id": "b98c9d94-8bdb-49af-871d-7bac92274535",
       "illustration_id": "828863bf-ddb7-4719-bcfd-2a20c667829f",
       "image_uris": {
@@ -158,7 +156,6 @@
   "collector_number": "97",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Wesley Burt",
   "artist_ids": [
     "b98c9d94-8bdb-49af-871d-7bac92274535"
   ],
@@ -173,23 +170,10 @@
   "story_spotlight": false,
   "edhrec_rank": 10742,
   "penny_rank": 5262,
-  "prices": {
-    "usd": "0.30",
-    "usd_foil": "1.24",
-    "usd_etched": null,
-    "eur": "0.22",
-    "eur_foil": "1.04",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=409843&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAccursed%2BWitch%2B%252F%252F%2BInfectious%2BCurse",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAccursed%2BWitch%2B%252F%252F%2BInfectious%2BCurse",
     "edhrec": "https://edhrec.com/route/?cc=Accursed+Witch"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F116486%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=289120&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/60370?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

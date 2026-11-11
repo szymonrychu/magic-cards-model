@@ -40,7 +40,6 @@
       ],
       "power": "2",
       "toughness": "4",
-      "artist": "Grzegorz Rutkowski",
       "artist_id": "b5f49d0d-8056-48e3-b614-090e656b4f9c",
       "illustration_id": "8a65028e-20a7-4470-ab12-9b6b90b95e14",
       "image_uris": {
@@ -66,8 +65,6 @@
       "colors": [
         "G"
       ],
-      "flavor_text": "Kolvori's love for her family knows no bounds.",
-      "artist": "Grzegorz Rutkowski",
       "artist_id": "b5f49d0d-8056-48e3-b614-090e656b4f9c",
       "illustration_id": "de379e44-b3d7-4c1f-bdf1-faf9c0fa2842",
       "image_uris": {
@@ -139,7 +136,6 @@
   "collector_number": "181",
   "digital": false,
   "rarity": "rare",
-  "artist": "Grzegorz Rutkowski",
   "artist_ids": [
     "b5f49d0d-8056-48e3-b614-090e656b4f9c"
   ],
@@ -160,23 +156,10 @@
     "source_uri": "https://infinite.tcgplayer.com/article/Kolvori-God-of-Kinship/b6d433c3-6f0b-4b0e-803d-5ea72e901cf1",
     "previewed_at": "2021-01-08"
   },
-  "prices": {
-    "usd": "0.35",
-    "usd_foil": "0.44",
-    "usd_etched": null,
-    "eur": "0.35",
-    "eur_foil": "0.38",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=503796&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKolvori%252C%2BGod%2Bof%2BKinship%2B%252F%252F%2BThe%2BRinghart%2BCrest",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKolvori%252C%2BGod%2Bof%2BKinship%2B%252F%252F%2BThe%2BRinghart%2BCrest",
     "edhrec": "https://edhrec.com/route/?cc=Kolvori%2C+God+of+Kinship"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F230143%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=530307&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/87703?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

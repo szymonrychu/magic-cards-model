@@ -97,9 +97,7 @@
   "collector_number": "151",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "The agony that consumed him also gave him clarity of purpose.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Dmitry Burmak",
   "artist_ids": [
     "9872f5c0-274a-48ce-a9ad-6f0d5654e29c"
   ],
@@ -116,22 +114,9 @@
   "story_spotlight": true,
   "edhrec_rank": 2822,
   "penny_rank": 10629,
-  "prices": {
-    "usd": "2.27",
-    "usd_foil": "1.93",
-    "usd_etched": null,
-    "eur": "0.63",
-    "eur_foil": "0.88",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPain%2Bfor%2BAll",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPain%2Bfor%2BAll",
     "edhrec": "https://edhrec.com/route/?cc=Pain+for+All"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F643036%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=835033&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/142915?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

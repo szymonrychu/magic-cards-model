@@ -46,7 +46,6 @@
         "R",
         "W"
       ],
-      "artist": "Victor Adame Minguez",
       "artist_id": "bd8f7368-5b10-4554-b6b8-d052c6aca89f",
       "illustration_id": "0c40cc5d-d767-47c5-afa0-75c9b399857b",
       "image_uris": {
@@ -70,7 +69,6 @@
       "type_line": "Legendary Land",
       "oracle_text": "(Transforms from Path of Mettle.)\n{T}: Add one mana of any color.\n{1}{R}, {T}: Metzali deals 2 damage to each opponent.\n{2}{W}, {T}: Choose a creature at random that attacked this turn. Destroy that creature.",
       "colors": [],
-      "artist": "Victor Adame Minguez",
       "artist_id": "bd8f7368-5b10-4554-b6b8-d052c6aca89f",
       "illustration_id": "67fa762a-bbd9-4ffa-a249-222ac8089e72",
       "image_uris": {
@@ -160,7 +158,6 @@
   "collector_number": "165",
   "digital": false,
   "rarity": "rare",
-  "artist": "Victor Adame Minguez",
   "artist_ids": [
     "bd8f7368-5b10-4554-b6b8-d052c6aca89f"
   ],
@@ -176,23 +173,10 @@
   "story_spotlight": false,
   "edhrec_rank": 17309,
   "penny_rank": 9789,
-  "prices": {
-    "usd": "0.38",
-    "usd_foil": "1.38",
-    "usd_etched": null,
-    "eur": "0.22",
-    "eur_foil": "1.09",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=439824&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPath%2Bof%2BMettle%2B%252F%252F%2BMetzali%252C%2BTower%2Bof%2BTriumph",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPath%2Bof%2BMettle%2B%252F%252F%2BMetzali%252C%2BTower%2Bof%2BTriumph",
     "edhrec": "https://edhrec.com/route/?cc=Path+of+Mettle"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F155742%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=315458&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/66787?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

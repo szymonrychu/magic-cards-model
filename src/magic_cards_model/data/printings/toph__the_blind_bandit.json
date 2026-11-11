@@ -100,9 +100,7 @@
   "digital": false,
   "rarity": "uncommon",
   "watermark": "earthkingdom",
-  "flavor_text": "\"You think you're so tough?\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Yueko",
   "artist_ids": [
     "42c66a88-445c-4693-9742-be2203b51325"
   ],
@@ -126,22 +124,9 @@
     "source_uri": "https://www.ign.com/articles/avatar-the-last-airbender-magic-the-gathering-beginner-box-card-reveal-spoilers",
     "previewed_at": "2025-08-14"
   },
-  "prices": {
-    "usd": "0.29",
-    "usd_foil": "0.35",
-    "usd_etched": null,
-    "eur": "0.11",
-    "eur_foil": "0.26",
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DToph%252C%2Bthe%2BBlind%2BBandit",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DToph%252C%2Bthe%2BBlind%2BBandit",
     "edhrec": "https://edhrec.com/route/?cc=Toph%2C+the+Blind+Bandit"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F649616%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=857477&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/144882?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

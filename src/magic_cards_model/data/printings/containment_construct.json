@@ -90,9 +90,7 @@
   "collector_number": "344",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "Automated units are deployed to stabilize merge sites deemed too dangerous even for trained intercessors.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Julian Kok Joon Wen",
   "artist_ids": [
     "7f1868e3-325f-4df9-8f27-a381fed4f0fc"
   ],
@@ -105,22 +103,9 @@
   "story_spotlight": false,
   "edhrec_rank": 1853,
   "penny_rank": 5562,
-  "prices": {
-    "usd": "0.34",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.29",
-    "eur_foil": null,
-    "tix": "0.04"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DContainment%2BConstruct",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DContainment%2BConstruct",
     "edhrec": "https://edhrec.com/route/?cc=Containment+Construct"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F687582%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=881678&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/149155?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

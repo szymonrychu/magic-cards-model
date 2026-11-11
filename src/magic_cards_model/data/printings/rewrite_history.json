@@ -96,7 +96,6 @@
   "digital": false,
   "rarity": "uncommon",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Allen Douglas",
   "artist_ids": [
     "e17f248e-6a47-4889-b048-a646739923b0"
   ],
@@ -119,22 +118,9 @@
     "source_uri": "https://www.xiaohongshu.com/explore/6a20c89f000000002202b26e?app_platform=ios&app_version=9.33.2&share_from_user_hidden=true&xsec_source=app_share&type=normal&xsec_token=CBLTwV6bIZSaAzKprDNIE0ensQG5sZ6xI44oKHUeg8j58=&author_share=1&xhsshare=CopyLink&shareRedId=ODlIOEQ8SU02NzUyOTgwNjczOThINjlM&apptime=1780540321&share_id=dd71169f90994c0097c3226cbd2567c1",
     "previewed_at": "2026-06-03"
   },
-  "prices": {
-    "usd": "0.23",
-    "usd_foil": "0.28",
-    "usd_etched": null,
-    "eur": "0.11",
-    "eur_foil": "0.20",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRewrite%2BHistory",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRewrite%2BHistory",
     "edhrec": "https://edhrec.com/route/?cc=Rewrite+History"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696550%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891160&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/152327?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

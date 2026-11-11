@@ -96,9 +96,7 @@
   "collector_number": "195",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"Let us hope that fire now lies between us and pursuit. Come! There is no time to lose.\"\n\u2014Gandalf",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Javier Charro",
   "artist_ids": [
     "8fd2d5fa-3b94-4e48-9cec-9d148acc8180"
   ],
@@ -113,22 +111,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 17009,
-  "prices": {
-    "usd": "0.95",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "1.15",
-    "eur_foil": null,
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGoblin%2BFireleaper",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGoblin%2BFireleaper",
     "edhrec": "https://edhrec.com/route/?cc=Goblin+Fireleaper"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709611%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=900715&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/154806?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

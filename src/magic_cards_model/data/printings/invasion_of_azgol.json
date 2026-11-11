@@ -41,7 +41,6 @@
         "R"
       ],
       "defense": "4",
-      "artist": "Joshua Raphael",
       "artist_id": "553b2a73-780f-414b-b2d7-3b7888821082",
       "illustration_id": "362aec39-c5b6-4d7a-89c9-8b42c348a17f",
       "image_uris": {
@@ -74,8 +73,6 @@
       ],
       "power": "2",
       "toughness": "1",
-      "flavor_text": "Eternal hatred fuels eternal fire.",
-      "artist": "Joshua Raphael",
       "artist_id": "553b2a73-780f-414b-b2d7-3b7888821082",
       "illustration_id": "a4d0bd08-1731-4fbe-bff6-b2ea90d8f289",
       "image_uris": {
@@ -147,7 +144,6 @@
   "collector_number": "232",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Joshua Raphael",
   "artist_ids": [
     "553b2a73-780f-414b-b2d7-3b7888821082"
   ],
@@ -159,23 +155,10 @@
   "story_spotlight": false,
   "edhrec_rank": 18130,
   "penny_rank": 2617,
-  "prices": {
-    "usd": "0.19",
-    "usd_foil": "0.31",
-    "usd_etched": null,
-    "eur": "0.06",
-    "eur_foil": "0.20",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607292&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BAzgol%2B%252F%252F%2BAshen%2BReaper",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BAzgol%2B%252F%252F%2BAshen%2BReaper",
     "edhrec": "https://edhrec.com/route/?cc=Invasion+of+Azgol"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490611%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704058&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/110356?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

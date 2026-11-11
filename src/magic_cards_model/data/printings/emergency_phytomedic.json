@@ -54,7 +54,6 @@
       "oracle_text": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
       "power": "1",
       "toughness": "1",
-      "artist": "Dmitry Burmak",
       "artist_id": "9872f5c0-274a-48ce-a9ad-6f0d5654e29c",
       "illustration_id": "4892fe64-f8ce-46f1-a3e7-67787c5942ac"
     },
@@ -64,7 +63,6 @@
       "mana_cost": "{G/W}",
       "type_line": "Sorcery",
       "oracle_text": "Put a +1/+1 counter on target creature. You gain 1 life.",
-      "artist": "Dmitry Burmak",
       "artist_id": "9872f5c0-274a-48ce-a9ad-6f0d5654e29c"
     }
   ],
@@ -123,7 +121,6 @@
   "digital": false,
   "rarity": "common",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Dmitry Burmak",
   "artist_ids": [
     "9872f5c0-274a-48ce-a9ad-6f0d5654e29c"
   ],
@@ -140,22 +137,9 @@
     "source_uri": "https://questdaily.com.au/news/magic-the-gathering-card-reveal-reality-fracture-emergency-phytomedic/",
     "previewed_at": "2026-09-10"
   },
-  "prices": {
-    "usd": "0.51",
-    "usd_foil": "0.30",
-    "usd_etched": null,
-    "eur": "0.09",
-    "eur_foil": "0.20",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEmergency%2BPhytomedic%2B%252F%252F%2BSeed%2BSuture",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEmergency%2BPhytomedic%2B%252F%252F%2BSeed%2BSuture",
     "edhrec": "https://edhrec.com/route/?cc=Emergency+Phytomedic"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F716694%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908429&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/155966?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

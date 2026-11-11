@@ -98,9 +98,7 @@
   "collector_number": "271",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"Your people stand strong, Rhonas. Rest easy, you have prepared us well.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Jodie Muir",
   "artist_ids": [
     "b09e6cd1-0257-425a-9bbb-5cac3f803443"
   ],
@@ -115,22 +113,9 @@
   "booster": false,
   "story_spotlight": false,
   "edhrec_rank": 28423,
-  "prices": {
-    "usd": "0.31",
-    "usd_foil": "0.52",
-    "usd_etched": null,
-    "eur": "0.02",
-    "eur_foil": "0.24",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHapatra%252C%2Bthe%2BDesert%2BFang",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHapatra%252C%2Bthe%2BDesert%2BFang",
     "edhrec": "https://edhrec.com/route/?cc=Hapatra%2C+the+Desert+Fang"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F717016%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=909250&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/155688?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

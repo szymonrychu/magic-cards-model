@@ -101,7 +101,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Julia Vasilyeva",
   "artist_ids": [
     "f86d69da-4f35-465a-a85f-a9215c9e5ab8"
   ],
@@ -125,22 +124,9 @@
     "source_uri": "https://bsky.app/profile/itsannamargaret.com/post/3mni3z7s3xs2b",
     "previewed_at": "2026-06-05"
   },
-  "prices": {
-    "usd": "0.34",
-    "usd_foil": "0.57",
-    "usd_etched": null,
-    "eur": "0.54",
-    "eur_foil": "0.51",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DIronheart%252C%2BClever%2BChampion",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DIronheart%252C%2BClever%2BChampion",
     "edhrec": "https://edhrec.com/route/?cc=Ironheart%2C+Clever+Champion"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696655%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891328&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/152305?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

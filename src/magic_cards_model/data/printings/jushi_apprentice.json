@@ -52,7 +52,6 @@
       "oracle_text": "{2}{U}, {T}: Draw a card. If you have nine or more cards in hand, flip this creature.",
       "power": "1",
       "toughness": "2",
-      "artist": "Glen Angus",
       "artist_id": "7be3b9e4-de9b-4a3d-884e-e67b9681d409",
       "illustration_id": "42548f86-c5d6-4056-b5d4-9087d24f0549"
     },
@@ -64,7 +63,6 @@
       "oracle_text": "{3}{U}{U}, {T}: Target player draws X cards, where X is the number of cards in your hand.",
       "power": "2",
       "toughness": "3",
-      "artist": "Glen Angus",
       "artist_id": "7be3b9e4-de9b-4a3d-884e-e67b9681d409"
     }
   ],
@@ -122,7 +120,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Glen Angus",
   "artist_ids": [
     "7be3b9e4-de9b-4a3d-884e-e67b9681d409"
   ],
@@ -135,23 +132,10 @@
   "story_spotlight": false,
   "edhrec_rank": 19506,
   "penny_rank": 13602,
-  "prices": {
-    "usd": "0.40",
-    "usd_foil": "3.12",
-    "usd_etched": null,
-    "eur": "0.25",
-    "eur_foil": "2.87",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=78686&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DJushi%2BApprentice%2B%252F%252F%2BTomoya%2Bthe%2BRevealer",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DJushi%2BApprentice%2B%252F%252F%2BTomoya%2Bthe%2BRevealer",
     "edhrec": "https://edhrec.com/route/?cc=Jushi+Apprentice"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F12048%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=12067&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/21223?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

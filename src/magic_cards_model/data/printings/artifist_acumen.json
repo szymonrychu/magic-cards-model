@@ -94,9 +94,7 @@
   "collector_number": "73",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "\"It's important to emphasize core principles, but to win duels you must extrapolate your designs to work in a variety of formats.\"\n\u2014*Advanced Tethering*",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Anna Podedworna",
   "artist_ids": [
     "1874cb2c-f690-475f-a217-c14f11166758"
   ],
@@ -108,22 +106,9 @@
   "booster": false,
   "story_spotlight": false,
   "edhrec_rank": 26202,
-  "prices": {
-    "usd": "0.25",
-    "usd_foil": "0.33",
-    "usd_etched": null,
-    "eur": "0.14",
-    "eur_foil": "0.20",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DArtifist%2BAcumen",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DArtifist%2BAcumen",
     "edhrec": "https://edhrec.com/route/?cc=Artifist+Acumen"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F718603%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=910176&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/155852?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

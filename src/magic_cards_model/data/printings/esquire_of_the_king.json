@@ -96,9 +96,7 @@
   "collector_number": "166",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "\"Where now the horse and the rider?\nWhere is the horn that was blowing?\nWhere is the helm and the hauberk,\nand the bright hair flowing?\"\n\u2014Lament for the Rohirrim",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Tyukina Tatiana",
   "artist_ids": [
     "7ceaa3e7-986b-4130-9c2b-e660e9578225"
   ],
@@ -113,22 +111,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 19999,
-  "prices": {
-    "usd": "0.28",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.28",
-    "eur_foil": null,
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEsquire%2Bof%2Bthe%2BKing",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEsquire%2Bof%2Bthe%2BKing",
     "edhrec": "https://edhrec.com/route/?cc=Esquire+of+the+King"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709577%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=900682&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/154748?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

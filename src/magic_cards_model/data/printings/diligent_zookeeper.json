@@ -97,9 +97,7 @@
   "collector_number": "171",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"I wish I could get her a big, open prairie like she likes. I'd let her hop her way to happiness.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Maojin Lee",
   "artist_ids": [
     "aa40e688-7c3b-4242-b2d3-4bc7b722fbb5"
   ],
@@ -120,22 +118,9 @@
     "source_uri": "https://www.youtube.com/watch?v=r_KeYC2D4LM",
     "previewed_at": "2025-10-29"
   },
-  "prices": {
-    "usd": "0.35",
-    "usd_foil": "0.31",
-    "usd_etched": null,
-    "eur": "0.14",
-    "eur_foil": "0.31",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDiligent%2BZookeeper",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDiligent%2BZookeeper",
     "edhrec": "https://edhrec.com/route/?cc=Diligent+Zookeeper"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F660618%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=857467&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/144826?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

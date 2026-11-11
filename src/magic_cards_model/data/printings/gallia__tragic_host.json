@@ -99,9 +99,7 @@
   "digital": false,
   "rarity": "uncommon",
   "watermark": "echoverse",
-  "flavor_text": "The party never ends, but the guests will never arrive.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Andrea Piparo",
   "artist_ids": [
     "e8ab9604-1b3c-4bb5-9290-dfb3fd3cf01d"
   ],
@@ -121,22 +119,9 @@
     "source_uri": "https://www.instagram.com/brandsanderson/reel/DdJ4dlKRBwH/",
     "previewed_at": "2026-09-13"
   },
-  "prices": {
-    "usd": "0.29",
-    "usd_foil": "0.34",
-    "usd_etched": null,
-    "eur": "0.20",
-    "eur_foil": "0.20",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGallia%252C%2BTragic%2BHost",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGallia%252C%2BTragic%2BHost",
     "edhrec": "https://edhrec.com/route/?cc=Gallia%2C+Tragic+Host"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F716973%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908832&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/155602?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -40,7 +40,6 @@
       ],
       "power": "5",
       "toughness": "5",
-      "artist": "Ekaterina Burmak",
       "artist_id": "2a9f3780-fcc8-4ec5-b403-ee1d1370d3b4",
       "illustration_id": "623da80d-87ba-4f14-b933-2f87d34cd635",
       "image_uris": {
@@ -69,7 +68,6 @@
       "color_indicator": [
         "U"
       ],
-      "artist": "Ekaterina Burmak",
       "artist_id": "2a9f3780-fcc8-4ec5-b403-ee1d1370d3b4",
       "illustration_id": "08e9bfaf-6eff-4b4d-aa38-add4b228cbe2",
       "image_uris": {
@@ -141,7 +139,6 @@
   "collector_number": "65",
   "digital": false,
   "rarity": "mythic",
-  "artist": "Ekaterina Burmak",
   "artist_ids": [
     "2a9f3780-fcc8-4ec5-b403-ee1d1370d3b4"
   ],
@@ -162,23 +159,10 @@
     "source_uri": "https://twitter.com/wizards_magic/status/1627377870875009032",
     "previewed_at": "2023-02-19"
   },
-  "prices": {
-    "usd": "12.49",
-    "usd_foil": "13.62",
-    "usd_etched": null,
-    "eur": "8.12",
-    "eur_foil": "11.69",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607090&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DJin-Gitaxias%2B%252F%252F%2BThe%2BGreat%2BSynthesis",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DJin-Gitaxias%2B%252F%252F%2BThe%2BGreat%2BSynthesis",
     "edhrec": "https://edhrec.com/route/?cc=Jin-Gitaxias"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F484546%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=697763&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/109952?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

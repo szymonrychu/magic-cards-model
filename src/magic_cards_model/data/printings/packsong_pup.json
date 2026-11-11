@@ -98,9 +98,7 @@
   "collector_number": "213",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "A wolf pup is always dangerous, because a wolf pup is never alone.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "April Prime",
   "artist_ids": [
     "266f773b-5c80-4803-9b95-5a985af90548"
   ],
@@ -118,23 +116,10 @@
     "source_uri": "https://www.twitch.tv/videos/1191481486?t=03h58m00s",
     "previewed_at": "2021-10-31"
   },
-  "prices": {
-    "usd": "0.37",
-    "usd_foil": "0.40",
-    "usd_etched": null,
-    "eur": "0.20",
-    "eur_foil": "0.45",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=541080&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPacksong%2BPup",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPacksong%2BPup",
     "edhrec": "https://edhrec.com/route/?cc=Packsong+Pup"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F253038%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=581674&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/94788?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

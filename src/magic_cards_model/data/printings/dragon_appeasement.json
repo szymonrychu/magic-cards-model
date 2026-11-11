@@ -99,9 +99,7 @@
   "collector_number": "115",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"Look there\u2014they carry that one upon a sedan chair. It must be their leader. Wait . . . Oh! Perhaps not.\"\n\u2014Kaeda, aven scout",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Paul Bonner",
   "artist_ids": [
     "db74e463-9c78-4f45-80a9-efa5cc4f9841"
   ],
@@ -113,23 +111,10 @@
   "booster": true,
   "story_spotlight": false,
   "edhrec_rank": 26583,
-  "prices": {
-    "usd": "0.17",
-    "usd_foil": "0.46",
-    "usd_etched": null,
-    "eur": "0.09",
-    "eur_foil": "0.48",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=180616&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDragon%2BAppeasement",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDragon%2BAppeasement",
     "edhrec": "https://edhrec.com/route/?cc=Dragon+Appeasement"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F31721%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=20994&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/32392?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

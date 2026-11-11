@@ -98,9 +98,7 @@
   "collector_number": "70",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "The ritual successfully rebound her soul to her body, but not quite in the way she'd planned.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Diana Franco",
   "artist_ids": [
     "6b04ff0c-cd6d-42c1-83d3-3ff150fecdc3"
   ],
@@ -113,23 +111,10 @@
   "story_spotlight": false,
   "edhrec_rank": 14742,
   "penny_rank": 12827,
-  "prices": {
-    "usd": "0.16",
-    "usd_foil": "0.24",
-    "usd_etched": null,
-    "eur": "0.02",
-    "eur_foil": "0.06",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=679147&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSoul-Shackled%2BZombie",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSoul-Shackled%2BZombie",
     "edhrec": "https://edhrec.com/route/?cc=Soul-Shackled+Zombie"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F591718%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=797320&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/133708?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

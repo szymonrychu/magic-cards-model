@@ -40,8 +40,6 @@
       ],
       "power": "1",
       "toughness": "1",
-      "flavor_text": "She faced down a howlpack alone, saving her town at the cost of her life.",
-      "artist": "Tuan Duong Chu",
       "artist_id": "d84246f9-a536-485f-a21d-a237302ed100",
       "illustration_id": "62868d68-fafd-4008-b274-d5513cb77395",
       "image_uris": {
@@ -70,8 +68,6 @@
       "color_indicator": [
         "W"
       ],
-      "flavor_text": "Since her passing, many more travelers have made it home alive.",
-      "artist": "Tuan Duong Chu",
       "artist_id": "d84246f9-a536-485f-a21d-a237302ed100",
       "illustration_id": "ba25ac4a-d3db-4881-99c5-302e953c0246",
       "image_uris": {
@@ -142,7 +138,6 @@
   "collector_number": "47",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Tuan Duong Chu",
   "artist_ids": [
     "d84246f9-a536-485f-a21d-a237302ed100"
   ],
@@ -157,23 +152,10 @@
   "story_spotlight": false,
   "edhrec_rank": 14367,
   "penny_rank": 8319,
-  "prices": {
-    "usd": "0.20",
-    "usd_foil": "0.29",
-    "usd_etched": null,
-    "eur": "0.15",
-    "eur_foil": "0.21",
-    "tix": "0.04"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=685865&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTwinblade%2BGeist%2B%252F%252F%2BTwinblade%2BInvocation",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTwinblade%2BGeist%2B%252F%252F%2BTwinblade%2BInvocation",
     "edhrec": "https://edhrec.com/route/?cc=Twinblade+Geist"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F610057%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=805710&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/135458?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

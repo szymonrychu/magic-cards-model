@@ -96,9 +96,7 @@
   "collector_number": "61",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "Yarvis was almost certain he'd seen the same tree an hour ago, but then again, didn't all trees look alike? He shelved his doubts and followed the friendly, twinkling motes deeper into the forest.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Raoul Vitale",
   "artist_ids": [
     "c7c15d49-f84b-4d98-9a34-e80e8347b756"
   ],
@@ -110,23 +108,10 @@
   "booster": true,
   "story_spotlight": false,
   "edhrec_rank": 26610,
-  "prices": {
-    "usd": "0.07",
-    "usd_foil": "0.17",
-    "usd_etched": null,
-    "eur": "0.03",
-    "eur_foil": "0.04",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=629562&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMisleading%2BMotes",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMisleading%2BMotes",
     "edhrec": "https://edhrec.com/route/?cc=Misleading+Motes"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F513854%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=729882&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/116424?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

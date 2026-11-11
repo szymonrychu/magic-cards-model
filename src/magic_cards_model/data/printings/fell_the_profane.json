@@ -37,8 +37,6 @@
       "colors": [
         "B"
       ],
-      "flavor_text": "\"I can think of no fate more fitting for one so foul as you.\"\n\u2014Aryel, knight of Windgrace",
-      "artist": "Yeong-Hao Han",
       "artist_id": "f8e7f8d6-6dde-4059-973c-30f1fd1bbe4e",
       "illustration_id": "ad0eb554-f687-411c-95c2-edc23f7f2b66",
       "image_uris": {
@@ -62,8 +60,6 @@
       "type_line": "Land",
       "oracle_text": "As this land enters, you may pay 3 life. If you don't, it enters tapped.\n{T}: Add {B}.",
       "colors": [],
-      "flavor_text": "\"The Nethermire is all the salvation you deserve.\"\n\u2014Aryel, knight of Windgrace",
-      "artist": "Yeong-Hao Han",
       "artist_id": "f8e7f8d6-6dde-4059-973c-30f1fd1bbe4e",
       "illustration_id": "f88db4fc-7556-4851-bb4e-dd39e8396723",
       "image_uris": {
@@ -135,7 +131,6 @@
   "collector_number": "244",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Yeong-Hao Han",
   "artist_ids": [
     "f8e7f8d6-6dde-4059-973c-30f1fd1bbe4e"
   ],
@@ -151,23 +146,10 @@
     "source_uri": "https://www.channelfireball.com/article/Our-EXCLUSIVE-Modern-Horizons-3-Preview-Card/f16a095e-4a0c-4b98-b99a-0ef94a09f369/",
     "previewed_at": "2024-05-23"
   },
-  "prices": {
-    "usd": "5.62",
-    "usd_foil": "5.98",
-    "usd_etched": null,
-    "eur": "4.31",
-    "eur_foil": "6.33",
-    "tix": "0.04"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=661767&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFell%2Bthe%2BProfane%2B%252F%252F%2BFell%2BMire",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFell%2Bthe%2BProfane%2B%252F%252F%2BFell%2BMire",
     "edhrec": "https://edhrec.com/route/?cc=Fell+the+Profane"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F552580%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=771814&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/126521?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

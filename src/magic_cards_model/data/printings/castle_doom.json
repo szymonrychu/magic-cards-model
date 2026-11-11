@@ -117,9 +117,7 @@
   "collector_number": "263",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "Those in Doom's shadow know his protection. And his wrath.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Nino Is",
   "artist_ids": [
     "ae717001-28ec-46e3-a07e-f16b6deaf9e2"
   ],
@@ -141,22 +139,9 @@
     "source_uri": "https://articles.starcitygames.com/magic-the-gathering/rare-land-from-mtg-marvel-super-heroes-helps-cast-artifacts-and-brings-the-doom/",
     "previewed_at": "2026-06-05"
   },
-  "prices": {
-    "usd": "0.58",
-    "usd_foil": "1.11",
-    "usd_etched": null,
-    "eur": "0.64",
-    "eur_foil": "0.97",
-    "tix": "0.12"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCastle%2BDoom",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCastle%2BDoom",
     "edhrec": "https://edhrec.com/route/?cc=Castle+Doom"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696674%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891346&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/152715?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -42,7 +42,6 @@
       ],
       "power": "7",
       "toughness": "7",
-      "artist": "Ryan Pancoast",
       "artist_id": "89cc9475-dda2-4d13-bf88-54b92867a25c",
       "illustration_id": "47b780f9-e4ae-4d5c-92a2-05984328b350",
       "image_uris": {
@@ -75,8 +74,6 @@
       ],
       "power": "11",
       "toughness": "11",
-      "flavor_text": "The contagion spreads and the Multiverse quakes.",
-      "artist": "Ryan Pancoast",
       "artist_id": "89cc9475-dda2-4d13-bf88-54b92867a25c",
       "illustration_id": "03b404c9-fc26-4b29-af13-441083006065",
       "image_uris": {
@@ -166,7 +163,6 @@
   "collector_number": "137",
   "digital": false,
   "rarity": "rare",
-  "artist": "Ryan Pancoast",
   "artist_ids": [
     "89cc9475-dda2-4d13-bf88-54b92867a25c"
   ],
@@ -187,23 +183,10 @@
     "source_uri": "https://youtu.be/U6jjgTUsTBY?t=77",
     "previewed_at": "2023-03-29"
   },
-  "prices": {
-    "usd": "28.71",
-    "usd_foil": "34.79",
-    "usd_etched": null,
-    "eur": "21.55",
-    "eur_foil": "28.69",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607175&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEtali%252C%2BPrimal%2BConqueror%2B%252F%252F%2BEtali%252C%2BPrimal%2BSickness",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEtali%252C%2BPrimal%2BConqueror%2B%252F%252F%2BEtali%252C%2BPrimal%2BSickness",
     "edhrec": "https://edhrec.com/route/?cc=Etali%2C+Primal+Conqueror"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490390%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=703459&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/110122?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

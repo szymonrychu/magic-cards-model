@@ -96,9 +96,7 @@
   "digital": false,
   "rarity": "rare",
   "watermark": "azorius",
-  "flavor_text": "Leonos had no second thoughts about the abolishment edict. He'd left skyrunes warning of the eviction, even though it was cloudy.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Sam Burley",
   "artist_ids": [
     "f89f4b78-cefb-41f7-b7cb-4f4d28de0c4f"
   ],
@@ -112,23 +110,10 @@
   "story_spotlight": false,
   "edhrec_rank": 471,
   "penny_rank": 101,
-  "prices": {
-    "usd": "2.07",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "2.24",
-    "eur_foil": null,
-    "tix": "0.10"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=651946&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSupreme%2BVerdict",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSupreme%2BVerdict",
     "edhrec": "https://edhrec.com/route/?cc=Supreme+Verdict"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F535181%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=753168&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/123226?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

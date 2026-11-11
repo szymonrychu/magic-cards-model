@@ -95,9 +95,7 @@
   "collector_number": "190",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"Lady Anje said no violence at the wedding. She never said anything about the journey there!\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Aaron J. Riley",
   "artist_ids": [
     "f21b412c-aef5-4d15-88be-4f40615acde3"
   ],
@@ -111,23 +109,10 @@
   "story_spotlight": false,
   "edhrec_rank": 3646,
   "penny_rank": 13949,
-  "prices": {
-    "usd": "0.34",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.29",
-    "eur_foil": null,
-    "tix": "0.39"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=640486&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCrossway%2BTroublemakers",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCrossway%2BTroublemakers",
     "edhrec": "https://edhrec.com/route/?cc=Crossway+Troublemakers"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F525852%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=743542&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/118780?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

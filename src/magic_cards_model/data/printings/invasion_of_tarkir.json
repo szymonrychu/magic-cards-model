@@ -40,7 +40,6 @@
         "R"
       ],
       "defense": "5",
-      "artist": "Darren Tan",
       "artist_id": "14c7f83c-d0fb-43f0-90f3-703f910f8bb9",
       "illustration_id": "17dfa61d-bf8e-40d0-b736-2a065b3530d7",
       "image_uris": {
@@ -71,8 +70,6 @@
       ],
       "power": "4",
       "toughness": "4",
-      "flavor_text": "\"The Phyrexians are fools if they believe they can weather such a storm.\"\n\u2014Sarkhan Vol",
-      "artist": "Darren Tan",
       "artist_id": "14c7f83c-d0fb-43f0-90f3-703f910f8bb9",
       "illustration_id": "fe8c2619-b992-419e-b2ba-74c19afbe594",
       "image_uris": {
@@ -144,7 +141,6 @@
   "collector_number": "149",
   "digital": false,
   "rarity": "mythic",
-  "artist": "Darren Tan",
   "artist_ids": [
     "14c7f83c-d0fb-43f0-90f3-703f910f8bb9"
   ],
@@ -162,23 +158,10 @@
     "source_uri": "https://www.ign.com/articles/magic-the-gatherings-march-of-the-machine-card-reveal-spoilers-combo",
     "previewed_at": "2023-03-29"
   },
-  "prices": {
-    "usd": "2.57",
-    "usd_foil": "2.98",
-    "usd_etched": null,
-    "eur": "2.53",
-    "eur_foil": "3.77",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607193&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BTarkir%2B%252F%252F%2BDefiant%2BThundermaw",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BTarkir%2B%252F%252F%2BDefiant%2BThundermaw",
     "edhrec": "https://edhrec.com/route/?cc=Invasion+of+Tarkir"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490493%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=703493&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/110158?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

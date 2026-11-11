@@ -96,9 +96,7 @@
   "collector_number": "66",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "After years of silence, the caves once again echo with the grisly sounds of Phyrexians preparing for war.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Julian Kok Joon Wen",
   "artist_ids": [
     "7f1868e3-325f-4df9-8f27-a381fed4f0fc"
   ],
@@ -112,22 +110,9 @@
   "story_spotlight": false,
   "edhrec_rank": 124,
   "penny_rank": 56,
-  "prices": {
-    "usd": "0.37",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.69",
-    "eur_foil": null,
-    "tix": "0.07"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCaves%2Bof%2BKoilos",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCaves%2Bof%2BKoilos",
     "edhrec": "https://edhrec.com/route/?cc=Caves+of+Koilos"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F717736%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=909859&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/156528?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

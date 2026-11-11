@@ -51,7 +51,6 @@
       "oracle_text": "Bilbo can't be blocked.\nWhenever Bilbo deals combat damage to a player, draw a card, then discard a card.",
       "power": "1",
       "toughness": "1",
-      "artist": "Anna Steinbauer",
       "artist_id": "3516496c-c279-4b56-8239-720683d03ae0",
       "illustration_id": "3b44e514-1da2-4bfd-889e-1716f9e86e60"
     },
@@ -61,7 +60,6 @@
       "mana_cost": "{4}{U}",
       "type_line": "Sorcery \u2014 Adventure",
       "oracle_text": "Exchange control of two target nonland permanents that share a card type. (Then exile this card. You may cast the creature later from exile.)",
-      "artist": "Anna Steinbauer",
       "artist_id": "3516496c-c279-4b56-8239-720683d03ae0"
     }
   ],
@@ -120,7 +118,6 @@
   "digital": false,
   "rarity": "uncommon",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Anna Steinbauer",
   "artist_ids": [
     "3516496c-c279-4b56-8239-720683d03ae0"
   ],
@@ -139,22 +136,9 @@
   ],
   "edhrec_rank": 12091,
   "penny_rank": 4855,
-  "prices": {
-    "usd": "0.20",
-    "usd_foil": "0.21",
-    "usd_etched": null,
-    "eur": "0.09",
-    "eur_foil": "0.10",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBilbo%252C%2BLuckwearer%2B%252F%252F%2BBurglar%2527s%2BPlot",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBilbo%252C%2BLuckwearer%2B%252F%252F%2BBurglar%2527s%2BPlot",
     "edhrec": "https://edhrec.com/route/?cc=Bilbo%2C+Luckwearer"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F693000%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=898485&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/153982?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

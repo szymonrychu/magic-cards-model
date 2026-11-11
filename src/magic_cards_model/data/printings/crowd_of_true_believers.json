@@ -97,9 +97,7 @@
   "collector_number": "14",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "Being a hero is easy when you know who you're fighting for.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Michele Giorgi",
   "artist_ids": [
     "60ff7459-c81d-41e6-bec1-4264c2161014"
   ],
@@ -114,22 +112,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 25330,
-  "prices": {
-    "usd": "0.09",
-    "usd_foil": "0.18",
-    "usd_etched": null,
-    "eur": "0.06",
-    "eur_foil": "0.07",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCrowd%2Bof%2BTrue%2BBelievers",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCrowd%2Bof%2BTrue%2BBelievers",
     "edhrec": "https://edhrec.com/route/?cc=Crowd+of+True+Believers"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696963%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891493&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/152207?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

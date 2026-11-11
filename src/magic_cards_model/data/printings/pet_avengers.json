@@ -118,9 +118,7 @@
   "collector_number": "178",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "\"Lockheed! Hairball! Lockjaw! Redwing! To me!\"\n\u2014Throg",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Leesha Hannigan",
   "artist_ids": [
     "0c5d1acd-714b-4e7a-b7bf-e3450b305337"
   ],
@@ -135,22 +133,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 20106,
-  "prices": {
-    "usd": "0.20",
-    "usd_foil": "0.23",
-    "usd_etched": null,
-    "eur": "0.07",
-    "eur_foil": "0.07",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPet%2BAvengers",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPet%2BAvengers",
     "edhrec": "https://edhrec.com/route/?cc=Pet+Avengers"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F697052%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891576&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/152543?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

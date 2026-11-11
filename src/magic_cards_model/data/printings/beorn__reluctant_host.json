@@ -53,8 +53,6 @@
       "oracle_text": "Trample",
       "power": "5",
       "toughness": "5",
-      "flavor_text": "He never invited people into his house if he could help it. Now he had got fifteen strangers sitting in his porch!",
-      "artist": "Javier Charro",
       "artist_id": "8fd2d5fa-3b94-4e48-9cec-9d148acc8180",
       "illustration_id": "72278333-ebd7-4f78-b92d-e96fe9b11dd2"
     },
@@ -64,7 +62,6 @@
       "mana_cost": "{1}{G}",
       "type_line": "Sorcery \u2014 Adventure",
       "oracle_text": "You may play an additional land this turn. (Then exile this card. You may cast the creature later from exile.)",
-      "artist": "Javier Charro",
       "artist_id": "8fd2d5fa-3b94-4e48-9cec-9d148acc8180"
     }
   ],
@@ -122,9 +119,7 @@
   "collector_number": "118",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "He never invited people into his house if he could help it. Now he had got fifteen strangers sitting in his porch!",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Javier Charro",
   "artist_ids": [
     "8fd2d5fa-3b94-4e48-9cec-9d148acc8180"
   ],
@@ -142,22 +137,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 13791,
-  "prices": {
-    "usd": "0.14",
-    "usd_foil": "0.28",
-    "usd_etched": null,
-    "eur": "0.05",
-    "eur_foil": "0.05",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBeorn%252C%2BReluctant%2BHost%2B%252F%252F%2BTill%2Band%2BTend",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBeorn%252C%2BReluctant%2BHost%2B%252F%252F%2BTill%2Band%2BTend",
     "edhrec": "https://edhrec.com/route/?cc=Beorn%2C+Reluctant+Host"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F708804%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=900328&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/154172?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

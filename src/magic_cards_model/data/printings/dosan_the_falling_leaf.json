@@ -97,9 +97,7 @@
   "collector_number": "205",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"Each night as Master Dosan prays to the kami, the hate he receives in return withers his body a little more. Though the kami are slowly killing him, still he continues his prayers.\"\n\u2014Meditation journal of a young budoka",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Mark Zug",
   "artist_ids": [
     "48e2b98c-5467-4671-bd42-4c3746115117"
   ],
@@ -112,23 +110,10 @@
   "story_spotlight": false,
   "edhrec_rank": 6229,
   "penny_rank": 4100,
-  "prices": {
-    "usd": "25.56",
-    "usd_foil": "137.50",
-    "usd_etched": null,
-    "eur": "8.00",
-    "eur_foil": "84.17",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=80524&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDosan%2Bthe%2BFalling%2BLeaf",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDosan%2Bthe%2BFalling%2BLeaf",
     "edhrec": "https://edhrec.com/route/?cc=Dosan+the+Falling+Leaf"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F11981%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=12000&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/21277?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

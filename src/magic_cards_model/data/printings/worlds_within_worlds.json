@@ -97,9 +97,7 @@
   "collector_number": "241",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"Uh, I think I might have overdone it a smidge.\"\n\u2014Ant-Man, Scott Lang",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Michael MacRae",
   "artist_ids": [
     "4704d907-4fb1-402c-858f-bacf989fa156"
   ],
@@ -115,22 +113,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 24282,
-  "prices": {
-    "usd": "0.22",
-    "usd_foil": "0.34",
-    "usd_etched": null,
-    "eur": "0.12",
-    "eur_foil": "0.30",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWorlds%2BWithin%2BWorlds",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWorlds%2BWithin%2BWorlds",
     "edhrec": "https://edhrec.com/route/?cc=Worlds+Within+Worlds"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696331%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=890588&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/152671?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

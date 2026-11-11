@@ -41,8 +41,6 @@
       ],
       "power": "3",
       "toughness": "4",
-      "flavor_text": "\"In ashen grip, let ember glow, to kindle flames anew.\"",
-      "artist": "Lius Lasahido",
       "artist_id": "0a0e9093-ce44-4a69-93a7-09b63e7c330d",
       "illustration_id": "d0c7d90b-1f0e-492a-8731-1e4781e0ee02",
       "image_uris": {
@@ -75,7 +73,6 @@
       ],
       "power": "4",
       "toughness": "4",
-      "artist": "Lius Lasahido",
       "artist_id": "0a0e9093-ce44-4a69-93a7-09b63e7c330d",
       "illustration_id": "79e67408-a32d-43e0-8062-5f5275d2fa7c",
       "image_uris": {
@@ -147,7 +144,6 @@
   "collector_number": "229",
   "digital": false,
   "rarity": "rare",
-  "artist": "Lius Lasahido",
   "artist_ids": [
     "0a0e9093-ce44-4a69-93a7-09b63e7c330d"
   ],
@@ -173,22 +169,9 @@
     "source_uri": "https://comicbook.com/gaming/news/magic-the-gathering-final-fantasy-card-reveal-exclusive/",
     "previewed_at": "2025-05-20"
   },
-  "prices": {
-    "usd": "1.01",
-    "usd_foil": "1.97",
-    "usd_etched": null,
-    "eur": "1.02",
-    "eur_foil": "2.19",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DJoshua%252C%2BPhoenix%2527s%2BDominant%2B%252F%252F%2BPhoenix%252C%2BWarden%2Bof%2BFire",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DJoshua%252C%2BPhoenix%2527s%2BDominant%2B%252F%252F%2BPhoenix%252C%2BWarden%2Bof%2BFire",
     "edhrec": "https://edhrec.com/route/?cc=Joshua%2C+Phoenix%27s+Dominant"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F633170%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=826609&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/141413?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

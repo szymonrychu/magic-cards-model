@@ -50,7 +50,6 @@
       "type_line": "Sorcery",
       "oracle_text": "Look at the top five cards of your library. You may reveal a creature card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
       "watermark": "simic",
-      "artist": "Mike Bierek",
       "artist_id": "e5f52ef5-1a2e-4128-90b0-ccc71cd47ea7",
       "illustration_id": "eb2c9029-6963-4729-815b-40f035476f02"
     },
@@ -61,7 +60,6 @@
       "type_line": "Instant",
       "oracle_text": "Exile target creature. That creature's controller creates a 3/3 green Frog Lizard creature token.",
       "watermark": "simic",
-      "artist": "Mike Bierek",
       "artist_id": "e5f52ef5-1a2e-4128-90b0-ccc71cd47ea7"
     }
   ],
@@ -136,7 +134,6 @@
   "digital": false,
   "rarity": "uncommon",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Mike Bierek",
   "artist_ids": [
     "e5f52ef5-1a2e-4128-90b0-ccc71cd47ea7"
   ],
@@ -149,23 +146,10 @@
   "story_spotlight": false,
   "edhrec_rank": 11397,
   "penny_rank": 1693,
-  "prices": {
-    "usd": "0.17",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.22",
-    "eur_foil": null,
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=651932&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DIncubation%2B%252F%252F%2BIncongruity",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DIncubation%2B%252F%252F%2BIncongruity",
     "edhrec": "https://edhrec.com/route/?cc=Incubation+%2F%2F+Incongruity"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F534643%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=752698&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/123186?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

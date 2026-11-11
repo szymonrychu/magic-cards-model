@@ -100,9 +100,7 @@
   "collector_number": "477",
   "digital": false,
   "rarity": "mythic",
-  "flavor_text": "A golden helix streaked skyward from the Helvault. A thunderous explosion shattered the silver monolith and Avacyn emerged, free from her prison at last.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Jason Chan",
   "artist_ids": [
     "8062d5a9-51b6-4822-933f-fa9e9dba8416"
   ],
@@ -120,23 +118,10 @@
     "source_uri": "",
     "previewed_at": "2025-01-07"
   },
-  "prices": {
-    "usd": "32.37",
-    "usd_foil": "36.43",
-    "usd_etched": null,
-    "eur": "27.13",
-    "eur_foil": "27.91",
-    "tix": "0.66"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=688127&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAvacyn%252C%2BAngel%2Bof%2BHope",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAvacyn%252C%2BAngel%2Bof%2BHope",
     "edhrec": "https://edhrec.com/route/?cc=Avacyn%2C+Angel+of+Hope"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F609699%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=805250&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/135186?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

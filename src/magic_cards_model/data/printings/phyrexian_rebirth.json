@@ -111,9 +111,7 @@
   "collector_number": "199",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "As long as one drop of the oil exists, the joyous work continues.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Scott Chou",
   "artist_ids": [
     "9e048547-f9c3-4958-9c2c-91e45df7c6ae"
   ],
@@ -127,23 +125,10 @@
   "story_spotlight": false,
   "edhrec_rank": 4358,
   "penny_rank": 7945,
-  "prices": {
-    "usd": "0.41",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.27",
-    "eur_foil": null,
-    "tix": "0.26"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=612447&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPhyrexian%2BRebirth",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPhyrexian%2BRebirth",
     "edhrec": "https://edhrec.com/route/?cc=Phyrexian+Rebirth"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F491405%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=705594&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/110846?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

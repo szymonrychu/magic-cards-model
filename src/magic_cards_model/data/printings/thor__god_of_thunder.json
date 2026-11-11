@@ -100,7 +100,6 @@
   "digital": false,
   "rarity": "mythic",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Jesper Ejsing",
   "artist_ids": [
     "a5f8354a-8b51-4e59-96b2-0e3aeae4fa1d"
   ],
@@ -119,22 +118,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 8545,
-  "prices": {
-    "usd": "9.82",
-    "usd_foil": "15.40",
-    "usd_etched": null,
-    "eur": "11.98",
-    "eur_foil": "12.63",
-    "tix": "1.18"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThor%252C%2BGod%2Bof%2BThunder",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThor%252C%2BGod%2Bof%2BThunder",
     "edhrec": "https://edhrec.com/route/?cc=Thor%2C+God+of+Thunder"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696299%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=890566&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/152499?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

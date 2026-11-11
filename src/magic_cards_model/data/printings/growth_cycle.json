@@ -96,9 +96,7 @@
   "collector_number": "175",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "\"Shed your faded husk! Emerge sleeker and stronger!\"\n\u2014Tyris, fauna shaman",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Svetlin Velinov",
   "artist_ids": [
     "ffd063ae-c097-4f26-b2e6-b1e2137708bc"
   ],
@@ -111,23 +109,10 @@
   "story_spotlight": false,
   "edhrec_rank": 29351,
   "penny_rank": 12338,
-  "prices": {
-    "usd": "0.04",
-    "usd_foil": "0.24",
-    "usd_etched": null,
-    "eur": "0.03",
-    "eur_foil": "0.18",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=466929&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGrowth%2BCycle",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGrowth%2BCycle",
     "edhrec": "https://edhrec.com/route/?cc=Growth+Cycle"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F192554%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=378603&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/73249?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

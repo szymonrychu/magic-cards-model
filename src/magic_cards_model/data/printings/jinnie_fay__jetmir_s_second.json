@@ -129,9 +129,7 @@
   "digital": false,
   "rarity": "rare",
   "watermark": "cabaretti",
-  "flavor_text": "She watches Jetmir's back while her companions watch hers.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "David Gaillet",
   "artist_ids": [
     "3496c5b4-57bf-4e5e-8bac-a1e05a911a2d"
   ],
@@ -153,23 +151,10 @@
     "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/jinnie-fay-jetmirs-second-2022-04-12",
     "previewed_at": "2022-04-12"
   },
-  "prices": {
-    "usd": "0.70",
-    "usd_foil": "3.76",
-    "usd_etched": null,
-    "eur": "0.55",
-    "eur_foil": "0.84",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=555396&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DJinnie%2BFay%252C%2BJetmir%2527s%2BSecond",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DJinnie%2BFay%252C%2BJetmir%2527s%2BSecond",
     "edhrec": "https://edhrec.com/route/?cc=Jinnie+Fay%2C+Jetmir%27s+Second"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F268744%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=651859&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/98609?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

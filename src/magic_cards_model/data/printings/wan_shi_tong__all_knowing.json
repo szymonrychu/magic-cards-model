@@ -118,7 +118,6 @@
   "digital": false,
   "rarity": "mythic",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Axel Sauerwald",
   "artist_ids": [
     "ce5cbff7-7a24-4125-b485-f835185a9fec"
   ],
@@ -137,22 +136,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 14387,
-  "prices": {
-    "usd": "0.91",
-    "usd_foil": "3.27",
-    "usd_etched": null,
-    "eur": "2.12",
-    "eur_foil": "3.04",
-    "tix": "1.92"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWan%2BShi%2BTong%252C%2BAll-Knowing",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWan%2BShi%2BTong%252C%2BAll-Knowing",
     "edhrec": "https://edhrec.com/route/?cc=Wan+Shi+Tong%2C+All-Knowing"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F660521%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=855792&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/145594?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

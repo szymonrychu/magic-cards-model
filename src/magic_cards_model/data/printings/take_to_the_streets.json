@@ -96,9 +96,7 @@
   "collector_number": "158",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "No institution, however grand, can withstand the collective will of the people.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Matt Forsyth",
   "artist_ids": [
     "5548bc56-e1cc-40d5-a6cd-ae81beafa8a3"
   ],
@@ -115,23 +113,10 @@
     "source_uri": "https://twitter.com/SpellTable/status/1514348421154451459",
     "previewed_at": "2022-04-13"
   },
-  "prices": {
-    "usd": "0.14",
-    "usd_foil": "0.25",
-    "usd_etched": null,
-    "eur": "0.03",
-    "eur_foil": "0.03",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=555359&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTake%2Bto%2Bthe%2BStreets",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTake%2Bto%2Bthe%2BStreets",
     "edhrec": "https://edhrec.com/route/?cc=Take+to+the+Streets"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F269097%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=652109&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/98535?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

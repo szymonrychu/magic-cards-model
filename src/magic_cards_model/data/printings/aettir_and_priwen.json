@@ -93,9 +93,7 @@
   "collector_number": "253",
   "digital": false,
   "rarity": "mythic",
-  "flavor_text": "\"The pinnacle o' perfection, forged from blood, sweat, an' tears!\"\n\u2014Gerolt Blackthorne",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Vilhelmas Banys",
   "artist_ids": [
     "020fbe69-3549-4d96-bb71-c1688925b1fb"
   ],
@@ -116,22 +114,9 @@
   ],
   "edhrec_rank": 2744,
   "penny_rank": 10002,
-  "prices": {
-    "usd": "10.42",
-    "usd_foil": "14.17",
-    "usd_etched": null,
-    "eur": "7.22",
-    "eur_foil": "6.35",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAettir%2Band%2BPriwen",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAettir%2Band%2BPriwen",
     "edhrec": "https://edhrec.com/route/?cc=Aettir+and+Priwen"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F633148%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=826826&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/141473?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

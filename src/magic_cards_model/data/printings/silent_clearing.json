@@ -97,9 +97,7 @@
   "collector_number": "246",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "The expedition's end began the marsh's story.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Seb McKinnon",
   "artist_ids": [
     "ad4caca0-8d89-44ce-a1a6-d5ca905bd6fb"
   ],
@@ -117,23 +115,10 @@
     "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/lands-horizon-2019-05-21",
     "previewed_at": "2019-05-21"
   },
-  "prices": {
-    "usd": "5.55",
-    "usd_foil": "12.43",
-    "usd_etched": null,
-    "eur": "4.45",
-    "eur_foil": "8.40",
-    "tix": "1.21"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=464195&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSilent%2BClearing",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSilent%2BClearing",
     "edhrec": "https://edhrec.com/route/?cc=Silent+Clearing"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F190796%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=374505&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/72864?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

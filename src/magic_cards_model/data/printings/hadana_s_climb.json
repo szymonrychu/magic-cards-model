@@ -46,8 +46,6 @@
         "G",
         "U"
       ],
-      "flavor_text": "Hadana seeks power in the service of peace.",
-      "artist": "Titus Lunter",
       "artist_id": "b11e6b3a-f4ca-4cf1-8fd7-475696de5f5c",
       "illustration_id": "83db383b-fb13-4550-93bb-afb6d9e9d996",
       "image_uris": {
@@ -71,7 +69,6 @@
       "type_line": "Legendary Land",
       "oracle_text": "(Transforms from Hadana's Climb.)\n{T}: Add one mana of any color.\n{1}{G}{U}, {T}: Target creature you control gains flying and gets +X/+X until end of turn, where X is its power.",
       "colors": [],
-      "artist": "Titus Lunter",
       "artist_id": "b11e6b3a-f4ca-4cf1-8fd7-475696de5f5c",
       "illustration_id": "cd38847f-1253-49f8-9b7e-7fc8b50b727a",
       "image_uris": {
@@ -161,7 +158,6 @@
   "collector_number": "158",
   "digital": false,
   "rarity": "rare",
-  "artist": "Titus Lunter",
   "artist_ids": [
     "b11e6b3a-f4ca-4cf1-8fd7-475696de5f5c"
   ],
@@ -177,23 +173,10 @@
   "story_spotlight": false,
   "edhrec_rank": 5937,
   "penny_rank": 8367,
-  "prices": {
-    "usd": "2.33",
-    "usd_foil": "5.07",
-    "usd_etched": null,
-    "eur": "2.50",
-    "eur_foil": "4.71",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=439815&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHadana%2527s%2BClimb%2B%252F%252F%2BWinged%2BTemple%2Bof%2BOrazca",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHadana%2527s%2BClimb%2B%252F%252F%2BWinged%2BTemple%2Bof%2BOrazca",
     "edhrec": "https://edhrec.com/route/?cc=Hadana%27s+Climb"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F155738%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=315457&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/66769?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

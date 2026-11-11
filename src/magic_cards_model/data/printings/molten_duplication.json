@@ -114,9 +114,7 @@
   "collector_number": "14",
   "digital": false,
   "rarity": "mythic",
-  "flavor_text": "No one had seen this side of Angeline before, not even her.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Justyna Dura",
   "artist_ids": [
     "d2340aef-8ca9-4e0d-864c-6a4e8d5e350a"
   ],
@@ -135,23 +133,10 @@
     "source_uri": "https://www.gamingbible.com/features/magic-the-gathering-thunder-junction-card-preview-165494-20240326",
     "previewed_at": "2024-04-02"
   },
-  "prices": {
-    "usd": "16.27",
-    "usd_foil": "17.61",
-    "usd_etched": null,
-    "eur": "10.45",
-    "eur_foil": "17.51",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=660310&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMolten%2BDuplication",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMolten%2BDuplication",
     "edhrec": "https://edhrec.com/route/?cc=Molten+Duplication"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F545126%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=764292&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/125389?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

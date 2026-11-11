@@ -102,9 +102,7 @@
   "collector_number": "196",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"The Seventh Astral Era is come!\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Anna Podedworna",
   "artist_ids": [
     "1874cb2c-f690-475f-a217-c14f11166758"
   ],
@@ -125,22 +123,9 @@
   ],
   "edhrec_rank": 7472,
   "penny_rank": 12211,
-  "prices": {
-    "usd": "0.46",
-    "usd_foil": "0.61",
-    "usd_etched": null,
-    "eur": "0.30",
-    "eur_foil": "0.48",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DA%2BRealm%2BReborn",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DA%2BRealm%2BReborn",
     "edhrec": "https://edhrec.com/route/?cc=A+Realm+Reborn"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F630921%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=824149&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/141333?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

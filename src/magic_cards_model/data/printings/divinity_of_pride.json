@@ -101,9 +101,7 @@
   "collector_number": "228",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"She spoke of mystery and portent, of such unfathomable things that my mind screamed for pity.\"\n\u2014*The Seer's Parables*",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Greg Staples",
   "artist_ids": [
     "93d65564-bf00-447b-8406-e2031f03b6b1"
   ],
@@ -116,23 +114,10 @@
   "story_spotlight": false,
   "edhrec_rank": 10381,
   "penny_rank": 7518,
-  "prices": {
-    "usd": "1.58",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "1.25",
-    "eur_foil": null,
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=376311&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDivinity%2Bof%2BPride",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDivinity%2Bof%2BPride",
     "edhrec": "https://edhrec.com/route/?cc=Divinity+of+Pride"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F72096%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=264918&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/50912?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

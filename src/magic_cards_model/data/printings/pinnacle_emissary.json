@@ -120,7 +120,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Alejandro Pacheco",
   "artist_ids": [
     "e001c298-d81d-4824-87fd-44dec540a6f5"
   ],
@@ -138,22 +137,9 @@
     "source_uri": "https://www.bilibili.com/opus/1089784388012474408",
     "previewed_at": "2025-07-15"
   },
-  "prices": {
-    "usd": "2.18",
-    "usd_foil": "2.50",
-    "usd_etched": null,
-    "eur": "2.53",
-    "eur_foil": "3.45",
-    "tix": "2.17"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPinnacle%2BEmissary",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPinnacle%2BEmissary",
     "edhrec": "https://edhrec.com/route/?cc=Pinnacle+Emissary"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F643621%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=835727&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/143059?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

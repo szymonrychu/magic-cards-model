@@ -98,9 +98,7 @@
   "collector_number": "147",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "A dwarf's grudge runs deeper than the mountains' roots.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Grzegorz Rutkowski",
   "artist_ids": [
     "b5f49d0d-8056-48e3-b614-090e656b4f9c"
   ],
@@ -122,23 +120,10 @@
     "source_uri": "https://twitter.com/ZiggyDStarcraft/status/1173553765070209024",
     "previewed_at": "2019-09-16"
   },
-  "prices": {
-    "usd": "5.21",
-    "usd_foil": "6.60",
-    "usd_etched": null,
-    "eur": "3.17",
-    "eur_foil": "4.20",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473109&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTorbran%252C%2BThane%2Bof%2BRed%2BFell",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTorbran%252C%2BThane%2Bof%2BRed%2BFell",
     "edhrec": "https://edhrec.com/route/?cc=Torbran%2C+Thane+of+Red+Fell"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F199556%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=401304&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/78424?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

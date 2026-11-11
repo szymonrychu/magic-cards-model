@@ -38,8 +38,6 @@
       "colors": [
         "U"
       ],
-      "flavor_text": "\"You worry too much.\"\n\u2014Nys Dal, Sea Gate trapfinder",
-      "artist": "Cliff Childs",
       "artist_id": "ed6f7e03-20ba-4c73-bdda-4a4928480721",
       "illustration_id": "9658aadf-bb95-4d45-8fe2-a0f7f2f7e262",
       "image_uris": {
@@ -63,8 +61,6 @@
       "type_line": "Land",
       "oracle_text": "This land enters tapped.\n{T}: Add {U}.",
       "colors": [],
-      "flavor_text": "\"The Ondu Skyclave was a center for rebellion against the capital in Makindi. Of course they built in deadly traps.\"\n\u2014Nys Dal, Sea Gate trapfinder",
-      "artist": "Cliff Childs",
       "artist_id": "ed6f7e03-20ba-4c73-bdda-4a4928480721",
       "illustration_id": "af2c8d11-3179-48c7-aed3-8957c04220c2",
       "image_uris": {
@@ -136,7 +132,6 @@
   "collector_number": "64",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Cliff Childs",
   "artist_ids": [
     "ed6f7e03-20ba-4c73-bdda-4a4928480721"
   ],
@@ -148,23 +143,10 @@
   "story_spotlight": false,
   "edhrec_rank": 2686,
   "penny_rank": 938,
-  "prices": {
-    "usd": "0.42",
-    "usd_foil": "2.57",
-    "usd_etched": null,
-    "eur": "0.36",
-    "eur_foil": "0.72",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=491693&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DJwari%2BDisruption%2B%252F%252F%2BJwari%2BRuins",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DJwari%2BDisruption%2B%252F%252F%2BJwari%2BRuins",
     "edhrec": "https://edhrec.com/route/?cc=Jwari+Disruption"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F222101%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=496395&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/83079?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

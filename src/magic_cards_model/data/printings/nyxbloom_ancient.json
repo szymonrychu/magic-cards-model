@@ -100,9 +100,7 @@
   "collector_number": "190",
   "digital": false,
   "rarity": "mythic",
-  "flavor_text": "Ancient yet ever-young, it is wise and subtle\u2014and cruel and reckless as the spring itself.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Filip Burburan",
   "artist_ids": [
     "66082c3b-a623-4d34-be51-2475214b85d3"
   ],
@@ -124,23 +122,10 @@
     "source_uri": "https://www.youtube.com/watch?v=FrSbBMp45rg",
     "previewed_at": "2020-01-09"
   },
-  "prices": {
-    "usd": "28.23",
-    "usd_foil": "29.96",
-    "usd_etched": null,
-    "eur": "18.00",
-    "eur_foil": "23.09",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=476441&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DNyxbloom%2BAncient",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DNyxbloom%2BAncient",
     "edhrec": "https://edhrec.com/route/?cc=Nyxbloom+Ancient"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F207021%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=431694&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/79504?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

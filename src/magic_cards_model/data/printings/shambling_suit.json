@@ -94,9 +94,7 @@
   "collector_number": "230",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"The young squire gripped her sword as the clanking stranger emerged. It was no knight that had come to challenge her.\"\n\u2014*Beyond the Great Henge*",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Nicholas Gregory",
   "artist_ids": [
     "a1bba8ff-63b4-4786-b1c4-f1bfe5d3ab1c"
   ],
@@ -114,23 +112,10 @@
     "source_uri": "https://twitter.com/MTG_Arena/status/1169291126970314752",
     "previewed_at": "2019-09-04"
   },
-  "prices": {
-    "usd": "0.31",
-    "usd_foil": "0.36",
-    "usd_etched": null,
-    "eur": "0.26",
-    "eur_foil": "0.34",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473192&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DShambling%2BSuit",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DShambling%2BSuit",
     "edhrec": "https://edhrec.com/route/?cc=Shambling+Suit"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F199564%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=401174&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/78606?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

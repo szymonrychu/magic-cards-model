@@ -97,9 +97,7 @@
   "collector_number": "189",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "Jace remembered the ship. The captain who saw him through. He remembered how losing a part of himself had only made him stronger.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Darren Tan",
   "artist_ids": [
     "14c7f83c-d0fb-43f0-90f3-703f910f8bb9"
   ],
@@ -112,22 +110,9 @@
   "booster": false,
   "story_spotlight": false,
   "edhrec_rank": 229,
-  "prices": {
-    "usd": "1.67",
-    "usd_foil": "1.96",
-    "usd_etched": null,
-    "eur": "1.78",
-    "eur_foil": "2.59",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DShipwreck%2BMarsh",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DShipwreck%2BMarsh",
     "edhrec": "https://edhrec.com/route/?cc=Shipwreck+Marsh"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F715943%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=907325&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/156084?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

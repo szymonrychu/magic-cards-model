@@ -40,7 +40,6 @@
         "W"
       ],
       "defense": "5",
-      "artist": "Johann Bodin",
       "artist_id": "d92e2dd9-9ef6-43f6-81f8-df87f9066983",
       "illustration_id": "1db7722e-4bba-4031-80fc-0d92f4b29989",
       "image_uris": {
@@ -71,8 +70,6 @@
         "R",
         "W"
       ],
-      "flavor_text": "\"Let's give these creeps the old one-two!\"",
-      "artist": "Johann Bodin",
       "artist_id": "d92e2dd9-9ef6-43f6-81f8-df87f9066983",
       "illustration_id": "542a2875-ec63-4151-8727-26c4d72b3bdd",
       "image_uris": {
@@ -162,7 +159,6 @@
   "collector_number": "235",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Johann Bodin",
   "artist_ids": [
     "d92e2dd9-9ef6-43f6-81f8-df87f9066983"
   ],
@@ -178,23 +174,10 @@
     "source_uri": "https://twitter.com/RapsoloM/status/1642840019755827201",
     "previewed_at": "2023-04-03"
   },
-  "prices": {
-    "usd": "0.24",
-    "usd_foil": "0.16",
-    "usd_etched": null,
-    "eur": "0.04",
-    "eur_foil": "0.16",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607298&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BKylem%2B%252F%252F%2BValor%2527s%2BReach%2BTag%2BTeam",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BKylem%2B%252F%252F%2BValor%2527s%2BReach%2BTag%2BTeam",
     "edhrec": "https://edhrec.com/route/?cc=Invasion+of+Kylem"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490700%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704438&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/110368?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

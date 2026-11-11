@@ -94,9 +94,7 @@
   "collector_number": "183",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "Some nature mages unknowingly took advantage of the temporal energies still swirling on Dominaria. What they mistook for healing magic was in fact the manipulation of time.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "John Donahue",
   "artist_ids": [
     "5dd10cc1-7146-4c47-9114-b1ecae435a44"
   ],
@@ -109,23 +107,10 @@
   "story_spotlight": false,
   "edhrec_rank": 2332,
   "penny_rank": 4621,
-  "prices": {
-    "usd": "1.53",
-    "usd_foil": "12.71",
-    "usd_etched": null,
-    "eur": "1.25",
-    "eur_foil": "6.59",
-    "tix": null
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=382413&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWrap%2Bin%2BVigor",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWrap%2Bin%2BVigor",
     "edhrec": "https://edhrec.com/route/?cc=Wrap+in+Vigor"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F83189%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=267315&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Wrap+in+Vigor&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

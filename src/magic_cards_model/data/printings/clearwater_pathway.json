@@ -38,8 +38,6 @@
       "type_line": "Land",
       "oracle_text": "{T}: Add {U}.",
       "colors": [],
-      "flavor_text": "\"Just when the river seems most peaceful, suddenly you round a bend and hurtle down a waterfall.\"\n\u2014Zahr Gada, Halimar expedition leader",
-      "artist": "Daarken",
       "artist_id": "e607a0d4-fc12-4c01-9e3f-501f5269b9cb",
       "illustration_id": "710d4f1a-d32c-4306-9ffc-ae769aba76ce",
       "image_uris": {
@@ -63,8 +61,6 @@
       "type_line": "Land",
       "oracle_text": "{T}: Add {B}.",
       "colors": [],
-      "flavor_text": "\"Here, at least, the danger is usually in plain sight.\"\n\u2014Zahr Gada, Halimar expedition leader",
-      "artist": "Daarken",
       "artist_id": "e607a0d4-fc12-4c01-9e3f-501f5269b9cb",
       "illustration_id": "c2d6133d-c302-4cfa-8b25-da221bd55246",
       "image_uris": {
@@ -136,7 +132,6 @@
   "collector_number": "260",
   "digital": false,
   "rarity": "rare",
-  "artist": "Daarken",
   "artist_ids": [
     "e607a0d4-fc12-4c01-9e3f-501f5269b9cb"
   ],
@@ -153,23 +148,10 @@
     "source_uri": "",
     "previewed_at": "2020-09-02"
   },
-  "prices": {
-    "usd": "4.74",
-    "usd_foil": "5.01",
-    "usd_etched": null,
-    "eur": "4.87",
-    "eur_foil": "5.93",
-    "tix": "0.06"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=491913&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DClearwater%2BPathway%2B%252F%252F%2BMurkwater%2BPathway",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DClearwater%2BPathway%2B%252F%252F%2BMurkwater%2BPathway",
     "edhrec": "https://edhrec.com/route/?cc=Clearwater+Pathway"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F221830%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=494764&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/83519?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

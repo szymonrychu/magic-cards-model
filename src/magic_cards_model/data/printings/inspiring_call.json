@@ -94,9 +94,7 @@
   "collector_number": "168",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"Sozin's comet is arriving and our destinies are upon us!\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Alexander Forssberg",
   "artist_ids": [
     "85908891-3cc7-42b0-9b54-27ed0fe89c53"
   ],
@@ -112,22 +110,9 @@
   ],
   "edhrec_rank": 280,
   "penny_rank": 7993,
-  "prices": {
-    "usd": "0.39",
-    "usd_foil": "2.92",
-    "usd_etched": null,
-    "eur": "0.64",
-    "eur_foil": "0.69",
-    "tix": null
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInspiring%2BCall",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInspiring%2BCall",
     "edhrec": "https://edhrec.com/route/?cc=Inspiring+Call"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F662422%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=857963&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Inspiring+Call&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

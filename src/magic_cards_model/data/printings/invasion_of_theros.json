@@ -39,7 +39,6 @@
         "W"
       ],
       "defense": "4",
-      "artist": "Johan Grenier",
       "artist_id": "465e38b8-7eed-4d22-a6d2-d3603ee0c00b",
       "illustration_id": "3d0fe50f-f370-4246-b0dd-458974676adc",
       "image_uris": {
@@ -72,8 +71,6 @@
       ],
       "power": "4",
       "toughness": "4",
-      "flavor_text": "When the sun falters and the seas disperse, when the wilds wither and the forges go cold, when death itself succumbs, she endures.",
-      "artist": "Johan Grenier",
       "artist_id": "465e38b8-7eed-4d22-a6d2-d3603ee0c00b",
       "illustration_id": "60e58660-c6e7-46ba-86fb-7224a3e5da29",
       "image_uris": {
@@ -145,7 +142,6 @@
   "collector_number": "23",
   "digital": false,
   "rarity": "rare",
-  "artist": "Johan Grenier",
   "artist_ids": [
     "465e38b8-7eed-4d22-a6d2-d3603ee0c00b"
   ],
@@ -167,23 +163,10 @@
     "source_uri": "https://twitter.com/AliaDeschain/status/1642947270927589377",
     "previewed_at": "2023-04-03"
   },
-  "prices": {
-    "usd": "0.42",
-    "usd_foil": "0.89",
-    "usd_etched": null,
-    "eur": "0.34",
-    "eur_foil": "0.73",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607039&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BTheros%2B%252F%252F%2BEphara%252C%2BEver-Sheltering",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BTheros%2B%252F%252F%2BEphara%252C%2BEver-Sheltering",
     "edhrec": "https://edhrec.com/route/?cc=Invasion+of+Theros"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490950%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704287&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/109850?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

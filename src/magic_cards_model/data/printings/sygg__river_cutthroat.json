@@ -95,9 +95,7 @@
   "collector_number": "103",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"It's not a matter of deserving. It's a matter of strength. The power to hold versus the power to take.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Jeremy Enecio",
   "artist_ids": [
     "f9e1fab6-f366-4dae-a5c7-736d475312b8"
   ],
@@ -114,23 +112,10 @@
   "story_spotlight": false,
   "edhrec_rank": 3840,
   "penny_rank": 3783,
-  "prices": {
-    "usd": "3.63",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "6.87",
-    "eur_foil": null,
-    "tix": null
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=496041&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSygg%252C%2BRiver%2BCutthroat",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSygg%252C%2BRiver%2BCutthroat",
     "edhrec": "https://edhrec.com/route/?cc=Sygg%2C+River+Cutthroat"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F222376%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=504070&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Sygg%2C+River+Cutthroat&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

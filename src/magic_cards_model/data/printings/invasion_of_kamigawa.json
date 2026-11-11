@@ -39,7 +39,6 @@
         "U"
       ],
       "defense": "4",
-      "artist": "Kekai Kotaki",
       "artist_id": "4b771085-c049-4308-930d-ec9665f803a4",
       "illustration_id": "adf5b2a4-86e1-4b4b-8267-1bb4a8e19483",
       "image_uris": {
@@ -70,8 +69,6 @@
       ],
       "power": "2",
       "toughness": "3",
-      "flavor_text": "The pace of Kamigawa's development meant that Jin-Gitaxias's intel was already outdated when the invaders arrived.",
-      "artist": "Kekai Kotaki",
       "artist_id": "4b771085-c049-4308-930d-ec9665f803a4",
       "illustration_id": "7c3d3138-f125-4616-aafa-8358b5068ee2",
       "image_uris": {
@@ -143,7 +140,6 @@
   "collector_number": "62",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Kekai Kotaki",
   "artist_ids": [
     "4b771085-c049-4308-930d-ec9665f803a4"
   ],
@@ -159,23 +155,10 @@
     "source_uri": "https://twitter.com/LelandPalmerMTG/status/1641778855781228545",
     "previewed_at": "2023-03-31"
   },
-  "prices": {
-    "usd": "0.22",
-    "usd_foil": "0.24",
-    "usd_etched": null,
-    "eur": "0.03",
-    "eur_foil": "0.17",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607084&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BKamigawa%2B%252F%252F%2BRooftop%2BSaboteurs",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BKamigawa%2B%252F%252F%2BRooftop%2BSaboteurs",
     "edhrec": "https://edhrec.com/route/?cc=Invasion+of+Kamigawa"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490637%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704017&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/109940?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

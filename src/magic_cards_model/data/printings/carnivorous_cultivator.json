@@ -53,7 +53,6 @@
       "oracle_text": "Deathtouch\nThis creature enters prepared.\nWhenever this creature deals combat damage to a player, return target land card from your graveyard to your hand.",
       "power": "2",
       "toughness": "3",
-      "artist": "Martina Fa\u010dkov\u00e1",
       "artist_id": "6338124e-8e53-498d-8bf9-93a55db2f61c",
       "illustration_id": "a0b36cb6-9786-4098-b908-49eb76478c2a"
     },
@@ -63,7 +62,6 @@
       "mana_cost": "{G}",
       "type_line": "Sorcery",
       "oracle_text": "Search your library for a land card, put it into your graveyard, then shuffle.",
-      "artist": "Martina Fa\u010dkov\u00e1",
       "artist_id": "6338124e-8e53-498d-8bf9-93a55db2f61c"
     }
   ],
@@ -122,7 +120,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Martina Fa\u010dkov\u00e1",
   "artist_ids": [
     "6338124e-8e53-498d-8bf9-93a55db2f61c"
   ],
@@ -135,22 +132,9 @@
   "booster": false,
   "story_spotlight": false,
   "edhrec_rank": 21384,
-  "prices": {
-    "usd": "0.57",
-    "usd_foil": "1.14",
-    "usd_etched": null,
-    "eur": "0.02",
-    "eur_foil": "1.37",
-    "tix": "0.36"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCarnivorous%2BCultivator%2B%252F%252F%2BEnroot",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCarnivorous%2BCultivator%2B%252F%252F%2BEnroot",
     "edhrec": "https://edhrec.com/route/?cc=Carnivorous+Cultivator"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F717027%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=909242&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/155906?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

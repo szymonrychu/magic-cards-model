@@ -100,9 +100,7 @@
   "collector_number": "160",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "As Sanar watched the tangle of chirps and flames run by, his eyes lit up. \"I want one,\" he whispered.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Alessandra Pisano",
   "artist_ids": [
     "15869690-bf3c-4498-a577-409a6bde5c83"
   ],
@@ -114,22 +112,9 @@
   "booster": true,
   "story_spotlight": false,
   "edhrec_rank": 25844,
-  "prices": {
-    "usd": "0.08",
-    "usd_foil": "0.11",
-    "usd_etched": null,
-    "eur": "0.04",
-    "eur_foil": "0.08",
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSquawkroaster",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSquawkroaster",
     "edhrec": "https://edhrec.com/route/?cc=Squawkroaster"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671663%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=865781&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/146711?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

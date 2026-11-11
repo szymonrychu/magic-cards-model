@@ -100,9 +100,7 @@
   "collector_number": "53",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "One piercing stare usually convinces thieves to go elsewhere.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Kev Walker",
   "artist_ids": [
     "f366a0ee-a0cd-466d-ba6a-90058c7a31a6"
   ],
@@ -115,23 +113,10 @@
   "story_spotlight": false,
   "edhrec_rank": 18098,
   "penny_rank": 11168,
-  "prices": {
-    "usd": "0.21",
-    "usd_foil": "0.35",
-    "usd_etched": null,
-    "eur": "0.13",
-    "eur_foil": "0.23",
-    "tix": "0.04"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=438619&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDoorkeeper",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDoorkeeper",
     "edhrec": "https://edhrec.com/route/?cc=Doorkeeper"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F145310%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=301439&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/65985?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

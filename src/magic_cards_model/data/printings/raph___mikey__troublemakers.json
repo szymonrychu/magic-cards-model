@@ -103,7 +103,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Aaron J. Riley",
   "artist_ids": [
     "f21b412c-aef5-4d15-88be-4f40615acde3"
   ],
@@ -122,22 +121,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 6501,
-  "prices": {
-    "usd": "3.69",
-    "usd_foil": "3.19",
-    "usd_etched": null,
-    "eur": "1.59",
-    "eur_foil": "2.74",
-    "tix": "0.42"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRaph%2B%2526%2BMikey%252C%2BTroublemakers",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRaph%2B%2526%2BMikey%252C%2BTroublemakers",
     "edhrec": "https://edhrec.com/route/?cc=Raph+%26+Mikey%2C+Troublemakers"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F673671%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=868407&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/147957?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

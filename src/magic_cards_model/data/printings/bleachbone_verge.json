@@ -99,9 +99,7 @@
   "collector_number": "250",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"Despite being older than nearly every living thing here, Loot is still just a kid. That doesn't change what we need from him.\"\n\u2014Jace",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Mark Tedin",
   "artist_ids": [
     "9ee9a9cc-c09e-486f-918b-69f80cbc4188"
   ],
@@ -114,23 +112,10 @@
   "booster": true,
   "story_spotlight": false,
   "edhrec_rank": 790,
-  "prices": {
-    "usd": "11.41",
-    "usd_foil": "9.74",
-    "usd_etched": null,
-    "eur": "9.19",
-    "eur_foil": "10.46",
-    "tix": "0.17"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=690687&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBleachbone%2BVerge",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBleachbone%2BVerge",
     "edhrec": "https://edhrec.com/route/?cc=Bleachbone+Verge"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F614401%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=807217&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/136623?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -98,9 +98,7 @@
   "collector_number": "199",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "The upside to not thinking about the consequences is that you'll always surprise those who do.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Randy Vargas",
   "artist_ids": [
     "d20672ca-0555-4238-a984-fd171d36b247"
   ],
@@ -116,23 +114,10 @@
   ],
   "edhrec_rank": 9576,
   "penny_rank": 4072,
-  "prices": {
-    "usd": "0.22",
-    "usd_foil": "0.32",
-    "usd_etched": null,
-    "eur": "0.08",
-    "eur_foil": "0.16",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=679941&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFrenzied%2BGoblin",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFrenzied%2BGoblin",
     "edhrec": "https://edhrec.com/route/?cc=Frenzied+Goblin"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F591777%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=797358&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/133424?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

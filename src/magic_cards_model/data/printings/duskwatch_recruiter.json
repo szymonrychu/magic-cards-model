@@ -37,7 +37,6 @@
       ],
       "power": "2",
       "toughness": "2",
-      "artist": "Craig J Spearing",
       "artist_id": "b0f15e74-0dd6-4156-959e-c5e30c5cdc52",
       "illustration_id": "7c7c6edf-7046-465d-93ff-1f13bbf3db73",
       "image_uris": {
@@ -68,7 +67,6 @@
       ],
       "power": "3",
       "toughness": "3",
-      "artist": "Craig J Spearing",
       "artist_id": "b0f15e74-0dd6-4156-959e-c5e30c5cdc52",
       "illustration_id": "02f4e677-adb6-4389-81ae-c2e67047b86f",
       "image_uris": {
@@ -157,7 +155,6 @@
   "collector_number": "193",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Craig J Spearing",
   "artist_ids": [
     "b0f15e74-0dd6-4156-959e-c5e30c5cdc52"
   ],
@@ -169,23 +166,10 @@
   "story_spotlight": false,
   "edhrec_rank": 6013,
   "penny_rank": 1177,
-  "prices": {
-    "usd": "0.32",
-    "usd_foil": "0.37",
-    "usd_etched": null,
-    "eur": "0.20",
-    "eur_foil": "0.26",
-    "tix": "0.05"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=686034&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDuskwatch%2BRecruiter%2B%252F%252F%2BKrallenhorde%2BHowler",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDuskwatch%2BRecruiter%2B%252F%252F%2BKrallenhorde%2BHowler",
     "edhrec": "https://edhrec.com/route/?cc=Duskwatch+Recruiter"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F609865%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=805820&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/135798?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -52,7 +52,6 @@
       "type_line": "Instant",
       "oracle_text": "Put target artifact or enchantment on the bottom of its owner's library.",
       "watermark": "boros",
-      "artist": "Zoltan Boros",
       "artist_id": "1885e6cb-c827-4896-994e-3d0a027d602f",
       "illustration_id": "1980f9d3-3bdc-4396-b454-a7c86075ff8a"
     },
@@ -63,7 +62,6 @@
       "type_line": "Instant",
       "oracle_text": "Search target opponent's library for a card and exile it. You gain life equal to its mana value. Then that player shuffles.",
       "watermark": "orzhov",
-      "artist": "Gabor Szikszai",
       "artist_id": "44c3877f-8771-43dc-9e40-f4c765f59d2e"
     }
   ],
@@ -121,7 +119,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Zoltan Boros & Gabor Szikszai",
   "artist_ids": [
     "1885e6cb-c827-4896-994e-3d0a027d602f",
     "44c3877f-8771-43dc-9e40-f4c765f59d2e"
@@ -135,23 +132,10 @@
   "story_spotlight": false,
   "edhrec_rank": 21287,
   "penny_rank": 5145,
-  "prices": {
-    "usd": "1.06",
-    "usd_foil": "10.22",
-    "usd_etched": null,
-    "eur": "0.67",
-    "eur_foil": "4.82",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=107315&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHide%2B%252F%252F%2BSeek",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHide%2B%252F%252F%2BSeek",
     "edhrec": "https://edhrec.com/route/?cc=Hide+%2F%2F+Seek"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F13878%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=13014&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/24357?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

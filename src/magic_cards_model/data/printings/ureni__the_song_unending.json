@@ -107,7 +107,6 @@
   "rarity": "mythic",
   "watermark": "temur",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Alexander Ostrowski",
   "artist_ids": [
     "3c278fce-4a9d-4b16-8c84-d29addc394f5"
   ],
@@ -123,23 +122,10 @@
   "booster": true,
   "story_spotlight": false,
   "edhrec_rank": 5291,
-  "prices": {
-    "usd": "2.75",
-    "usd_foil": "2.88",
-    "usd_etched": null,
-    "eur": "2.46",
-    "eur_foil": "3.27",
-    "tix": "0.06"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=693713&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DUreni%252C%2Bthe%2BSong%2BUnending",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DUreni%252C%2Bthe%2BSong%2BUnending",
     "edhrec": "https://edhrec.com/route/?cc=Ureni%2C+the+Song+Unending"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F623895%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=817875&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/139433?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

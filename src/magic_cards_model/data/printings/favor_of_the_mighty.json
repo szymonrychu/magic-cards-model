@@ -95,9 +95,7 @@
   "collector_number": "14",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"What does a mountain fear of a fly? Giants are barely aware of us, let alone afraid.\"\n\u2014Gaddock Teeg",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Larry MacDougall",
   "artist_ids": [
     "73932957-e76e-4ff0-8f0a-b3ad2d8dfae2"
   ],
@@ -110,23 +108,10 @@
   "story_spotlight": false,
   "edhrec_rank": 22108,
   "penny_rank": 10563,
-  "prices": {
-    "usd": "0.64",
-    "usd_foil": "6.38",
-    "usd_etched": null,
-    "eur": "0.33",
-    "eur_foil": "1.55",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=143683&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFavor%2Bof%2Bthe%2BMighty",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFavor%2Bof%2Bthe%2BMighty",
     "edhrec": "https://edhrec.com/route/?cc=Favor+of+the+Mighty"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F15486%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=17755&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/28613?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

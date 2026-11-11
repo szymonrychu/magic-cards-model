@@ -94,9 +94,7 @@
   "collector_number": "106",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "The first satyr to wake after a revel must search for the site of the next one.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Steve Prescott",
   "artist_ids": [
     "a1139fb8-41f5-4a9e-9a74-f662e1a23b35"
   ],
@@ -114,22 +112,9 @@
     "source_uri": "https://www.youtube.com/watch?v=HxXLWC_JRdM",
     "previewed_at": "2025-07-09"
   },
-  "prices": {
-    "usd": "0.22",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.11",
-    "eur_foil": null,
-    "tix": "0.07"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSatyr%2BWayfinder",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSatyr%2BWayfinder",
     "edhrec": "https://edhrec.com/route/?cc=Satyr+Wayfinder"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F642000%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=834111&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/142349?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

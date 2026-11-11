@@ -89,9 +89,7 @@
   "collector_number": "245",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "\"Our glorious infection has taken hold.\"\n\u2014Elesh Norn, Grand Cenobite",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Steven Belledin",
   "artist_ids": [
     "f07d73b9-52a0-4fe5-858b-61f7b42174a5"
   ],
@@ -104,23 +102,10 @@
   "story_spotlight": false,
   "edhrec_rank": 962,
   "penny_rank": 1035,
-  "prices": {
-    "usd": "1.50",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.89",
-    "eur_foil": null,
-    "tix": null
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=519280&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DIchor%2BWellspring",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DIchor%2BWellspring",
     "edhrec": "https://edhrec.com/route/?cc=Ichor+Wellspring"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F236127%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=558534&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/89595?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

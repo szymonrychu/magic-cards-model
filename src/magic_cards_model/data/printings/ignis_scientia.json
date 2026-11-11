@@ -120,7 +120,6 @@
   "digital": false,
   "rarity": "uncommon",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Mingchen Shen",
   "artist_ids": [
     "3ad1b458-7977-4655-90df-aad2cf8335f2"
   ],
@@ -146,22 +145,9 @@
     "source_uri": "https://www.crunchyroll.com/news/latest/2025/5/22/magic-the-gathering-final-fantasy-15-card-reveal-exclusive",
     "previewed_at": "2025-05-22"
   },
-  "prices": {
-    "usd": "0.19",
-    "usd_foil": "0.30",
-    "usd_etched": null,
-    "eur": "0.10",
-    "eur_foil": "0.22",
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DIgnis%2BScientia",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DIgnis%2BScientia",
     "edhrec": "https://edhrec.com/route/?cc=Ignis+Scientia"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F633413%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=826889&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/141409?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -47,8 +47,6 @@
       "mana_cost": "{3}",
       "type_line": "Legendary Artifact \u2014 Equipment",
       "oracle_text": "Equipped creature has hexproof and can't be blocked.\nEquip\u2014{2}, Pay 2 life.",
-      "flavor_text": "\"It won't see us, will it, my precious?\"",
-      "artist": "Valera Lutfullina",
       "artist_id": "76bc57c7-47c6-40c5-8797-8ffcce430ac7",
       "illustration_id": "3f76ad55-9d31-4531-85cc-d04a86398512"
     },
@@ -58,7 +56,6 @@
       "mana_cost": "{1}{B}",
       "type_line": "Instant \u2014 Adventure",
       "oracle_text": "As an additional cost to cast this spell, sacrifice a creature.\nDraw two cards.",
-      "artist": "Valera Lutfullina",
       "artist_id": "76bc57c7-47c6-40c5-8797-8ffcce430ac7"
     }
   ],
@@ -116,9 +113,7 @@
   "collector_number": "176",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"It won't see us, will it, my precious?\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Valera Lutfullina",
   "artist_ids": [
     "76bc57c7-47c6-40c5-8797-8ffcce430ac7"
   ],
@@ -137,22 +132,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 6645,
-  "prices": {
-    "usd": "1.48",
-    "usd_foil": "3.19",
-    "usd_etched": null,
-    "eur": "1.57",
-    "eur_foil": "1.63",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMy%2BPrecious%2B%252F%252F%2BAllure%2Bof%2BPower",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMy%2BPrecious%2B%252F%252F%2BAllure%2Bof%2BPower",
     "edhrec": "https://edhrec.com/route/?cc=My+Precious"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F693008%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=898513&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/154296?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -40,8 +40,6 @@
       ],
       "power": "1",
       "toughness": "1",
-      "flavor_text": "\"I heard her talking in her sleep\u2014pleading, shrieking, snarling. It was not my daughter's voice. That is not my daughter.\"\n\u2014Ekatrin, elder of Hanweir",
-      "artist": "Igor Kieryluk",
       "artist_id": "9c3e9d17-509f-485c-9360-46d897ce716b",
       "illustration_id": "6556f870-50b0-429c-809e-33f14a0e78c5",
       "image_uris": {
@@ -72,8 +70,6 @@
       ],
       "power": "3",
       "toughness": "3",
-      "flavor_text": "The fiend tormented them by recounting the girl's memories, as if some part of her remained inside that twisted shell.",
-      "artist": "Igor Kieryluk",
       "artist_id": "9c3e9d17-509f-485c-9360-46d897ce716b",
       "illustration_id": "c25def8d-3fa1-457b-b2af-b40fe24648c1",
       "image_uris": {
@@ -162,7 +158,6 @@
   "collector_number": "8",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Igor Kieryluk",
   "artist_ids": [
     "9c3e9d17-509f-485c-9360-46d897ce716b"
   ],
@@ -177,23 +172,10 @@
   "story_spotlight": false,
   "edhrec_rank": 31229,
   "penny_rank": 12951,
-  "prices": {
-    "usd": "0.07",
-    "usd_foil": "0.41",
-    "usd_etched": null,
-    "eur": "0.09",
-    "eur_foil": "0.33",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=221212&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCloistered%2BYouth%2B%252F%252F%2BUnholy%2BFiend",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCloistered%2BYouth%2B%252F%252F%2BUnholy%2BFiend",
     "edhrec": "https://edhrec.com/route/?cc=Cloistered+Youth"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F56218%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=250669&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/42352?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

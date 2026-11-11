@@ -54,7 +54,6 @@
       "oracle_text": "Flying, prowess\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
       "power": "2",
       "toughness": "3",
-      "artist": "Kai Carpenter",
       "artist_id": "dcd3cf0d-67b7-4b73-8e62-1d318bf6209c",
       "illustration_id": "17c469cd-e0d9-4c49-898a-29a8eb5db4e7"
     },
@@ -64,7 +63,6 @@
       "mana_cost": "{2}{U}",
       "type_line": "Sorcery",
       "oracle_text": "Each player may discard their hand and draw seven cards.",
-      "artist": "Kai Carpenter",
       "artist_id": "dcd3cf0d-67b7-4b73-8e62-1d318bf6209c"
     }
   ],
@@ -123,7 +121,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Kai Carpenter",
   "artist_ids": [
     "dcd3cf0d-67b7-4b73-8e62-1d318bf6209c"
   ],
@@ -136,22 +133,9 @@
   "booster": false,
   "story_spotlight": false,
   "edhrec_rank": 21125,
-  "prices": {
-    "usd": "0.47",
-    "usd_foil": "2.76",
-    "usd_etched": null,
-    "eur": "0.02",
-    "eur_foil": "0.76",
-    "tix": "0.09"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVariable%2BChaser%2B%252F%252F%2BArc%2Bof%2BFortune",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVariable%2BChaser%2B%252F%252F%2BArc%2Bof%2BFortune",
     "edhrec": "https://edhrec.com/route/?cc=Variable+Chaser"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F717482%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=909540&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/155800?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

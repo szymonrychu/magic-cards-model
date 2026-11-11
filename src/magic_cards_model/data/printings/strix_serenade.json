@@ -114,9 +114,7 @@
   "collector_number": "71",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "Some birds sing to nature's beauty and the freedom of the skies. Others simply ask questions.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Filipe Pagliuso",
   "artist_ids": [
     "64c537b4-a864-4051-9a24-fbdd22cb40b4"
   ],
@@ -135,23 +133,10 @@
     "source_uri": "https://twitter.com/PleasantKenobi/status/1793312639889690771",
     "previewed_at": "2024-05-22"
   },
-  "prices": {
-    "usd": "2.41",
-    "usd_foil": "2.38",
-    "usd_etched": null,
-    "eur": "2.54",
-    "eur_foil": "3.66",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=662223&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DStrix%2BSerenade",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DStrix%2BSerenade",
     "edhrec": "https://edhrec.com/route/?cc=Strix+Serenade"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F552621%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=771454&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/126159?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

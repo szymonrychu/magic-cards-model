@@ -43,7 +43,6 @@
       "colors": [
         "R"
       ],
-      "artist": "Song Qijin",
       "artist_id": "67750cc4-846d-40a2-8d1a-e8085544be07",
       "illustration_id": "d0c6906e-1de7-4521-a2a4-5a46f4fa4fb3",
       "image_uris": {
@@ -69,8 +68,6 @@
       "colors": [],
       "power": "4",
       "toughness": "4",
-      "flavor_text": "\"You must be decisive.\"",
-      "artist": "Song Qijin",
       "artist_id": "67750cc4-846d-40a2-8d1a-e8085544be07",
       "illustration_id": "72143273-53f0-4fed-9a56-1b7c86c8a8b2",
       "image_uris": {
@@ -160,7 +157,6 @@
   "collector_number": "145",
   "digital": false,
   "rarity": "mythic",
-  "artist": "Song Qijin",
   "artist_ids": [
     "67750cc4-846d-40a2-8d1a-e8085544be07"
   ],
@@ -179,22 +175,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 4257,
-  "prices": {
-    "usd": "10.53",
-    "usd_foil": "10.80",
-    "usd_etched": null,
-    "eur": "11.07",
-    "eur_foil": "12.69",
-    "tix": "1.00"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThe%2BLegend%2Bof%2BRoku%2B%252F%252F%2BAvatar%2BRoku",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThe%2BLegend%2Bof%2BRoku%2B%252F%252F%2BAvatar%2BRoku",
     "edhrec": "https://edhrec.com/route/?cc=The+Legend+of+Roku"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F660549%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=855715&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/144772?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

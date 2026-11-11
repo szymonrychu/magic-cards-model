@@ -40,8 +40,6 @@
       ],
       "power": "4",
       "toughness": "4",
-      "flavor_text": "\"*Compleat* the faith, *compleat* the god.\"\n\u2014Ajani Goldmane",
-      "artist": "Victor Adame Minguez",
       "artist_id": "bd8f7368-5b10-4554-b6b8-d052c6aca89f",
       "illustration_id": "e5fcd738-5942-440f-ad02-7447b0a3861b",
       "image_uris": {
@@ -74,8 +72,6 @@
       ],
       "power": "4",
       "toughness": "6",
-      "flavor_text": "\"*Compleat* the god, *compleat* the plane.\"\n\u2014Ajani Goldmane",
-      "artist": "Victor Adame Minguez",
       "artist_id": "bd8f7368-5b10-4554-b6b8-d052c6aca89f",
       "illustration_id": "4e064415-a6c6-417f-9619-5a5ed3486183",
       "image_uris": {
@@ -147,7 +143,6 @@
   "collector_number": "17",
   "digital": false,
   "rarity": "rare",
-  "artist": "Victor Adame Minguez",
   "artist_ids": [
     "bd8f7368-5b10-4554-b6b8-d052c6aca89f"
   ],
@@ -169,23 +164,10 @@
     "source_uri": "https://twitter.com/wizards_magic/status/1627379095263748097?s=20",
     "previewed_at": "2023-02-19"
   },
-  "prices": {
-    "usd": "1.55",
-    "usd_foil": "2.92",
-    "usd_etched": null,
-    "eur": "1.43",
-    "eur_foil": "1.39",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607029&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHeliod%252C%2Bthe%2BRadiant%2BDawn%2B%252F%252F%2BHeliod%252C%2Bthe%2BWarped%2BEclipse",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHeliod%252C%2Bthe%2BRadiant%2BDawn%2B%252F%252F%2BHeliod%252C%2Bthe%2BWarped%2BEclipse",
     "edhrec": "https://edhrec.com/route/?cc=Heliod%2C+the+Radiant+Dawn"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F484508%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=697761&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/109830?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

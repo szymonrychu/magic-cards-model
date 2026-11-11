@@ -17,6 +17,9 @@ import urllib.request
 import magic_cards_model
 
 POOL = pathlib.Path(magic_cards_model.__file__).parent / "data" / "printings"
+#: Scryfall fields that are not needed by the engine and carry third-party
+#: content (artist credit, flavor text) or marketplace data; never stored.
+DROPPED_KEYS = ("flavor_text", "prices", "purchase_uris", "artist")
 HEADERS = {"User-Agent": "magic-cards-model/0.1", "Accept": "*/*"}
 
 
@@ -25,11 +28,24 @@ def slugify(name: str) -> str:
     return "".join(c if c.isalnum() else "_" for c in front).strip("_")
 
 
+def strip_dropped(value):
+    """Remove DROPPED_KEYS from a card record, including inside card_faces."""
+    if isinstance(value, dict):
+        for key in DROPPED_KEYS:
+            value.pop(key, None)
+        for child in value.values():
+            strip_dropped(child)
+    elif isinstance(value, list):
+        for child in value:
+            strip_dropped(child)
+    return value
+
+
 def fetch(name: str) -> dict:
     url = "https://api.scryfall.com/cards/named?exact=" + urllib.parse.quote(name)
     request = urllib.request.Request(url, headers=HEADERS)
     with urllib.request.urlopen(request) as response:
-        return json.load(response)
+        return strip_dropped(json.load(response))
 
 
 def main(names: list[str]) -> int:

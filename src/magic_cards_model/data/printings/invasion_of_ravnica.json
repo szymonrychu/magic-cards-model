@@ -34,7 +34,6 @@
       "oracle_text": "(As a Siege enters, choose an opponent to protect it. You and others can attack it. When it's defeated, exile it, then cast it transformed.)\nWhen this Siege enters, exile target nonland permanent an opponent controls that isn't exactly two colors.",
       "colors": [],
       "defense": "4",
-      "artist": "Leon Tukker",
       "artist_id": "669b8b90-758d-4f9e-b4f7-98cd6742eb97",
       "illustration_id": "a3c935cf-7d12-4548-a38b-1aad2887d140",
       "image_uris": {
@@ -60,7 +59,6 @@
       "colors": [],
       "power": "5",
       "toughness": "5",
-      "artist": "Leon Tukker",
       "artist_id": "669b8b90-758d-4f9e-b4f7-98cd6742eb97",
       "illustration_id": "fd029fea-0715-4c57-9c44-784eec1699bf",
       "image_uris": {
@@ -132,7 +130,6 @@
   "collector_number": "1",
   "digital": false,
   "rarity": "mythic",
-  "artist": "Leon Tukker",
   "artist_ids": [
     "669b8b90-758d-4f9e-b4f7-98cd6742eb97"
   ],
@@ -145,23 +142,10 @@
   "story_spotlight": false,
   "edhrec_rank": 14205,
   "penny_rank": 8194,
-  "prices": {
-    "usd": "0.46",
-    "usd_foil": "0.67",
-    "usd_etched": null,
-    "eur": "0.55",
-    "eur_foil": "1.27",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607011&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BRavnica%2B%252F%252F%2BGuildpact%2BParagon",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BRavnica%2B%252F%252F%2BGuildpact%2BParagon",
     "edhrec": "https://edhrec.com/route/?cc=Invasion+of+Ravnica"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490433%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=703461&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/109794?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

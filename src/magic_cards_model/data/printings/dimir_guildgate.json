@@ -98,9 +98,7 @@
   "collector_number": "688",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "Enter and become a mastermind of spies, lies, and deception.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Cliff Childs",
   "artist_ids": [
     "ed6f7e03-20ba-4c73-bdda-4a4928480721"
   ],
@@ -116,23 +114,10 @@
   ],
   "edhrec_rank": 1819,
   "penny_rank": 1238,
-  "prices": {
-    "usd": "0.15",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.18",
-    "eur_foil": null,
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=680827&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDimir%2BGuildgate",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDimir%2BGuildgate",
     "edhrec": "https://edhrec.com/route/?cc=Dimir+Guildgate"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F591094%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=796135&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/134712?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

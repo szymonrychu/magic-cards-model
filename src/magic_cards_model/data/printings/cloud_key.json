@@ -88,9 +88,7 @@
   "collector_number": "54",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "The advent of cloudsculpting ended the use of mechanical locks in Illvoi society.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Matt Stewart",
   "artist_ids": [
     "20871267-2d8a-41d5-b03a-be3d557c5734"
   ],
@@ -109,22 +107,9 @@
     "source_uri": "https://www.youtube.com/watch?v=Swjj0JGhFco",
     "previewed_at": "2025-07-10"
   },
-  "prices": {
-    "usd": "1.47",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "2.02",
-    "eur_foil": null,
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCloud%2BKey",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCloud%2BKey",
     "edhrec": "https://edhrec.com/route/?cc=Cloud+Key"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F642824%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=834273&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/142245?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

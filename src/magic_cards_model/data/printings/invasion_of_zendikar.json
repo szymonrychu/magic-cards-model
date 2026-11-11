@@ -47,7 +47,6 @@
         "G"
       ],
       "defense": "3",
-      "artist": "Diego Gisbert",
       "artist_id": "3f4e975d-092c-40e4-b850-2d582bf4b5cb",
       "illustration_id": "f66d58dc-39f5-4488-8812-66b00e730468",
       "image_uris": {
@@ -78,8 +77,6 @@
       ],
       "power": "4",
       "toughness": "4",
-      "flavor_text": "Nahiri tried to bend Zendikar to Phyrexia's will. In response, the world rose against her.",
-      "artist": "Diego Gisbert",
       "artist_id": "3f4e975d-092c-40e4-b850-2d582bf4b5cb",
       "illustration_id": "4e2cd51a-4d1b-4652-8c9e-e2735a483cc6",
       "image_uris": {
@@ -151,7 +148,6 @@
   "collector_number": "194",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Diego Gisbert",
   "artist_ids": [
     "3f4e975d-092c-40e4-b850-2d582bf4b5cb"
   ],
@@ -168,23 +164,10 @@
     "source_uri": "https://press-start.com.au/news/2023/03/29/mtg-march-of-the-machine-preview/",
     "previewed_at": "2023-03-28"
   },
-  "prices": {
-    "usd": "0.33",
-    "usd_foil": "0.41",
-    "usd_etched": null,
-    "eur": "0.27",
-    "eur_foil": "0.65",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607249&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BZendikar%2B%252F%252F%2BAwakened%2BSkyclave",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BZendikar%2B%252F%252F%2BAwakened%2BSkyclave",
     "edhrec": "https://edhrec.com/route/?cc=Invasion+of+Zendikar"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490235%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=703415&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/110270?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

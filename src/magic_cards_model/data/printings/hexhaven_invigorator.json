@@ -98,9 +98,7 @@
   "collector_number": "106",
   "digital": false,
   "rarity": "mythic",
-  "flavor_text": "\"Behold ideal symbiosis.\"\n\u2014Kwia Vigorbloom",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Olivier Bernard",
   "artist_ids": [
     "11c6f325-68c2-4f2a-972d-98d2ffe6c224"
   ],
@@ -113,22 +111,9 @@
   "booster": false,
   "story_spotlight": false,
   "edhrec_rank": 14014,
-  "prices": {
-    "usd": "29.86",
-    "usd_foil": "34.32",
-    "usd_etched": null,
-    "eur": "18.58",
-    "eur_foil": "25.25",
-    "tix": "10.74"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHexhaven%2BInvigorator",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHexhaven%2BInvigorator",
     "edhrec": "https://edhrec.com/route/?cc=Hexhaven+Invigorator"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F715862%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=907303&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/155918?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

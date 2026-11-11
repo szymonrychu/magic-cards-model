@@ -134,7 +134,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "17471e86-f808-418a-9ac2-ce0ab092afbd",
-  "artist": "Cristi Balanescu",
   "artist_ids": [
     "c09ede88-a1b5-4a18-9895-dc8a965d28a5"
   ],
@@ -148,23 +147,10 @@
   "story_spotlight": false,
   "edhrec_rank": 3795,
   "penny_rank": 1142,
-  "prices": {
-    "usd": "3.39",
-    "usd_foil": "3.87",
-    "usd_etched": null,
-    "eur": "1.22",
-    "eur_foil": "2.10",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=588291&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DArgoth%252C%2BSanctum%2Bof%2BNature",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DArgoth%252C%2BSanctum%2Bof%2BNature",
     "edhrec": "https://edhrec.com/route/?cc=Argoth%2C+Sanctum+of+Nature"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F451446%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=681777&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/105136?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

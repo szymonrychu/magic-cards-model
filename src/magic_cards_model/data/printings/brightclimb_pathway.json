@@ -38,8 +38,6 @@
       "type_line": "Land",
       "oracle_text": "{T}: Add {W}.",
       "colors": [],
-      "flavor_text": "\"Why risk life and limb exploring the wilds? For this.\"\n\u2014Yavotz, Sea Gate Expeditionary House",
-      "artist": "Johannes Voss",
       "artist_id": "3593dd7e-c547-4a32-81cd-7da725f60118",
       "illustration_id": "79d90b4a-dd78-4880-a00e-aa58d1ad03af",
       "image_uris": {
@@ -63,8 +61,6 @@
       "type_line": "Land",
       "oracle_text": "{T}: Add {B}.",
       "colors": [],
-      "flavor_text": "\"My mother wanted me to take over the family dry goods business, but no. I had to come here.\"\n\u2014Yavotz, Sea Gate Expeditionary House",
-      "artist": "Johannes Voss",
       "artist_id": "3593dd7e-c547-4a32-81cd-7da725f60118",
       "illustration_id": "1e493142-fbbb-42df-b13d-968f828d3917",
       "image_uris": {
@@ -136,7 +132,6 @@
   "collector_number": "259",
   "digital": false,
   "rarity": "rare",
-  "artist": "Johannes Voss",
   "artist_ids": [
     "3593dd7e-c547-4a32-81cd-7da725f60118"
   ],
@@ -154,23 +149,10 @@
     "source_uri": "http://twitch.tv/videos/728086792",
     "previewed_at": "2020-09-01"
   },
-  "prices": {
-    "usd": "4.63",
-    "usd_foil": "4.66",
-    "usd_etched": null,
-    "eur": "4.59",
-    "eur_foil": "4.60",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=491911&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBrightclimb%2BPathway%2B%252F%252F%2BGrimclimb%2BPathway",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBrightclimb%2BPathway%2B%252F%252F%2BGrimclimb%2BPathway",
     "edhrec": "https://edhrec.com/route/?cc=Brightclimb+Pathway"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F221817%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=494779&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/83515?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

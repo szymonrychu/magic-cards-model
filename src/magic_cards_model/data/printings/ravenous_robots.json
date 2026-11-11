@@ -115,9 +115,7 @@
   "collector_number": "106",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"The mousers have a new command: to consume everything here . . . all of you will be destroyed!\"\n\u2014Baxter Stockman",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Kevin Sidharta",
   "artist_ids": [
     "e0bcff21-4a2b-4151-86a2-a462da7b5aaa"
   ],
@@ -133,22 +131,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 7603,
-  "prices": {
-    "usd": "1.54",
-    "usd_foil": "1.27",
-    "usd_etched": null,
-    "eur": "1.76",
-    "eur_foil": "2.30",
-    "tix": "0.32"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRavenous%2BRobots",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRavenous%2BRobots",
     "edhrec": "https://edhrec.com/route/?cc=Ravenous+Robots"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F673644%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=868315&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/147835?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

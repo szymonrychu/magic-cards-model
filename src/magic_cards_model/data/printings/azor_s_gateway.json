@@ -40,7 +40,6 @@
       "type_line": "Legendary Artifact",
       "oracle_text": "{1}, {T}: Draw a card, then exile a card from your hand. If cards with five or more different mana values are exiled with Azor's Gateway, you gain 5 life, untap Azor's Gateway, and transform it.",
       "colors": [],
-      "artist": "Yeong-Hao Han",
       "artist_id": "f8e7f8d6-6dde-4059-973c-30f1fd1bbe4e",
       "illustration_id": "6204e81b-e7af-4ac8-a16a-9c7f0598d67f",
       "image_uris": {
@@ -64,8 +63,6 @@
       "type_line": "Legendary Land",
       "oracle_text": "(Transforms from Azor's Gateway.)\n{T}: Add X mana of any one color, where X is your life total.",
       "colors": [],
-      "flavor_text": "As soon as Jace laid eyes on the great sphinx's chamber, the shards of memory began sliding into place.",
-      "artist": "Yeong-Hao Han",
       "artist_id": "f8e7f8d6-6dde-4059-973c-30f1fd1bbe4e",
       "illustration_id": "d7dcf0e5-86a8-4ab7-9dd0-2b9eb7eee6c2",
       "image_uris": {
@@ -155,7 +152,6 @@
   "collector_number": "176",
   "digital": false,
   "rarity": "mythic",
-  "artist": "Yeong-Hao Han",
   "artist_ids": [
     "f8e7f8d6-6dde-4059-973c-30f1fd1bbe4e"
   ],
@@ -171,23 +167,10 @@
   "story_spotlight": false,
   "edhrec_rank": 8592,
   "penny_rank": 5995,
-  "prices": {
-    "usd": "2.32",
-    "usd_foil": "10.84",
-    "usd_etched": null,
-    "eur": "2.27",
-    "eur_foil": "4.39",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=439838&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAzor%2527s%2BGateway%2B%252F%252F%2BSanctum%2Bof%2Bthe%2BSun",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAzor%2527s%2BGateway%2B%252F%252F%2BSanctum%2Bof%2Bthe%2BSun",
     "edhrec": "https://edhrec.com/route/?cc=Azor%27s+Gateway"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F155700%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=315356&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/66815?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -96,9 +96,7 @@
   "collector_number": "26",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "Teferi's body couldn't travel through time far enough, but with Kaya's help, his spirit could.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Kekai Kotaki",
   "artist_ids": [
     "4b771085-c049-4308-930d-ec9665f803a4"
   ],
@@ -112,23 +110,10 @@
   "story_spotlight": true,
   "edhrec_rank": 6841,
   "penny_rank": 1929,
-  "prices": {
-    "usd": "0.38",
-    "usd_foil": "0.44",
-    "usd_etched": null,
-    "eur": "0.72",
-    "eur_foil": "1.08",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=583611&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSoul%2BPartition",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSoul%2BPartition",
     "edhrec": "https://edhrec.com/route/?cc=Soul+Partition"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F451920%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=681996&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/104670?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

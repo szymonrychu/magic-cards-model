@@ -99,9 +99,7 @@
   "collector_number": "266",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"Will your friends be staying the night, Master Stark?\"\n\u2014Edwin Jarvis, Avengers Mansion butler",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Pablo Mendoza",
   "artist_ids": [
     "57f8d135-42e9-46e2-bb00-eff941b3152b"
   ],
@@ -117,22 +115,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 7673,
-  "prices": {
-    "usd": "1.73",
-    "usd_foil": "1.81",
-    "usd_etched": null,
-    "eur": "2.36",
-    "eur_foil": "2.92",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGathering%2BPlace",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGathering%2BPlace",
     "edhrec": "https://edhrec.com/route/?cc=Gathering+Place"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696353%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=893150&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/152721?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

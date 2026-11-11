@@ -53,7 +53,6 @@
       "oracle_text": "Flash\nFlying\nThis creature can block only creatures with flying.",
       "power": "3",
       "toughness": "1",
-      "artist": "Eric Deschamps",
       "artist_id": "37970e22-9cee-44c1-af44-5ee27cf26b76",
       "illustration_id": "7561a5ca-8e49-4f91-80f3-96124a7e10f5"
     },
@@ -63,7 +62,6 @@
       "mana_cost": "{1}{U}",
       "type_line": "Instant \u2014 Adventure",
       "oracle_text": "Return target nonland permanent an opponent controls to its owner's hand.",
-      "artist": "Eric Deschamps",
       "artist_id": "37970e22-9cee-44c1-af44-5ee27cf26b76"
     }
   ],
@@ -138,7 +136,6 @@
   "digital": false,
   "rarity": "mythic",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Eric Deschamps",
   "artist_ids": [
     "37970e22-9cee-44c1-af44-5ee27cf26b76"
   ],
@@ -151,22 +148,9 @@
   "booster": false,
   "story_spotlight": false,
   "edhrec_rank": 2674,
-  "prices": {
-    "usd": "0.45",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "1.04",
-    "eur_foil": null,
-    "tix": "0.04"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBrazen%2BBorrower%2B%252F%252F%2BPetty%2BTheft",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBrazen%2BBorrower%2B%252F%252F%2BPetty%2BTheft",
     "edhrec": "https://edhrec.com/route/?cc=Brazen+Borrower"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F687399%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=881510&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/148847?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

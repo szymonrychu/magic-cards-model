@@ -100,9 +100,7 @@
   "collector_number": "208",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "Every night, Cori threw the unsettling doll away. Every morning, it was back on the shelf, its eyes following her every move.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "J.P. Targete",
   "artist_ids": [
     "75a48ae5-d1d0-4a98-98a8-2ca5fd9e0cd9"
   ],
@@ -123,23 +121,10 @@
     "source_uri": "https://www.facebook.com/photo/?fbid=921753806636734&set=a.472813414864111",
     "previewed_at": "2024-09-09"
   },
-  "prices": {
-    "usd": "0.86",
-    "usd_foil": "0.92",
-    "usd_etched": null,
-    "eur": "0.28",
-    "eur_foil": "0.83",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=673613&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DArabella%252C%2BAbandoned%2BDoll",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DArabella%252C%2BAbandoned%2BDoll",
     "edhrec": "https://edhrec.com/route/?cc=Arabella%2C+Abandoned+Doll"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F578068%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=788304&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/130547?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

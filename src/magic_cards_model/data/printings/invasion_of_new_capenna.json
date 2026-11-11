@@ -41,7 +41,6 @@
         "W"
       ],
       "defense": "4",
-      "artist": "Diego Gisbert",
       "artist_id": "3f4e975d-092c-40e4-b850-2d582bf4b5cb",
       "illustration_id": "249dd644-c973-4277-adc7-f7d6deb47743",
       "image_uris": {
@@ -72,8 +71,6 @@
         "B",
         "W"
       ],
-      "flavor_text": "\"They're using my Halo stockpile for what?\"\n\u2014Jetmir",
-      "artist": "Diego Gisbert",
       "artist_id": "3f4e975d-092c-40e4-b850-2d582bf4b5cb",
       "illustration_id": "6796d943-7734-451f-91d8-b146f1f0e7dc",
       "image_uris": {
@@ -145,7 +142,6 @@
   "collector_number": "238",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Diego Gisbert",
   "artist_ids": [
     "3f4e975d-092c-40e4-b850-2d582bf4b5cb"
   ],
@@ -162,23 +158,10 @@
     "source_uri": "https://twitter.com/SimoneAKirA/status/1642986895603843073",
     "previewed_at": "2023-04-03"
   },
-  "prices": {
-    "usd": "0.21",
-    "usd_foil": "0.31",
-    "usd_etched": null,
-    "eur": "0.14",
-    "eur_foil": "0.35",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607304&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BNew%2BCapenna%2B%252F%252F%2BHoly%2BFrazzle-Cannon",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BNew%2BCapenna%2B%252F%252F%2BHoly%2BFrazzle-Cannon",
     "edhrec": "https://edhrec.com/route/?cc=Invasion+of+New+Capenna"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F491253%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704442&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/110380?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

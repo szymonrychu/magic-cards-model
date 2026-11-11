@@ -99,9 +99,7 @@
   "digital": false,
   "rarity": "rare",
   "watermark": "prismari",
-  "flavor_text": "\"Careful ideation crashes together with wild creativity. Though I am grateful to be made dean, I've found it difficult to represent just the one side.\"\n\u2014Veyran, dean of perfection",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Leon Tukker",
   "artist_ids": [
     "669b8b90-758d-4f9e-b4f7-98cd6742eb97"
   ],
@@ -115,22 +113,9 @@
   "story_spotlight": false,
   "edhrec_rank": 184,
   "penny_rank": 75,
-  "prices": {
-    "usd": "2.42",
-    "usd_foil": "2.65",
-    "usd_etched": null,
-    "eur": "1.78",
-    "eur_foil": "1.92",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DStormcarved%2BCoast",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DStormcarved%2BCoast",
     "edhrec": "https://edhrec.com/route/?cc=Stormcarved+Coast"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F686581%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=880546&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/150025?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -42,7 +42,6 @@
       ],
       "power": "2",
       "toughness": "1",
-      "artist": "Daarken",
       "artist_id": "e607a0d4-fc12-4c01-9e3f-501f5269b9cb",
       "illustration_id": "e4543968-8f2e-456a-a582-c75e866f5b02",
       "image_uris": {
@@ -73,8 +72,6 @@
       ],
       "power": "2",
       "toughness": "2",
-      "flavor_text": "All his old grudges suddenly seemed laughably petty. So he laughed.",
-      "artist": "Daarken",
       "artist_id": "e607a0d4-fc12-4c01-9e3f-501f5269b9cb",
       "illustration_id": "7ea2cc3d-ae55-423d-856b-761e89dc7d8a",
       "image_uris": {
@@ -146,7 +143,6 @@
   "collector_number": "61",
   "digital": false,
   "rarity": "rare",
-  "artist": "Daarken",
   "artist_ids": [
     "e607a0d4-fc12-4c01-9e3f-501f5269b9cb"
   ],
@@ -167,23 +163,10 @@
     "source_uri": "https://www.twitch.tv/videos/1143922637",
     "previewed_at": "2021-09-09"
   },
-  "prices": {
-    "usd": "1.05",
-    "usd_foil": "1.26",
-    "usd_etched": null,
-    "eur": "0.99",
-    "eur_foil": "1.50",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=534823&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMalevolent%2BHermit%2B%252F%252F%2BBenevolent%2BGeist",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMalevolent%2BHermit%2B%252F%252F%2BBenevolent%2BGeist",
     "edhrec": "https://edhrec.com/route/?cc=Malevolent+Hermit"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F248289%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=575025&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/93060?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

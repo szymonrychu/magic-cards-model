@@ -99,7 +99,6 @@
   "rarity": "rare",
   "watermark": "lorehold",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Raluca Marinescu",
   "artist_ids": [
     "1922e455-d09b-4922-afec-5f6fb5bb5111"
   ],
@@ -118,22 +117,9 @@
     "source_uri": "https://www.instagram.com/p/DWrqdMFhadi/?l=1",
     "previewed_at": "2026-04-03"
   },
-  "prices": {
-    "usd": "2.13",
-    "usd_foil": "1.63",
-    "usd_etched": null,
-    "eur": "0.85",
-    "eur_foil": "0.64",
-    "tix": "1.64"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPracticed%2BOffense",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPracticed%2BOffense",
     "edhrec": "https://edhrec.com/route/?cc=Practiced+Offense"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F688654%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=882035&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/149549?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

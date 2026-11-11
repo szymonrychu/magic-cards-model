@@ -43,7 +43,6 @@
       ],
       "power": "1",
       "toughness": "1",
-      "artist": "Olena Richards",
       "artist_id": "fad4282c-49d1-4b5b-be1d-713369fc8bc8",
       "illustration_id": "348ec7b8-21b5-4c84-adaa-77f983ad3e51",
       "image_uris": {
@@ -74,7 +73,6 @@
         "U",
         "W"
       ],
-      "artist": "Olena Richards",
       "artist_id": "fad4282c-49d1-4b5b-be1d-713369fc8bc8",
       "illustration_id": "7d860d46-3a79-43b6-89c0-ce628efaa207",
       "image_uris": {
@@ -164,7 +162,6 @@
   "collector_number": "233",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Olena Richards",
   "artist_ids": [
     "fad4282c-49d1-4b5b-be1d-713369fc8bc8"
   ],
@@ -184,23 +181,10 @@
     "source_uri": "https://www.youtube.com/watch?v=xcRbVozw5-c",
     "previewed_at": "2021-10-31"
   },
-  "prices": {
-    "usd": "0.18",
-    "usd_foil": "0.36",
-    "usd_etched": null,
-    "eur": "0.10",
-    "eur_foil": "0.24",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=541103&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBrine%2BComber%2B%252F%252F%2BBrinebound%2BGift",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBrine%2BComber%2B%252F%252F%2BBrinebound%2BGift",
     "edhrec": "https://edhrec.com/route/?cc=Brine+Comber"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F253049%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=581692&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/94834?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

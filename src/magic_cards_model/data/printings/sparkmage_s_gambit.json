@@ -94,9 +94,7 @@
   "collector_number": "124",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "\"A touch of lightning, and anyone can be taught to dance.\"\n\u2014Tobin, sparkmage",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Mathias Kollros",
   "artist_ids": [
     "2ae0dd12-047c-4efb-80d7-bccc3bac5fba"
   ],
@@ -114,23 +112,10 @@
     "source_uri": "https://magic.wizards.com/en/articles/archive/feature/double-masters-2022-release-notes-2022-06-24",
     "previewed_at": "2022-06-24"
   },
-  "prices": {
-    "usd": "0.13",
-    "usd_foil": "0.24",
-    "usd_etched": null,
-    "eur": "0.04",
-    "eur_foil": "0.08",
-    "tix": "0.04"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=571457&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSparkmage%2527s%2BGambit",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSparkmage%2527s%2BGambit",
     "edhrec": "https://edhrec.com/route/?cc=Sparkmage%27s+Gambit"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F277237%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=665751&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/101732?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

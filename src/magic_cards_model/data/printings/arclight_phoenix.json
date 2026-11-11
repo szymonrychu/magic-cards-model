@@ -99,9 +99,7 @@
   "collector_number": "100",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "Some storms never blow over.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Slawomir Maniak",
   "artist_ids": [
     "d887bc66-2779-416c-a1ff-d8720242063e"
   ],
@@ -114,23 +112,10 @@
   "booster": true,
   "story_spotlight": false,
   "edhrec_rank": 19167,
-  "prices": {
-    "usd": "0.71",
-    "usd_foil": "0.92",
-    "usd_etched": null,
-    "eur": "1.43",
-    "eur_foil": "1.06",
-    "tix": "2.31"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=643107&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DArclight%2BPhoenix",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DArclight%2BPhoenix",
     "edhrec": "https://edhrec.com/route/?cc=Arclight+Phoenix"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F531078%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=748448&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/120727?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

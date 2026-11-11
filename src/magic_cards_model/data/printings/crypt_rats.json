@@ -96,9 +96,7 @@
   "collector_number": "84",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"Shoo, you little worm tails\u2014go away! My corpses aren't your dinner!\"\n\u2014Ghoulcaller Gisa",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Matt Cavotta",
   "artist_ids": [
     "2e6a0611-9411-4ba4-98e3-c0e18cbf9f83"
   ],
@@ -115,23 +113,10 @@
     "source_uri": "https://magic.wizards.com/en/products/modernhorizons/cards",
     "previewed_at": "2019-05-22"
   },
-  "prices": {
-    "usd": "0.59",
-    "usd_foil": "5.81",
-    "usd_etched": null,
-    "eur": "0.59",
-    "eur_foil": "7.90",
-    "tix": "0.67"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=464033&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCrypt%2BRats",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCrypt%2BRats",
     "edhrec": "https://edhrec.com/route/?cc=Crypt+Rats"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F190879%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=374673&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/72540?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

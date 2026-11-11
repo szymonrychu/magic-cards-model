@@ -40,7 +40,6 @@
       "colors": [
         "W"
       ],
-      "artist": "Wayne Reynolds",
       "artist_id": "afc47cec-3ccc-404e-a8c6-4d83dd504271",
       "illustration_id": "57df9477-1086-411f-9b94-cfd0edaf78b4",
       "image_uris": {
@@ -71,7 +70,6 @@
       ],
       "power": "5",
       "toughness": "5",
-      "artist": "Wayne Reynolds",
       "artist_id": "afc47cec-3ccc-404e-a8c6-4d83dd504271",
       "illustration_id": "a5c8c7eb-79b0-4646-ba70-0d0a100e54e3",
       "image_uris": {
@@ -143,7 +141,6 @@
   "collector_number": "36",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Wayne Reynolds",
   "artist_ids": [
     "afc47cec-3ccc-404e-a8c6-4d83dd504271"
   ],
@@ -160,23 +157,10 @@
     "source_uri": "https://www.youtube.com/watch?v=Szm0yzSUUm0",
     "previewed_at": "2023-10-24"
   },
-  "prices": {
-    "usd": "0.33",
-    "usd_foil": "0.29",
-    "usd_etched": null,
-    "eur": "0.09",
-    "eur_foil": "0.28",
-    "tix": "0.04"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=636729&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSpring-Loaded%2BSawblades%2B%252F%252F%2BBladewheel%2BChariot",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSpring-Loaded%2BSawblades%2B%252F%252F%2BBladewheel%2BChariot",
     "edhrec": "https://edhrec.com/route/?cc=Spring-Loaded+Sawblades"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F524229%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=740859&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/117854?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

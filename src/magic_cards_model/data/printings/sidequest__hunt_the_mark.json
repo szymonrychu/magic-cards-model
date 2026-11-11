@@ -36,7 +36,6 @@
       "colors": [
         "B"
       ],
-      "artist": "Nino Is",
       "artist_id": "ae717001-28ec-46e3-a07e-f16b6deaf9e2",
       "illustration_id": "f83a8a35-cc6e-4459-ad57-28cdf4ee5194",
       "image_uris": {
@@ -67,8 +66,6 @@
       ],
       "power": "5",
       "toughness": "6",
-      "flavor_text": "Legend says it is an Anima, guardian to a sacred blade. Though most sacred amongst its kind, its great power drove it to madness, and in the end, it became a threat to its own creator.",
-      "artist": "Joshua Raphael",
       "artist_id": "553b2a73-780f-414b-b2d7-3b7888821082",
       "illustration_id": "8e00af7a-f558-4565-a42e-ca8ec639afa5",
       "image_uris": {
@@ -158,7 +155,6 @@
   "collector_number": "119",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Nino Is & Joshua Raphael",
   "artist_ids": [
     "ae717001-28ec-46e3-a07e-f16b6deaf9e2",
     "553b2a73-780f-414b-b2d7-3b7888821082"
@@ -185,22 +181,9 @@
     "source_uri": "https://na.finalfantasy.com/topics/594",
     "previewed_at": "2025-05-22"
   },
-  "prices": {
-    "usd": "0.21",
-    "usd_foil": "0.26",
-    "usd_etched": null,
-    "eur": "0.06",
-    "eur_foil": "0.22",
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSidequest%253A%2BHunt%2Bthe%2BMark%2B%252F%252F%2BYiazmat%252C%2BUltimate%2BMark",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSidequest%253A%2BHunt%2Bthe%2BMark%2B%252F%252F%2BYiazmat%252C%2BUltimate%2BMark",
     "edhrec": "https://edhrec.com/route/?cc=Sidequest%3A+Hunt+the+Mark"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F633397%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=826884&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/141167?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -31,8 +31,6 @@
       "type_line": "Artifact",
       "oracle_text": "{T}: You gain 1 life. Then if you have at least 10 life more than your starting life total, transform this artifact.",
       "colors": [],
-      "flavor_text": "The sweet taste of hope's promise.",
-      "artist": "Ryan Yee",
       "artist_id": "8955dca7-3e37-42b4-83a9-167c78a2178f",
       "illustration_id": "7cdf9a5b-b43b-4bc9-8800-67070923a81f",
       "image_uris": {
@@ -56,8 +54,6 @@
       "type_line": "Artifact",
       "oracle_text": "{T}: Target player loses 5 life.",
       "colors": [],
-      "flavor_text": "The bitter taste of life's only certainty.",
-      "artist": "Ryan Yee",
       "artist_id": "8955dca7-3e37-42b4-83a9-167c78a2178f",
       "illustration_id": "a0bedbae-620a-47cf-9a0c-65af1d7b8774",
       "image_uris": {
@@ -146,7 +142,6 @@
   "collector_number": "257",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Ryan Yee",
   "artist_ids": [
     "8955dca7-3e37-42b4-83a9-167c78a2178f"
   ],
@@ -158,23 +153,10 @@
   "story_spotlight": false,
   "edhrec_rank": 8226,
   "penny_rank": 6586,
-  "prices": {
-    "usd": "0.35",
-    "usd_foil": "0.39",
-    "usd_etched": null,
-    "eur": "0.22",
-    "eur_foil": "0.37",
-    "tix": "0.04"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=686107&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DChalice%2Bof%2BLife%2B%252F%252F%2BChalice%2Bof%2BDeath",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DChalice%2Bof%2BLife%2B%252F%252F%2BChalice%2Bof%2BDeath",
     "edhrec": "https://edhrec.com/route/?cc=Chalice+of+Life"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F609963%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=805859&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/135944?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

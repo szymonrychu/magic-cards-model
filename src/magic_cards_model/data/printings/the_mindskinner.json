@@ -100,9 +100,7 @@
   "collector_number": "66",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "It slices away the most precious memories first, then the mundane, until all that remains is blank, formless fear.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Abz J Harding",
   "artist_ids": [
     "2e541c44-40bb-4883-a578-3dcc2af41888"
   ],
@@ -125,23 +123,10 @@
     "source_uri": "https://www.numerama.com/pop-culture/1801948-magic-decouvrez-en-exclusivite-mondiale-2-cartes-de-la-prochaine-extension-2.html",
     "previewed_at": "2024-09-06"
   },
-  "prices": {
-    "usd": "2.32",
-    "usd_foil": "3.60",
-    "usd_etched": null,
-    "eur": "0.67",
-    "eur_foil": "1.45",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=673471&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThe%2BMindskinner",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThe%2BMindskinner",
     "edhrec": "https://edhrec.com/route/?cc=The+Mindskinner"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F577660%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=788244&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/130263?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

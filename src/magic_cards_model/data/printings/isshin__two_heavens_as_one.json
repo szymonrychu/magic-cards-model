@@ -102,9 +102,7 @@
   "collector_number": "224",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "Trained by the Imperials but disillusioned by their rigidity, he gave his heart\u2014and his swords\u2014to the Asari Uprising.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Ryan Pancoast",
   "artist_ids": [
     "89cc9475-dda2-4d13-bf88-54b92867a25c"
   ],
@@ -126,23 +124,10 @@
     "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/isshin-two-heavens-one-2022-02-02",
     "previewed_at": "2022-02-03"
   },
-  "prices": {
-    "usd": "3.85",
-    "usd_foil": "4.21",
-    "usd_etched": null,
-    "eur": "3.02",
-    "eur_foil": "3.92",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=548536&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DIsshin%252C%2BTwo%2BHeavens%2Bas%2BOne",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DIsshin%252C%2BTwo%2BHeavens%2Bas%2BOne",
     "edhrec": "https://edhrec.com/route/?cc=Isshin%2C+Two+Heavens+as+One"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F262579%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=607627&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/97396?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

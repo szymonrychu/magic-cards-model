@@ -101,7 +101,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Marius Bota",
   "artist_ids": [
     "f3e8124b-0b6d-48ee-96de-6ff7e5a4da75"
   ],
@@ -126,22 +125,9 @@
     "source_uri": "https://www.gamespot.com/articles/gamespots-exclusive-magic-the-gathering-the-hobbit-cards-turn-death-into-an-opportunity/",
     "previewed_at": "2026-07-20"
   },
-  "prices": {
-    "usd": "0.57",
-    "usd_foil": "0.60",
-    "usd_etched": null,
-    "eur": "0.51",
-    "eur_foil": "0.57",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThe%2BMaster%2Bof%2BLake-town",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThe%2BMaster%2Bof%2BLake-town",
     "edhrec": "https://edhrec.com/route/?cc=The+Master+of+Lake-town"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F707281%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=898492&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/154084?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

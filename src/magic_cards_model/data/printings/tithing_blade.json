@@ -38,7 +38,6 @@
       "colors": [
         "B"
       ],
-      "artist": "Michael Walsh",
       "artist_id": "6a86bcd5-4829-4bc6-ad82-a4448b28d089",
       "illustration_id": "bf6dd36e-85a2-4976-af1e-c51838ced8a7",
       "image_uris": {
@@ -67,8 +66,6 @@
       "color_indicator": [
         "B"
       ],
-      "flavor_text": "\"Slake my thirst so that we both may be free.\"\n\u2014Faded inscription",
-      "artist": "Michael Walsh",
       "artist_id": "6a86bcd5-4829-4bc6-ad82-a4448b28d089",
       "illustration_id": "bc67ead6-11da-4190-a48e-495401cc5e79",
       "image_uris": {
@@ -140,7 +137,6 @@
   "collector_number": "128",
   "digital": false,
   "rarity": "common",
-  "artist": "Michael Walsh",
   "artist_ids": [
     "6a86bcd5-4829-4bc6-ad82-a4448b28d089"
   ],
@@ -152,23 +148,10 @@
   "story_spotlight": false,
   "edhrec_rank": 4783,
   "penny_rank": 82,
-  "prices": {
-    "usd": "0.56",
-    "usd_foil": "0.82",
-    "usd_etched": null,
-    "eur": "0.93",
-    "eur_foil": "1.47",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=636834&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTithing%2BBlade%2B%252F%252F%2BConsuming%2BSepulcher",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTithing%2BBlade%2B%252F%252F%2BConsuming%2BSepulcher",
     "edhrec": "https://edhrec.com/route/?cc=Tithing+Blade"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F526379%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=744006&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/118064?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

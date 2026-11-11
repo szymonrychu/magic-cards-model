@@ -104,7 +104,6 @@
   "rarity": "common",
   "watermark": "rakdos",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Slawomir Maniak",
   "artist_ids": [
     "d887bc66-2779-416c-a1ff-d8720242063e"
   ],
@@ -122,23 +121,10 @@
     "source_uri": "https://magic.wizards.com/en/articles/archive/feature/ravnica-allegiance-mechanics-2018-12-17",
     "previewed_at": "2018-12-17"
   },
-  "prices": {
-    "usd": "0.07",
-    "usd_foil": "0.35",
-    "usd_etched": null,
-    "eur": "0.04",
-    "eur_foil": "0.28",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=457340&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRafter%2BDemon",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRafter%2BDemon",
     "edhrec": "https://edhrec.com/route/?cc=Rafter+Demon"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F182136%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=367807&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/71392?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

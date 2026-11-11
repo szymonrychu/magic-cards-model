@@ -95,9 +95,7 @@
   "collector_number": "117",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "\"Even alone I outnumber you.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Mark Winters",
   "artist_ids": [
     "3d8a379d-f4e8-440d-99d5-5ec107757348"
   ],
@@ -110,23 +108,10 @@
   "story_spotlight": false,
   "edhrec_rank": 11639,
   "penny_rank": 1831,
-  "prices": {
-    "usd": "0.26",
-    "usd_foil": "1.48",
-    "usd_etched": null,
-    "eur": "0.22",
-    "eur_foil": "1.33",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=378489&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAspect%2Bof%2BHydra",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAspect%2Bof%2BHydra",
     "edhrec": "https://edhrec.com/route/?cc=Aspect+of+Hydra"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F79095%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=265890&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/51557?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

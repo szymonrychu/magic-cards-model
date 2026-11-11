@@ -52,7 +52,6 @@
       "oracle_text": "At the beginning of each end step, if three or more creatures died this turn, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
       "power": "2",
       "toughness": "2",
-      "artist": "Cynthia Sheppard",
       "artist_id": "9dfbdd58-65e6-40cf-951a-80e141061939",
       "illustration_id": "8588ee7b-b874-485e-af97-3a1b4229b2c1"
     },
@@ -62,7 +61,6 @@
       "mana_cost": "{B}",
       "type_line": "Instant",
       "oracle_text": "Target player draws three cards and loses 3 life.",
-      "artist": "Cynthia Sheppard",
       "artist_id": "9dfbdd58-65e6-40cf-951a-80e141061939"
     }
   ],
@@ -121,7 +119,6 @@
   "digital": false,
   "rarity": "mythic",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Cynthia Sheppard",
   "artist_ids": [
     "9dfbdd58-65e6-40cf-951a-80e141061939"
   ],
@@ -134,22 +131,9 @@
   "booster": false,
   "story_spotlight": false,
   "edhrec_rank": 16648,
-  "prices": {
-    "usd": "7.03",
-    "usd_foil": "15.85",
-    "usd_etched": null,
-    "eur": "5.54",
-    "eur_foil": "14.72",
-    "tix": "1.63"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBloodline%2BRecollector%2B%252F%252F%2BAncestral%2BCraving",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBloodline%2BRecollector%2B%252F%252F%2BAncestral%2BCraving",
     "edhrec": "https://edhrec.com/route/?cc=Bloodline+Recollector"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F692994%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=905779&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/155804?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

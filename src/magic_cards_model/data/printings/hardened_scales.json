@@ -92,9 +92,7 @@
   "collector_number": "272",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"Naga shed their scales. We wear ours with pride.\"\n\u2014Golran, dragonscale captain",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Mark Winters",
   "artist_ids": [
     "3d8a379d-f4e8-440d-99d5-5ec107757348"
   ],
@@ -111,22 +109,9 @@
   "story_spotlight": false,
   "edhrec_rank": 185,
   "penny_rank": 532,
-  "prices": {
-    "usd": "3.89",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "2.10",
-    "eur_foil": null,
-    "tix": "0.04"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHardened%2BScales",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHardened%2BScales",
     "edhrec": "https://edhrec.com/route/?cc=Hardened+Scales"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F687521%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=881604&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/149011?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

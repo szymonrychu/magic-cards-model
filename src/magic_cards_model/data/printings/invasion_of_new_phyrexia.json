@@ -40,7 +40,6 @@
         "W"
       ],
       "defense": "6",
-      "artist": "Chris Rallis",
       "artist_id": "a8e7b854-b15a-421a-b66d-6e68187ae285",
       "illustration_id": "48b4427a-82fb-428c-8e3f-280702202a04",
       "image_uris": {
@@ -72,7 +71,6 @@
         "W"
       ],
       "loyalty": "4",
-      "artist": "Chris Rallis",
       "artist_id": "a8e7b854-b15a-421a-b66d-6e68187ae285",
       "illustration_id": "748c36f4-8df0-4949-8514-82386f1852f7",
       "image_uris": {
@@ -170,7 +168,6 @@
   "collector_number": "239",
   "digital": false,
   "rarity": "mythic",
-  "artist": "Chris Rallis",
   "artist_ids": [
     "a8e7b854-b15a-421a-b66d-6e68187ae285"
   ],
@@ -183,23 +180,10 @@
   "story_spotlight": true,
   "edhrec_rank": 10365,
   "penny_rank": 6357,
-  "prices": {
-    "usd": "1.09",
-    "usd_foil": "1.87",
-    "usd_etched": null,
-    "eur": "1.23",
-    "eur_foil": "2.51",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607306&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BNew%2BPhyrexia%2B%252F%252F%2BTeferi%2BAkosa%2Bof%2BZhalfir",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BNew%2BPhyrexia%2B%252F%252F%2BTeferi%2BAkosa%2Bof%2BZhalfir",
     "edhrec": "https://edhrec.com/route/?cc=Invasion+of+New+Phyrexia"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490340%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=703478&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/110384?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -46,7 +46,6 @@
         "W"
       ],
       "defense": "7",
-      "artist": "Mathias Kollros",
       "artist_id": "2ae0dd12-047c-4efb-80d7-bccc3bac5fba",
       "illustration_id": "f580122c-7d41-48f1-95fb-00ef6346b125",
       "image_uris": {
@@ -76,7 +75,6 @@
         "U",
         "W"
       ],
-      "artist": "Mathias Kollros",
       "artist_id": "2ae0dd12-047c-4efb-80d7-bccc3bac5fba",
       "illustration_id": "9890958e-7f57-449e-ac4c-adfb0591ae2a",
       "image_uris": {
@@ -166,7 +164,6 @@
   "collector_number": "230",
   "digital": false,
   "rarity": "rare",
-  "artist": "Mathias Kollros",
   "artist_ids": [
     "2ae0dd12-047c-4efb-80d7-bccc3bac5fba"
   ],
@@ -184,23 +181,10 @@
     "source_uri": "https://mob.iyingdi.com/post/5266532",
     "previewed_at": "2023-03-30"
   },
-  "prices": {
-    "usd": "0.33",
-    "usd_foil": "0.38",
-    "usd_etched": null,
-    "eur": "0.26",
-    "eur_foil": "0.53",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607288&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BAlara%2B%252F%252F%2BAwaken%2Bthe%2BMaelstrom",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BAlara%2B%252F%252F%2BAwaken%2Bthe%2BMaelstrom",
     "edhrec": "https://edhrec.com/route/?cc=Invasion+of+Alara"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F491252%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704420&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/110348?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

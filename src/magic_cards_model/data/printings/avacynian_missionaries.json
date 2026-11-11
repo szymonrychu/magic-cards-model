@@ -39,8 +39,6 @@
       ],
       "power": "3",
       "toughness": "3",
-      "flavor_text": "\"We come bearing the word of Avacyn and the Lunarch Council.\"",
-      "artist": "Wayne Reynolds",
       "artist_id": "afc47cec-3ccc-404e-a8c6-4d83dd504271",
       "illustration_id": "abe9d2b7-8ae3-4f03-9dc4-c613b8fab1df",
       "image_uris": {
@@ -71,8 +69,6 @@
       ],
       "power": "4",
       "toughness": "4",
-      "flavor_text": "\"We come bearing the tools of confession and absolution.\"",
-      "artist": "Wayne Reynolds",
       "artist_id": "afc47cec-3ccc-404e-a8c6-4d83dd504271",
       "illustration_id": "55edf2a2-dd7c-4b2a-9377-88a6d1c38b99",
       "image_uris": {
@@ -161,7 +157,6 @@
   "collector_number": "6",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Wayne Reynolds",
   "artist_ids": [
     "afc47cec-3ccc-404e-a8c6-4d83dd504271"
   ],
@@ -176,23 +171,10 @@
   "story_spotlight": false,
   "edhrec_rank": 27549,
   "penny_rank": 12920,
-  "prices": {
-    "usd": "0.12",
-    "usd_foil": "0.21",
-    "usd_etched": null,
-    "eur": "0.10",
-    "eur_foil": "0.27",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=409743&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAvacynian%2BMissionaries%2B%252F%252F%2BLunarch%2BInquisitors",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAvacynian%2BMissionaries%2B%252F%252F%2BLunarch%2BInquisitors",
     "edhrec": "https://edhrec.com/route/?cc=Avacynian+Missionaries"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F114849%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=288642&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/59882?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

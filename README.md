@@ -56,3 +56,9 @@ The `spellslinger` MCP server is configured in `.mcp.json` and serves the
 Comprehensive Rules, curated rulings, and card data. Use it to research a
 mechanic before modelling it - see [docs/mcp-tools.md](docs/mcp-tools.md). It is
 exposed to the home network by `deploy/mcp-ingress.yaml`.
+
+## Fan Content notice
+
+unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. (c)Wizards of the Coast LLC.
+
+Card data comes from [Scryfall](https://scryfall.com).

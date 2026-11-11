@@ -40,7 +40,6 @@
       ],
       "power": "3",
       "toughness": "4",
-      "artist": "Annie Stegg",
       "artist_id": "19360be6-f563-42aa-afd8-04a361843fa6",
       "illustration_id": "d8c83639-70af-4633-9ada-0196b281f8f8",
       "image_uris": {
@@ -71,7 +70,6 @@
       ],
       "power": "3",
       "toughness": "4",
-      "artist": "Annie Stegg",
       "artist_id": "19360be6-f563-42aa-afd8-04a361843fa6",
       "illustration_id": "d5bd4ebb-b9a0-4efc-817b-d4858714c46c",
       "image_uris": {
@@ -143,7 +141,6 @@
   "collector_number": "199",
   "digital": false,
   "rarity": "rare",
-  "artist": "Annie Stegg",
   "artist_ids": [
     "19360be6-f563-42aa-afd8-04a361843fa6"
   ],
@@ -158,22 +155,9 @@
   "booster": true,
   "story_spotlight": false,
   "edhrec_rank": 11990,
-  "prices": {
-    "usd": "0.32",
-    "usd_foil": "0.38",
-    "usd_etched": null,
-    "eur": "0.22",
-    "eur_foil": "0.54",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTrystan%252C%2BCallous%2BCultivator%2B%252F%252F%2BTrystan%252C%2BPenitent%2BCuller",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTrystan%252C%2BCallous%2BCultivator%2B%252F%252F%2BTrystan%252C%2BPenitent%2BCuller",
     "edhrec": "https://edhrec.com/route/?cc=Trystan%2C+Callous+Cultivator"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671037%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=864608&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/146789?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -52,7 +52,6 @@
       "type_line": "Sorcery",
       "oracle_text": "Surveil 2, then draw a card. (To surveil 2, look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
       "watermark": "dimir",
-      "artist": "Mark Behm",
       "artist_id": "ccf77963-723f-4137-b364-7417079e8ab9",
       "illustration_id": "6b4c151d-16cb-412a-a72b-81af2c62f5ed"
     },
@@ -63,7 +62,6 @@
       "type_line": "Instant",
       "oracle_text": "Each opponent returns a nonland permanent they control with the greatest mana value among permanents they control to its owner's hand, then discards a card.",
       "watermark": "dimir",
-      "artist": "Mark Behm",
       "artist_id": "ccf77963-723f-4137-b364-7417079e8ab9"
     }
   ],
@@ -120,7 +118,6 @@
   "digital": false,
   "rarity": "uncommon",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Mark Behm",
   "artist_ids": [
     "ccf77963-723f-4137-b364-7417079e8ab9"
   ],
@@ -133,23 +130,10 @@
   "story_spotlight": false,
   "edhrec_rank": 10243,
   "penny_rank": 1368,
-  "prices": {
-    "usd": "0.12",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.21",
-    "eur_foil": null,
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=651922&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDiscovery%2B%252F%252F%2BDispersal",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDiscovery%2B%252F%252F%2BDispersal",
     "edhrec": "https://edhrec.com/route/?cc=Discovery+%2F%2F+Dispersal"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F534615%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=752671&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/123162?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

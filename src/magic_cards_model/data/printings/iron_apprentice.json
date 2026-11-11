@@ -94,9 +94,7 @@
   "collector_number": "248",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "\"I needed an extra set of hands, so I built one.\"\n\u2014Kenji, Sokenzan artisan",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Kekai Kotaki",
   "artist_ids": [
     "4b771085-c049-4308-930d-ec9665f803a4"
   ],
@@ -109,23 +107,10 @@
   "story_spotlight": false,
   "edhrec_rank": 6051,
   "penny_rank": 2103,
-  "prices": {
-    "usd": "0.26",
-    "usd_foil": "0.39",
-    "usd_etched": null,
-    "eur": "0.10",
-    "eur_foil": "0.30",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=548561&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DIron%2BApprentice",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DIron%2BApprentice",
     "edhrec": "https://edhrec.com/route/?cc=Iron+Apprentice"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F262708%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=608289&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/97446?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

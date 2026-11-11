@@ -43,7 +43,6 @@
       ],
       "power": "6",
       "toughness": "6",
-      "artist": "Daarken",
       "artist_id": "e607a0d4-fc12-4c01-9e3f-501f5269b9cb",
       "illustration_id": "8383bac7-d6ca-4c93-8078-ba6e82e65bb3",
       "image_uris": {
@@ -72,7 +71,6 @@
       "color_indicator": [
         "G"
       ],
-      "artist": "Daarken",
       "artist_id": "e607a0d4-fc12-4c01-9e3f-501f5269b9cb",
       "illustration_id": "e4938da9-124b-4847-90fd-3623aca16ad2",
       "image_uris": {
@@ -144,7 +142,6 @@
   "collector_number": "213",
   "digital": false,
   "rarity": "mythic",
-  "artist": "Daarken",
   "artist_ids": [
     "e607a0d4-fc12-4c01-9e3f-501f5269b9cb"
   ],
@@ -165,23 +162,10 @@
     "source_uri": "https://twitter.com/theaumery/status/1641713902382723073",
     "previewed_at": "2023-03-31"
   },
-  "prices": {
-    "usd": "6.44",
-    "usd_foil": "6.71",
-    "usd_etched": null,
-    "eur": "5.95",
-    "eur_foil": "7.46",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607270&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVorinclex%2B%252F%252F%2BThe%2BGrand%2BEvolution",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVorinclex%2B%252F%252F%2BThe%2BGrand%2BEvolution",
     "edhrec": "https://edhrec.com/route/?cc=Vorinclex"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490630%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704055&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/110312?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -100,9 +100,7 @@
   "collector_number": "62",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"We've drained human life force for millennia. Then one day, turtles! Delectable! We'll suck you dry and spit out the shells!\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Alix Branwyn",
   "artist_ids": [
     "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d"
   ],
@@ -117,22 +115,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 13194,
-  "prices": {
-    "usd": "0.34",
-    "usd_foil": "0.33",
-    "usd_etched": null,
-    "eur": "0.20",
-    "eur_foil": "0.61",
-    "tix": "0.21"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDream%2BBeavers",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDream%2BBeavers",
     "edhrec": "https://edhrec.com/route/?cc=Dream+Beavers"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F680261%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=873919&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/147747?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

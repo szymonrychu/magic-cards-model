@@ -47,8 +47,6 @@
         "B",
         "G"
       ],
-      "flavor_text": "Every journey has its inevitable end . . .",
-      "artist": "Deruchenko Alexander",
       "artist_id": "806f6ff9-6ed4-4e93-998a-a562c0b792e6",
       "illustration_id": "f3c48762-8d2a-4204-be7a-575f655ca934",
       "image_uris": {
@@ -72,8 +70,6 @@
       "type_line": "Legendary Land",
       "oracle_text": "(Transforms from Journey to Eternity.)\n{T}: Add one mana of any color.\n{3}{B}{G}, {T}: Return target creature card from your graveyard to the battlefield.",
       "colors": [],
-      "flavor_text": ". . . but every end is a new beginning.",
-      "artist": "Deruchenko Alexander",
       "artist_id": "806f6ff9-6ed4-4e93-998a-a562c0b792e6",
       "illustration_id": "9e66b220-cb18-4199-a154-8cb79b8a91e4",
       "image_uris": {
@@ -163,7 +159,6 @@
   "collector_number": "160",
   "digital": false,
   "rarity": "rare",
-  "artist": "Deruchenko Alexander",
   "artist_ids": [
     "806f6ff9-6ed4-4e93-998a-a562c0b792e6"
   ],
@@ -179,23 +174,10 @@
   "story_spotlight": false,
   "edhrec_rank": 4069,
   "penny_rank": 8629,
-  "prices": {
-    "usd": "4.58",
-    "usd_foil": "11.02",
-    "usd_etched": null,
-    "eur": "5.07",
-    "eur_foil": "8.26",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=439818&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DJourney%2Bto%2BEternity%2B%252F%252F%2BAtzal%252C%2BCave%2Bof%2BEternity",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DJourney%2Bto%2BEternity%2B%252F%252F%2BAtzal%252C%2BCave%2Bof%2BEternity",
     "edhrec": "https://edhrec.com/route/?cc=Journey+to+Eternity"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F155581%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=315288&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/66775?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

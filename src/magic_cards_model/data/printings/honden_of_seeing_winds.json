@@ -95,9 +95,7 @@
   "collector_number": "54",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "To the sorrow of all, its winds found sin in the hearts of those who once learned from its wisdom.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Martina Pilcerova",
   "artist_ids": [
     "30fead7c-da53-4c1b-b514-4be6e5ce487c"
   ],
@@ -110,23 +108,10 @@
   "story_spotlight": false,
   "edhrec_rank": 5326,
   "penny_rank": 4293,
-  "prices": {
-    "usd": "2.74",
-    "usd_foil": "7.47",
-    "usd_etched": null,
-    "eur": "1.62",
-    "eur_foil": "4.85",
-    "tix": "0.04"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=413596&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHonden%2Bof%2BSeeing%2BWinds",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHonden%2Bof%2BSeeing%2BWinds",
     "edhrec": "https://edhrec.com/route/?cc=Honden+of+Seeing+Winds"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F118728%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=290360&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/60991?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

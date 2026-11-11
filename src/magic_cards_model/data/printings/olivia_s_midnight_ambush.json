@@ -97,9 +97,7 @@
   "collector_number": "118",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "\"And you were almost finished with that ritual, weren't you, darling? How very rude of me. To make it up to you, I'll send you an invitation to my wedding.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Chris Rallis",
   "artist_ids": [
     "a8e7b854-b15a-421a-b66d-6e68187ae285"
   ],
@@ -111,23 +109,10 @@
   "booster": true,
   "story_spotlight": true,
   "edhrec_rank": 27048,
-  "prices": {
-    "usd": "0.12",
-    "usd_foil": "0.27",
-    "usd_etched": null,
-    "eur": "0.06",
-    "eur_foil": "0.07",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=534892&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DOlivia%2527s%2BMidnight%2BAmbush",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DOlivia%2527s%2BMidnight%2BAmbush",
     "edhrec": "https://edhrec.com/route/?cc=Olivia%27s+Midnight+Ambush"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F248325%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=575047&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/93198?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

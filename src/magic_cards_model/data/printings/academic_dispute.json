@@ -98,9 +98,7 @@
   "collector_number": "91",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"I'll show you original research, you hack!\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Manuel Casta\u00f1\u00f3n",
   "artist_ids": [
     "35f11eeb-36ff-4059-bb70-d1274f5bd858"
   ],
@@ -118,23 +116,10 @@
     "source_uri": "https://www.esports.com/de/magic-the-gathering-strixhaven-karten-vorschau-neue-optionen-fuer-rot-19",
     "previewed_at": "2021-03-30"
   },
-  "prices": {
-    "usd": "0.22",
-    "usd_foil": "0.38",
-    "usd_etched": null,
-    "eur": "0.12",
-    "eur_foil": "0.36",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=513568&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAcademic%2BDispute",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAcademic%2BDispute",
     "edhrec": "https://edhrec.com/route/?cc=Academic+Dispute"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F235873%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=557514&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/88659?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

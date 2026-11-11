@@ -100,9 +100,7 @@
   "collector_number": "237",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "She is cursed with visions of monsters and suffering . . . and all her visions come true.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Ekaterina Burmak",
   "artist_ids": [
     "2a9f3780-fcc8-4ec5-b403-ee1d1370d3b4"
   ],
@@ -124,23 +122,10 @@
     "source_uri": "https://twitter.com/coL_AliasV/status/1455898055413313536",
     "previewed_at": "2021-11-03"
   },
-  "prices": {
-    "usd": "0.38",
-    "usd_foil": "0.42",
-    "usd_etched": null,
-    "eur": "0.49",
-    "eur_foil": "0.48",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=541111&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEruth%252C%2BTormented%2BProphet",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEruth%252C%2BTormented%2BProphet",
     "edhrec": "https://edhrec.com/route/?cc=Eruth%2C+Tormented+Prophet"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F253510%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=582642&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/94850?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

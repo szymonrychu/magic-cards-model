@@ -117,9 +117,7 @@
   "collector_number": "238",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"I'll control the world with fear. It takes too much to do it like my old man.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Ittoku",
   "artist_ids": [
     "d3a47c28-84e9-4b53-a236-5066ae1bb62f"
   ],
@@ -145,22 +143,9 @@
     "source_uri": "https://www.youtube.com/live/VbKA1llgGvw",
     "previewed_at": "2025-05-27"
   },
-  "prices": {
-    "usd": "0.21",
-    "usd_foil": "0.26",
-    "usd_etched": null,
-    "eur": "0.07",
-    "eur_foil": "0.28",
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRufus%2BShinra",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRufus%2BShinra",
     "edhrec": "https://edhrec.com/route/?cc=Rufus+Shinra"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F634226%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=827782&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/141437?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

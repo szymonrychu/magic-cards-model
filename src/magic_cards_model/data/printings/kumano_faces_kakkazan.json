@@ -38,7 +38,6 @@
       "colors": [
         "R"
       ],
-      "artist": "Mike Bierek",
       "artist_id": "e5f52ef5-1a2e-4128-90b0-ccc71cd47ea7",
       "illustration_id": "20605f7a-1cc0-4eec-add1-14ca723839ba",
       "image_uris": {
@@ -69,8 +68,6 @@
       ],
       "power": "2",
       "toughness": "2",
-      "flavor_text": "Many kami came to demand a secret he did not know, and every one of them fell.",
-      "artist": "Mike Bierek",
       "artist_id": "e5f52ef5-1a2e-4128-90b0-ccc71cd47ea7",
       "illustration_id": "0251aee6-31b7-4c6e-8b90-eadc53008ec9",
       "image_uris": {
@@ -142,7 +139,6 @@
   "collector_number": "152",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Mike Bierek",
   "artist_ids": [
     "e5f52ef5-1a2e-4128-90b0-ccc71cd47ea7"
   ],
@@ -163,23 +159,10 @@
     "source_uri": "https://twitter.com/BWheelerMTG/status/1489372553449590789",
     "previewed_at": "2022-02-03"
   },
-  "prices": {
-    "usd": "0.29",
-    "usd_foil": "0.26",
-    "usd_etched": null,
-    "eur": "0.28",
-    "eur_foil": "0.35",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=548455&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKumano%2BFaces%2BKakkazan%2B%252F%252F%2BEtching%2Bof%2BKumano",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKumano%2BFaces%2BKakkazan%2B%252F%252F%2BEtching%2Bof%2BKumano",
     "edhrec": "https://edhrec.com/route/?cc=Kumano+Faces+Kakkazan"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F262776%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=608242&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/97234?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

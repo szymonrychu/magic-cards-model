@@ -101,9 +101,7 @@
   "collector_number": "86",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "Its mandibles can leave a rider in the clouds astride a headless griffin.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Tomasz Jedruszek",
   "artist_ids": [
     "bba69285-2445-4a4b-a847-59397be972ea"
   ],
@@ -116,23 +114,10 @@
   "story_spotlight": false,
   "edhrec_rank": 28780,
   "penny_rank": 17876,
-  "prices": {
-    "usd": "0.09",
-    "usd_foil": "0.44",
-    "usd_etched": null,
-    "eur": "0.13",
-    "eur_foil": "0.28",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=457230&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSpire%2BMangler",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSpire%2BMangler",
     "edhrec": "https://edhrec.com/route/?cc=Spire+Mangler"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F183433%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=368576&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/71172?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

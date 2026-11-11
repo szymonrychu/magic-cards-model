@@ -95,9 +95,7 @@
   "collector_number": "13",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "King Darien's breath crystallized and fell to the frozen battlefield, but its command carried true to all soldiers of New Argive.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Michael Phillippi",
   "artist_ids": [
     "3bda7dbe-1d9f-47c6-95ce-d283859ffab1"
   ],
@@ -110,23 +108,10 @@
   "story_spotlight": false,
   "edhrec_rank": 32111,
   "penny_rank": 15848,
-  "prices": {
-    "usd": "0.07",
-    "usd_foil": "0.37",
-    "usd_etched": null,
-    "eur": "0.12",
-    "eur_foil": "0.26",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=121148&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKjeldoran%2BWar%2BCry",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKjeldoran%2BWar%2BCry",
     "edhrec": "https://edhrec.com/route/?cc=Kjeldoran+War+Cry"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F14067%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=13674&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/24571?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

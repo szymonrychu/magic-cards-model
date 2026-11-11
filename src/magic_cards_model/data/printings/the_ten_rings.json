@@ -91,9 +91,7 @@
   "collector_number": "251",
   "digital": false,
   "rarity": "mythic",
-  "flavor_text": "\"The rings act as if they have a will of their own.\"\n\u2014Shang-Chi",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Arthur Yuan",
   "artist_ids": [
     "0c066852-6fdb-42d0-aab9-db4038850da0"
   ],
@@ -112,22 +110,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 4596,
-  "prices": {
-    "usd": "14.16",
-    "usd_foil": "18.61",
-    "usd_etched": null,
-    "eur": "14.60",
-    "eur_foil": "16.37",
-    "tix": "1.05"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThe%2BTen%2BRings",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThe%2BTen%2BRings",
     "edhrec": "https://edhrec.com/route/?cc=The+Ten+Rings"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696349%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=890590&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/152691?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }
