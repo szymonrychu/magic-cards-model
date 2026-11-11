@@ -94,6 +94,7 @@ from magic_cards_model.machines.abilities import (
     keyword_abilities,
     parse_abilities,
     self_reference_names,
+    station_creature_threshold,
 )
 from magic_cards_model.machines.casting import (
     MarkedExile,
@@ -3327,6 +3328,14 @@ def _is_equipment(card: Card) -> bool:
     return "Equipment" in card.subtypes
 
 
+def _station_creature_at(card: Card, ability: TriggeredAbility) -> bool:
+    """A station card is an attacker once staged at the striation of an ability
+    at or past its creature threshold (CR 722.2b, staged by `_source`)."""
+    creature_at = station_creature_threshold(card)
+    threshold = getattr(ability, "station_threshold", None)
+    return creature_at is not None and threshold is not None and threshold >= creature_at
+
+
 def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     card = case.printing
     lowered = ability.condition.lower()
@@ -3423,7 +3432,12 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     walkers: tuple[str, ...] = (_LOYALTY_PROBE,) if at_walker else ()
     for side in _combat_sides(ability):
         attackers: list[str | None] = []
-        if side == ALICE and (_is(card, Type.CREATURE) or is_vehicle or back_creature):
+        if side == ALICE and (
+            _is(card, Type.CREATURE)
+            or is_vehicle
+            or back_creature
+            or _station_creature_at(card, ability)
+        ):
             attackers.append(None)
         if not is_vehicle:
             attackers += [p for p in _probes(case, ability, entering=False) if p != card.name]
