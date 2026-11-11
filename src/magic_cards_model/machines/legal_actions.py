@@ -1180,6 +1180,21 @@ def _cast_actions(
 # ---------------------------------------------------------------------------
 
 
+def _outside_the_game_opened(game: Any, player: str) -> bool:
+    """Whether a permanent `player` controls has a static permission opening
+    their cards outside the game right now (`StaticZoneCastPermission.
+    outside_the_game`)."""
+    from .casting import static_zone_cast_permission
+
+    board = game.computed_board()
+    return any(
+        (permission := static_zone_cast_permission(line)) is not None
+        and permission.outside_the_game
+        for permanent in game.permanents_controlled_by(player)
+        for line in board.of(permanent).abilities
+    )
+
+
 def _land_actions(game: Any, player: str, card: CardState) -> list[Action]:
     """CR 305.1's own land drop, from the hand it names by default, or from
     wherever else a `PlayAction.PLAY` `PlayPermission` reaches - Wrenn's
@@ -2301,6 +2316,12 @@ def _legal_actions(
         actions.extend(_cast_actions(game, player, card, candidate_scan))
         actions.extend(_land_actions(game, player, card))
         actions.extend(_off_zone_actions(game, player, card, candidate_scan))
+    # CR 400.11a: a card outside the game is played only under a permission
+    # that names outside the game (The Holodeck's static ability).
+    if me.sideboard and _outside_the_game_opened(game, player):
+        for card in list(me.sideboard):
+            actions.extend(_cast_actions(game, player, card, candidate_scan))
+            actions.extend(_land_actions(game, player, card))
     if me.library:
         # CR 601.3 / CR 305.1 opened to the top card of the library by a
         # static permission ("You may play lands and cast `<quality>` spells

@@ -1132,6 +1132,15 @@ _GRAVEYARD_LAND_OR_SPELL_RE = re.compile(
 )
 #: Muldrotha: "During each of your turns, you may play a land and cast a
 #: permanent spell of each permanent type from your graveyard."
+#: The Holodeck: "Once during each of your turns, you may play a permanent
+#: card you own from outside the game or from your graveyard." - one use of
+#: the turn, a land played (CR 305.1) or a spell cast (CR 601.3), from either
+#: zone (CR 400.11a's sideboard is outside the game).
+_PLAY_FROM_OUTSIDE_OR_GRAVEYARD_RE = re.compile(
+    r"^once during each of your turns, you may play an? (?P<q>[\w' ,-]+?) card you own from "
+    r"outside the game or from your graveyard\.$",
+    re.IGNORECASE,
+)
 _GRAVEYARD_EACH_PERMANENT_TYPE_RE = re.compile(
     r"^during each of your turns, you may play a land and cast a permanent spell of each "
     r"permanent type from your graveyard\.$",
@@ -1240,6 +1249,14 @@ class StaticZoneCastPermission(EngineModel):
     pays_life_for_mana_value: bool = False
     """Bolas's Citadel: the spells cast this way are paid for with life equal to
     their mana value rather than their mana cost (CR 118.9)."""
+    outside_the_game: bool = False
+    """The Holodeck: "from outside the game or from your graveyard" - the
+    caster's own cards outside the game (CR 400.11a, `Zone.SIDEBOARD`) are
+    opened alongside `zone`."""
+
+    def opens(self, zone: Zone) -> bool:
+        """Whether a card in `zone` may be played or cast under this."""
+        return zone is self.zone or (self.outside_the_game and zone is Zone.SIDEBOARD)
 
 
 @lru_cache(maxsize=4096)
@@ -1289,6 +1306,19 @@ def static_zone_cast_permission(text: str) -> StaticZoneCastPermission | None:
             bound=int(serra.group("n")) if serra.group("n") else None,
             greater=(serra.group("direction") or "").lower() == "greater",
             gained_line=serra.group("gain"),
+        )
+    holodeck = _PLAY_FROM_OUTSIDE_OR_GRAVEYARD_RE.fullmatch(whole_line)
+    if holodeck is not None and not conditions:
+        quality = normalized_spell_quality(holodeck.group("q"))
+        if spell_quality_predicate(quality) is None:
+            return None
+        return StaticZoneCastPermission(
+            zone=Zone.GRAVEYARD,
+            quality=quality,
+            during_your_turn=True,
+            once_each_turn=True,
+            plays_lands=True,
+            outside_the_game=True,
         )
     if _GRAVEYARD_EACH_PERMANENT_TYPE_RE.fullmatch(whole_line) and not conditions:
         return StaticZoneCastPermission(
@@ -1471,7 +1501,7 @@ def _static_zone_cast_options(
     whose use this turn is still unspent (a card of several types chooses one
     as it is cast, CR 110.4)."""
     permission = static_zone_cast_permission(text)
-    if permission is None or permission.zone is not origin_zone or not permission.casts:
+    if permission is None or not permission.opens(origin_zone) or not permission.casts:
         return []
     if (spell.owner or caster) != caster:
         return []
@@ -1558,7 +1588,9 @@ def static_graveyard_land_source(
     Muldrotha's one land a turn - with the permission and the use it spends
     (None for an unlimited one). An unlimited permission is the one to claim
     when two apply."""
-    if game is None or land.zone is not Zone.GRAVEYARD or (land.owner or username) != username:
+    if game is None or land.zone not in (Zone.GRAVEYARD, Zone.SIDEBOARD):
+        return None
+    if (land.owner or username) != username:
         return None
     used = getattr(game, "once_per_turn_cast_permissions_used", {})
     board = game.computed_board()
@@ -1570,6 +1602,7 @@ def static_graveyard_land_source(
                 permission is None
                 or not permission.plays_lands
                 or permission.zone is not Zone.GRAVEYARD
+                or not permission.opens(land.zone)
                 or not static_permission_applies_now(permission, game, username, permanent)
             ):
                 continue

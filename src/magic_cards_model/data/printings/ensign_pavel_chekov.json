@@ -1,0 +1,130 @@
+{
+  "object": "card",
+  "id": "a441c12e-1a2f-4b04-83dd-407bf6040efe",
+  "oracle_id": "7d7e232f-e4f9-41db-a2d9-cfe88721b7a9",
+  "multiverse_ids": [],
+  "resource_id": "D8D37FC95D9710A74E248E7B02BA5A96886DAAC0E9F07040FD73077917E589BA",
+  "mtgo_id": 158254,
+  "tcgplayer_id": 725844,
+  "cardmarket_id": 918890,
+  "name": "Ensign Pavel Chekov",
+  "lang": "en",
+  "released_at": "2026-11-13",
+  "uri": "https://api.scryfall.com/cards/a441c12e-1a2f-4b04-83dd-407bf6040efe",
+  "scryfall_uri": "https://scryfall.com/card/trk/57/ensign-pavel-chekov?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-10-23T11:08:18Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/4/a441c12e-1a2f-4b04-83dd-407bf6040efe.jpg?1792753698",
+    "normal": "https://cards.scryfall.io/normal/front/a/4/a441c12e-1a2f-4b04-83dd-407bf6040efe.jpg?1792753698",
+    "large": "https://cards.scryfall.io/large/front/a/4/a441c12e-1a2f-4b04-83dd-407bf6040efe.jpg?1792753698",
+    "png": "https://cards.scryfall.io/png/front/a/4/a441c12e-1a2f-4b04-83dd-407bf6040efe.png?1792753698",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/4/a441c12e-1a2f-4b04-83dd-407bf6040efe.jpg?1792753698",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/4/a441c12e-1a2f-4b04-83dd-407bf6040efe.jpg?1792753698",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/4/a441c12e-1a2f-4b04-83dd-407bf6040efe.webp?1792753698",
+    "grid": "https://cards.scryfall.io/grid/front/a/4/a441c12e-1a2f-4b04-83dd-407bf6040efe.webp?1792753698",
+    "display": "https://cards.scryfall.io/display/front/a/4/a441c12e-1a2f-4b04-83dd-407bf6040efe.webp?1792753698",
+    "art": "https://cards.scryfall.io/art/front/a/4/a441c12e-1a2f-4b04-83dd-407bf6040efe.webp?1792753698",
+    "crop": "https://cards.scryfall.io/crop/front/a/4/a441c12e-1a2f-4b04-83dd-407bf6040efe.webp?1792753698",
+    "jpeg": "https://cards.scryfall.io/normal/front/a/4/a441c12e-1a2f-4b04-83dd-407bf6040efe.jpg?1792753698"
+  },
+  "mana_cost": "{3}{U}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Human Pilot",
+  "oracle_text": "Strange new worlds \u2014 When Ensign Chekov enters, each opponent exiles the top X cards of their library, where X is the number of differently named lands you control. For each opponent, choose a land card that player owns exiled this way. You may play the chosen cards for as long as they remain exiled.",
+  "power": "1",
+  "toughness": "5",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Strange new worlds"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set": "trk",
+  "set_name": "Star Trek",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atrk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/trk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a441c12e-1a2f-4b04-83dd-407bf6040efe/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7d7e232f-e4f9-41db-a2d9-cfe88721b7a9&unique=prints",
+  "collector_number": "57",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "4bbf92ce-72b4-4afa-9e3d-b54326e842b0"
+  ],
+  "illustration_id": "e4b77790-40d6-441e-908b-15dbc2e80ee9",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 29444,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.youtube.com/shorts/0G5qQWPW3O8",
+    "previewed_at": "2026-10-22"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEnsign%2BPavel%2BChekov",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEnsign%2BPavel%2BChekov",
+    "edhrec": "https://edhrec.com/route/?cc=Ensign+Pavel+Chekov"
+  }
+}

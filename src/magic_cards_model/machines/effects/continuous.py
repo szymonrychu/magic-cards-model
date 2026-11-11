@@ -2922,6 +2922,41 @@ def _parse_tap_enchanted_then_unprepared_clause(text: str) -> AbilityEffect | No
     return effect
 
 
+#: "All artifacts and creatures phase out." - The City on the Edge of
+#: Forever's chapter I: every permanent of a named card type phases out (CR
+#: 702.26b), with whatever is attached to it (CR 702.26g, `Game.phase_out`).
+_ALL_PHASE_OUT_RE = re.compile(
+    r"^all (?P<types>(?:artifacts|creatures|enchantments|lands|planeswalkers|battles)"
+    r"(?:(?:, | and | and/or |, and )(?:artifacts|creatures|enchantments|lands|planeswalkers"
+    r"|battles))*) phase out\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s3", for_spell=FORWARD)
+def _parse_all_phase_out_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_ALL_PHASE_OUT_RE`'s shape: the permanents are found as the effect
+    resolves (CR 608.2c) and all phase out at once."""
+    match = _ALL_PHASE_OUT_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    wanted = {
+        Type(word[:-1].lower())
+        for word in re.split(r",\s*(?:and\s+)?|\s+and(?:/or)?\s+", match.group("types"))
+        if word
+    }
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for permanent in [
+            permanent
+            for permanent in list(game.battlefield)
+            if wanted & set(game.characteristics_of(permanent).types)
+        ]:
+            game.phase_out(permanent)
+
+    return effect
+
+
 #: "they get that many poison counters" - Etali, Primal Sickness's "Whenever
 #: Etali deals combat damage to a player, they get that many poison
 #: counters." CR 122.1f's poison counters, given to the player the event

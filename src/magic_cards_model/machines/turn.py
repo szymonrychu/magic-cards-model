@@ -302,6 +302,11 @@ class TurnMachine(EngineModel):
     taking_extra_turn: bool = False
     """Whether the turn now in progress is an extra one (CR 500.7)."""
 
+    extra_turns_begun_by: dict[str, int] = Field(default_factory=dict)
+    """How many extra turns (CR 500.7) each player has begun this game - H.M.S.
+    Bounty, Unlikely Timeship's "haven't begun an extra turn this game". Kept
+    apart from `turns_taken_by`, which counts normal and extra turns alike."""
+
     extra_phase_queue: list[Step] = Field(default_factory=list)
     """Steps still to run before the ordinary `TURN_ORDER` walk resumes,
     queued by `insert_extra_phase` (CR 500.8).
@@ -735,6 +740,7 @@ class TurnMachine(EngineModel):
             self.order_index = rotation
             self.active_index = self.players.index(extra)
             self.taking_extra_turn = True
+            self.extra_turns_begun_by[extra] = self.extra_turns_begun_by.get(extra, 0) + 1
             self._begin_own_turn()
             self._begin_player_control()
             return

@@ -4,6 +4,10 @@
   permanent regeneration: unlike a shield (CR 701.19a), nothing is spent.
 - "If enchanted land would be destroyed, instead sacrifice this Aura and that
   land gains indestructible until end of turn." (Crackling Emergence)
+- "If another creature you control with a +1/+1 counter on it would be
+  destroyed, instead remove all +1/+1 counters from it and all damage already
+  dealt to it is healed." (Dr. McCoy, Surly Surgeon) - a group replacement
+  for every qualifying creature its controller controls.
 """
 
 import re
@@ -11,6 +15,7 @@ from typing import TYPE_CHECKING
 
 from ...models.card import Type
 from ...models.card_state import CardState
+from ...models.zone import Zone
 from ..layers import ContinuousEffect, Duration, Layer, grant_ability, only_this_incarnation
 from .model import (
     CardReplacement,
@@ -117,4 +122,59 @@ def _indestructible_until_end_of_turn(store, source: CardState, card: CardState)
     )
 
 
-DESTROY_COMPILERS = (_compile_destroy,)
+#: The group form: "<another >creature you control[ with a <kind> counter on
+#: it] would be destroyed" (Dr. McCoy, Surly Surgeon).
+_GROUP_EVENT_RE = re.compile(
+    r"^(?P<another>another )?creature you control"
+    r"(?: with an? (?P<kind>[+-]?\w+(?:/[+-]?\w+)?) counter on it)? would be destroyed$",
+    re.IGNORECASE,
+)
+#: "remove all <kind> counters from it and all damage already dealt to it is
+#: healed" - CR 614.1a's "instead" replacing the destruction (CR 701.8a) with
+#: removing the counters (CR 122.8) and healing (CR 120.6's marked damage).
+_REMOVE_COUNTERS_AND_HEAL_RE = re.compile(
+    r"^remove all (?P<kind>[+-]?\w+(?:/[+-]?\w+)?) counters from it and all damage already "
+    r"dealt to it is healed$",
+    re.IGNORECASE,
+)
+
+
+def _compile_group_remove_counters_instead(effect: ReplacementEffect) -> CardReplacement | None:
+    """`_GROUP_EVENT_RE` replaced by `_REMOVE_COUNTERS_AND_HEAL_RE`: the
+    destruction of each qualifying creature its controller controls (the
+    source itself too, unless "another") is replaced - the creature stays,
+    loses every counter of the named kind and has its damage healed."""
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD or effect.condition is not None:
+        return None
+    event_text = strip_reminder_text(effect.event or "")[0].strip()
+    event_match = _GROUP_EVENT_RE.match(event_text)
+    printed = strip_reminder_text(effect.replacement or "")[0].strip().rstrip(".")
+    action = _REMOVE_COUNTERS_AND_HEAL_RE.match(printed)
+    if event_match is None or action is None:
+        return None
+    another = event_match.group("another") is not None
+    needed_kind = event_match.group("kind")
+    removed_kind = action.group("kind")
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        card = event.card
+        if event.kind is not EventKind.DESTROY or event.replaced or card is None:
+            return False
+        if card.zone is not Zone.BATTLEFIELD or (another and card.id == source.id):
+            return False
+        if game.controller_of(card).username != game.controller_of(source).username:
+            return False
+        if not game.characteristics_of(card).is_creature:
+            return False
+        return needed_kind is None or card.counter_count(needed_kind) > 0
+
+    def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+        card = event.card
+        event.replaced = True  # CR 614.6: the destruction never happens
+        card.remove_counters(removed_kind, card.counter_count(removed_kind))
+        card.damage = 0
+
+    return CardReplacement(label=effect.text, applies=applies, apply=apply)
+
+
+DESTROY_COMPILERS = (_compile_destroy, _compile_group_remove_counters_instead)

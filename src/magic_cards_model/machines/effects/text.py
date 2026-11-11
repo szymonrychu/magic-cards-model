@@ -953,6 +953,15 @@ _CARD_TYPE_PAIR_AND_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "All artifacts and creatures phase out." (The City on the Edge of
+#: Forever) - one plural card-type list as the subject of one instruction
+#: (`continuous._parse_all_phase_out_clause`), not two.
+_PLURAL_TYPE_PAIR_PHASE_OUT_RE = re.compile(
+    r"\ball (?:artifacts|creatures|enchantments|lands|planeswalkers|battles) and "
+    r"(?:artifacts|creatures|enchantments|lands|planeswalkers|battles)(?= phase out\b)",
+    re.IGNORECASE,
+)
+
 #: "the number of Mounts and Vehicles you control" (Road Rage), "the number of
 #: Wolves and Werewolves you control" (Runebound Wolf) - one count over a list
 #: of types and subtypes (`amounts._COUNT_AND_OR_YOU_CONTROL_RE`), not two
@@ -972,6 +981,16 @@ _COUNT_TYPE_PAIR_AND_RE = re.compile(
 _IF_SENTENCE_CONSEQUENCE_RE = re.compile(
     r"(?P<head>(?:^|(?<=\.\s))(?:then\s+)?if (?!(?:you|they|a player|that player) "
     r"(?:do|does|don't|doesn't)\b)[^,.]+,\s*)(?P<consequence>[^.,]*)(?=\.|$)",
+    re.IGNORECASE,
+)
+
+
+#: "If you control a Whale and haven't begun an extra turn this game, ..."
+#: (H.M.S. Bounty, Unlikely Timeship): a subjectless negated second half of
+#: an "if" head is still the same condition (`conditions`'s compound reader
+#: supplies its subject), never a second instruction.
+_IF_HEAD_NEGATED_AND_RE = re.compile(
+    r"(?:^|(?<=\.\s))if [^,.]+? and (?:haven't|hasn't|have not|has not|didn't)\b[^,.]*,",
     re.IGNORECASE,
 )
 
@@ -1073,6 +1092,9 @@ def _split_effect_clauses(text: str) -> list[str]:
     masked = _CARD_TYPE_PAIR_AND_RE.sub(
         lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
     )
+    masked = _PLURAL_TYPE_PAIR_PHASE_OUT_RE.sub(
+        lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
+    )
     masked = _YOU_OWN_AND_CONTROL_AND_RE.sub(
         lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
     )
@@ -1087,6 +1109,9 @@ def _split_effect_clauses(text: str) -> list[str]:
     # consequence, both halves of its "and" (CR 608.2c) - kept one clause so
     # `_parse_condition_clause` reads it whole, never split into a
     # conditional sacrifice and an unconditional draw.
+    masked = _IF_HEAD_NEGATED_AND_RE.sub(
+        lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
+    )
     masked = _IF_SENTENCE_CONSEQUENCE_RE.sub(
         lambda m: m.group("head") + m.group("consequence").replace(" and ", _AND_SENTINEL),
         masked,
@@ -1291,8 +1316,9 @@ def _strip_keyword_ability_lines(text: str) -> str:
 #: undergrowth, valiant, vivid, void, and will of the council." Looked up in
 #: this session with `mise run rules:find 207.2`. The current rule also names
 #: battlefront, federation, rulebreaker, seek out and strange new worlds;
-#: only "strange new worlds" is entered here (the Star Trek cards of this
-#: pool print it), the others when a card in the pool needs them.
+#: "strange new worlds" and "federation" are entered here (the Star Trek
+#: cards of this pool print them), the others when a card in the pool needs
+#: them.
 #:
 #: The rule goes on to say an ability word "[has] no special rules meaning
 #: and no individual entries in the Comprehensive Rules" - which is exactly
@@ -1333,6 +1359,7 @@ _ABILITY_WORDS = frozenset(
         "enrage",
         "fateful hour",
         "fathomless descent",
+        "federation",
         "ferocious",
         "flurry",
         "formidable",

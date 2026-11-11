@@ -50,6 +50,7 @@ from ..triggers import (
     AbilityOnStack,
     is_ability,
 )
+from ..triggers.events import event_subject_or_source
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
@@ -5755,6 +5756,43 @@ def _explore_each_in_apnap_order(
             _explore(game, chosen, controller, source_name, source_id=source_id)
 
 
+#: Q, Stacking the Deck's enters trigger: "Shuffle your library, then exile
+#: cards from the top of your library until you exile a nonland card. That
+#: nonland card gains "<ability>"." CR 701.24a's shuffle, then each card is
+#: exiled in turn (CR 701.13a) until a nonland one is, and the quoted ability
+#: is granted to that card where it now is, in exile (CR 113.6b reads an
+#: ability that states it works there). A library of lands is exiled whole
+#: and nothing gains anything. The grant ends when the card changes zones
+#: (CR 400.7, `CardState.granted_ability_texts`).
+_SHUFFLE_EXILE_UNTIL_NONLAND_GRANT_RE = re.compile(
+    r"^shuffle your library, then exile cards from the top of your library until you exile "
+    r'a nonland card\.\s*that (?:nonland )?card gains "(?P<grant>[^"]+)"\.?$',
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_shuffle_exile_until_nonland_grant(text: str) -> AbilityEffect | None:
+    """`_SHUFFLE_EXILE_UNTIL_NONLAND_GRANT_RE`'s shape, or `None`."""
+    match = _SHUFFLE_EXILE_UNTIL_NONLAND_GRANT_RE.fullmatch(collapsed(text.strip()))
+    if match is None:
+        return None
+    grant = match.group("grant").strip()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.player(ability.controller)
+        game.shuffle_library(player)
+        for card_state in list(player.library):
+            moved = game.exile_permanent(card_state)
+            if moved is None or moved.zone is not Zone.EXILE:
+                continue
+            if not moved.card.is_land:
+                moved.granted_ability_texts = (*moved.granted_ability_texts, grant)
+                return
+
+    return effect
+
+
 #: The generic "<subject> explores[, then it explores again]." clause (CR
 #: 701.44a-d), read off any triggered, activated, or spell text - Merfolk
 #: Branchwalker's "it explores.", Legion Vanguard's "This creature
@@ -5774,7 +5812,7 @@ def _explore_each_in_apnap_order(
 #: all), but shares this function's `source_or_last_known` fix for CR
 #: 701.44c.
 _EXPLORES_CLAUSE_RE = re.compile(
-    r"^(?P<subject>this creature|this permanent|it|"
+    r"^(?P<subject>this creature|this permanent|it|that creature|"
     r"target creature you control|each creature you control)\s+explores"
     r"(?P<again>,?\s*then it explores again)?\.?$",
     re.IGNORECASE,
@@ -5804,6 +5842,12 @@ def _parse_explores_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
     subject = match.group("subject").lower()
     twice = match.group("again") is not None
     is_self = subject in ("this creature", "this permanent", "it")
+    # "that creature": a trigger's own event subject (Captain Kathryn
+    # Janeway's "Whenever Captain Janeway or another creature you control
+    # enters, that creature explores."), or on a spell the creature its
+    # earlier instruction targeted and moved (Defossilize's "Return target
+    # creature card ... to the battlefield. That creature explores").
+    is_that = subject == "that creature"
     if is_self and for_spell:
         return None
     is_target = subject == "target creature you control"
@@ -5819,7 +5863,10 @@ def _parse_explores_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             assert isinstance(stack_object, AbilityOnStack)
             source = stack_object.source_or_last_known(game)
             explorers = [source] if source is not None else []
-        elif is_target:
+        elif is_that and isinstance(stack_object, AbilityOnStack) and stack_object.event:
+            subject = event_subject_or_source(game, stack_object)
+            explorers = [subject] if subject is not None else []
+        elif is_that or is_target:
             explorers = [
                 target
                 for target in game.resolve_targets(stack_object)

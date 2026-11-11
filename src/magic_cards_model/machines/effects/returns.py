@@ -249,6 +249,121 @@ def _parse_return_as_creature_clause(text: str) -> TargetedClause | None:
     return effect
 
 
+#: "Assimilate target `<quality>` card from (a|your|an opponent's) graveyard." -
+#: Death Is Irrelevant's end step trigger (CR 701.72b); the reminder text in
+#: parentheses is stripped before dispatch.
+_ASSIMILATE_TARGET_CARD_RE = re.compile(
+    r"^assimilate (?P<phrase>target [^.]+? cards?) "
+    r"(?P<zone>from (?:a|your|an opponent'?s) graveyard)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s14")
+@SPELL_TEXT.rung("s14")
+def _parse_reanimate_by_assimilating_target_clause(text: str) -> TargetedClause | None:
+    """`_ASSIMILATE_TARGET_CARD_RE`'s shape, or `None`: each target still in
+    its graveyard is assimilated (`machines/assimilate.assimilate_card`). CR
+    608.2b: a target that left the graveyard is illegal, and nothing
+    happens to it."""
+    match = _ASSIMILATE_TARGET_CARD_RE.fullmatch(collapsed(_strip_non_effect_preamble(text)))
+    if match is None:
+        return None
+    if not _targets_understood(
+        f"{match.group('phrase')} {match.group('zone')}", battlefield_only=False
+    ):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        from ..assimilate import assimilate_card
+
+        controller = game.controller_of(stack_object).username
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, CardState) and target.zone is Zone.GRAVEYARD:
+                assimilate_card(game, controller, target, source_name=stack_object.name)
+
+    return effect
+
+
+#: "Assimilate a `<quality>` card exiled with it[. If you can't, `<fallback>`]"
+#: - Borg Cube's enters-or-attacks trigger: CR 701.72b on one card of the
+#: source's own linked exile pile (CR 607.2a, `Game.cards_exiled_with`), and
+#: CR 608.2c's "if you can't" consequence when the pile holds none. The
+#: fallback is any ability clause the dispatcher reads whole; a card it
+#: exiles is linked to the source by `link_cards_exiled_during`, so a later
+#: trigger can assimilate it.
+_ASSIMILATE_EXILED_WITH_RE = re.compile(
+    r"^assimilate an? (?P<quality>[a-z]+) card exiled with (?:it|this [a-z]+)\."
+    r"(?:\s*if you can'?t,\s*(?P<fallback>.+))?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s14")
+def _parse_reanimate_by_assimilating_exiled_card_clause(text: str) -> AbilityEffect | None:
+    """`_ASSIMILATE_EXILED_WITH_RE`'s shape, or `None`. With several
+    candidates the controller chooses one (CR 608.2d)."""
+    match = _ASSIMILATE_EXILED_WITH_RE.fullmatch(collapsed(text.strip()))
+    if match is None:
+        return None
+    card_type = _singular_card_type(match.group("quality"))
+    if card_type is None:
+        return None
+    fallback: AbilityEffect | None = None
+    if match.group("fallback") is not None:
+        fallback_text = match.group("fallback").strip()
+        fallback = _ability_effect_or_notice(fallback_text[0].upper() + fallback_text[1:])
+        if fallback is None or _is_notice_only(fallback):
+            return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        from ..assimilate import assimilate_card
+
+        controller = game.controller_of(ability).username
+        pile = (
+            []
+            if ability.source_id is None
+            else game.cards_exiled_with(ability.source_id, ability.source_stamp)
+        )
+        candidates = [card for card in pile if card_type in card.types]
+        chosen: CardState | None = candidates[0] if candidates else None
+        if len(candidates) > 1:
+            answer = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller,
+                    prompt=f"choose a {match.group('quality').lower()} card to assimilate",
+                    source=ability.source_name,
+                    amount=1,
+                    cards=tuple(card.id for card in candidates),
+                    source_id=source_id_of(ability),
+                )
+            )
+            assert isinstance(answer, tuple)
+            chosen = next(card for card in candidates if card.id in answer)
+        if chosen is not None and assimilate_card(
+            game, controller, chosen, source_name=ability.source_name
+        ):
+            return
+        if fallback is None:
+            return
+        exiled_before = {card.id for card in game.exile}
+        fallback(game, ability)
+        # CR 607.2a links a card one ability exiles to another that reads
+        # "exiled with"; here one ability does both, so
+        # `link_cards_exiled_during` (which skips the ability's own line)
+        # does not, and the link is made here.
+        for card in game.exile:
+            if (
+                isinstance(card, CardState)
+                and card.id not in exiled_before
+                and card.exile_annotation is None
+            ):
+                card.exile_annotation = linked_exile_annotation(game, ability, card)
+
+    return effect
+
+
 #: "Return this creature to its owner's hand and create N <token descriptor>
 #: token(s)[ with <tail>]." - Thopter Assembly's whole upkeep trigger, read as
 #: one CR 608.2c instruction: the return, then the token creation, in printed
@@ -1652,7 +1767,8 @@ def _parse_return_dead_self_to_hand_clause(
 #: many (none when the subtraction reaches zero) when the step arrives. A fixed
 #: "with N `<kind>` counters on it" is the same shape without the subtraction.
 _RETURN_DEAD_SELF_WITH_COUNTERS_AT_STEP_RE = re.compile(
-    rf"^return (?:it|this card|that card) to the battlefield(?P<tapped> tapped)? with "
+    rf"^return (?:it|this card|that card) to the battlefield(?P<tapped> tapped)?"
+    rf"(?: under its owner's control)? with "
     rf"(?:(?P<fewer>{COUNT}) fewer|(?P<fixed>{COUNT}|an?)) (?P<kind>[a-z0-9+/-]+) counters? "
     rf"on it at (?P<timing>{'|'.join(map(re.escape, ANAPHORIC_TIMING_STEPS))})\.?$",
     re.IGNORECASE,
@@ -3073,10 +3189,11 @@ from .continuous import (  # noqa: E402
 )
 from .counters import _counter_kind  # noqa: E402
 from .damage import _clause_slots  # noqa: E402
-from .dispatch import parse_mixed_effect  # noqa: E402
+from .dispatch import _ability_effect_or_notice, parse_mixed_effect  # noqa: E402
 from .library import _dead_self_found, _reveal_and_bring_into_hand  # noqa: E402
+from .removal import linked_exile_annotation  # noqa: E402
 from .text import _singular_card_type, _strip_non_effect_preamble  # noqa: E402
-from .tokens import _parse_token_clause  # noqa: E402
+from .tokens import _is_notice_only, _parse_token_clause  # noqa: E402
 
 
 @MIXED_CLAUSE.rung("s1", for_spell=FORWARD)

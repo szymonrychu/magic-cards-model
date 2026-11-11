@@ -181,8 +181,15 @@ def dies_consequence_effect(text: str, *, source_stamp: UUID | None = None) -> A
 
         return owner_loses
     from .effects import parse_mixed_effect
+    from .effects.returns import _parse_return_dead_self_with_counters_at_step_clause
 
-    return parse_mixed_effect(cleaned)
+    # "return that card to the battlefield under its owner's control with a
+    # +1/+1 counter on it at the beginning of the next end step" (Dr. Leonard
+    # "Bones" McCoy): the dead creature is the DIES event's own subject, the
+    # same look-back (CR 603.10a) Nine-Lives Familiar's own dies trigger reads.
+    return _parse_return_dead_self_with_counters_at_step_clause(cleaned) or parse_mixed_effect(
+        cleaned
+    )
 
 
 def parse_then_when_that_creature_dies_this_turn(text: str, *, for_spell: bool) -> Any:

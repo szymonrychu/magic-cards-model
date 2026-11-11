@@ -507,6 +507,55 @@ def _parse_copy_revealed_card_and_cast_for_less(text: str) -> AbilityEffect | No
     return effect
 
 
+#: "Create a copy of this card. You may cast the copy." - the ability Q,
+#: Stacking the Deck grants the card it exiles, activated from exile: the
+#: copy is created in the zone the card is in (CR 707.12) and cast paying its
+#: mana cost; a copy not cast ceases to exist (CR 707.10a).
+_COPY_THIS_CARD_AND_CAST_RE = re.compile(
+    r"^create a copy of this card\.\s*you may cast the copy\.?$", re.IGNORECASE
+)
+
+
+@ABILITY_TEXT.rung("s22")
+def _parse_copy_this_card_and_cast(text: str) -> AbilityEffect | None:
+    """`_COPY_THIS_CARD_AND_CAST_RE`'s shape. The source card is found where
+    it now is (a card that left its zone is a new object, CR 400.7, and there
+    is nothing to copy)."""
+    if _COPY_THIS_CARD_AND_CAST_RE.fullmatch(collapsed(_strip_non_effect_preamble(text))) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        original = ability.source(game)
+        if original is None or original.zone not in (Zone.EXILE, Zone.GRAVEYARD, Zone.HAND):
+            return
+        if ability.source_stamp is not None and original.zone_change_stamp != ability.source_stamp:
+            return
+        controller = game.controller_of(ability)
+        copy = CardState(
+            card=original.card,
+            zone=original.zone,
+            controller=controller.username,
+            owner=controller.username,  # CR 112.2a
+            is_copy=True,
+        )
+        pile = game.exile if original.zone is Zone.EXILE else controller.zones[original.zone]
+        pile.append(copy)
+        game.may_cast_during_resolution(
+            copy,
+            controller.username,
+            prompt=f"cast the copy of {copy.name}",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+            source_name=ability.source_name,
+            rule="CR 707.12",
+            pays_mana_cost=True,
+        )
+        if copy in pile:
+            pile.remove(copy)  # CR 707.10a
+
+    return effect
+
+
 @ABILITY_TEXT.rung("s22")
 def _parse_copy_exiled_card_and_cast(text: str) -> AbilityEffect | None:
     """`_COPY_EXILED_CARD_AND_CAST_RE`'s shape - Isochron Scepter's activated

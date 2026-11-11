@@ -1,0 +1,126 @@
+{
+  "object": "card",
+  "id": "33ade614-3593-4055-8ecc-2d9e4858ba19",
+  "oracle_id": "c7d8ed66-d66e-42fd-9c3e-8c2d8194e009",
+  "multiverse_ids": [],
+  "resource_id": "3B3A11002BE7DF13E39D8FC8A560437B3F8047B140F4DDE27B5D8C40CE5E0E23",
+  "mtgo_id": 158446,
+  "tcgplayer_id": 727370,
+  "cardmarket_id": 919311,
+  "name": "Infinite Diversity",
+  "lang": "en",
+  "released_at": "2026-11-13",
+  "uri": "https://api.scryfall.com/cards/33ade614-3593-4055-8ecc-2d9e4858ba19",
+  "scryfall_uri": "https://scryfall.com/card/trk/153/infinite-diversity?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-10-29T11:36:59Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/3/33ade614-3593-4055-8ecc-2d9e4858ba19.jpg?1793273819",
+    "normal": "https://cards.scryfall.io/normal/front/3/3/33ade614-3593-4055-8ecc-2d9e4858ba19.jpg?1793273819",
+    "large": "https://cards.scryfall.io/large/front/3/3/33ade614-3593-4055-8ecc-2d9e4858ba19.jpg?1793273819",
+    "png": "https://cards.scryfall.io/png/front/3/3/33ade614-3593-4055-8ecc-2d9e4858ba19.png?1793273819",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/3/33ade614-3593-4055-8ecc-2d9e4858ba19.jpg?1793273819",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/3/33ade614-3593-4055-8ecc-2d9e4858ba19.jpg?1793273819",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/3/33ade614-3593-4055-8ecc-2d9e4858ba19.webp?1793273819",
+    "grid": "https://cards.scryfall.io/grid/front/3/3/33ade614-3593-4055-8ecc-2d9e4858ba19.webp?1793273819",
+    "display": "https://cards.scryfall.io/display/front/3/3/33ade614-3593-4055-8ecc-2d9e4858ba19.webp?1793273819",
+    "art": "https://cards.scryfall.io/art/front/3/3/33ade614-3593-4055-8ecc-2d9e4858ba19.webp?1793273819",
+    "crop": "https://cards.scryfall.io/crop/front/3/3/33ade614-3593-4055-8ecc-2d9e4858ba19.webp?1793273819",
+    "jpeg": "https://cards.scryfall.io/normal/front/3/3/33ade614-3593-4055-8ecc-2d9e4858ba19.jpg?1793273819"
+  },
+  "mana_cost": "{7}{R}{R}",
+  "cmc": 9.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Federation \u2014 Exile target instant or sorcery card from your graveyard. Copy that card X times, where X is the number of creature types among non-Borg creatures you control. You may cast the copies without paying their mana costs. Exile Infinite Diversity.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Federation"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set": "trk",
+  "set_name": "Star Trek",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atrk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/trk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/33ade614-3593-4055-8ecc-2d9e4858ba19/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac7d8ed66-d66e-42fd-9c3e-8c2d8194e009&unique=prints",
+  "collector_number": "153",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "ce8605ad-6d5a-45a3-a7b6-84be4f5209cd"
+  ],
+  "illustration_id": "9fc585f8-bcef-44b7-8971-05b351030195",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 31216,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.youtube.com/watch?v=g5OL_rHOQFU",
+    "previewed_at": "2026-10-24"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInfinite%2BDiversity",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInfinite%2BDiversity",
+    "edhrec": "https://edhrec.com/route/?cc=Infinite+Diversity"
+  }
+}

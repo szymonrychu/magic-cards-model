@@ -1,0 +1,126 @@
+{
+  "object": "card",
+  "id": "e10d6d71-9360-4ecf-97c8-22afb22aaeb7",
+  "oracle_id": "9a71aa6c-2d5f-468d-b588-252fae37ccbb",
+  "multiverse_ids": [],
+  "resource_id": "2AB13A408191B35260DE89448A73395FFB667E1A19353D70BA3076BD538464DA",
+  "mtgo_id": 158426,
+  "tcgplayer_id": 725024,
+  "cardmarket_id": 918544,
+  "name": "Captain Michael Burnham",
+  "lang": "en",
+  "released_at": "2026-11-13",
+  "uri": "https://api.scryfall.com/cards/e10d6d71-9360-4ecf-97c8-22afb22aaeb7",
+  "scryfall_uri": "https://scryfall.com/card/trk/143/captain-michael-burnham?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-10-20T14:57:01Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/1/e10d6d71-9360-4ecf-97c8-22afb22aaeb7.jpg?1792508221",
+    "normal": "https://cards.scryfall.io/normal/front/e/1/e10d6d71-9360-4ecf-97c8-22afb22aaeb7.jpg?1792508221",
+    "large": "https://cards.scryfall.io/large/front/e/1/e10d6d71-9360-4ecf-97c8-22afb22aaeb7.jpg?1792508221",
+    "png": "https://cards.scryfall.io/png/front/e/1/e10d6d71-9360-4ecf-97c8-22afb22aaeb7.png?1792508221",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/1/e10d6d71-9360-4ecf-97c8-22afb22aaeb7.jpg?1792508221",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/1/e10d6d71-9360-4ecf-97c8-22afb22aaeb7.jpg?1792508221",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/1/e10d6d71-9360-4ecf-97c8-22afb22aaeb7.webp?1792508221",
+    "grid": "https://cards.scryfall.io/grid/front/e/1/e10d6d71-9360-4ecf-97c8-22afb22aaeb7.webp?1792508221",
+    "display": "https://cards.scryfall.io/display/front/e/1/e10d6d71-9360-4ecf-97c8-22afb22aaeb7.webp?1792508221",
+    "art": "https://cards.scryfall.io/art/front/e/1/e10d6d71-9360-4ecf-97c8-22afb22aaeb7.webp?1792508221",
+    "crop": "https://cards.scryfall.io/crop/front/e/1/e10d6d71-9360-4ecf-97c8-22afb22aaeb7.webp?1792508221",
+    "jpeg": "https://cards.scryfall.io/normal/front/e/1/e10d6d71-9360-4ecf-97c8-22afb22aaeb7.jpg?1792508221"
+  },
+  "mana_cost": "{2}{R}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Human Officer",
+  "oracle_text": "Trample\nLandfall \u2014 Whenever a land you control enters, Captain Burnham deals 1 damage to each opponent. If this is the second time this ability has resolved this turn, put a +1/+1 counter on Captain Burnham.",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Trample",
+    "Landfall"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set": "trk",
+  "set_name": "Star Trek",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atrk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/trk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e10d6d71-9360-4ecf-97c8-22afb22aaeb7/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9a71aa6c-2d5f-468d-b588-252fae37ccbb&unique=prints",
+  "collector_number": "143",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "2a7daaa0-e880-4925-a35e-5a4fc18b15e9"
+  ],
+  "illustration_id": "04e91905-383e-49d8-8bc4-6129edc78e55",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 26601,
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCaptain%2BMichael%2BBurnham",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCaptain%2BMichael%2BBurnham",
+    "edhrec": "https://edhrec.com/route/?cc=Captain+Michael+Burnham"
+  }
+}

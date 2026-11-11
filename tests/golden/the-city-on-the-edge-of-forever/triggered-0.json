@@ -1,0 +1,96 @@
+{
+  "ability": "I — All artifacts and creatures phase out. Create a 0/1 white Human creature token with \"Permanents can't phase in.\"",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "The City on the Edge of Forever@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "The City on the Edge of Forever"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "The City on the Edge of Forever",
+  "delta": {
+    "created": {
+      "Human Token@alice+1": {
+        "attached_to": null,
+        "class_level": 1,
+        "controller": "alice",
+        "counters": {},
+        "damage": 0,
+        "face_up": true,
+        "granted": [],
+        "monstrous": false,
+        "power": 0,
+        "tapped": false,
+        "toughness": 1,
+        "transformed": false,
+        "zone": "battlefield"
+      }
+    },
+    "decisions": [],
+    "fields_changed": ["continuous_effects", "phased_out", "turn_counts", "turn_facts", "turn_history"],
+    "notices": {},
+    "objects": {
+      "Bonesplitter@alice#1": {
+        "zone": ["battlefield", null]
+      },
+      "Dragonfire Blade@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Fleecemane Lion@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Icehide Golem@alice#1": {
+        "zone": ["battlefield", null]
+      },
+      "Icehide Golem@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Icy Manipulator@alice#1": {
+        "zone": ["battlefield", null]
+      },
+      "Memnite@alice#1": {
+        "zone": ["battlefield", null]
+      },
+      "Shadowspear@bob#1": {
+        "zone": ["battlefield", null]
+      }
+    },
+    "players": {},
+    "stack": []
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "lore_counters_added",
+  "number": 0,
+  "recipe": {
+    "attempt": "entered",
+    "index": 1,
+    "params": {},
+    "variant": "quiet"
+  }
+}

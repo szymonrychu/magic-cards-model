@@ -1,0 +1,131 @@
+{
+  "object": "card",
+  "id": "d8593bf7-5248-4f4a-bf8b-9816d2f76c6b",
+  "oracle_id": "0157faee-f307-43c0-b308-bbf36ce02e32",
+  "multiverse_ids": [],
+  "resource_id": "1885DA74C4930F953993EB0FF60087ED68775F3E36664D832EEBE4C4D07567F9",
+  "mtgo_id": 158534,
+  "tcgplayer_id": 726704,
+  "cardmarket_id": 919814,
+  "name": "Dr. Leonard \"Bones\" McCoy",
+  "lang": "en",
+  "released_at": "2026-11-13",
+  "uri": "https://api.scryfall.com/cards/d8593bf7-5248-4f4a-bf8b-9816d2f76c6b",
+  "scryfall_uri": "https://scryfall.com/card/trk/197/dr-leonard-bones-mccoy?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-10-28T11:32:07Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/8/d8593bf7-5248-4f4a-bf8b-9816d2f76c6b.jpg?1793187127",
+    "normal": "https://cards.scryfall.io/normal/front/d/8/d8593bf7-5248-4f4a-bf8b-9816d2f76c6b.jpg?1793187127",
+    "large": "https://cards.scryfall.io/large/front/d/8/d8593bf7-5248-4f4a-bf8b-9816d2f76c6b.jpg?1793187127",
+    "png": "https://cards.scryfall.io/png/front/d/8/d8593bf7-5248-4f4a-bf8b-9816d2f76c6b.png?1793187127",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/8/d8593bf7-5248-4f4a-bf8b-9816d2f76c6b.jpg?1793187127",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/8/d8593bf7-5248-4f4a-bf8b-9816d2f76c6b.jpg?1793187127",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/8/d8593bf7-5248-4f4a-bf8b-9816d2f76c6b.webp?1793187127",
+    "grid": "https://cards.scryfall.io/grid/front/d/8/d8593bf7-5248-4f4a-bf8b-9816d2f76c6b.webp?1793187127",
+    "display": "https://cards.scryfall.io/display/front/d/8/d8593bf7-5248-4f4a-bf8b-9816d2f76c6b.webp?1793187127",
+    "art": "https://cards.scryfall.io/art/front/d/8/d8593bf7-5248-4f4a-bf8b-9816d2f76c6b.webp?1793187127",
+    "crop": "https://cards.scryfall.io/crop/front/d/8/d8593bf7-5248-4f4a-bf8b-9816d2f76c6b.webp?1793187127",
+    "jpeg": "https://cards.scryfall.io/normal/front/d/8/d8593bf7-5248-4f4a-bf8b-9816d2f76c6b.jpg?1793187127"
+  },
+  "mana_cost": "{1}{G}{G}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Human Doctor",
+  "oracle_text": "Flash\nWhen Dr. McCoy enters, choose one \u2014\n\u2022 Return target non-Doctor permanent card from your graveyard to your hand.\n\u2022 Choose up to one other target creature. When it dies this turn, return that card to the battlefield under its owner's control with a +1/+1 counter on it at the beginning of the next end step.",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Flash"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set": "trk",
+  "set_name": "Star Trek",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atrk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/trk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d8593bf7-5248-4f4a-bf8b-9816d2f76c6b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A0157faee-f307-43c0-b308-bbf36ce02e32&unique=prints",
+  "collector_number": "197",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "7728937a-fcc9-4ed4-a225-c73a51c66e42"
+  ],
+  "illustration_id": "1b15e6e3-1976-4e6d-9537-1dfa65510a2a",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 29048,
+  "preview": {
+    "source": "ScottNoMana",
+    "source_uri": "https://www.instagram.com/p/DfA4TlDko_8",
+    "previewed_at": "2026-10-28"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDr.%2BLeonard%2B%2522Bones%2522%2BMcCoy",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDr.%2BLeonard%2B%2522Bones%2522%2BMcCoy",
+    "edhrec": "https://edhrec.com/route/?cc=Dr.+Leonard+%22Bones%22+McCoy"
+  }
+}

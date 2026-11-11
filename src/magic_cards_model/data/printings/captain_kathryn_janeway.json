@@ -1,0 +1,126 @@
+{
+  "object": "card",
+  "id": "d17ea45c-7f9c-411f-b7d3-ca7100ffe53b",
+  "oracle_id": "d77d1895-ce02-4302-87c9-649e852fd0ea",
+  "multiverse_ids": [],
+  "resource_id": "4B781D7055E1AFDF671722A9F47F1506B31DD8E057FFF9C5255960401541118F",
+  "mtgo_id": 158514,
+  "tcgplayer_id": 706178,
+  "cardmarket_id": 917767,
+  "name": "Captain Kathryn Janeway",
+  "lang": "en",
+  "released_at": "2026-11-13",
+  "uri": "https://api.scryfall.com/cards/d17ea45c-7f9c-411f-b7d3-ca7100ffe53b",
+  "scryfall_uri": "https://scryfall.com/card/trk/187/captain-kathryn-janeway?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-14T13:46:28Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/1/d17ea45c-7f9c-411f-b7d3-ca7100ffe53b.jpg?1784036788",
+    "normal": "https://cards.scryfall.io/normal/front/d/1/d17ea45c-7f9c-411f-b7d3-ca7100ffe53b.jpg?1784036788",
+    "large": "https://cards.scryfall.io/large/front/d/1/d17ea45c-7f9c-411f-b7d3-ca7100ffe53b.jpg?1784036788",
+    "png": "https://cards.scryfall.io/png/front/d/1/d17ea45c-7f9c-411f-b7d3-ca7100ffe53b.png?1784036788",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/1/d17ea45c-7f9c-411f-b7d3-ca7100ffe53b.jpg?1784036788",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/1/d17ea45c-7f9c-411f-b7d3-ca7100ffe53b.jpg?1784036788",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/1/d17ea45c-7f9c-411f-b7d3-ca7100ffe53b.webp?1784036788",
+    "grid": "https://cards.scryfall.io/grid/front/d/1/d17ea45c-7f9c-411f-b7d3-ca7100ffe53b.webp?1784036788",
+    "display": "https://cards.scryfall.io/display/front/d/1/d17ea45c-7f9c-411f-b7d3-ca7100ffe53b.webp?1784036788",
+    "art": "https://cards.scryfall.io/art/front/d/1/d17ea45c-7f9c-411f-b7d3-ca7100ffe53b.webp?1784036788",
+    "crop": "https://cards.scryfall.io/crop/front/d/1/d17ea45c-7f9c-411f-b7d3-ca7100ffe53b.webp?1784036788",
+    "jpeg": "https://cards.scryfall.io/normal/front/d/1/d17ea45c-7f9c-411f-b7d3-ca7100ffe53b.jpg?1784036788"
+  },
+  "mana_cost": "{3}{G}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Human Officer",
+  "oracle_text": "You may play an additional land on each of your turns.\nWhenever Captain Janeway or another creature you control enters, that creature explores. (Reveal the top card of your library. Put that card into your hand if it's a land. Otherwise, put a +1/+1 counter on the creature, then put the card back or put it into your graveyard.)",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Explore"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set": "trk",
+  "set_name": "Star Trek",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atrk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/trk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d17ea45c-7f9c-411f-b7d3-ca7100ffe53b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad77d1895-ce02-4302-87c9-649e852fd0ea&unique=prints",
+  "collector_number": "187",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "e0dbd970-2299-479f-aab3-f83c341ffc72"
+  ],
+  "illustration_id": "575382de-5f56-430c-8a9f-7048d080f705",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 20569,
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCaptain%2BKathryn%2BJaneway",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCaptain%2BKathryn%2BJaneway",
+    "edhrec": "https://edhrec.com/route/?cc=Captain+Kathryn+Janeway"
+  }
+}
