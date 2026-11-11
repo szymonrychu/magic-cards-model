@@ -108,6 +108,53 @@ _DISCARD_THEN_DRAW_TOKEN_PER_NONLAND_RE = re.compile(
 )
 
 
+#: "Draw a card for every `<n>` `<counted>`[. If you draw `<m>` or more cards
+#: this way, `<consequence>`]" - Sarek, Federation Ambassador's "draw a card
+#: for every five creature types among non-Borg creatures you control. If you
+#: draw three or more cards this way, put two +1/+1 counters on each creature
+#: you control." "For every five" draws one card per complete group of five
+#: (no fractional card is drawn, CR 107.1a), so four types draw nothing and
+#: nine draw one. "Draw ... this way" is CR 608.2c's anaphora: the
+#: cards actually drawn, so a short library draws fewer.
+_DRAW_A_CARD_FOR_EVERY_N_RE = re.compile(
+    rf"^draw a card for every (?P<n>{COUNT}) (?P<counted>[^.]+?)\.?"
+    rf"(?:\s*if you draw (?P<m>{COUNT}) or more cards this way,\s*(?P<then>[^.]+\.?))?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s16")
+def _parse_draw_a_card_for_every_n_clause(text: str) -> AbilityEffect | None:
+    """`_DRAW_A_CARD_FOR_EVERY_N_RE`'s shape, or `None`. The counted phrase
+    is any `count_expression` "the number of `<counted>`"; the consequence
+    any ability clause the dispatcher reads whole."""
+    match = _DRAW_A_CARD_FOR_EVERY_N_RE.fullmatch(collapsed(text.strip()))
+    if match is None:
+        return None
+    per = parse_count(match.group("n"))
+    counted = count_expression(f"the number of {match.group('counted')}")
+    if not per or counted is None:
+        return None
+    threshold: int | None = None
+    consequence: AbilityEffect | None = None
+    if match.group("then") is not None:
+        threshold = parse_count(match.group("m"))
+        then_text = match.group("then").strip()
+        then_text = then_text[0].upper() + then_text[1:]
+        consequence = _ability_effect_or_notice(then_text)
+        if threshold is None or consequence is None or _is_notice_only(consequence):
+            return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        amount = counted(game, player.username) // per  # complete groups only
+        drawn = game.draw_cards(player.username, amount) if amount > 0 else []
+        if consequence is not None and threshold is not None and len(drawn) >= threshold:
+            consequence(game, ability)
+
+    return effect
+
+
 @ABILITY_TEXT.rung("s16")
 def _parse_discard_after_damage_dealt_this_way_ability(text: str) -> AbilityEffect | None:
     """Sonic Shrieker's whole enters-the-battlefield trigger: a damage head,

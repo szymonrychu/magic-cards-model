@@ -403,6 +403,56 @@ _COUNT_DAMAGE_ALREADY_DEALT_TO_YOU_RE = re.compile(
 _COUNT_PERMANENTS_SACRIFICED_THIS_TURN_RE = re.compile(
     r"^(?:the number of )?permanents? you(?:'ve| have)? sacrificed this turn$", re.IGNORECASE
 )
+#: "the number of creature types among non-Borg creatures you control" - the
+#: count every trk Federation card prints (Saavik, Hoshi Sato, Infinite
+#: Diversity, Captain Jonathan Archer, Starfleet Academy; Sarek's "for every
+#: five" reads the same phrase). CR 207.2c: "Federation" is an ability word
+#: with no rules meaning; the count is CR 205.3m's creature types.
+CREATURE_TYPES_AMONG_RE = re.compile(
+    r"^(?:the )?number of creature types among "
+    r"(?:non-(?P<excluded>[A-Za-z']+) )?creatures you control$",
+    re.IGNORECASE,
+)
+
+
+def creature_types_among(game: "Game", controller: str, excluded: str | None) -> int:
+    """CR 205.3m's distinct creature types among the creatures `controller`
+    controls, read off the computed board (CR 613.5): a changeling is every
+    creature type there (CR 702.73a), and a creature whose types a layer 4
+    effect replaced (an assimilated Borg) carries only its new ones. A
+    creature that has the `excluded` type ("non-Borg") contributes nothing.
+    Duplicates count once; no creatures is 0 (CR 107.2)."""
+    from ...data.creature_types import creature_types
+
+    known = frozenset(creature_types())
+    board = game.computed_board()
+    found: set[str] = set()
+    for permanent in game.battlefield:
+        chars = board.of(permanent)
+        if chars.controller != controller or Type.CREATURE not in chars.types:
+            continue
+        if excluded is not None and excluded in chars.subtypes:
+            continue
+        found.update(known.intersection(chars.subtypes))
+    return len(found)
+
+
+def creature_types_among_count(phrase: str) -> Callable[["Game", str], int] | None:
+    """`CREATURE_TYPES_AMONG_RE`'s `(game, controller) -> int`, or `None`.
+    The excluded word must be a CR 205.3m creature type."""
+    match = CREATURE_TYPES_AMONG_RE.fullmatch(phrase.strip().rstrip("."))
+    if match is None:
+        return None
+    excluded = match.group("excluded")
+    if excluded is not None:
+        from ...data.creature_types import creature_types
+
+        excluded = next((t for t in creature_types() if t.lower() == excluded.lower()), None)
+        if excluded is None:
+            return None
+    return lambda game, controller: creature_types_among(game, controller, excluded)
+
+
 #: "the number of differently named `<qualifier>` you control" - Emil,
 #: Vastlands Roamer's own "the number of differently named lands you
 #: control", generalised over the qualifier rather than fixed to lands.
@@ -1497,6 +1547,9 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             )
 
         return permanents_sacrificed_this_turn
+
+    if (types_among := creature_types_among_count(stripped)) is not None:
+        return types_among
 
     if match := _DIFFERENTLY_NAMED_QUALIFIER_RE.fullmatch(stripped):
         # "the number of differently named `<qualifier>` you control" - Emil,
