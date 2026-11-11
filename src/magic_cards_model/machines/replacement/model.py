@@ -529,6 +529,10 @@ class ReplaceableEvent:
     unpreventable: bool = False
     #: Whether the permanent arrives tapped (CR 614.1c).
     tapped: bool = False
+    #: Whether the permanent arrives attacking (CR 508.4): Kira Nerys,
+    #: Firebrand's "instead it enters tapped and attacking". `Game.enter_the_
+    #: battlefield` puts it into the attack its controller is already making.
+    attacking: bool = False
     #: Whether the permanent arrives with the prepared designation (CR 722.3a).
     prepared: bool = False
     #: The creature an as-enters choice made the entering Equipment arrive

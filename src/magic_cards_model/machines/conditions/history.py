@@ -1688,6 +1688,14 @@ def _faced_a_dilemma(context: "ConditionContext", match: re.Match[str]) -> bool:
     return context.game.turn_count(DILEMMAS_FACED, context.controller) > 0
 
 
+def _begun_an_extra_turn(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "you've begun an extra turn this game" / "you haven't ..." (CR 500.7),
+    read off `TurnMachine.extra_turns_begun_by`."""
+    turn = getattr(context.game, "turn", None)
+    begun = turn is not None and turn.extra_turns_begun_by.get(context.controller, 0) > 0
+    return not begun if match.group("neg") else begun
+
+
 def _played_not_from_hand(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "you've played a land or cast a spell this turn from anywhere other
     than your hand"."""
@@ -2092,6 +2100,10 @@ READERS: tuple[ConditionReader, ...] = (
     ),
     ConditionReader(re.compile(r"you(?:'ve| have)? committed a crime this turn"), _committed_crime),
     ConditionReader(re.compile(r"you(?:'ve| have)? faced a dilemma this turn"), _faced_a_dilemma),
+    ConditionReader(
+        re.compile(r"you (?:(?P<neg>haven't|have not)|'ve|have) begun an extra turn this game"),
+        _begun_an_extra_turn,
+    ),
     ConditionReader(
         re.compile(
             r"you(?:'ve| have)? played a land or cast a spell this turn from anywhere "

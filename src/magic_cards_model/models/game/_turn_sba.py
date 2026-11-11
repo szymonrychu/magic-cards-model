@@ -98,6 +98,10 @@ _ZERO_LOYALTY_EXEMPTION_RE = re.compile(
 )
 
 
+#: A static "Permanents can't phase in." (`Game.permanents_cant_phase_in`).
+_PERMANENTS_CANT_PHASE_IN_RE = re.compile(r"^permanents can['’]t phase in\.?$", re.IGNORECASE)
+
+
 class TurnSbaMixin:
     @property
     def is_over(self: "Game") -> bool:
@@ -574,12 +578,25 @@ class TurnSbaMixin:
         carries the phasing keyword (CR 702.26a), so nothing could exercise
         it.
         """
+        if self.permanents_cant_phase_in():
+            return
         for state in [
             state
             for state in self.phased_out
             if state.phased_out_under == username and not state.phased_out_indirectly
         ]:
             self.phase_in(state)
+
+    def permanents_cant_phase_in(self: "Game") -> bool:
+        """Whether a permanent on the battlefield has "Permanents can't phase
+        in." (The City on the Edge of Forever's Human token): CR 702.26c's
+        phasing in does not happen while it is there (CR 101.2, a "can't"
+        wins)."""
+        return any(
+            _PERMANENTS_CANT_PHASE_IN_RE.fullmatch(line.strip())
+            for permanent in self.battlefield
+            for line in self.characteristics_of(permanent).abilities
+        )
 
     def turn_based_actions(self: "Game") -> None:
         """Perform the turn-based actions of the step that has just begun (CR 703.3).

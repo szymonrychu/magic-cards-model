@@ -782,6 +782,63 @@ def _parse_lock_and_counter_while_tapped_clause(effect_text: str) -> AbilityEffe
     return effect
 
 
+#: "Choose another target creature you control. For as long as `<self>`
+#: remains tapped, if a triggered ability of that creature triggers, that
+#: ability triggers an additional time." (Lwaxana Troi, Charming Guest): CR
+#: 603.2d's multiplier, scoped to one creature and lasting (CR 611.2b) while
+#: the source stays tapped. Granted to the target as a layer-6 line (CR
+#: 613.1f) that `trigger_doubling` reads as "this creature"'s own.
+_DOUBLE_TARGET_TRIGGERS_WHILE_TAPPED_RE = re.compile(
+    r"^choose (?P<phrase>(?:another )?target creature you control)\.\s*"
+    rf"for as long as (?P<source_tapped>{_SELF}) remains tapped, if a triggered ability of "
+    r"(?:that|the chosen) creature triggers, that ability triggers an additional time\.?$",
+    re.IGNORECASE,
+)
+DOUBLED_TRIGGERS_GRANT = (
+    "If a triggered ability of this creature triggers, that ability triggers an additional time."
+)
+
+
+def _parse_double_target_triggers_while_tapped_clause(effect_text: str) -> AbilityEffect | None:
+    """`_DOUBLE_TARGET_TRIGGERS_WHILE_TAPPED_RE`'s shape, or `None`."""
+    match = _DOUBLE_TARGET_TRIGGERS_WHILE_TAPPED_RE.fullmatch(collapsed(effect_text))
+    if match is None:
+        return None
+
+    from .effects import _targets_understood
+
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+
+    def effect(game: Game, ability: AbilityOnStack) -> None:
+        condition = _lock_condition(game, ability, duration_kind="source_tapped")
+        source = ability.source(game)
+        targets = [
+            target
+            for target in game.resolve_card_targets(ability)
+            if target.zone is Zone.BATTLEFIELD
+        ]
+        if condition is None or source is None or not targets:
+            return
+        store = game.continuous_effects
+        for target in targets:
+            store.add(
+                ContinuousEffect(
+                    description=f"{source.name}: {target.name}'s triggered abilities trigger "
+                    "an additional time",
+                    layer=Layer.ABILITY,
+                    timestamp=store.tick(),
+                    duration=Duration.FOR_AS_LONG_AS,
+                    condition=condition,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=grant_ability(DOUBLED_TRIGGERS_GRANT),
+                ),
+                game=game,
+            )
+
+    return effect
+
+
 def control_change_ability_effect(effect_text: str) -> AbilityEffect | None:
     """A control change or rider on an activated or triggered ability."""
     for reader in (
@@ -790,6 +847,7 @@ def control_change_ability_effect(effect_text: str) -> AbilityEffect | None:
         _parse_gain_control_of_all_target_players_clause,
         _parse_grant_while_source_tapped_clause,
         _parse_lock_and_counter_while_tapped_clause,
+        _parse_double_target_triggers_while_tapped_clause,
     ):
         effect = reader(effect_text)
         if effect is not None:

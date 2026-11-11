@@ -3718,6 +3718,8 @@ def _unread_condition_matches(
         # owner), not the controller of whatever effect moved it.
         if (event.player == controller) != (match.group("whose") == "your"):
             return False
+        if match.group("your_turn") and getattr(game.turn, "active_player", None) != controller:
+            return False
         types = match.group("types")
         return types is None or _types_match(event.subject_types, types)
 

@@ -98,12 +98,14 @@ _YOU_PUT_A_COUNTER_ON_QUALITY_CONDITION = re.compile(
 
 #: Hardened Academic's "one or more cards leave your graveyard", Murktide
 #: Regent's "an instant or sorcery card leaves your graveyard" and Erebos's
-#: Titan's "a creature card leaves an opponent's graveyard" - one shape with
-#: an optional type restriction and whose graveyard (CR 603.10a's own "abilities that trigger when
+#: Titan's "a creature card leaves an opponent's graveyard", Vash, Freelance
+#: Archaeologist's untyped "a card leaves your graveyard" and Kishla Skimmer's
+#: "... during your turn" - one shape with an optional type restriction, an
+#: optional your-turn gate and whose graveyard (CR 603.10a's own "abilities that trigger when
 #: a card leaves a graveyard").
 _LEAVES_GRAVEYARD_CONDITION = re.compile(
-    r"^(?:one or more cards leave|(?:an?|one) (?P<types>[a-z ]+?) card leaves)"
-    r" (?P<whose>your|an opponent's) graveyard$"
+    r"^(?:one or more cards leave|(?:an?|one) (?:(?P<types>[a-z ]+?) )?card leaves)"
+    r" (?P<whose>your|an opponent's) graveyard(?P<your_turn> during your turn)?$"
 )
 
 #: Wan Shi Tong, All-Knowing's "one or more cards are put into a library from

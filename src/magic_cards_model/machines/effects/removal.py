@@ -9999,6 +9999,213 @@ def _parse_face_down_exile_play_clause(effect_text: str) -> TargetedClause | Non
     return effect
 
 
+#: A face-down exile sequence with play permissions (CR 406.3, 406.3a, 601.3):
+#: each sentence exiles the top card(s) of a library face down by one player,
+#: then one permission sentence says who may play them, and an optional
+#: sentence lets mana of any type pay for them. Vulcan Mind-Meld: "Target
+#: opponent looks at the top card of your library, then exiles it face down.
+#: You look at the top two cards of their library, then exile them face down.
+#: For each card exiled this way, the player who exiled it may play it for as
+#: long as it remains exiled. Mana of any type can be spent to cast spells
+#: this way." Outrageous Robbery: "Target opponent exiles the top X cards of
+#: their library face down. You may look at and play those cards for as long
+#: as they remain exiled. If you cast a spell this way, you may spend mana as
+#: though it were mana of any type to cast it."
+_FACE_DOWN_EXILE_STEP_RE = re.compile(
+    r"^(?P<who>target opponent|you) (?:"
+    rf"looks? at the top (?:card|(?P<n>{COUNT}) cards) of (?P<whose>your|their) library, "
+    r"then exiles? (?:it|them) face down"
+    rf"|exiles? the top (?:card|(?P<n2>{COUNT}) cards) of (?P<whose2>your|their) library "
+    r"face down)$",
+    re.IGNORECASE,
+)
+_FACE_DOWN_EXILER_PLAYS_RE = re.compile(
+    r"^for each card exiled this way, the player who exiled it may play it for as long as it "
+    r"remains exiled$",
+    re.IGNORECASE,
+)
+_FACE_DOWN_YOU_PLAY_RE = re.compile(
+    r"^you may (?:look at and )?play (?:them|those cards) for as long as they remain exiled$",
+    re.IGNORECASE,
+)
+_ANY_TYPE_MANA_RE = re.compile(
+    r"^(?:mana of any type can be spent to cast (?:spells this way|those spells)"
+    r"|if you cast a spell this way, you may spend mana as though it were mana of any type "
+    r"to cast it)$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+@SPELL_TEXT.rung("s14")
+def _parse_face_down_exile_sequence_play_clause(effect_text: str) -> TargetedClause | None:
+    """`_FACE_DOWN_EXILE_STEP_RE` sentences, then a permission and an
+    optional any-type-mana sentence. "your" is the controller's library,
+    "their" the other party's: the target opponent's when you exile, yours
+    when the target opponent does. Each exiler looks at what it exiles (CR
+    406.3) and the permission goes to the exiler or to the controller as
+    printed (CR 601.3), lasting while the card stays in exile (CR 400.7)."""
+    whole = collapsed(_strip_non_effect_preamble(effect_text)).strip()
+    sentences = [part.strip() for part in re.split(r"\.\s*", whole) if part.strip()]
+    steps: list[tuple[bool, bool, int]] = []  # (opponent exiles, from own library, count)
+    index = 0
+    while index < len(sentences):
+        match = _FACE_DOWN_EXILE_STEP_RE.fullmatch(sentences[index])
+        if match is None:
+            break
+        count_word = match.group("n") or match.group("n2")
+        count = parse_count(count_word) if count_word else 1
+        if count is None:
+            return None
+        opponent = match.group("who").lower() == "target opponent"
+        whose = (match.group("whose") or match.group("whose2")).lower()
+        # "your" names the controller's library from either mouth; "their" is
+        # the speaker's own when the opponent speaks, the opponent's otherwise.
+        own = whose == "your"
+        if whose == "their" and opponent:
+            own = False
+        steps.append((opponent, own, count))
+        index += 1
+    if not steps or not any(opponent for opponent, _, _ in steps) or index >= len(sentences):
+        return None
+    exiler_plays = _FACE_DOWN_EXILER_PLAYS_RE.fullmatch(sentences[index]) is not None
+    if not exiler_plays and _FACE_DOWN_YOU_PLAY_RE.fullmatch(sentences[index]) is None:
+        return None
+    index += 1
+    any_type = index < len(sentences) and _ANY_TYPE_MANA_RE.fullmatch(sentences[index]) is not None
+    index += int(any_type)
+    if index != len(sentences):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        opponents = [
+            target.username
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, Player)
+        ]
+        if not opponents:
+            return  # CR 608.2b: the target opponent is gone.
+        opponent = opponents[0]
+        for opponent_exiles, own, count in steps:
+            exiler = opponent if opponent_exiles else controller
+            library_owner = game.player(controller if own else opponent)
+            for card_state in list(library_owner.library[:count]):
+                game.look(card_state, exiler, source=source_name)
+                moved = game.exile_permanent(card_state)
+                if moved is None or moved.zone is not Zone.EXILE:
+                    continue
+                moved.face_up = False
+                player = exiler if exiler_plays else controller
+                game.look(moved, player, source=source_name)
+                game.grant_play_permission(
+                    moved,
+                    player,
+                    action=PlayAction.PLAY,
+                    pays_mana_cost=True,
+                    source_name=source_name,
+                    rule="CR 601.3",
+                    zone=Zone.EXILE,
+                    until_end_of_turn=False,
+                    any_type_mana=any_type,
+                )
+
+    return effect
+
+
+#: Ensign Pavel Chekov's own Strange new worlds trigger: "Each opponent exiles
+#: the top X cards of their library, where X is `<count>`. For each opponent,
+#: choose a land card that player owns exiled this way. You may play the
+#: chosen cards for as long as they remain exiled." X is read as the ability
+#: resolves (CR 608.2h); the choice is one land card per opponent among what
+#: that opponent exiled, and only the chosen cards get the permission (CR
+#: 601.3), lasting while they stay in exile (CR 400.7).
+_EACH_OPPONENT_EXILES_CHOOSE_PLAY_RE = re.compile(
+    rf"^each opponent exiles the top (?:card|(?P<n>{COUNT}) cards|x cards) of their library"
+    r"(?:, where x is (?P<x>[^.]+))?\.\s*"
+    r"for each opponent, choose an? (?P<quality>land|nonland|creature|artifact) card that player "
+    r"owns exiled this way\.\s*"
+    r"you may play the chosen cards for as long as they remain exiled\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_each_opponent_exiles_choose_play_clause(effect_text: str) -> AbilityEffect | None:
+    """`_EACH_OPPONENT_EXILES_CHOOSE_PLAY_RE`'s shape, or `None`."""
+    match = _EACH_OPPONENT_EXILES_CHOOSE_PLAY_RE.fullmatch(
+        collapsed(_strip_non_effect_preamble(effect_text)).strip()
+    )
+    if match is None:
+        return None
+    count_word = match.group("n")
+    fixed = parse_count(count_word) if count_word else (1 if match.group("x") is None else None)
+    x_reader = None
+    if fixed is None:
+        if match.group("x") is None:
+            return None
+        from .amounts import _where_x_count_expression
+
+        x_reader = _where_x_count_expression(match.group("x"))
+        if x_reader is None:
+            return None
+    wanted = Type(match.group("quality").lower().removeprefix("non"))
+    excluded = match.group("quality").lower().startswith("non")
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = ability.controller
+        amount = fixed if x_reader is None else x_reader(game, controller)
+        for username in game._turn_order_from_active():
+            if username == controller:
+                continue
+            player = game.player(username)
+            exiled = [
+                moved
+                for card_state in list(player.library[: max(amount, 0)])
+                if (moved := game.exile_permanent(card_state)) is not None
+                and moved.zone is Zone.EXILE
+            ]
+            eligible = [
+                card_state
+                for card_state in exiled
+                if (card_state.owner or username) == username
+                and (wanted in card_state.types) != excluded
+            ]
+            if not eligible:
+                continue
+            chosen = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller,
+                    prompt=f"choose a {match.group('quality').lower()} card {username} exiled",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    amount=1,
+                    cards=tuple(card_state.id for card_state in eligible),
+                )
+            )
+            by_id = {card_state.id: card_state for card_state in eligible}
+            for card_id in chosen:
+                card_state = by_id[card_id]
+                game.grant_play_permission(
+                    card_state,
+                    controller,
+                    action=PlayAction.PLAY,
+                    pays_mana_cost=True,
+                    source_name=ability.source_name,
+                    rule="CR 601.3",
+                    zone=Zone.EXILE,
+                    until_end_of_turn=False,
+                )
+
+    return effect
+
+
 #: "For each opponent, exile up to one target `<X>` that player controls[
 #: until this `<type>` leaves the battlefield| and that player gains life
 #: equal to its power]." - Celebrate the Mountain-king's and Haytham Kenway's

@@ -5049,10 +5049,17 @@ def off_battlefield_activation(
     Nothing about resolving the ability depends on finding it there again.
     """
     from .targeting import profile_for_text
+    from .triggers.collect import granted_activated_abilities_of
 
+    # Printed first, then what was granted to this very object (Q, Stacking
+    # the Deck's ability on the card it exiled) - the index space
+    # `Game.activated_abilities` and `Game.activation_cost` share.
     candidates = [
         (source_index, ability)
-        for source_index, ability in enumerate(activated_abilities_of(card.card))
+        for source_index, ability in enumerate(
+            activated_abilities_of(card.card)
+            + granted_activated_abilities_of(card.granted_ability_texts)
+        )
         if ability.zone is not None
     ]
     if index >= len(candidates):
@@ -5311,7 +5318,12 @@ def off_zone_abilities(
                 ),
             )
         )
-    printed = [ability for ability in activated_abilities_of(card) if ability.zone is not None]
+    from .triggers.collect import granted_activated_abilities_of
+
+    granted = granted_activated_abilities_of(state.granted_ability_texts) if state else []
+    printed = [
+        ability for ability in activated_abilities_of(card) + granted if ability.zone is not None
+    ]
     for index, ability in enumerate(printed):
         assert ability.zone is not None and ability.zone_rule is not None
         pool.append(

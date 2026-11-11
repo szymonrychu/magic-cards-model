@@ -168,3 +168,142 @@ def test_delving_a_card_out_of_your_graveyard_triggers_the_academic():
     assert scenario.player("alice").graveyard == []
     assert all(state.zone is Zone.EXILE for state in binned)
     assert scenario.stack_names() == ["Murktide Regent", "Hardened Academic's triggered ability"]
+
+
+# "Whenever a card leaves your graveyard, <effect>. This ability triggers only
+# once each turn." - the untyped singular shape (Vash, Hologram Stalker) and
+# Kishla Skimmer's "... during your turn" gate. The once-each-turn rider is
+# the source's own limiter (CR 702.179d prints the same sentence on speed's
+# inherent ability); CR 603.10a still makes the leave a look-back trigger.
+
+
+def watcher_board(watcher: str, *, opponent_graveyard: tuple[str, ...] = ()) -> Scenario:
+    return (
+        Scenario()
+        .player(
+            "alice",
+            graveyard=["Brainstorm", "Grizzly Bears"],
+            battlefield=[watcher, "Island"],
+            library=["Island"] * 4,
+        )
+        .player("bob", graveyard=list(opponent_graveyard), library=["Island"] * 4)
+    )
+
+
+def test_an_untyped_card_leaving_triggers_once_however_many_leave():
+    """Two separate cards leave alice's graveyard in one turn; the untyped
+    watcher triggers for the first and its once-each-turn rider stops the
+    second."""
+    scenario = watcher_board("Vash, Freelance Archaeologist").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    brainstorm = scenario.find("Brainstorm", Zone.GRAVEYARD, "alice")
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+
+    leaves_graveyard(scenario, brainstorm, "alice")
+    assert [t.source_name for t in scenario.pending_triggers] == ["Vash, Freelance Archaeologist"]
+    scenario.pass_until_resolved()
+    hand_after_first = len(scenario.player("alice").hand)
+
+    leaves_graveyard(scenario, bears, "alice")
+    assert scenario.pending_triggers == []
+    assert scenario.stack_names() == []
+    assert len(scenario.player("alice").hand) == hand_after_first
+
+
+def test_an_untyped_watcher_ignores_an_opponents_graveyard():
+    scenario = watcher_board("Vash, Freelance Archaeologist", opponent_graveyard=("Brainstorm",))
+    scenario = scenario.build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    leaves_graveyard(scenario, scenario.find("Brainstorm", Zone.GRAVEYARD, "bob"), "bob")
+    assert scenario.pending_triggers == []
+
+
+def test_the_once_each_turn_limit_resets_on_the_next_turn():
+    scenario = watcher_board("Vash, Freelance Archaeologist").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    leaves_graveyard(scenario, scenario.find("Brainstorm", Zone.GRAVEYARD, "alice"), "alice")
+    scenario.pass_until_resolved()
+    while scenario.turn.active_player != "bob":
+        scenario.advance()
+    leaves_graveyard(scenario, scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice"), "alice")
+    assert [t.source_name for t in scenario.pending_triggers] == ["Vash, Freelance Archaeologist"]
+
+
+def test_kishla_skimmer_watches_only_during_its_controllers_turn():
+    """Kishla Skimmer's "during your turn" gate: the same leave on bob's turn
+    triggers nothing, on alice's own turn it draws."""
+    scenario = watcher_board("Kishla Skimmer").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    while scenario.turn.active_player != "bob":
+        scenario.advance()
+    leaves_graveyard(scenario, scenario.find("Brainstorm", Zone.GRAVEYARD, "alice"), "alice")
+    assert scenario.pending_triggers == []
+    while scenario.turn.active_player != "alice":
+        scenario.advance()
+    leaves_graveyard(scenario, scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice"), "alice")
+    assert [t.source_name for t in scenario.pending_triggers] == ["Kishla Skimmer"]
+    before = len(scenario.player("alice").hand)
+    scenario.pass_until_resolved()
+    assert len(scenario.player("alice").hand) == before + 1
+
+
+def stalker_and_vash_board() -> Scenario:
+    return (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Hologram Stalker"],
+            graveyard=["Grizzly Bears", "Llanowar Elves"],
+            battlefield=["Vash, Freelance Archaeologist"] + ["Forest"] * 6,
+            library=["Island"] * 4,
+        )
+        .player("bob", library=["Island"] * 4)
+    )
+
+
+def test_hologram_stalker_makes_an_illusion_when_its_own_return_empties_a_card():
+    """Hologram Stalker's own enters trigger returns a permanent card from
+    alice's graveyard to her hand; that card leaving her graveyard triggers the
+    Stalker's watcher: one 3/3 colorless Illusion artifact creature token."""
+    scenario = stalker_and_vash_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    scenario.choose_trigger_targets("Hologram Stalker", [bears])
+    scenario.cast_onto_stack("Hologram Stalker", *scenario.untapped_sources(*["Forest"] * 6))
+    scenario.pass_until_resolved()  # the Stalker resolves
+    scenario.pass_until_resolved()  # its enters trigger returns Grizzly Bears
+    assert bears.zone is Zone.HAND
+    assert sorted(scenario.stack_names()) == [
+        "Hologram Stalker's triggered ability",
+        "Vash, Freelance Archaeologist's triggered ability",
+    ]
+    hand = len(scenario.player("alice").hand)
+    scenario.pass_until_resolved()
+    scenario.pass_until_resolved()
+    illusions = [
+        p for p in scenario.game.battlefield if p.name == "Illusion" and p.controller == "alice"
+    ]
+    assert len(illusions) == 1
+    (illusion,) = illusions
+    assert (illusion.power, illusion.toughness) == (3, 3)
+    assert illusion.card.colors == []
+    assert len(scenario.player("alice").hand) == hand + 1, "Vash drew a card"
+
+
+def test_vash_freelance_archaeologist_draws_once_and_surveils_in_upkeep():
+    """Vash: "At the beginning of your upkeep, surveil 1." and "Whenever a card
+    leaves your graveyard, draw a card. This ability triggers only once each
+    turn." - two cards leave in one turn, one card is drawn."""
+    scenario = watcher_board("Vash, Freelance Archaeologist").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    hand = len(scenario.player("alice").hand)
+    leaves_graveyard(scenario, scenario.find("Brainstorm", Zone.GRAVEYARD, "alice"), "alice")
+    leaves_graveyard(scenario, scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice"), "alice")
+    scenario.pass_until_resolved()
+    assert len(scenario.player("alice").hand) == hand + 1
+    while not (scenario.turn.active_player == "alice" and scenario.step is Step.UPKEEP):
+        scenario.advance()
+    top = scenario.top_of_library(1)
+    scenario.surveil_to_graveyard(*top)
+    scenario.pass_until_resolved()
+    assert top[0].zone is Zone.GRAVEYARD

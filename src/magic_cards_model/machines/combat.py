@@ -60,6 +60,7 @@ from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
 from ..snapshot import EngineModel
 from .abilities import (
+    honorific_short_name,
     keyword_abilities_in_lines,
     keywords_in_lines,
     layer_readable_sentences,
@@ -1403,6 +1404,8 @@ def _self_reference_names(name: str) -> tuple[str, ...]:
         candidates.update({face, face.split(",")[0].strip()})
         if len(words) > 1 and "," not in face:
             candidates.add(words[0])
+        if (honorific := honorific_short_name(face)) is not None:
+            candidates.add(honorific)
     return tuple(
         sorted((candidate for candidate in candidates if candidate), key=len, reverse=True)
     )
