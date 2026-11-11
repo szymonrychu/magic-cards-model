@@ -241,7 +241,7 @@ def test_dr_leonard_bones_mccoy_brings_a_dying_creature_back_with_a_counter():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "alice")
     scenario.will_choose_mode(BONES_SAVE)
-    scenario.choose_trigger_targets('Dr. Leonard "Bones" McCoy', [bears])
+    scenario.will_choose_targets(bears, source='Dr. Leonard "Bones" McCoy')
     scenario.cast_and_resolve(
         'Dr. Leonard "Bones" McCoy', *scenario.untapped_sources(*["Forest"] * 3)
     )
@@ -251,7 +251,7 @@ def test_dr_leonard_bones_mccoy_brings_a_dying_creature_back_with_a_counter():
     )
     assert bears.zone is Zone.GRAVEYARD
     scenario.pass_until_resolved()
-    while scenario.step is not Step.END:
+    while scenario.step is not Step.END_STEP:
         scenario.advance()
     scenario.pass_until_resolved()
     returned = scenario.creature("Grizzly Bears", "alice")

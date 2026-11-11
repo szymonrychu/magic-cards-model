@@ -186,6 +186,12 @@ def _binary_splits(clause: str) -> list[tuple[str, str, str]]:
         if left and right:
             joiner = "and" if match.group("joiner") == "and" else "or"
             splits.append((joiner, left, right))
+            # "you control a Whale and haven't begun an extra turn this game"
+            # (H.M.S. Bounty, Unlikely Timeship), "you control no permanents
+            # other than this enchantment and have no cards in hand" (Barren
+            # Glory): the second half's subject is the first half's "you".
+            if left.startswith("you ") and _ELIDED_YOU_VERB.match(right):
+                splits.append((joiner, left, f"you {right}"))
     # A serial list's earlier commas ("A, B, and C" - Happily Ever After)
     # join with the list's closing joiner: cutting at one leaves "A" and
     # "B, and C", each read the same way in turn.
@@ -200,6 +206,12 @@ def _binary_splits(clause: str) -> list[tuple[str, str, str]]:
     return splits
 
 
+#: The verb a compound's second half opens with when it leaves the first
+#: half's "you" unsaid.
+_ELIDED_YOU_VERB = re.compile(
+    r"(?:have|haven't|have not|had|hadn't|control|controlled|don't|didn't|"
+    r"cast|attacked|gained|lost) "
+)
 #: A serial list's closing item: ", and C" / ", or C".
 _SERIAL_CLOSING = re.compile(r", (?P<joiner>and|or) ")
 #: A bare comma, the separator between a serial list's earlier items.

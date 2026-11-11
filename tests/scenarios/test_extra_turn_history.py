@@ -48,7 +48,8 @@ def hit(scenario, bounty):
     while scenario.step is not Step.DECLARE_BLOCKERS:
         scenario.advance()
     scenario.no_blocks()
-    scenario.combat_damage()
+    scenario.advance()  # into the combat damage step, which deals it (CR 510.1)
+    assert scenario.step is Step.COMBAT_DAMAGE
     scenario.game.put_triggers_on_stack()
     assert scenario.stack_names() == [f"{BOUNTY}'s triggered ability"]
     scenario.pass_until_resolved()
@@ -116,3 +117,80 @@ def test_h_m_s_bounty_unlikely_timeship_finds_a_whale_as_it_enters():
     scenario.cast_and_resolve(BOUNTY, *scenario.untapped_sources(*["Island"] * 5))
     scenario.pass_until_resolved()
     assert whale.zone is Zone.HAND
+
+
+def test_a_trigger_on_a_striation_continuation_line_is_granted_at_n():
+    """CR 722.2a on a non-trk printing: Specimen Freighter's "Whenever this
+    Spacecraft attacks, defending player mills four cards." sits on its own
+    line under "9+ | Flying" and is had only from nine charge counters on."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Specimen Freighter"], library=["Island"] * 10)
+        .player("bob", library=["Island"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    freighter = scenario.find("Specimen Freighter", Zone.BATTLEFIELD, "alice")
+    scenario.game.add_counters(freighter, Counter.CHARGE, 9, putter="alice")
+    while scenario.step is not Step.DECLARE_ATTACKERS:
+        scenario.advance()
+    scenario.attack_with(freighter)
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["Specimen Freighter's triggered ability"]
+    scenario.pass_until_resolved()
+    assert len(scenario.player("bob").graveyard) == 4
+
+
+def test_below_n_the_striation_continuation_trigger_is_not_had():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Specimen Freighter"], library=["Island"] * 10)
+        .player("bob", library=["Island"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    freighter = scenario.find("Specimen Freighter", Zone.BATTLEFIELD, "alice")
+    scenario.game.add_counters(freighter, Counter.CHARGE, 8, putter="alice")
+    from magic_cards_model.machines.triggers.collect import added_ability_lines
+
+    assert not any(
+        line.startswith("Whenever") for line in added_ability_lines(scenario.game, freighter)
+    )
+
+
+def test_a_compound_whose_second_half_elides_you_reads_both_halves():
+    """CR 603.4 on a non-trk printing: Barren Glory's "if you control no
+    permanents other than this enchantment and have no cards in hand" - the
+    second half's subject "you" is carried over from the first."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Barren Glory"], hand=["Island"], library=["Island"] * 10)
+        .player("bob", library=["Island"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    game = scenario.game
+    assert game.condition_holds("alice", "you control a Whale and have no cards in hand") is False
+    assert (
+        game.condition_holds("alice", "you control an enchantment and have no cards in hand")
+        is False
+    )
+    assert (
+        game.condition_holds("alice", "you control an enchantment and have a card in hand") is True
+    )
+
+
+def test_barren_glory_wins_with_an_empty_hand_and_nothing_else():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Barren Glory"], library=["Island"] * 10)
+        .player("bob", library=["Island"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    while not (scenario.turn.active_player == "alice" and scenario.step is Step.UPKEEP):
+        scenario.advance()
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["Barren Glory's triggered ability"]
+    scenario.pass_until_resolved()
+    assert scenario.game.winner == "alice"

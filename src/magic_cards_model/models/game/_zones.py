@@ -2470,7 +2470,8 @@ class ZonesMixin:
         added for Static Prison's "until this enchantment leaves the
         battlefield" (CR 610.3c's kind of one-shot return): a bounced
         Static Prison is exactly as much a departure as a destroyed or exiled
-        one, and nothing watched this path before.
+        one, and nothing watched this path before. A card returned from a
+        graveyard raises `ExtraTriggerEvent.LEAVES_GRAVEYARD` (CR 603.10a).
         """
         with self._id_allocator_scope():
             if move_refused(permanent, Zone.HAND) is not None:
@@ -2485,6 +2486,7 @@ class ZonesMixin:
             # battlefield - "another nonland permanent you control is
             # returned" asks about then, not about the hand it lands in.
             controller = permanent.controller
+            origin_graveyard_owner = self._graveyard_owner_of(permanent)
             if was_on_battlefield:
                 self._note_left_battlefield(permanent)
             self._take_out_of_every_zone(permanent)
@@ -2518,6 +2520,11 @@ class ZonesMixin:
                     self._returning_together.append((to_hand, departure))
                 else:
                     self._announce_returns([(to_hand, departure)])
+            if origin_graveyard_owner is not None:
+                # CR 603.10a: a card returned from a graveyard to a hand left
+                # that graveyard (Hologram Stalker's own enters trigger
+                # feeding its "Whenever a card leaves your graveyard").
+                self._emit_left_graveyard(origin_graveyard_owner, [permanent], exiled=False)
             return permanent
 
     def put_cards_into_library(

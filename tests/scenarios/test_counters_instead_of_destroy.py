@@ -24,9 +24,13 @@ def board() -> Scenario:
         .player(
             "alice",
             battlefield=["Dr. McCoy, Surly Surgeon", "Grizzly Bears", "Savannah Lions"],
+            library=["Plains"] * 6,
         )
         .player(
-            "bob", hand=["Go for the Throat", "Lightning Bolt"], battlefield=["Swamp", "Mountain"]
+            "bob",
+            hand=["Go for the Throat", "Lightning Bolt"],
+            battlefield=["Swamp", "Swamp", "Mountain"],
+            library=["Island"] * 6,
         )
     )
 
@@ -112,7 +116,7 @@ def test_an_opponents_creature_is_not_protected():
     bears = scenario.creature("Grizzly Bears", "bob")
     scenario.game.add_counters(bears, Counter.PLUS_ONE, 1, putter="bob")
     scenario.cast_and_resolve(
-        "Go for the Throat", *scenario.untapped_sources("Swamp"), targets=[bears]
+        "Go for the Throat", *scenario.untapped_sources("Swamp", "Swamp"), targets=[bears]
     )
     assert bears.zone is Zone.GRAVEYARD
 

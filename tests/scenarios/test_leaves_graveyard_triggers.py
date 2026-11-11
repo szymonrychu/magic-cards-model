@@ -286,7 +286,9 @@ def test_hologram_stalker_makes_an_illusion_when_its_own_return_empties_a_card()
     scenario.pass_until_resolved()
     scenario.pass_until_resolved()
     illusions = [
-        p for p in scenario.game.battlefield if p.name == "Illusion" and p.controller == "alice"
+        p
+        for p in scenario.game.battlefield
+        if p.name == "Illusion Token" and p.controller == "alice"
     ]
     assert len(illusions) == 1
     (illusion,) = illusions
@@ -312,3 +314,30 @@ def test_vash_freelance_archaeologist_draws_once_and_surveils_in_upkeep():
     scenario.surveil_to_graveyard(*top)
     scenario.pass_until_resolved()
     assert top[0].zone is Zone.GRAVEYARD
+
+
+def test_a_card_returned_from_a_graveyard_to_a_hand_left_that_graveyard():
+    """CR 603.10a on a non-trk printing: Raise Dead returns Grizzly Bears from
+    alice's graveyard to her hand, and Kishla Skimmer's "Whenever a card leaves
+    your graveyard during your turn, draw a card." triggers off it."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Raise Dead"],
+            graveyard=["Grizzly Bears"],
+            battlefield=["Kishla Skimmer", "Swamp"],
+            library=["Island"] * 4,
+        )
+        .player("bob", library=["Island"] * 4)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    scenario.cast_and_resolve("Raise Dead", *scenario.untapped_sources("Swamp"), targets=[bears])
+    assert bears.zone is Zone.HAND
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["Kishla Skimmer's triggered ability"]
+    hand = len(scenario.player("alice").hand)
+    scenario.pass_until_resolved()
+    assert len(scenario.player("alice").hand) == hand + 1
