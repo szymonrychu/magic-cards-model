@@ -173,6 +173,23 @@ def copiable_characteristics(
     return board[state.id]
 
 
+def _copied_ability_text(state: CardState, copy_effects: Sequence[ContinuousEffect]) -> str | None:
+    """The abilities `state` has by a layer 1 copy effect, as one text, or `None`.
+
+    CR 707.2: a copy has the copiable values of what it copies, abilities
+    included, so a permanent that became a copy generates the static effects of
+    the copied abilities rather than its own printed ones (Gwyndala, the
+    Progeny turning an Equipment token into a copy of Bonesplitter). `None`
+    when no copy effect changes the abilities, so the printed text is read.
+    """
+    if not copy_effects:
+        return None
+    copied = copiable_characteristics(state, copy_effects).abilities
+    if tuple(copied) == tuple(printed_characteristics(state, {}).abilities):
+        return None
+    return "\n".join(copied)
+
+
 def _changeling_effects(board: Board) -> list[ContinuousEffect]:
     """Changeling as the layer 4 characteristic-defining ability it is.
 
@@ -1416,6 +1433,7 @@ class ContinuousEffects(EngineModel):
         # within the same computation that first sees it.
         _sync_stored_grant_ability_texts([*permanents, *emblems], stored)
         effects: list[ContinuousEffect] = []
+        copy_effects = [effect for effect in stored if effect.layer is Layer.COPY]
         for permanent in [*permanents, *emblems]:
             effects.extend(
                 effects_for(
@@ -1425,6 +1443,7 @@ class ContinuousEffects(EngineModel):
                     shared,
                     self.layer_notices,
                     static_only=True,
+                    ability_text=_copied_ability_text(permanent, copy_effects),
                 )
             )
         return effects + stored + self.keyword_counter_grants(permanents)

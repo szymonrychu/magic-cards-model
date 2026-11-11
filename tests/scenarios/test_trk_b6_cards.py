@@ -127,11 +127,7 @@ def test_hit_it_gives_haste_and_puts_one_land_in_tapped_and_the_rest_in_the_grav
             hand=["Hit It!", "Cavalier of Thorns"],
             battlefield=[
                 "Mountain",
-                "Forest",
-                "Forest",
-                "Forest",
-                "Forest",
-                "Forest",
+                *["Forest"] * 7,
                 "Grizzly Bears",
             ],
             library=["Grizzly Bears", "Mountain", "Forest", "Island", "Lightning Bolt", "Plains"]
@@ -156,7 +152,7 @@ def test_hit_it_gives_haste_and_puts_one_land_in_tapped_and_the_rest_in_the_grav
     assert all(c.id not in top_five for c in alice.library)
     # Cavalier of Thorns: the same shape, the land comes in untapped.
     before = len(alice.graveyard)
-    forest_on_top = alice.library[2]
+    forest_on_top = next(c for c in alice.library[:5] if c.name == "Forest")
     scenario.will_choose_cards(forest_on_top, username="alice")
     scenario.cast_onto_stack(
         "Cavalier of Thorns", *scenario.untapped_sources(*["Forest"] * 3, "Forest", "Forest")
@@ -282,7 +278,7 @@ def test_dal_rel_adds_red_or_green_per_land_and_sacrifices_a_land_to_draw() -> N
     assert floating.get(Color.RED, 0) + floating.get(Color.GREEN, 0) == 1
     # A land an opponent controls does not trigger it.
     scenario.game.put_onto_battlefield(scenario.find("Mountain", Zone.HAND, "alice"), "bob")
-    scenario.pass_until_resolved()
+    assert not scenario.game.stack and not scenario.game.pending_triggers, "no landfall trigger"
     assert alice.mana_pool.total == 1
     # {3}, sacrifice a land: draw a card.
     plains = scenario.untapped_sources("Plains", "Plains", "Plains")
@@ -323,11 +319,11 @@ def test_salt_vampire_exiles_a_chosen_nonland_card_and_its_owner_draws() -> None
     assert vampire.zone is Zone.BATTLEFIELD
     # Oildeep Gearhulk: any card (a land is fine), discarded, then the player draws.
     mountain = scenario.find("Mountain", Zone.HAND, "bob")
+    scenario.choose_trigger_targets("Oildeep Gearhulk", [bob])
     scenario.cast_onto_stack(
         "Oildeep Gearhulk", *scenario.untapped_sources("Island", "Island", "Swamp", "Swamp")
     )
     scenario.pass_until_resolved()
-    scenario.choose_trigger_targets("Oildeep Gearhulk", [bob])
     scenario.will_choose_cards(mountain, username="alice")
     scenario.pass_until_resolved()
     assert mountain.zone is Zone.GRAVEYARD
@@ -435,7 +431,7 @@ def test_dominion_saboteur_copies_a_legendary_creature_as_nonlegendary_with_its_
         "Dominion Saboteur", *scenario.untapped_sources(*["Island"] * 5)
     )
     chars = scenario.game.characteristics_of(saboteur)
-    assert saboteur.name == "Thalia, Guardian of Thraben"
+    assert chars.name == "Thalia, Guardian of Thraben"
     assert Supertype.LEGENDARY not in chars.supertypes, "except it isn't legendary"
     assert saboteur.counter_count(Counter.PLUS_ONE) == 2
     assert saboteur.counter_count("charge") == 1
@@ -446,7 +442,13 @@ def test_dominion_saboteur_copies_a_legendary_creature_as_nonlegendary_with_its_
     metamorph = scenario.cast_and_resolve(
         "Phyrexian Metamorph", *scenario.untapped_sources(*["Island"] * 4)
     )
-    assert metamorph.name == "Sol Ring"
+    assert scenario.game.characteristics_of(metamorph).name == "Sol Ring"
+
+
+def _pt(scenario, permanent) -> tuple[int, int]:
+    """Power and toughness after continuous effects."""
+    computed = scenario.game.computed_board().of(permanent)
+    return computed.power, computed.toughness
 
 
 def _tokens(scenario, name: str, username: str = "alice") -> list:
@@ -471,9 +473,12 @@ def test_dominion_infiltration_copies_x_creatures_with_changeling_and_haste_then
     angel = scenario.creature("Serra Angel", "bob")
     bears = scenario.creature("Grizzly Bears", "bob")
     card = scenario.find("Dominion Infiltration", Zone.HAND, "alice")
-    scenario.will_choose_targets(angel, bears)
     scenario.game.cast(
-        card, "alice", x_value=2, mana_sources=scenario.untapped_sources(*["Mountain"] * 5)
+        card,
+        "alice",
+        x_value=2,
+        targets=[angel, bears],
+        mana_sources=scenario.untapped_sources(*["Mountain"] * 5),
     )
     scenario.pass_until_resolved()
     (angel_copy,) = _tokens(scenario, "Serra Angel")
@@ -510,9 +515,11 @@ def test_mirror_universe_intrusion_copies_one_creature_or_every_creature_when_ki
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     card = scenario.find("Mirror Universe Intrusion", Zone.HAND, "alice")
-    scenario.will_choose_targets(scenario.creature("Serra Angel", "bob"), scenario.player("bob"))
     scenario.game.cast(
-        card, "alice", mana_sources=scenario.untapped_sources("Island", "Swamp", "Island")
+        card,
+        "alice",
+        targets=[scenario.creature("Serra Angel", "bob")],
+        mana_sources=scenario.untapped_sources("Island", "Swamp", "Island"),
     )
     scenario.pass_until_resolved()
     (copy,) = _tokens(scenario, "Serra Angel")
@@ -523,10 +530,10 @@ def test_mirror_universe_intrusion_copies_one_creature_or_every_creature_when_ki
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     card = scenario.find("Mirror Universe Intrusion", Zone.HAND, "alice")
-    scenario.will_choose_targets(scenario.creature("Serra Angel", "bob"), scenario.player("bob"))
     scenario.game.cast(
         card,
         "alice",
+        targets=[scenario.player("bob")],
         kicker=1,
         mana_sources=scenario.untapped_sources(*["Island"] * 5, *["Swamp"] * 4),
     )
@@ -557,15 +564,17 @@ def test_gwyndala_makes_an_equipment_token_and_turns_every_equipment_token_into_
     scenario.pass_until_resolved()
     heirloom = next(p for p in scenario.game.battlefield if p.name == "Neuroflux Heirloom")
     assert heirloom.token and heirloom.attached_to == gwyndala.id
-    assert (gwyndala.power, gwyndala.toughness) == (3, 3), "base 2/2 plus the Heirloom's +1/+1"
+    assert _pt(scenario, gwyndala) == (2, 2), "base 1/1 plus the Heirloom's +1/+1"
     splitter = scenario.find("Bonesplitter", Zone.BATTLEFIELD, "alice")
     scenario.activate(gwyndala, *scenario.untapped_sources("Island", "Island"), targets=[splitter])
     scenario.pass_until_resolved()
-    assert heirloom.name == "Bonesplitter", "the token is a copy of Bonesplitter"
+    assert scenario.game.characteristics_of(heirloom).name == "Bonesplitter", (
+        "the token is a copy of Bonesplitter"
+    )
     assert splitter.name == "Bonesplitter" and not splitter.token, (
         "the nontoken original is not a token"
     )
-    assert gwyndala.power == 4, "Bonesplitter's +2/+0 now"
+    assert _pt(scenario, gwyndala) == (3, 1), "1/1 plus the copied Bonesplitter's +2/+0"
 
 
 def test_replicator_makes_a_food_and_copies_a_token_tapped() -> None:
@@ -581,13 +590,13 @@ def test_replicator_makes_a_food_and_copies_a_token_tapped() -> None:
         "Replicator", *scenario.untapped_sources("Island", "Island")
     )
     scenario.pass_until_resolved()
-    foods = _tokens(scenario, "Food")
+    foods = _tokens(scenario, "Food Token")
     assert len(foods) == 1
     scenario.activate(
         replicator, *scenario.untapped_sources("Island", "Island"), targets=[foods[0]]
     )
     scenario.pass_until_resolved()
-    foods = _tokens(scenario, "Food")
+    foods = _tokens(scenario, "Food Token")
     assert len(foods) == 2
     assert sorted(food.tapped for food in foods) == [False, True], "only the copy is tapped"
     assert replicator.tapped
@@ -628,11 +637,11 @@ def test_antagonist_incorporator_lets_artifact_creatures_pay_one_for_a_borg_toke
     bears = scenario.creature("Grizzly Bears", "alice")
     scenario.will_pay_the_mana_cost(True, username="alice")
     _attack_unblocked(scenario, revoker, bears)
-    triggers = [t.source_name for t in scenario.pending_triggers]
-    assert triggers == ["Phyrexian Revoker"], "only the artifact creature has the trigger"
+    stacked = [item.source_name for item in scenario.game.stack]
+    assert stacked == ["Phyrexian Revoker"], "only the artifact creature has the trigger"
     scenario.pass_until_resolved()
-    (borg,) = _tokens(scenario, "Borg Token") or _tokens(scenario, "Borg")
-    assert (borg.power, borg.toughness) == (1, 1)
+    (borg,) = _tokens(scenario, "Borg Token")
+    assert _pt(scenario, borg) == (1, 1)
     assert Type.ARTIFACT in scenario.game.characteristics_of(borg).types
     assert any(
         p.tapped for p in scenario.game.permanents_controlled_by("alice") if p.name == "Plains"
@@ -681,13 +690,12 @@ def test_captain_jean_luc_picard_anthem_officer_tokens_and_seven_officer_spacecr
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     picard = scenario.creature("Captain Jean-Luc Picard", "alice")
-    bears = scenario.cast_and_resolve(
-        "Grizzly Bears", *scenario.untapped_sources("Forest", "Forest")
-    )
+    scenario.cast_and_resolve("Grizzly Bears", *scenario.untapped_sources("Forest", "Forest"))
     scenario.pass_until_resolved()
-    assert (bears.power, bears.toughness) == (3, 3), "2/2 plus Picard's +1/+1"
-    (officer,) = _tokens(scenario, "Officer")
-    assert (officer.power, officer.toughness) == (2, 2), "a 1/1 with the anthem"
+    bears = scenario.creature("Grizzly Bears", "alice")
+    assert _pt(scenario, bears) == (3, 3), "2/2 plus Picard's +1/+1"
+    (officer,) = _tokens(scenario, "Officer Token")
+    assert _pt(scenario, officer) == (2, 2), "a 1/1 with the anthem"
     assert Color.RED in scenario.game.characteristics_of(officer).colors
     create_tokens(
         scenario.game,
@@ -695,7 +703,7 @@ def test_captain_jean_luc_picard_anthem_officer_tokens_and_seven_officer_spacecr
         "alice",
         count=6,
     )
-    officers = _tokens(scenario, "Officer")
+    officers = _tokens(scenario, "Officer Token")
     assert len(officers) == 7
     scenario.activate(picard, tapping_for_cost=officers)
     scenario.pass_until_resolved()
@@ -723,7 +731,7 @@ def test_conquest_mission_counts_quest_counters_and_doubles_the_borg_at_six() ->
     scenario.cast_and_resolve("Sol Ring", *scenario.untapped_sources("Plains"))
     scenario.pass_until_resolved()
     assert mission.counter_count("quest") == 1
-    assert len(_tokens(scenario, "Borg Token") + _tokens(scenario, "Borg")) == 1
+    assert len(_tokens(scenario, "Borg Token")) == 1
     create_tokens(scenario.game, PREDEFINED["Treasure"], "alice", count=1)
     scenario.game.pending_triggers.clear()
     assert mission.counter_count("quest") == 1, "a token artifact does not trigger it"
@@ -731,7 +739,7 @@ def test_conquest_mission_counts_quest_counters_and_doubles_the_borg_at_six() ->
     scenario.cast_and_resolve("Mind Stone", *scenario.untapped_sources("Plains", "Plains"))
     scenario.pass_until_resolved()
     assert mission.counter_count("quest") == 6
-    assert len(_tokens(scenario, "Borg Token") + _tokens(scenario, "Borg")) == 3, "two more"
+    assert len(_tokens(scenario, "Borg Token")) == 3, "two more"
 
 
 def test_support_mission_puts_one_counter_then_two_once_it_has_five_quest_counters() -> None:
@@ -779,9 +787,11 @@ def _chapter(scenario, saga, chapter: int, *targets) -> None:
     missing = chapter - 1 - saga.counter_count(Counter.LORE)
     if missing > 0:
         scenario.game.add_counters(saga, Counter.LORE, missing)
+    elif missing < 0:
+        saga.remove_counters(Counter.LORE, -missing)
     scenario.game.pending_triggers.clear()
     if targets:
-        scenario.will_choose_targets(*targets)
+        scenario.choose_trigger_targets(saga.name, list(targets))
     scenario.game.add_counters(saga, Counter.LORE, 1)
     _resolve_everything(scenario)
 
@@ -805,7 +815,7 @@ def test_the_measure_of_a_man_exiles_investigates_then_returns_the_card_and_gain
     _chapter(scenario, saga, 1, bears)
     assert bears.zone is Zone.EXILE
     _chapter(scenario, saga, 2)
-    assert [t.name for t in _tokens(scenario, "Clue")] == ["Clue"]
+    assert [t.name for t in _tokens(scenario, "Clue Token")] == ["Clue Token"]
     life = scenario.player("alice").life
     _chapter(scenario, saga, 3)
     back = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
@@ -884,7 +894,8 @@ def test_the_wrath_of_khan_damages_steals_at_combat_exiles_for_a_card_and_edicts
     assert len(scenario.player("alice").hand) == hand, "one exiled, one drawn"
     assert scenario.find("Island", Zone.EXILE, None) is not None
     _chapter(scenario, saga, 3)
-    assert len(scenario.game.permanents_controlled_by("bob")) == 1, "bob sacrificed one"
+    assert not scenario.game.permanents_controlled_by("bob"), "bob's only permanent is sacrificed"
+    assert scenario.find("Grizzly Bears", Zone.GRAVEYARD, "bob") is not None
 
 
 def test_the_inner_light_draws_as_many_cards_as_the_chosen_creature_deals() -> None:
@@ -1040,8 +1051,9 @@ def test_de_evolve_shrinks_stops_blocking_makes_a_salamander_and_exiles_at_thres
         .player(
             "alice",
             hand=["De-evolve"],
-            battlefield=["Swamp", "Swamp"],
-            library=["Island"] * 4,
+            battlefield=["Swamp", "Swamp", "Grizzly Bears"],
+            graveyard=["Island"] * 6,
+            library=["Island"] * 8,
         )
         .player("bob", battlefield=["Colossal Dreadmaw"], library=["Island"] * 4)
         .build()
@@ -1054,7 +1066,24 @@ def test_de_evolve_shrinks_stops_blocking_makes_a_salamander_and_exiles_at_thres
     chars = scenario.game.computed_board().of(dreadmaw)
     assert (chars.power, chars.toughness) == (2, 6)
     assert "Salamander" in chars.subtypes and "Dinosaur" not in chars.subtypes
-    assert scenario.game.why_cannot_block(dreadmaw) is not None
+    bears = scenario.creature("Grizzly Bears", "alice")
+    while scenario.step is not Step.BEGINNING_OF_COMBAT:
+        scenario.advance()
+    scenario.advance()  # declare attackers
+    scenario.attack_with(bears, defending="bob")
+    scenario.advance()  # declare blockers
+    assert scenario.game.why_cannot_block(dreadmaw, bears) is not None
+    scenario.no_blocks()
+    # Threshold: six cards in the graveyard is not enough, seven exiles the creature.
+    while not (scenario.turn.active_player == "bob" and scenario.step is Step.UPKEEP):
+        scenario.advance()
+    scenario.pass_until_resolved()
+    assert dreadmaw.zone is Zone.BATTLEFIELD, "only six cards in the graveyard"
+    scenario.game.put_into_graveyard(scenario.find("Island", Zone.LIBRARY, "alice"))
+    while not (scenario.turn.active_player == "alice" and scenario.step is Step.UPKEEP):
+        scenario.advance()
+    scenario.pass_until_resolved()
+    assert dreadmaw.zone is Zone.EXILE
 
 
 def test_dathon_adds_another_counter_of_a_chosen_kind_and_draws_on_enchantments() -> None:
@@ -1076,10 +1105,9 @@ def test_dathon_adds_another_counter_of_a_chosen_kind_and_draws_on_enchantments(
     scenario.start_at(Step.PRECOMBAT_MAIN)
     dathon = scenario.creature("Dathon, His Heart Open", "alice")
     saga = scenario.find("The Inner Light", Zone.BATTLEFIELD, "alice")
-    scenario.game.add_counters(saga, Counter.LORE, 1)
-    scenario.game.pending_triggers.clear()
+    assert saga.counter_count(Counter.LORE) == 1
     scenario.activate(dathon, *scenario.untapped_sources("Island", "Island"), targets=[saga])
-    scenario.pass_until_resolved()
+    _resolve_everything(scenario)
     assert saga.counter_count(Counter.LORE) == 2
     hand = len(scenario.player("alice").hand)
     scenario.cast_and_resolve(

@@ -3988,6 +3988,16 @@ _KICKED_INSTEAD_IMPERATIVE_TARGETS_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "<Instruction with a target>. If this spell was kicked, instead <instruction
+#: with a target>." - Mirror Universe Intrusion's "Create a token that's a copy
+#: of target creature an opponent controls, except it has menace. If this spell
+#: was kicked, instead for each creature target opponent controls, create ...":
+#: CR 601.2c, the kicked sentence's target replaces the unkicked one.
+_KICKED_INSTEAD_REPLACEMENT_TARGETS_RE = re.compile(
+    r"^(?:kicker [^\n]*\n)?(?P<base>[^.\n]*\btarget\b[^.\n]*)\.\s*"
+    r"if this spell was kicked, instead (?P<kicked>[^.\n]*\btarget\b[^.\n]*)\.?\s*$",
+    re.IGNORECASE,
+)
 
 #: "Choose any target, then choose another target for each time this spell was
 #: kicked." (Comet Storm) and "Choose target creature, then choose another
@@ -4024,9 +4034,11 @@ def kicked_instead_target_text(text: str) -> tuple[str, str] | None:
     """The unkicked and kicked "choose ..." sentences of a spell whose kicker
     changes which targets it chooses (`_KICKED_INSTEAD_TARGETS_RE`), each
     written as its own sentence for `profile_for_text`, or `None`."""
-    match = _KICKED_INSTEAD_TARGETS_RE.search(
-        text.strip()
-    ) or _KICKED_INSTEAD_IMPERATIVE_TARGETS_RE.search(text.strip())
+    match = (
+        _KICKED_INSTEAD_TARGETS_RE.search(text.strip())
+        or _KICKED_INSTEAD_IMPERATIVE_TARGETS_RE.search(text.strip())
+        or _KICKED_INSTEAD_REPLACEMENT_TARGETS_RE.search(text.strip())
+    )
     if match is None:
         return None
     return f"choose {match.group('base')}.", f"choose {match.group('kicked')}."

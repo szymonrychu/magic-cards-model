@@ -6332,6 +6332,11 @@ _MILL_THEN_MAY_TAKE_FROM_MILLED_RE = re.compile(
     r"|milled this way) "
     r"(?P<dest>into your hand|to your hand|onto the battlefield(?: under your control)?)"
     r"\.(?:\s*you gain (?P<life>\d+) life\.?)?"
+    # First Contact's rider: "If this spell is the first spell you've cast this
+    # game, you gain 2 life." - checked at resolution against the controller's
+    # cast count, which already includes this spell (CR 601.2i).
+    r"(?:\s*if this spell is the first spell you(?:'ve| have) cast this game, "
+    r"you gain (?P<first_life>\d+) life\.?)?"
     # Cache Grab's own rider: "If you control a Squirrel or returned a
     # Squirrel card to your hand this way, create a Food token." - a
     # resolution-time condition (CR 608.2c, checked once the mill and the
@@ -6419,6 +6424,7 @@ def _mill_then_may_take_from_milled_runner(
         # move as "put a card ... into your hand" - only the verb differs.
         destination = "into your hand"
     life = int(match.group("life")) if match.group("life") else 0
+    first_spell_life = int(match.group("first_life")) if match.group("first_life") else 0
     condition_subtype = match.group("subtype")
     consequence_text = (match.group("consequence") or "").strip()
     consequence_for_spell = (
@@ -6536,6 +6542,8 @@ def _mill_then_may_take_from_milled_runner(
                 game.put_onto_battlefield(state, controller.username)
         if life:
             game.gain_life(controller, life)
+        if first_spell_life and controller.spells_cast_this_game == 1:
+            game.gain_life(controller, first_spell_life)
         if condition_subtype and stack_object is not None:
             # Cache Grab's own rider (CR 608.2c, checked once the put/return
             # above has already happened): "you control a `<subtype>`" reads
