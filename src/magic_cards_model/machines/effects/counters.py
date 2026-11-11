@@ -761,10 +761,12 @@ def _parse_counter_each_other_creature_clause(
 
 #: Edgar, Moonlit Sovereign: "Put a +1/+1 counter on each creature you control
 #: with a +1/+1 counter on it." - CR 122.1's existing-counter filter as the
-#: selector, not "each `<group>`"'s type/subtype one.
+#: selector, not "each `<group>`"'s type/subtype one. The filter's kind may be
+#: left out - The Doctor, EMH's "with a counter on it" is a counter of any kind.
 _COUNTER_EACH_CREATURE_WITH_COUNTER_RE = re.compile(
     rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each creature you "
-    rf"control with an? (?P<filter_kind>\+1/\+1|-1/-1|[a-z]+) counters? on it\.?$",
+    r"control with an? (?:(?P<filter_kind>\+1/\+1|-1/-1|(?!counters?\b)[a-z]+) )?"
+    r"counters? on it\.?$",
     re.IGNORECASE,
 )
 
@@ -789,7 +791,7 @@ def _parse_counter_each_creature_with_counter_clause(
     if amount is None:
         return None
     kind = _counter_kind(match.group("kind"))
-    filter_kind = _counter_kind(match.group("filter_kind"))
+    filter_kind = _counter_kind(match.group("filter_kind")) if match.group("filter_kind") else None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object).username
@@ -798,7 +800,10 @@ def _parse_counter_each_creature_with_counter_clause(
                 continue
             if not game.characteristics_of(permanent).is_creature:
                 continue
-            if permanent.counter_count(filter_kind) <= 0:
+            if filter_kind is None:
+                if not permanent.counters.counts:
+                    continue
+            elif permanent.counter_count(filter_kind) <= 0:
                 continue
             game.add_counters(permanent, kind, amount)
 
@@ -1883,7 +1888,13 @@ def _parse_counter_on_it_trigger_subject_clause(clause: str) -> TargetedClause |
         if not isinstance(stack_object, AbilityOnStack):
             return
         event = stack_object.event
-        if event is not None and _damage_recipient_is_its_subject(stack_object):
+        if _only_intervening_if_names_source(stack_object):
+            # "Whenever you cast a noncreature spell, if this Spacecraft isn't
+            # a creature, put two charge counters on it." (Romulan
+            # Bird-of-Prey): the nearest antecedent of "it" is the source the
+            # "if" names, not the spell the trigger condition is about.
+            subject = stack_object.source(game)
+        elif event is not None and _damage_recipient_is_its_subject(stack_object):
             subject = game.find_by_id(event.target_id)
         elif event is not None and event.subject_id is not None:
             subject = game.find_by_id(event.subject_id)
@@ -1901,6 +1912,17 @@ def _parse_counter_on_it_trigger_subject_clause(clause: str) -> TargetedClause |
             game.add_counters(subject, kind, amount)
 
     return effect
+
+
+def _only_intervening_if_names_source(ability: AbilityOnStack) -> bool:
+    """Whether the intervening "if" names the source by CR 700.7's "this [type]"
+    while the trigger condition itself does not."""
+    printed = ability.ability
+    if not isinstance(printed, TriggeredAbility) or not printed.intervening_if:
+        return False
+    return has_self_reference_type_word(
+        printed.intervening_if.lower()
+    ) and not has_self_reference_type_word((printed.condition or "").lower())
 
 
 def _names_its_source(ability: AbilityOnStack) -> bool:

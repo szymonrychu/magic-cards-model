@@ -1,0 +1,124 @@
+{
+  "object": "card",
+  "id": "fdb5b940-9f62-47ad-8e80-5996daad0c9b",
+  "oracle_id": "5a824931-2b65-42b1-8653-d4313a6693d2",
+  "multiverse_ids": [],
+  "resource_id": "F255ABB30E21364A83DC7AD83F3ED8313505FDCEA51F3D46FAAA5031F4731802",
+  "mtgo_id": 158586,
+  "tcgplayer_id": 726708,
+  "cardmarket_id": 919820,
+  "name": "Warp Speed",
+  "lang": "en",
+  "released_at": "2026-11-13",
+  "uri": "https://api.scryfall.com/cards/fdb5b940-9f62-47ad-8e80-5996daad0c9b",
+  "scryfall_uri": "https://scryfall.com/card/trk/223/warp-speed?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-10-28T11:47:06Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/d/fdb5b940-9f62-47ad-8e80-5996daad0c9b.jpg?1793188026",
+    "normal": "https://cards.scryfall.io/normal/front/f/d/fdb5b940-9f62-47ad-8e80-5996daad0c9b.jpg?1793188026",
+    "large": "https://cards.scryfall.io/large/front/f/d/fdb5b940-9f62-47ad-8e80-5996daad0c9b.jpg?1793188026",
+    "png": "https://cards.scryfall.io/png/front/f/d/fdb5b940-9f62-47ad-8e80-5996daad0c9b.png?1793188026",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/d/fdb5b940-9f62-47ad-8e80-5996daad0c9b.jpg?1793188026",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/d/fdb5b940-9f62-47ad-8e80-5996daad0c9b.jpg?1793188026",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/d/fdb5b940-9f62-47ad-8e80-5996daad0c9b.webp?1793188026",
+    "grid": "https://cards.scryfall.io/grid/front/f/d/fdb5b940-9f62-47ad-8e80-5996daad0c9b.webp?1793188026",
+    "display": "https://cards.scryfall.io/display/front/f/d/fdb5b940-9f62-47ad-8e80-5996daad0c9b.webp?1793188026",
+    "art": "https://cards.scryfall.io/art/front/f/d/fdb5b940-9f62-47ad-8e80-5996daad0c9b.webp?1793188026",
+    "crop": "https://cards.scryfall.io/crop/front/f/d/fdb5b940-9f62-47ad-8e80-5996daad0c9b.webp?1793188026",
+    "jpeg": "https://cards.scryfall.io/normal/front/f/d/fdb5b940-9f62-47ad-8e80-5996daad0c9b.jpg?1793188026"
+  },
+  "mana_cost": "{2}{G}",
+  "cmc": 3.0,
+  "type_line": "Enchantment",
+  "oracle_text": "Lands you control enter untapped.\nWhen this enchantment enters, search your library for a basic land card or Planet card, reveal it, put it into your hand, then shuffle.\nStrange new worlds — {7}{U}{U}, Sacrifice this enchantment: Draw two cards. This ability costs {X} less to activate, where X is the number of differently named lands you control.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G",
+    "U"
+  ],
+  "keywords": [
+    "Strange new worlds"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set": "trk",
+  "set_name": "Star Trek",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atrk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/trk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/fdb5b940-9f62-47ad-8e80-5996daad0c9b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A5a824931-2b65-42b1-8653-d4313a6693d2&unique=prints",
+  "collector_number": "223",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "e956bacc-077d-4c12-b6bc-ba798b718af9"
+  ],
+  "illustration_id": "5da5ac9d-48f6-4e59-b909-8198435976eb",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 28937,
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWarp%2BSpeed",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWarp%2BSpeed",
+    "edhrec": "https://edhrec.com/route/?cc=Warp+Speed"
+  }
+}

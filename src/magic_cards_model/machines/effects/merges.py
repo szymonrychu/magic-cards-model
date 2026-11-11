@@ -5095,6 +5095,14 @@ def _merge_look_top_put_back_any_order_clauses(
 # Eldrazi Spawn) keeps its own reader.
 # --------------------------------------------------------------------------
 
+#: "reveal the top X cards of your library, where X is <expr>" (Branching
+#: Timeline) and the fixed-count twin, read by the "put all <quality> cards
+#: revealed this way" merge.
+_REVEAL_TOP_X_CARDS_WHERE_RE = re.compile(
+    rf"^reveal the top {count_pattern('count', x=True, article=False)} cards? of your library"
+    rf"{where_x_pattern()}$",
+    re.IGNORECASE,
+)
 #: "reveal the top <count> cards of your library"
 _REVEAL_TOP_N_CARDS_RE = re.compile(
     rf"^reveal the top (?P<count>{COUNT}) cards? of your library$", re.IGNORECASE
@@ -5707,7 +5715,12 @@ def _merge_reveal_top_put_all_quality_to_hand_rest_elsewhere_clauses(
     INTO_A_DESTINATION_RE` for the tail rather than a second copy of it -
     Merfolk Wayfinder's "the rest on the bottom of your library in any
     order" is the identical shape with a different destination, not a
-    different mechanic.
+    different mechanic. Branching Timeline's "Reveal the top X cards of your
+    library, where X is the number of differently named lands you control. Put
+    all permanent cards revealed this way onto the battlefield tapped and the
+    rest on the bottom of your library in a random order." is the same chain
+    with a dynamic count (read once as the effect applies, CR 608.2h) and the
+    battlefield as the destination of the matching cards.
 
     CR 701.20a/b: every one of the `count` cards is revealed - shown to all
     players - while still in the library, before any of them move; which
@@ -5717,15 +5730,24 @@ def _merge_reveal_top_put_all_quality_to_hand_rest_elsewhere_clauses(
     """
     if index + 2 >= len(clauses):
         return None
-    reveal_match = _REVEAL_TOP_N_CARDS_RE.fullmatch(clauses[index].strip())
+    reveal_match = _REVEAL_TOP_X_CARDS_WHERE_RE.fullmatch(clauses[index].strip())
     if reveal_match is None:
         return None
-    count = parse_count(reveal_match.group("count"))
-    if count is None:
+    count_reader = _fixed_or_where_x_amount(
+        reveal_match.group("count"), reveal_match.group("where_x")
+    )
+    if count_reader is None:
         return None
-    put_match = _PUT_ALL_QUALITY_REVEALED_INTO_HAND_RE.fullmatch(clauses[index + 1].strip())
+    put_text = clauses[index + 1].strip()
+    to_battlefield = False
+    tapped = False
+    put_match = _PUT_ALL_QUALITY_REVEALED_INTO_HAND_RE.fullmatch(put_text)
     if put_match is None:
-        return None
+        put_match = _PUT_ALL_QUALITY_REVEALED_ONTO_BATTLEFIELD_RE.fullmatch(put_text)
+        if put_match is None:
+            return None
+        to_battlefield = True
+        tapped = put_match.group("tapped") is not None
     quality = put_match.group("quality").strip()
     if not _search_quality_is_readable(quality):
         return None
@@ -5742,13 +5764,20 @@ def _merge_reveal_top_put_all_quality_to_hand_rest_elsewhere_clauses(
             stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
         )
         source_id = source_id_of(stack_object)
+        source_obj = (
+            stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+        )
+        count = max(count_reader(game, player.username, source_obj, 0), 0)  # CR 608.2h, once
         revealed = list(player.library[:count])
         for state in revealed:
             game.reveal(state, source=source)
-        to_hand = [state for state in revealed if matches(state)]
-        rest = [state for state in revealed if state not in to_hand]
-        for state in to_hand:
-            player.add(state, Zone.HAND)
+        moved = [state for state in revealed if matches(state)]
+        rest = [state for state in revealed if state not in moved]
+        for state in moved:
+            if to_battlefield:
+                game.put_onto_battlefield(state, player.username, tapped=tapped)
+            else:
+                player.add(state, Zone.HAND)
         if not rest:
             return
         if to_bottom:

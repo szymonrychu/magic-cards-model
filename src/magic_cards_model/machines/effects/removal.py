@@ -9308,6 +9308,49 @@ def _parse_sacrifice_greatest_stat_clause(clause: str, *, for_spell: bool) -> Ta
     return effect
 
 
+#: "`<effect>`. If you sacrificed a[n] `<quality>` this way, `<consequence>`."
+#: after an activated ability whose cost sacrificed something - Gowron, Eager
+#: for Battle ("Sacrifice another creature: This creature gains trample until
+#: end of turn. If you sacrificed a Klingon this way, you draw a card and lose
+#: 1 life."). "This way" is the cost (CR 118.3, CR 602.2b): the quality is
+#: asked of the sacrificed permanent's last known types, recorded on the
+#: ability as it was activated (`AbilityOnStack.cost_sacrificed_types`,
+#: CR 608.2h), the same record Shilgengar's "If you sacrificed an Angel this
+#: way" reads. A first sentence that itself sacrifices ("Each player
+#: sacrifices a creature of their choice. If you sacrificed a creature this
+#: way, ...") is the effect's own sacrifice, not the cost: it stays with
+#: `_EACH_SACRIFICES_THEN_IF_YOU_DID_RE`.
+_EFFECT_THEN_IF_SACRIFICED_COST_RE = re.compile(
+    r"^(?P<first>(?![^.]*\bsacrifice)[^.]+\.)\s*"
+    r"if you sacrificed an? (?P<quality>[a-z-]+) this way,\s*"
+    r"(?P<consequence>[^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s17")
+def _parse_effect_then_if_sacrificed_cost_clause(text: str) -> AbilityEffect | None:
+    """`_EFFECT_THEN_IF_SACRIFICED_COST_RE`'s shape; see the banner above."""
+    match = _EFFECT_THEN_IF_SACRIFICED_COST_RE.fullmatch(collapsed(text.strip()))
+    if match is None:
+        return None
+    from .dispatch import _ability_effect_or_notice
+
+    first = _ability_effect_or_notice(match.group("first"))
+    consequence = parse_mixed_effect(match.group("consequence") + ".")
+    if first is None or consequence is None:
+        return None
+    quality = match.group("quality").lower()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        first(game, ability)
+        sacrificed = getattr(ability, "cost_sacrificed_types", ())
+        if any(quality in words for words in sacrificed):
+            consequence(game, ability)
+
+    return effect
+
+
 #: "Each player sacrifices `<a description>` of their choice. If you
 #: sacrificed `<a description>` this way, `<consequence>`." - Garruk, Veiled
 #: Butcher's own `-2`, and the real, off-set printing Rise of the

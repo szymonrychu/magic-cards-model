@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "bd342f8b-9072-487d-8a33-b1bb149f1502",
+  "oracle_id": "67601646-f906-4824-9269-3cf89766d25f",
+  "multiverse_ids": [],
+  "resource_id": "ECFF02034C74DD3DF30563D6FC2D7DAD15032D65BB31931493BA41023F153D8A",
+  "mtgo_id": 158548,
+  "tcgplayer_id": 725947,
+  "cardmarket_id": 919321,
+  "name": "Jadzia Dax, Living Legacy",
+  "lang": "en",
+  "released_at": "2026-11-13",
+  "uri": "https://api.scryfall.com/cards/bd342f8b-9072-487d-8a33-b1bb149f1502",
+  "scryfall_uri": "https://scryfall.com/card/trk/204/jadzia-dax-living-legacy?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-10-26T11:14:27Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/d/bd342f8b-9072-487d-8a33-b1bb149f1502.jpg?1793013267",
+    "normal": "https://cards.scryfall.io/normal/front/b/d/bd342f8b-9072-487d-8a33-b1bb149f1502.jpg?1793013267",
+    "large": "https://cards.scryfall.io/large/front/b/d/bd342f8b-9072-487d-8a33-b1bb149f1502.jpg?1793013267",
+    "png": "https://cards.scryfall.io/png/front/b/d/bd342f8b-9072-487d-8a33-b1bb149f1502.png?1793013267",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/d/bd342f8b-9072-487d-8a33-b1bb149f1502.jpg?1793013267",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/d/bd342f8b-9072-487d-8a33-b1bb149f1502.jpg?1793013267",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/d/bd342f8b-9072-487d-8a33-b1bb149f1502.webp?1793013267",
+    "grid": "https://cards.scryfall.io/grid/front/b/d/bd342f8b-9072-487d-8a33-b1bb149f1502.webp?1793013267",
+    "display": "https://cards.scryfall.io/display/front/b/d/bd342f8b-9072-487d-8a33-b1bb149f1502.webp?1793013267",
+    "art": "https://cards.scryfall.io/art/front/b/d/bd342f8b-9072-487d-8a33-b1bb149f1502.webp?1793013267",
+    "crop": "https://cards.scryfall.io/crop/front/b/d/bd342f8b-9072-487d-8a33-b1bb149f1502.webp?1793013267",
+    "jpeg": "https://cards.scryfall.io/normal/front/b/d/bd342f8b-9072-487d-8a33-b1bb149f1502.jpg?1793013267"
+  },
+  "mana_cost": "{1}{G}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature — Trill Scientist",
+  "oracle_text": "At the beginning of your first main phase, put a +1/+1 counter on Jadzia Dax, then add an amount of {G} equal to the number of counters on her.\nTransfer Symbiont — {2}{G}, Discard this card: Put two +1/+1 counters on target creature.",
+  "power": "0",
+  "toughness": "1",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Transfer Symbiont"
+  ],
+  "produced_mana": [
+    "G"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set": "trk",
+  "set_name": "Star Trek",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atrk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/trk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/bd342f8b-9072-487d-8a33-b1bb149f1502/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A67601646-f906-4824-9269-3cf89766d25f&unique=prints",
+  "collector_number": "204",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "b029218f-baba-45aa-8f5a-24353077dcc9"
+  ],
+  "illustration_id": "e88573c8-97ec-45c6-aa5b-b1b861b21ba7",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 24517,
+  "preview": {
+    "source": "Chen Mingyang",
+    "source_uri": "https://www.bilibili.com/opus/1263004054766747672",
+    "previewed_at": "2026-10-24"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DJadzia%2BDax%252C%2BLiving%2BLegacy",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DJadzia%2BDax%252C%2BLiving%2BLegacy",
+    "edhrec": "https://edhrec.com/route/?cc=Jadzia+Dax%2C+Living+Legacy"
+  }
+}

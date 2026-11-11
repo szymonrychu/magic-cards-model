@@ -99,6 +99,9 @@ LOYALTY_ABILITY_ACTIVATED = "loyalty_ability_activated"
 #: CR 702.185c: "a spell was warped this turn" - a spell cast for its warp
 #: cost, per caster.
 SPELL_WARPED = "spell_warped"
+#: "you've cast a noncreature spell this turn" - a spell cast whose card is
+#: not a creature, per caster (Starfleet Spanner Jockey).
+CAST_NONCREATURE_SPELL = "cast_noncreature_spell"
 
 
 # -- recording -------------------------------------------------------------------
@@ -371,10 +374,14 @@ def _bind_crew(game: "Game", event: "GameEvent") -> None:
 def _record_played(game: "Game", event: "GameEvent") -> None:
     """A land played or a spell cast, by the zone it came from (CR 601.2a
     moves a spell from where it is to the stack; CR 305.1 plays a land)."""
+    from ..triggers import TriggerEvent
+
     if event.player is None or event.origin_zone is None:
         return
     if event.origin_zone is not Zone.HAND:
         game.record_turn_fact(PLAYED_NOT_FROM_HAND, event.player)
+    if event.event is TriggerEvent.CAST_SPELL and Type.CREATURE not in (event.subject_types or ()):
+        game.record_turn_fact(CAST_NONCREATURE_SPELL, event.player)
     if event.origin_zone is Zone.EXILE:
         game.record_turn_fact(PLAYED_FROM_EXILE, event.player)
     if event.subject_stamp is not None:
@@ -864,7 +871,8 @@ def _put_into_graveyard_from_battlefield(context: "ConditionContext", match: re.
 
 
 def _put_into_hand_from_battlefield(context: "ConditionContext", match: re.Match[str]) -> bool:
-    """ "a permanent was put into your hand from the battlefield this turn" -
+    """ "a permanent was put into (or returned to) your hand from the battlefield
+    this turn" (Miles O'Brien, Transporter Ops) -
     whose hand is the card's owner's (CR 108.3)."""
     quality = _quality(match.group("quality"))
     needed = _count(match.group("count"))
@@ -1886,7 +1894,8 @@ READERS: tuple[ConditionReader, ...] = (
     ),
     ConditionReader(
         re.compile(
-            rf"(?:(?P<count>{COUNT}) or more |an? ){_QUALITY} (?:was|were) put into "
+            rf"(?:(?P<count>{COUNT}) or more |an? ){_QUALITY} (?:was|were) "
+            r"(?:put|returned) (?:into|to) "
             r"(?P<whose>your|a player's) hand from the battlefield this turn"
         ),
         _put_into_hand_from_battlefield,

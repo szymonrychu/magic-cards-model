@@ -1,0 +1,129 @@
+{
+  "object": "card",
+  "id": "171932ba-26da-48e9-b8a2-c71aafe5c6a6",
+  "oracle_id": "b61718eb-dc6a-4199-b7c7-42eccf4158e8",
+  "multiverse_ids": [],
+  "resource_id": "34053A4FD506CB1E7027E5F714305E807EA2BEF99C3202481F87B6A7F0DEE8C0",
+  "mtgo_id": 158648,
+  "tcgplayer_id": 725155,
+  "cardmarket_id": 918573,
+  "name": "The Traveler",
+  "lang": "en",
+  "released_at": "2026-11-13",
+  "uri": "https://api.scryfall.com/cards/171932ba-26da-48e9-b8a2-c71aafe5c6a6",
+  "scryfall_uri": "https://scryfall.com/card/trk/254/the-traveler?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-10-20T14:59:56Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/7/171932ba-26da-48e9-b8a2-c71aafe5c6a6.jpg?1792508396",
+    "normal": "https://cards.scryfall.io/normal/front/1/7/171932ba-26da-48e9-b8a2-c71aafe5c6a6.jpg?1792508396",
+    "large": "https://cards.scryfall.io/large/front/1/7/171932ba-26da-48e9-b8a2-c71aafe5c6a6.jpg?1792508396",
+    "png": "https://cards.scryfall.io/png/front/1/7/171932ba-26da-48e9-b8a2-c71aafe5c6a6.png?1792508396",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/7/171932ba-26da-48e9-b8a2-c71aafe5c6a6.jpg?1792508396",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/7/171932ba-26da-48e9-b8a2-c71aafe5c6a6.jpg?1792508396",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/7/171932ba-26da-48e9-b8a2-c71aafe5c6a6.webp?1792508396",
+    "grid": "https://cards.scryfall.io/grid/front/1/7/171932ba-26da-48e9-b8a2-c71aafe5c6a6.webp?1792508396",
+    "display": "https://cards.scryfall.io/display/front/1/7/171932ba-26da-48e9-b8a2-c71aafe5c6a6.webp?1792508396",
+    "art": "https://cards.scryfall.io/art/front/1/7/171932ba-26da-48e9-b8a2-c71aafe5c6a6.webp?1792508396",
+    "crop": "https://cards.scryfall.io/crop/front/1/7/171932ba-26da-48e9-b8a2-c71aafe5c6a6.webp?1792508396",
+    "jpeg": "https://cards.scryfall.io/normal/front/1/7/171932ba-26da-48e9-b8a2-c71aafe5c6a6.jpg?1792508396"
+  },
+  "mana_cost": "{G}{U}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature — Scout",
+  "oracle_text": "Reach, vigilance\nStrange new worlds — The Traveler's power is equal to the number of differently named lands you control.",
+  "power": "*",
+  "toughness": "3",
+  "colors": [
+    "G",
+    "U"
+  ],
+  "color_identity": [
+    "G",
+    "U"
+  ],
+  "keywords": [
+    "Reach",
+    "Vigilance",
+    "Strange new worlds"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set": "trk",
+  "set_name": "Star Trek",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atrk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/trk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/171932ba-26da-48e9-b8a2-c71aafe5c6a6/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab61718eb-dc6a-4199-b7c7-42eccf4158e8&unique=prints",
+  "collector_number": "254",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "0af22200-d1b0-41dc-bb3f-386e661c3ad5"
+  ],
+  "illustration_id": "b119acae-b77c-495d-b63e-f12277b7ee61",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 30747,
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThe%2BTraveler",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThe%2BTraveler",
+    "edhrec": "https://edhrec.com/route/?cc=The+Traveler"
+  }
+}

@@ -823,6 +823,31 @@ class CountDevotion(CountBase):
 PARTY_ROLES: tuple[str, ...] = ("cleric", "rogue", "warrior", "wizard")
 
 
+class CountDifferentlyNamedControlledBy(CountBase):
+    """ "The number of differently named lands you control" (Captain Pike,
+    The Traveler, Seven of Nine - the Star Trek *strange new worlds* count).
+    Names are compared as the board computes them (CR 201.2), so a land whose
+    name an effect changed counts under its new name, and a permanent with no
+    name never joins a group (CR 201.2a: an object with no name doesn't have
+    the same name as any other object). `card_type` is the CR 205.2a type the
+    counted permanents must have; "you control" is `username` (CR 109.5)."""
+
+    kind: Literal["differently_named_controlled_by"] = "differently_named_controlled_by"
+    username: str | None = None
+    card_type: Type = Type.LAND
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        return len(
+            {
+                other.name
+                for other in board.values()
+                if other.controller == self.username
+                and self.card_type in other.types
+                and other.name
+            }
+        )
+
+
 class CountParty(CountBase):
     """How many creatures are in the asking object's controller's party (CR
     700.8, CR 700.8a) - Archpriest of Iona's "the number of creatures in your party". A
@@ -1178,6 +1203,7 @@ Count = Annotated[
     | CountColorsAmongControlledBy
     | CountDevotion
     | CountParty
+    | CountDifferentlyNamedControlledBy
     | CountBoardWhere
     | CountGroup
     | CountByControllerOfObject
@@ -4454,14 +4480,15 @@ def permanents_controlled_by_with_counters(username: str | None) -> Selector:
 
 def creatures_controlled_by_with_counter(
     username: str | None,
-    counter_kind: str,
+    counter_kind: str | None,
     *,
     other_than: UUID | None = None,
 ) -> Selector:
     """ "Each [other] creature you control with a[n] <counter kind> counter on
     it" (Gallia, the Merrymaker; Vigorbloom Vanguard) - the counter-gated twin
     of `creatures_controlled_by_with_subtype`, narrowed to one named counter
-    kind and to creatures only.
+    kind and to creatures only. `counter_kind=None` is "with counters on
+    them" - any kind (Dominion Supervisor, Dr. Joseph M'Benga).
     """
     return PermanentsControlledByWithCounters(
         username=username,
@@ -4818,6 +4845,12 @@ def count_basic_land_types_among_lands_controlled_by(username: str | None) -> Co
     whole reason Territorial Kavu grows next to a Dryad of the Ilysian Grove.
     """
     return CountBasicLandTypesAmongLandsControlledBy(username=username)
+
+
+def count_differently_named_controlled_by(username: str | None, card_type: Type) -> Count:
+    """The number of differently named permanents of `card_type` one player
+    controls - the Star Trek *strange new worlds* number."""
+    return CountDifferentlyNamedControlledBy(username=username, card_type=card_type)
 
 
 #: Canonical granted-ability text for "doesn't untap during its controller's

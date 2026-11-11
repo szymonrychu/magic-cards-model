@@ -815,10 +815,17 @@ class Player(EngineModel):
           maximum hand size is N." (The Ten Rings) applies after it (CR
           613.11, `_permanents_maximum_hand_size`);
         - a resolved "for the rest of the game" effect
-          (`no_maximum_hand_size_for_rest_of_game`, Sea Gate Restoration).
+          (`no_maximum_hand_size_for_rest_of_game`, Sea Gate Restoration);
+        - a resolved "until your next turn" effect, recorded on
+          `Game.casting_rule_effects` (Deep Space Scan).
         """
         if self.no_maximum_hand_size_for_rest_of_game:
             return True
+        if self.game is not None:
+            from ..machines.casting_restrictions import has_no_maximum_hand_size_grant
+
+            if has_no_maximum_hand_size_grant(self.game, self.username):
+                return True
         if any(
             _is_no_maximum_hand_size_line(emblem.card.oracle_text or "") for emblem in self.emblems
         ):

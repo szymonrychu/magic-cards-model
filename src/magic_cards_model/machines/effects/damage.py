@@ -3979,7 +3979,7 @@ def _parse_damage_target_player_and_their_creatures_clause(
 #: (CR 109.5).
 _DAMAGE_EACH_OPPONENT_AND_THEIRS_RE = re.compile(
     r"^opponent and each (?P<groups>[a-z]+(?:\s+and\s+(?:each\s+)?[a-z]+)*) "
-    r"(?P<whose>they control|you don(?:'|\u2019)t control)$",
+    r"(?P<whose>they control|your opponents control|you don(?:'|\u2019)t control)$",
     re.IGNORECASE,
 )
 

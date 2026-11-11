@@ -3083,10 +3083,10 @@ _COUNTER_AMOUNT_REPLACEMENT_RE = re.compile(
     r"(?: of each of those kinds of counters"
     rf"| (?P<kind>{_COUNTER_KIND_WORD}) counters(?: (?P<op>plus|minus) (?P<n>{COUNT}))?)"
     r" are put on (?:it|that creature|that permanent)"
-    rf"|put that many(?: plus (?P<put_plus>{COUNT}))?"
+    rf"|put (?:(?P<put_mult>{MULTIPLIER}) that many|that many(?: plus (?P<put_plus>{COUNT}))?)"
     r" (?:(?P<put_each>of each of those kinds of counters)"
     rf"|(?P<put_rkind>{_COUNTER_KIND_WORD}) counters)"
-    r" on (?:it|that creature|that permanent)"
+    r" on (?:it|that (?:creature|permanent|artifact|land|planeswalker|enchantment))"
     rf"|you get (?:(?P<pmult>{MULTIPLIER}) that many|that many(?: plus (?P<pplus>{COUNT}))?)"
     r"(?: of each of those kinds of counters"
     rf"| (?P<pkind>{_COUNTER_KIND_WORD})(?: counters?)?"
@@ -3127,7 +3127,12 @@ def _counter_amount_values(match: re.Match[str]) -> tuple[int, int] | None:
     branch ("... are put on it") - exactly one set is ever populated for a
     given match, so reading both costs nothing.
     """
-    multiplier_text = match.group("it_mult") or match.group("mult") or match.group("pmult")
+    multiplier_text = (
+        match.group("it_mult")
+        or match.group("mult")
+        or match.group("put_mult")
+        or match.group("pmult")
+    )
     if multiplier_text is not None:
         multiplier = parse_multiplier(multiplier_text)
         return None if multiplier is None else (multiplier, 0)

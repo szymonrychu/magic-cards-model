@@ -26,6 +26,7 @@ from ..abilities import (
     leveler_lines,
     parse_granted_ability_lines,
     self_normalized_effect_text,
+    station_creature_threshold,
 )
 from ..abilities import (
     _is_activated_mana_ability as is_activated_mana_ability,
@@ -2386,10 +2387,14 @@ _GROUP_ATTACK_WITHOUT_DEFENDER_RE = re.compile(
 #: "Each [other] creature you control with a[n] <counter kind> counter on it
 #: has/have <keyword(s)>." (Gallia, the Merrymaker; Vigorbloom Vanguard) - the
 #: `permanents_controlled_by_with_counters` gate named for one counter kind
-#: rather than "any counter" (Innkeeper's Talent's own shape).
+#: rather than "any counter" (Innkeeper's Talent's own shape). The plural
+#: "[Other] creatures you control with counters on them have <keyword(s)>."
+#: (Dominion Supervisor's trample, Dr. Joseph M'Benga's hexproof) is the same
+#: gate with any counter kind.
 _CREATURE_WITH_COUNTER_KEYWORD_GRANT_RE = re.compile(
-    r"^each (?P<other>other )?creature you control with (?:an? )?"
-    r"(?P<counter>[+-]1/[+-]1|[a-z]+) counter on it "
+    r"^(?:each (?P<other>other )?creature you control with (?:an? )?"
+    r"(?P<counter>[+-]1/[+-]1|[a-z]+) counter on it"
+    r"|(?P<other_plural>other )?creatures you control with counters on them) "
     r"(?:have|has) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
     re.IGNORECASE,
 )
@@ -2612,6 +2617,21 @@ _BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE = re.compile(
 _BECOMES_CREATURE_TYPE_WITH_ABILITIES_RE = re.compile(
     rf"^(?:{_SUBJECT}) becomes an? (?P<subtype>[a-z'-]+(?: [a-z'-]+)*?) "
     r"with (?!base power)(?P<abilities>[a-z][a-z ,]*?)(?P<until_eot> until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
+#: "This creature becomes a Ferengi Scout with base power and toughness 3/4 and
+#: gains "Whenever this creature becomes tapped, surveil 2."" / "... becomes a
+#: Ferengi Officer and gains "You may play lands from your graveyard" and "You
+#: may play an additional land on each of your turns."" (Nog, Ambitious Cadet)
+#: - `_BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE`'s twin whose granted abilities
+#: are quoted lines (CR 113.1a-style granted abilities, layer 6), with the base
+#: power and toughness optional. No duration printed, so until the end of the
+#: game (CR 611.2a).
+_BECOMES_CREATURE_TYPE_WITH_QUOTED_ABILITIES_RE = re.compile(
+    rf"^(?:{_SUBJECT}) becomes an? (?P<subtype>[a-z'-]+(?: [a-z'-]+)*?)"
+    r"(?: with base power and toughness (?P<power>\d+)/(?P<toughness>\d+))?"
+    r" and gains (?P<quoted>\"[^\"]+\"(?: and \"[^\"]+\")*)\.?$",
     re.IGNORECASE,
 )
 
@@ -5488,7 +5508,7 @@ def _during_your_turn_multi_type_keyword_grant_builder(
 
 
 def _counter_gated_keyword_grant_builder(
-    counter_kind: str, keywords: list[str], *, other: bool, line: str
+    counter_kind: str | None, keywords: list[str], *, other: bool, line: str
 ) -> EffectBuilder:
     """ "Each [other] creature you control with a[n] <counter kind> counter on
     it has <keyword(s)>." (Gallia, the Merrymaker's haste; Vigorbloom
@@ -5510,6 +5530,8 @@ def _counter_gated_keyword_grant_builder(
         subject = (
             f"each {'other ' if other else ''}creature you control with a "
             f"{counter_kind} counter on it"
+            if counter_kind is not None
+            else f"{'other ' if other else ''}creatures you control with counters on them"
         )
         return [
             ContinuousEffect(
@@ -7462,6 +7484,8 @@ _TURN_FACT_CONDITION_PHRASES: dict[str, tuple[str, str]] = {
     # CR 700.13, recorded by `machines/conditions/history.record_crime`
     # (Omenport Vigilante's "has double strike as long as you've committed a
     # crime this turn", Slickshot Vault-Buster's pump).
+    "you've cast a noncreature spell this turn": ("cast_noncreature_spell", "you"),
+    "you have cast a noncreature spell this turn": ("cast_noncreature_spell", "you"),
     "you've committed a crime this turn": ("committed_crime", "you"),
     "you have committed a crime this turn": ("committed_crime", "you"),
     "you committed a crime this turn": ("committed_crime", "you"),
@@ -7694,6 +7718,27 @@ _SELF_MONSTROUS_GATED_RE = re.compile(
     r"it (?:has|have) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
     re.IGNORECASE,
 )
+
+#: "As long as this Spacecraft isn't a creature, it has hexproof." (Romulan
+#: Bird-of-Prey's Cloaking Device) - the ability word, if still on the line, is
+#: reminder-free flavour (CR 207.2c). The gate asks whether the source is a
+#: creature right now: a printed creature, or a Spacecraft whose charge counters
+#: have reached its station box (CR 721.2b, `station_creature_threshold`), the
+#: layer 4 addition `_station_symbol_effects` builds. Type changes from other
+#: sources are not seen: this gate is built before layer 4 has been applied.
+_SELF_NOT_A_CREATURE_GATED_RE = re.compile(
+    r"^(?:[^.\u2014]+\u2014\s*)?as long as this [a-z]+ isn'?t a creature, "
+    r"it (?:has|have) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _source_is_not_a_creature(source: CardState, context: LayerContext) -> bool:
+    if Type.CREATURE in source.printed_types:
+        return False
+    creature_at = station_creature_threshold(source.card, source.oracle_text)
+    return creature_at is None or source.counter_count("charge") < creature_at
+
 
 #: "This creature has hexproof as long as it's untapped." (Illusion Spinners)
 #: - CR 110.5's tapped/untapped status, read straight off `CardState.tapped`
@@ -8403,6 +8448,11 @@ _CDA_CRAFT_POWER_RE = re.compile(
     r"^the total power of the exiled cards used to craft (?:it|this (?:creature|permanent))$"
 )
 _CDA_DOMAIN_RE = re.compile(r"^the number of basic land types among lands you control$")
+#: "the number of differently named lands you control" - Captain Pike,
+#: Fullness of Time and The Traveler (the *strange new worlds* count).
+_CDA_DIFFERENTLY_NAMED_RE = re.compile(
+    r"^the number of differently named (?P<qualifier>[a-z]+) you control$"
+)
 _CDA_SPLIT_RE = re.compile(r",\s*(?:and/or |and |or )?|\s+and/or\s+|\s+and\s+|\s+or\s+")
 
 _PERMANENT_CARD_TYPE_SET = frozenset(
@@ -8577,6 +8627,13 @@ def _cda_base_count(phrase: str) -> CdaCountFactory | None:
     if _CDA_DOMAIN_RE.fullmatch(phrase):
         return lambda source, context: count_basic_land_types_among_lands_controlled_by(
             source.controller
+        )
+    if match := _CDA_DIFFERENTLY_NAMED_RE.fullmatch(phrase):
+        named_type = _card_type_word(match.group("qualifier"))
+        if named_type is None:
+            return None
+        return lambda source, context: count_differently_named_controlled_by(
+            source.controller, named_type
         )
     if match := _CDA_DEVOTION_RE.fullmatch(phrase):
         words = [word for word in re.findall(r"[a-z]+", match.group("colors")) if word != "and"]
@@ -12242,6 +12299,21 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
             keywords=tuple(keywords),
             until_eot=match.group("until_eot") is not None,
         )
+    if match := _BECOMES_CREATURE_TYPE_WITH_QUOTED_ABILITIES_RE.fullmatch(sentence):
+        quoted_subtypes = _creature_type_words(match.group("subtype"))
+        if not quoted_subtypes:
+            return None
+        quoted = tuple(re.findall(r'"([^"]+)"', match.group("quoted")))
+        has_pt = match.group("power") is not None
+        return _becomes_creature_type_with_base_pt_builder(
+            tuple(quoted_subtypes),
+            (),
+            int(match.group("power")) if has_pt else None,
+            int(match.group("toughness")) if has_pt else None,
+            loses_abilities=False,
+            keywords=quoted,
+            until_eot=False,
+        )
     if match := _BECOMES_CREATURE_TYPE_WITH_ABILITIES_RE.fullmatch(sentence):
         with_subtypes = _creature_type_words(match.group("subtype"))
         with_abilities = _with_ability_list(match.group("abilities"))
@@ -12644,7 +12716,7 @@ def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _counter_gated_keyword_grant_builder(
             match.group("counter"),
             keywords,
-            other=match.group("other") is not None,
+            other=match.group("other") is not None or match.group("other_plural") is not None,
             line=sentence,
         )
     if match := _LANDS_KEYWORD_GRANT_RE.fullmatch(sentence):
@@ -13411,6 +13483,16 @@ def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             line=sentence,
             description="before it deals combat damage",
         )
+    if match := _SELF_NOT_A_CREATURE_GATED_RE.fullmatch(sentence):
+        not_creature_keywords = _split_and_validate_keywords(match.group("keywords"))
+        if not_creature_keywords is None:
+            return None
+        return _context_gated_self_static_builder(
+            _source_is_not_a_creature,
+            not_creature_keywords,
+            line=sentence,
+            description="while not a creature",
+        )
     if match := _SELF_MONSTROUS_GATED_RE.fullmatch(sentence):
         keywords = _split_and_validate_keywords(match.group("keywords"))
         if keywords is None:
@@ -14103,6 +14185,7 @@ from .model import (  # noqa: E402
     all_permanents_controlled_by,
     count_basic_land_types_among_lands_controlled_by,
     count_card_types,
+    count_differently_named_controlled_by,
     count_other_creatures_named,
     count_other_creatures_with_keyword,
     count_permanent_cards,

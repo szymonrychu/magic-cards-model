@@ -234,7 +234,7 @@ def _choose_target_then_that(text: str) -> StackEffect | None:
 #: the ordinary self-referential layer sentence.
 _IF_SELF_IS_A_TYPE_THEN_BECOMES_RE = re.compile(
     r"^if (?:this creature|this permanent) is an? (?P<quality>[A-Z][\w'-]*), "
-    r"it (?P<rest>becomes .+)$",
+    r"(?:it|he|she) (?P<rest>becomes .+)$",
     re.IGNORECASE,
 )
 

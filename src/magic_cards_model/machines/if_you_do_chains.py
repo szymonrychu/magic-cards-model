@@ -265,3 +265,92 @@ def parse_put_from_hand_or_graveyard(clause: str) -> Any:
         game.put_onto_battlefield(chosen, controller)
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# "you may put a <quality> card from your hand onto the battlefield. If you do,
+# <effect> at the beginning of the next end step."
+# --------------------------------------------------------------------------
+
+_PUT_FROM_HAND_THEN_AT_NEXT_END_STEP_RE = re.compile(
+    r"^you may put an? (?P<quality>[a-z ]+?) card from your hand onto the battlefield\.\s*"
+    r"if you do,\s*(?P<body>.+?) at the beginning of the next end step\.?$",
+    re.IGNORECASE,
+)
+
+
+def parse_put_from_hand_then_at_next_end_step(text: str) -> Any:
+    """Erica Ortegas, Plucky Pilot: the optional put (CR 608.2d) and, only if a
+    card was put, a delayed triggered ability (CR 603.7a) that does `<effect>`
+    at the beginning of the next end step - the effect read back off the
+    created ability's text by the same machinery a printed trigger uses
+    (`delayed.CreatedTriggeredAbility`), so a choice in it ("return a land you
+    control") is made when it resolves."""
+    from .effects._common import _quality_matcher
+    from .effects.text import _strip_non_effect_preamble
+
+    match = _PUT_FROM_HAND_THEN_AT_NEXT_END_STEP_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    quality = match["quality"].strip()
+    try:
+        matches = _quality_matcher(quality)
+    except (ValueError, KeyError):
+        return None
+    created = f"At the beginning of the next end step, {match['body'].strip()}."
+    from .triggers import granted_triggered_abilities_of
+
+    found = granted_triggered_abilities_of([created])
+    if len(found) != 1 or found[0].event is None:
+        return None
+    event = found[0].event
+
+    def effect(game: Game, ability: Any) -> None:
+        from .decisions import source_id_of
+        from .delayed import CreatedTriggeredAbility, DelayedTrigger
+        from .effects.modal import _choose_one_card
+        from .turn import Step
+
+        controller = game.controller_of(ability).username
+        player = game.player(controller)
+        candidates = [c for c in player.hand if matches(c)]
+        source_name = getattr(ability, "source_name", None) or ability.name
+        if not _ask_may(
+            game,
+            controller,
+            f"put a {quality} card from your hand onto the battlefield",
+            source_name,
+            source_id_of(ability),
+            bool(candidates),
+        ):
+            return
+        if not candidates:
+            return
+        chosen = _choose_one_card(
+            game,
+            player,
+            candidates,
+            prompt=f"choose a {quality} card to put onto the battlefield",
+            source=source_name,
+            source_id=source_id_of(ability),
+        )
+        game.put_onto_battlefield(chosen, controller)
+        source = ability.source(game) if hasattr(ability, "source") else None
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=created,
+                effect=CreatedTriggeredAbility(
+                    ability_text=created, source_card=source.card if source is not None else None
+                ),
+                event=event,
+                step=Step.END_STEP,
+                remaining=1,
+                controller=controller,
+                source_id=getattr(ability, "source_id", None),
+                source_name=source_name,
+            )
+        )
+
+    return effect

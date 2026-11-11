@@ -3092,6 +3092,18 @@ def _parse_return_put_from_hand_or_graveyard_clause(
     return parse_put_from_hand_or_graveyard(clause)
 
 
+@ABILITY_TEXT.rung("s1")
+def _parse_return_put_from_hand_then_next_end_step_text(text: str) -> AbilityEffect | None:
+    """ "you may put a <quality> card from your hand onto the battlefield. If you
+    do, <effect> at the beginning of the next end step" - Erica Ortegas,
+    Plucky Pilot (`machines/if_you_do_chains.parse_put_from_hand_then_at_next_end_step`)."""
+    if "at the beginning of the next end step" not in text.lower():
+        return None
+    from ..if_you_do_chains import parse_put_from_hand_then_at_next_end_step
+
+    return parse_put_from_hand_then_at_next_end_step(text)
+
+
 @ABILITY_TEXT.rung("s1", for_spell=False)
 @SPELL_TEXT.rung("s1", for_spell=True)
 def _parse_return_if_mana_value_text(

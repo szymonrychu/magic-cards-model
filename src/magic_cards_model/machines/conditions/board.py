@@ -454,11 +454,13 @@ def _matching(
     return [state for state in permanents if test(context, state, board.of(state))]
 
 
-# -- grouping: "with different powers", "that share a creature type" -----------
+# -- grouping: "with different powers", "differently named", "that share a
+#    creature type" -----------------------------------------------------------
 
 _GROUPING = re.compile(
-    rf"(?P<quality>.+?) (?:with different (?P<distinct>powers|names|{_STAT}s)"
-    r"|that share a (?P<shared>creature|card) type)"
+    r"(?:differently named (?P<named_quality>.+)"
+    rf"|(?P<quality>.+?) (?:with different (?P<distinct>powers|names|{_STAT}s)"
+    r"|that share a (?P<shared>creature|card) type))"
 )
 
 
@@ -470,8 +472,8 @@ def _grouped_measure(
     if match is None:
         return len(states)
     board = context.game.computed_board()
-    if match.group("distinct"):
-        attribute = match.group("distinct").removesuffix("s")
+    if match.group("distinct") or match.group("named_quality"):
+        attribute = (match.group("distinct") or "names").removesuffix("s")
         if attribute == "name":
             # CR 201.2b: "different names only if each of them has at least
             # one name" - a nameless object (a face-down permanent, CR
@@ -492,7 +494,9 @@ def _grouped_measure(
 
 def _split_quality(text: str) -> tuple[str, re.Match[str] | None]:
     grouping = _GROUPING.fullmatch(text)
-    return (grouping.group("quality"), grouping) if grouping else (text, None)
+    if grouping is None:
+        return text, None
+    return grouping.group("quality") or grouping.group("named_quality"), grouping
 
 
 def _quality_readable(text: str) -> bool:

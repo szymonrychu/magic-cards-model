@@ -456,6 +456,10 @@ def cant_be_sacrificed(game, permanent) -> str | None:
     for clauses in _compound_clause_sets(game, permanent):
         if _NO_SACRIFICE_CLAUSE in clauses:
             return f"{permanent.name} can't be sacrificed (CR 701.21a, CR 101.2)"
+    from .player_action_prohibitions import token_sacrifice_banned
+
+    if (holder := token_sacrifice_banned(game, permanent)) is not None:
+        return f"{holder.name}: {permanent.name} can't be sacrificed (CR 701.21a, CR 101.2)"
     return None
 
 

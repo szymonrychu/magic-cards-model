@@ -3548,6 +3548,83 @@ def _parse_reflexive_mandatory_mill_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "you may pay {1} and exile a card from your graveyard. When you do,
+#: `<consequence>`." - Sylvia Tilly, Joy of Discovery's beginning-of-combat
+#: trigger. A two-part optional cost (CR 118.3, CR 601.2h's all-or-nothing
+#: payment) with the reflexive ability of CR 603.12 created once both parts are
+#: paid. The mana part is optional in the pattern ("you may exile a card ...").
+_REFLEXIVE_MAY_PAY_AND_EXILE_FROM_GRAVEYARD_RE = re.compile(
+    r"^you may (?:pay (?P<mana>(?:\{[^}]+\})+) and )?exile an? card from your graveyard\.\s*"
+    r"when you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+@ABILITY_TEXT.rung("s20")
+def _parse_reflexive_pay_and_exile_from_graveyard_clause(text: str) -> AbilityEffect | None:
+    """`_REFLEXIVE_MAY_PAY_AND_EXILE_FROM_GRAVEYARD_RE`'s shape; see above.
+    Nothing is paid when the graveyard holds no card to exile (CR 118.3: a cost
+    that can't be paid in full isn't paid)."""
+    match = _REFLEXIVE_MAY_PAY_AND_EXILE_FROM_GRAVEYARD_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    cost = ManaCost.try_parse(match.group("mana")) if match.group("mana") else None
+    if match.group("mana") and cost is None:
+        return None
+    consequence_text = _reflexive_consequence_text(match.group("consequence"))
+    if reflexive_pay_consequence_effect(consequence_text) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        candidates = list(player.graveyard)
+        if not candidates:
+            return
+        if cost is not None:
+            if not game.may_pay_mana_cost(
+                player, cost, source=source_name, source_id=source_id_of(source_id)
+            ):
+                return
+        elif not game.may(
+            player,
+            "exile a card from your graveyard",
+            source=source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt="exile a card from your graveyard",
+                source=source_name,
+                amount=1,
+                exact=True,
+                cards=tuple(card.id for card in candidates),
+                card_labels=tuple(card.name for card in candidates),
+                source_id=source_id_of(ability),
+            )
+        )
+        by_id = {card.id: card for card in candidates}
+        chosen = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
+        if not chosen:
+            return
+        game.exile_cards(chosen)
+        game.create_reflexive_trigger(
+            text=consequence_text,
+            controller=player.username,
+            source_id=ability.source_id,
+            source_name=source_name,
+            callback=ReflexivePayManaConsequence(),
+            event=ability.event,
+        )
+
+    return effect
+
+
 #: "you may pay {N}. When you do, `<consequence>`." - Lich's Relic's own ETB
 #: trigger, the ordinary-mana twin of `_REFLEXIVE_MAY_PAY_ENERGY_RE`'s energy
 #: symbols. The symbol run is only ever mana: `ManaCost.try_parse` declines
