@@ -56,7 +56,7 @@ def test_the_count_starts_again_next_turn():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     burnham = scenario.creature(BURNHAM, "alice")
     land_enters(scenario)
-    while scenario.turn.active_player != "bob":
+    while not (scenario.turn.active_player == "bob" and scenario.step is Step.PRECOMBAT_MAIN):
         scenario.advance()
     land_enters(scenario)
     assert burnham.counter_count(Counter.PLUS_ONE) == 0, "first this turn again"

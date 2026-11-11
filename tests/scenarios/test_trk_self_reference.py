@@ -22,6 +22,13 @@ from magic_cards_model.models.card_state import Counter
 from magic_cards_model.models.zone import Zone
 from tests.scenarios.harness import Scenario
 
+BONES_RETURN = "Return target non-Doctor permanent card from your graveyard to your hand."
+BONES_SAVE = (
+    "Choose up to one other target creature. When it dies this turn, return that card to the "
+    "battlefield under its owner's control with a +1/+1 counter on it at the beginning of the "
+    "next end step."
+)
+
 # -- the reader's corner cases -----------------------------------------------
 
 
@@ -86,12 +93,17 @@ def test_dr_beverly_crusher_doubles_her_own_life_gain_trigger():
 def test_dr_beverly_crusher_ignores_an_opponent_gaining_life():
     scenario = (
         Scenario()
-        .player("alice", battlefield=["Dr. Beverly Crusher"])
-        .player("bob", hand=["Grizzly Bears"], battlefield=["Soul Warden", "Forest", "Forest"])
+        .player("alice", battlefield=["Dr. Beverly Crusher"], library=["Island"] * 4)
+        .player(
+            "bob",
+            hand=["Grizzly Bears"],
+            battlefield=["Soul Warden", "Forest", "Forest"],
+            library=["Island"] * 4,
+        )
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    while scenario.turn.active_player != "bob":
+    while not (scenario.turn.active_player == "bob" and scenario.step is Step.PRECOMBAT_MAIN):
         scenario.advance()
     scenario.cast_onto_stack(
         "Grizzly Bears", *scenario.untapped_sources("Forest", "Forest", username="bob")
@@ -141,12 +153,14 @@ def test_captain_kathryn_janeway_explores_as_she_enters_and_lets_two_lands_be_pl
 def test_captain_kathryn_janeway_ignores_an_opponents_creature():
     scenario = (
         Scenario()
-        .player("alice", battlefield=["Captain Kathryn Janeway"], library=["Island"])
-        .player("bob", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"])
+        .player("alice", battlefield=["Captain Kathryn Janeway"], library=["Island"] * 4)
+        .player(
+            "bob", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"], library=["Island"] * 4
+        )
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    while scenario.turn.active_player != "bob":
+    while not (scenario.turn.active_player == "bob" and scenario.step is Step.PRECOMBAT_MAIN):
         scenario.advance()
     scenario.cast_and_resolve(
         "Grizzly Bears", *scenario.untapped_sources("Forest", "Forest", username="bob")
@@ -201,7 +215,7 @@ def test_dr_leonard_bones_mccoy_returns_a_non_doctor_permanent_card():
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
-    scenario.will_choose_mode("Return target non-Doctor permanent card")
+    scenario.will_choose_mode(BONES_RETURN)
     scenario.choose_trigger_targets('Dr. Leonard "Bones" McCoy', [bears])
     scenario.cast_and_resolve(
         'Dr. Leonard "Bones" McCoy', *scenario.untapped_sources(*["Forest"] * 3)
@@ -226,7 +240,7 @@ def test_dr_leonard_bones_mccoy_brings_a_dying_creature_back_with_a_counter():
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "alice")
-    scenario.will_choose_mode("Choose up to one other target creature")
+    scenario.will_choose_mode(BONES_SAVE)
     scenario.choose_trigger_targets('Dr. Leonard "Bones" McCoy', [bears])
     scenario.cast_and_resolve(
         'Dr. Leonard "Bones" McCoy', *scenario.untapped_sources(*["Forest"] * 3)

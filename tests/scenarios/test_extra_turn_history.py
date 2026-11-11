@@ -49,6 +49,7 @@ def hit(scenario, bounty):
         scenario.advance()
     scenario.no_blocks()
     scenario.combat_damage()
+    scenario.game.put_triggers_on_stack()
     assert scenario.stack_names() == [f"{BOUNTY}'s triggered ability"]
     scenario.pass_until_resolved()
 

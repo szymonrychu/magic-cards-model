@@ -23,6 +23,14 @@ from magic_cards_model.models.zone import Zone
 from tests.scenarios.harness import Scenario
 
 
+CAST_PERMISSION = "Cast permission"
+
+
+def cast(scenario, name, zone, *sources):
+    card = scenario.find(name, zone, "alice")
+    return scenario.game.cast(card, "alice", keyword=CAST_PERMISSION, mana_sources=list(sources))
+
+
 def board() -> Scenario:
     return (
         Scenario()
@@ -43,9 +51,7 @@ def test_a_permanent_card_is_cast_from_outside_the_game():
     actions = legal_actions(scenario.game, "alice")
     bears = scenario.find("Grizzly Bears", Zone.SIDEBOARD, "alice")
     assert any(a.kind is ActionKind.CAST and a.card_id == bears.id for a in actions)
-    casting = scenario.cast("Grizzly Bears", from_zone=Zone.SIDEBOARD)
-    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Forest", "Forest"))
-    scenario.put_on_stack(casting)
+    cast(scenario, "Grizzly Bears", Zone.SIDEBOARD, *scenario.untapped_sources("Forest", "Forest"))
     scenario.pass_until_resolved()
     assert scenario.creature("Grizzly Bears", "alice").zone is Zone.BATTLEFIELD
 
@@ -53,12 +59,10 @@ def test_a_permanent_card_is_cast_from_outside_the_game():
 def test_once_each_turn_across_both_zones():
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    casting = scenario.cast("Grizzly Bears", from_zone=Zone.SIDEBOARD)
-    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Forest", "Forest"))
-    scenario.put_on_stack(casting)
+    cast(scenario, "Grizzly Bears", Zone.SIDEBOARD, *scenario.untapped_sources("Forest", "Forest"))
     scenario.pass_until_resolved()
     with pytest.raises(ValueError):
-        scenario.cast("Llanowar Elves", from_zone=Zone.GRAVEYARD)
+        cast(scenario, "Llanowar Elves", Zone.GRAVEYARD, *scenario.untapped_sources("Forest"))
     with pytest.raises(ValueError):
         scenario.play_land("Plains", from_zone=Zone.GRAVEYARD)
 
@@ -83,7 +87,7 @@ def test_a_nonpermanent_card_is_not_reached():
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     with pytest.raises(ValueError):
-        scenario.cast("Lightning Bolt", from_zone=Zone.SIDEBOARD)
+        cast(scenario, "Lightning Bolt", Zone.SIDEBOARD, *scenario.untapped_sources("Forest"))
 
 
 def test_not_on_an_opponents_turn():
@@ -107,8 +111,6 @@ def test_the_holodeck_is_usable_again_on_the_next_turn():
         scenario.advance()
     for land in scenario.game.permanents_controlled_by("alice"):
         land.tapped = False
-    elves = scenario.cast("Llanowar Elves", from_zone=Zone.GRAVEYARD)
-    scenario.pay_with(elves.begin_paying(), *scenario.untapped_sources("Forest"))
-    scenario.put_on_stack(elves)
+    cast(scenario, "Llanowar Elves", Zone.GRAVEYARD, *scenario.untapped_sources("Forest"))
     scenario.pass_until_resolved()
     assert scenario.creature("Llanowar Elves", "alice").zone is Zone.BATTLEFIELD

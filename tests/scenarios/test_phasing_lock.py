@@ -65,8 +65,9 @@ def test_chapter_one_phases_out_every_artifact_and_creature():
     memnite = scenario.creature("Memnite", "bob")
     cast_city(scenario)
     assert all(p.phased_out for p in (alice_bears, ornithopter, bob_bears, memnite))
+    humans = [p for p in scenario.game.battlefield if "Human" in p.subtypes]
+    assert len(humans) == 1, "the token is created after the phasing, so it is here"
     names = scenario.battlefield_names()
-    assert "Human" in names, "the token is created after the phasing, so it is here"
     assert "Forest" in names and "Plains" in names, "lands are neither artifacts nor creatures"
 
 
@@ -94,7 +95,7 @@ def test_the_city_on_the_edge_of_forever_chapters_and_the_return():
     assert scenario.player("bob").life == 18
     assert len(scenario.player("alice").hand) == 3, "her draw step plus two"
     next_main_of(scenario, "alice")  # chapter III
-    assert "Human" not in scenario.battlefield_names()
+    assert not [p for p in scenario.game.battlefield if "Human" in p.subtypes]
     assert scenario.player("alice").life == 23
     assert "The City on the Edge of Forever" not in scenario.battlefield_names()
     assert alice_bears.phased_out, "alice's untap step came before chapter III"

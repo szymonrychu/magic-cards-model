@@ -190,6 +190,13 @@ def watcher_board(watcher: str, *, opponent_graveyard: tuple[str, ...] = ()) -> 
     )
 
 
+def main_of(scenario, username):
+    """Advance to `username`'s next precombat main phase."""
+    scenario.advance()
+    while not (scenario.turn.active_player == username and scenario.step is Step.PRECOMBAT_MAIN):
+        scenario.advance()
+
+
 def test_an_untyped_card_leaving_triggers_once_however_many_leave():
     """Two separate cards leave alice's graveyard in one turn; the untyped
     watcher triggers for the first and its once-each-turn rider stops the
@@ -223,8 +230,7 @@ def test_the_once_each_turn_limit_resets_on_the_next_turn():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     leaves_graveyard(scenario, scenario.find("Brainstorm", Zone.GRAVEYARD, "alice"), "alice")
     scenario.pass_until_resolved()
-    while scenario.turn.active_player != "bob":
-        scenario.advance()
+    main_of(scenario, "bob")
     leaves_graveyard(scenario, scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice"), "alice")
     assert [t.source_name for t in scenario.pending_triggers] == ["Vash, Freelance Archaeologist"]
 
@@ -234,12 +240,10 @@ def test_kishla_skimmer_watches_only_during_its_controllers_turn():
     triggers nothing, on alice's own turn it draws."""
     scenario = watcher_board("Kishla Skimmer").build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    while scenario.turn.active_player != "bob":
-        scenario.advance()
+    main_of(scenario, "bob")
     leaves_graveyard(scenario, scenario.find("Brainstorm", Zone.GRAVEYARD, "alice"), "alice")
     assert scenario.pending_triggers == []
-    while scenario.turn.active_player != "alice":
-        scenario.advance()
+    main_of(scenario, "alice")
     leaves_graveyard(scenario, scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice"), "alice")
     assert [t.source_name for t in scenario.pending_triggers] == ["Kishla Skimmer"]
     before = len(scenario.player("alice").hand)
@@ -272,6 +276,7 @@ def test_hologram_stalker_makes_an_illusion_when_its_own_return_empties_a_card()
     scenario.cast_onto_stack("Hologram Stalker", *scenario.untapped_sources(*["Forest"] * 6))
     scenario.pass_until_resolved()  # the Stalker resolves
     scenario.pass_until_resolved()  # its enters trigger returns Grizzly Bears
+    scenario.game.put_triggers_on_stack()
     assert bears.zone is Zone.HAND
     assert sorted(scenario.stack_names()) == [
         "Hologram Stalker's triggered ability",

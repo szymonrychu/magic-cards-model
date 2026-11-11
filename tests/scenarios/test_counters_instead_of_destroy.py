@@ -45,7 +45,9 @@ def test_a_destroy_spell_takes_the_counters_instead():
     scenario.game.add_counters(bears, Counter.PLUS_ONE, 2, putter="alice")
     bob_turn(scenario)
     scenario.cast_and_resolve(
-        "Go for the Throat", *scenario.untapped_sources("Swamp", username="bob"), targets=[bears]
+        "Go for the Throat",
+        *scenario.untapped_sources("Swamp", "Swamp", username="bob"),
+        targets=[bears],
     )
     assert bears.zone is Zone.BATTLEFIELD
     assert bears.counter_count(Counter.PLUS_ONE) == 0
@@ -74,7 +76,9 @@ def test_a_creature_without_a_counter_is_destroyed():
     lions = scenario.creature("Savannah Lions", "alice")
     bob_turn(scenario)
     scenario.cast_and_resolve(
-        "Go for the Throat", *scenario.untapped_sources("Swamp", username="bob"), targets=[lions]
+        "Go for the Throat",
+        *scenario.untapped_sources("Swamp", "Swamp", username="bob"),
+        targets=[lions],
     )
     assert lions.zone is Zone.GRAVEYARD
 
@@ -86,7 +90,9 @@ def test_dr_mccoy_does_not_protect_himself():
     scenario.game.add_counters(mccoy, Counter.PLUS_ONE, 1, putter="alice")
     bob_turn(scenario)
     scenario.cast_and_resolve(
-        "Go for the Throat", *scenario.untapped_sources("Swamp", username="bob"), targets=[mccoy]
+        "Go for the Throat",
+        *scenario.untapped_sources("Swamp", "Swamp", username="bob"),
+        targets=[mccoy],
     )
     assert mccoy.zone is Zone.GRAVEYARD
 
@@ -97,7 +103,7 @@ def test_an_opponents_creature_is_not_protected():
         .player(
             "alice",
             hand=["Go for the Throat"],
-            battlefield=["Dr. McCoy, Surly Surgeon", "Swamp"],
+            battlefield=["Dr. McCoy, Surly Surgeon", "Swamp", "Swamp"],
         )
         .player("bob", battlefield=["Grizzly Bears"])
         .build()
@@ -120,8 +126,14 @@ def test_dr_mccoy_surly_surgeon_counters_a_creature_then_saves_it():
             "alice",
             hand=["Dr. McCoy, Surly Surgeon"],
             battlefield=["Plains"] * 4 + ["Grizzly Bears"],
+            library=["Plains"] * 6,
         )
-        .player("bob", hand=["Go for the Throat"], battlefield=["Swamp"])
+        .player(
+            "bob",
+            hand=["Go for the Throat"],
+            battlefield=["Swamp", "Swamp"],
+            library=["Island"] * 6,
+        )
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -134,7 +146,9 @@ def test_dr_mccoy_surly_surgeon_counters_a_creature_then_saves_it():
     assert bears.counter_count(Counter.PLUS_ONE) == 1
     bob_turn(scenario)
     scenario.cast_and_resolve(
-        "Go for the Throat", *scenario.untapped_sources("Swamp", username="bob"), targets=[bears]
+        "Go for the Throat",
+        *scenario.untapped_sources("Swamp", "Swamp", username="bob"),
+        targets=[bears],
     )
     assert bears.zone is Zone.BATTLEFIELD
     assert bears.counter_count(Counter.PLUS_ONE) == 0
