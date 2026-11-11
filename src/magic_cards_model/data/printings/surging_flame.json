@@ -1,0 +1,121 @@
+{
+  "object": "card",
+  "id": "9974a543-7429-458b-a24f-c84cbffbb54d",
+  "oracle_id": "3c51b991-f6fa-44d2-81a3-0894939f3c22",
+  "multiverse_ids": [
+    121269
+  ],
+  "resource_id": "3D04018574FCD2390512FFD9A1C7A34AD70D705AB67FB8FA88EDB05F061640FB",
+  "mtgo_id": 24761,
+  "mtgo_foil_id": 24762,
+  "tcgplayer_id": 14129,
+  "cardmarket_id": 13736,
+  "name": "Surging Flame",
+  "lang": "en",
+  "released_at": "2006-07-21",
+  "uri": "https://api.scryfall.com/cards/9974a543-7429-458b-a24f-c84cbffbb54d",
+  "scryfall_uri": "https://scryfall.com/card/csp/99/surging-flame?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:48:55Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/9/9974a543-7429-458b-a24f-c84cbffbb54d.jpg?1783943335",
+    "normal": "https://cards.scryfall.io/normal/front/9/9/9974a543-7429-458b-a24f-c84cbffbb54d.jpg?1783943335",
+    "large": "https://cards.scryfall.io/large/front/9/9/9974a543-7429-458b-a24f-c84cbffbb54d.jpg?1783943335",
+    "png": "https://cards.scryfall.io/png/front/9/9/9974a543-7429-458b-a24f-c84cbffbb54d.png?1783943335",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/9/9974a543-7429-458b-a24f-c84cbffbb54d.jpg?1783943335",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/9/9974a543-7429-458b-a24f-c84cbffbb54d.jpg?1783943335",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/9/9974a543-7429-458b-a24f-c84cbffbb54d.webp?1783943335",
+    "grid": "https://cards.scryfall.io/grid/front/9/9/9974a543-7429-458b-a24f-c84cbffbb54d.webp?1783943335",
+    "display": "https://cards.scryfall.io/display/front/9/9/9974a543-7429-458b-a24f-c84cbffbb54d.webp?1783943335",
+    "art": "https://cards.scryfall.io/art/front/9/9/9974a543-7429-458b-a24f-c84cbffbb54d.webp?1783943335",
+    "crop": "https://cards.scryfall.io/crop/front/9/9/9974a543-7429-458b-a24f-c84cbffbb54d.webp?1783943335",
+    "jpeg": "https://cards.scryfall.io/normal/front/9/9/9974a543-7429-458b-a24f-c84cbffbb54d.jpg?1783943335"
+  },
+  "mana_cost": "{1}{R}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Ripple 4 (When you cast this spell, you may reveal the top four cards of your library. You may cast spells with the same name as this spell from among those cards without paying their mana costs. Put the rest on the bottom of your library.)\nSurging Flame deals 2 damage to any target.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Ripple"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "1f4f105f-73e4-4f03-849e-82a204807847",
+  "set": "csp",
+  "set_name": "Coldsnap",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/1f4f105f-73e4-4f03-849e-82a204807847",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acsp&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/csp?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9974a543-7429-458b-a24f-c84cbffbb54d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A3c51b991-f6fa-44d2-81a3-0894939f3c22&unique=prints",
+  "collector_number": "99",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "dab52c11-0564-4207-a4a1-c1735c946a65"
+  ],
+  "illustration_id": "49a211ee-2060-4c76-97e1-aaa3936f0deb",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 32432,
+  "penny_rank": 10598,
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=121269&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSurging%2BFlame",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSurging%2BFlame",
+    "edhrec": "https://edhrec.com/route/?cc=Surging+Flame"
+  }
+}

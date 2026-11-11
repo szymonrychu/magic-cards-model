@@ -1,0 +1,122 @@
+{
+  "object": "card",
+  "id": "86c1ff65-8ad5-42e0-9e4c-1caf83ab86e0",
+  "oracle_id": "19055292-1a79-413e-8056-7d4aec9839ed",
+  "multiverse_ids": [
+    175085
+  ],
+  "mtgo_id": 31151,
+  "mtgo_foil_id": 31152,
+  "tcgplayer_id": 27646,
+  "cardmarket_id": 19811,
+  "name": "Dawnray Archer",
+  "lang": "en",
+  "released_at": "2008-10-03",
+  "uri": "https://api.scryfall.com/cards/86c1ff65-8ad5-42e0-9e4c-1caf83ab86e0",
+  "scryfall_uri": "https://scryfall.com/card/ala/39/dawnray-archer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:36:15Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/6/86c1ff65-8ad5-42e0-9e4c-1caf83ab86e0.jpg?1783942575",
+    "normal": "https://cards.scryfall.io/normal/front/8/6/86c1ff65-8ad5-42e0-9e4c-1caf83ab86e0.jpg?1783942575",
+    "large": "https://cards.scryfall.io/large/front/8/6/86c1ff65-8ad5-42e0-9e4c-1caf83ab86e0.jpg?1783942575",
+    "png": "https://cards.scryfall.io/png/front/8/6/86c1ff65-8ad5-42e0-9e4c-1caf83ab86e0.png?1783942575",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/6/86c1ff65-8ad5-42e0-9e4c-1caf83ab86e0.jpg?1783942575",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/6/86c1ff65-8ad5-42e0-9e4c-1caf83ab86e0.jpg?1783942575",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/6/86c1ff65-8ad5-42e0-9e4c-1caf83ab86e0.webp?1783942575",
+    "grid": "https://cards.scryfall.io/grid/front/8/6/86c1ff65-8ad5-42e0-9e4c-1caf83ab86e0.webp?1783942575",
+    "display": "https://cards.scryfall.io/display/front/8/6/86c1ff65-8ad5-42e0-9e4c-1caf83ab86e0.webp?1783942575",
+    "art": "https://cards.scryfall.io/art/front/8/6/86c1ff65-8ad5-42e0-9e4c-1caf83ab86e0.webp?1783942575",
+    "crop": "https://cards.scryfall.io/crop/front/8/6/86c1ff65-8ad5-42e0-9e4c-1caf83ab86e0.webp?1783942575",
+    "jpeg": "https://cards.scryfall.io/normal/front/8/6/86c1ff65-8ad5-42e0-9e4c-1caf83ab86e0.jpg?1783942575"
+  },
+  "mana_cost": "{2}{U}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Human Archer",
+  "oracle_text": "Exalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)\n{W}, {T}: This creature deals 1 damage to target attacking or blocking creature.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U",
+    "W"
+  ],
+  "keywords": [
+    "Exalted"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d667aaec-09b7-4406-b6fa-60795132dc11",
+  "set": "ala",
+  "set_name": "Shards of Alara",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/d667aaec-09b7-4406-b6fa-60795132dc11",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aala&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ala?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/86c1ff65-8ad5-42e0-9e4c-1caf83ab86e0/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A19055292-1a79-413e-8056-7d4aec9839ed&unique=prints",
+  "collector_number": "39",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "9b55c657-5b5b-4152-a6e2-51180517bfa9"
+  ],
+  "illustration_id": "40e1f1c5-015a-48fc-8055-01fd5c09781d",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 23037,
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=175085&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDawnray%2BArcher",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDawnray%2BArcher",
+    "edhrec": "https://edhrec.com/route/?cc=Dawnray+Archer"
+  }
+}

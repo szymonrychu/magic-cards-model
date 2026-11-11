@@ -1,0 +1,121 @@
+{
+  "object": "card",
+  "id": "e00a2b22-a473-44ae-919f-29bc8be05543",
+  "oracle_id": "8740b9be-3ab4-4bd1-8a89-a59397c59e82",
+  "multiverse_ids": [
+    265714
+  ],
+  "mtgo_id": 45506,
+  "mtgo_foil_id": 45507,
+  "tcgplayer_id": 59721,
+  "cardmarket_id": 256388,
+  "name": "Servant of Nefarox",
+  "lang": "en",
+  "released_at": "2012-07-13",
+  "uri": "https://api.scryfall.com/cards/e00a2b22-a473-44ae-919f-29bc8be05543",
+  "scryfall_uri": "https://scryfall.com/card/m13/108/servant-of-nefarox?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:01:30Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/0/e00a2b22-a473-44ae-919f-29bc8be05543.jpg?1783940490",
+    "normal": "https://cards.scryfall.io/normal/front/e/0/e00a2b22-a473-44ae-919f-29bc8be05543.jpg?1783940490",
+    "large": "https://cards.scryfall.io/large/front/e/0/e00a2b22-a473-44ae-919f-29bc8be05543.jpg?1783940490",
+    "png": "https://cards.scryfall.io/png/front/e/0/e00a2b22-a473-44ae-919f-29bc8be05543.png?1783940490",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/0/e00a2b22-a473-44ae-919f-29bc8be05543.jpg?1783940490",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/0/e00a2b22-a473-44ae-919f-29bc8be05543.jpg?1783940490",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/0/e00a2b22-a473-44ae-919f-29bc8be05543.webp?1783940490",
+    "grid": "https://cards.scryfall.io/grid/front/e/0/e00a2b22-a473-44ae-919f-29bc8be05543.webp?1783940490",
+    "display": "https://cards.scryfall.io/display/front/e/0/e00a2b22-a473-44ae-919f-29bc8be05543.webp?1783940490",
+    "art": "https://cards.scryfall.io/art/front/e/0/e00a2b22-a473-44ae-919f-29bc8be05543.webp?1783940490",
+    "crop": "https://cards.scryfall.io/crop/front/e/0/e00a2b22-a473-44ae-919f-29bc8be05543.webp?1783940490",
+    "jpeg": "https://cards.scryfall.io/normal/front/e/0/e00a2b22-a473-44ae-919f-29bc8be05543.jpg?1783940490"
+  },
+  "mana_cost": "{2}{B}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Human Cleric",
+  "oracle_text": "Exalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)",
+  "power": "3",
+  "toughness": "1",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Exalted"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "f9b0c6f4-8a4f-4f36-ad3c-e1e16fb8535d",
+  "set": "m13",
+  "set_name": "Magic 2013",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/f9b0c6f4-8a4f-4f36-ad3c-e1e16fb8535d",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Am13&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/m13?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e00a2b22-a473-44ae-919f-29bc8be05543/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A8740b9be-3ab4-4bd1-8a89-a59397c59e82&unique=prints",
+  "collector_number": "108",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "9c3e9d17-509f-485c-9360-46d897ce716b"
+  ],
+  "illustration_id": "614288f7-9b69-4301-b432-64e255aa417e",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 23908,
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=265714&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DServant%2Bof%2BNefarox",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DServant%2Bof%2BNefarox",
+    "edhrec": "https://edhrec.com/route/?cc=Servant+of+Nefarox"
+  }
+}
