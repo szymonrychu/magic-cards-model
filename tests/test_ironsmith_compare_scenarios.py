@@ -144,7 +144,7 @@ def test_targets_are_queued_and_zone_moves_become_counts():
 
 def test_a_player_target_is_named_the_runner_way():
     golden = _golden("ajani-strength-of-the-pride/activated-0.json")
-    golden["action"]["targets"] = ["bob"]
+    golden["action"]["targets"] = ["player:bob"]
     assert {"op": "addTarget", "player": 0, "target": "playerB"} in translate(golden)
 
 
@@ -172,6 +172,22 @@ def test_each_unmapped_shape_is_untranslated_with_its_reason(change, reason):
     result = translate(golden)
     assert isinstance(result, Untranslated)
     assert reason in result.reason
+
+
+def test_an_enters_source_moved_by_its_own_trigger_is_untranslated():
+    golden = _golden("aatchik-emerald-radian/triggered-0.json")
+    golden["delta"]["objects"]["Aatchik, Emerald Radian@alice#1"] = {
+        "zone": ["graveyard", "battlefield"]
+    }
+    result = translate(golden)
+    assert result == Untranslated("source moved from graveyard by the trigger itself")
+
+
+def test_a_card_created_outside_the_battlefield_counts_in_its_zone():
+    golden = _golden("ajani-strength-of-the-pride/activated-0.json")
+    golden["delta"]["created"] = {"Clue@alice+1": {"zone": "graveyard", "controller": "alice"}}
+    graveyard = len(golden["board"]["players"]["alice"]["graveyard"])
+    assert {"op": "assertGraveyardCount", "player": 0, "count": graveyard + 1} in translate(golden)
 
 
 def test_a_golden_with_nothing_assertable_is_untranslated():

@@ -121,3 +121,13 @@ Change `commit` and `date` in `scripts/ironsmith_compare/pin.toml` in a reviewed
 then re-run `doctor`. If ironsmith changed its status schema, `collect coverage` stops
 with the unknown `PRAGMA user_version`; extend `KNOWN_SCHEMA_VERSIONS` in
 `coverage.py` only after checking the status columns still mean the same.
+
+## Known limits
+
+- Only MCM `handled` counts as MCM support in the quadrants; `unaudited` cards count as
+  not supported.
+- Metagame weight is the highest rate over all three formats, whatever `--format` is.
+- `iron_reason` and behaviour messages are ironsmith's own error strings; they stay in
+  the gitignored out dir like every other output.
+- If MCM gained a commit since `collect`, `compare` reads the newest collected dir for the
+  same ironsmith sha (it says so) and writes its reports under the current sha.

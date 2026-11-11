@@ -12,7 +12,7 @@ import io
 import json
 import subprocess
 
-from scripts.ironsmith_compare.__main__ import main
+from scripts.ironsmith_compare.__main__ import latest_collected, main
 from scripts.ironsmith_compare.compare import build_rows
 from scripts.ironsmith_compare.coverage import write_jsonl
 from scripts.ironsmith_compare.report import (
@@ -227,3 +227,12 @@ def test_doctor_reports_a_missing_checkout(tmp_path, capsys):
     printed = capsys.readouterr()
     assert "does not exist" in printed.err
     assert "git clone" in printed.out
+
+
+def test_compare_finds_data_collected_before_an_mcm_commit(tmp_path):
+    collected = tmp_path / ("c" * 12 + "-" + "1" * 12)
+    write_jsonl([], collected / "ironsmith-coverage.jsonl")
+    (tmp_path / ("c" * 12 + "-" + "2" * 12)).mkdir()  # after an MCM commit, nothing collected
+    write_jsonl([], tmp_path / ("e" * 12 + "-" + "1" * 12) / "ironsmith-coverage.jsonl")
+    assert latest_collected(tmp_path, "c" * 40) == collected
+    assert latest_collected(tmp_path, "f" * 40) is None

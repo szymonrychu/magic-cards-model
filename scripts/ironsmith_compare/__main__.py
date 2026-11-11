@@ -191,11 +191,23 @@ def _mcm_verdicts(args: argparse.Namespace, pool: list[dict], wanted: set[str]) 
     return verdicts
 
 
+def latest_collected(base: Path, iron_sha: str) -> Path | None:
+    """The most recently collected out dir under `base` for this ironsmith sha, so a
+    commit to MCM between `collect` and `compare` does not lose the collected data."""
+    dirs = [d for d in base.glob(f"{iron_sha[:12]}-*") if (d / COVERAGE_JSONL).is_file()]
+    return max(dirs, key=lambda d: (d / COVERAGE_JSONL).stat().st_mtime, default=None)
+
+
 def cmd_compare(args: argparse.Namespace, pin: checkout.Pin) -> int:
     out = _out_dir(args, pin)
     wanted = STATUSES[args.status]
     pool = _pool(args)
-    iron_path, behaviour_path = out / COVERAGE_JSONL, out / BEHAVIOUR_JSONL
+    source = out
+    if not args.out and not (out / COVERAGE_JSONL).is_file():
+        source = latest_collected(out.parent, _sha(args.ironsmith, pin.commit)) or out
+        if source != out:
+            print(f"note: reading collected data from {source}", file=sys.stderr)
+    iron_path, behaviour_path = source / COVERAGE_JSONL, source / BEHAVIOUR_JSONL
     if not iron_path.is_file():
         print(f"note: no {iron_path}; every card's ironsmith status is unknown", file=sys.stderr)
     iron = coverage.read_jsonl(iron_path) if iron_path.is_file() else []

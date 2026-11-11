@@ -102,7 +102,9 @@ def _cost_label(ability: str) -> str:
 
 
 def _target(label: str, seats: dict[str, int]) -> str:
-    return _RUNNER_PLAYERS[seats[label]] if label in seats else _label_name(label)
+    """A golden target label (`Name@owner#k`, or `player:<name>`) as the runner names it."""
+    player = label.removeprefix("player:")
+    return _RUNNER_PLAYERS[seats[player]] if player in seats else _label_name(label)
 
 
 def _raise(golden: dict, seats: dict[str, int]) -> dict | Untranslated:
@@ -117,6 +119,9 @@ def _raise(golden: dict, seats: dict[str, int]) -> dict | Untranslated:
         return {"op": "activateAbility", **_TURN, "player": controller, "ability": ability}
     if source not in {_front(n) for n in zones["hand"]}:
         return Untranslated("source not in its controller's hand")
+    moved = (golden["delta"].get("objects") or {}).get(action["source"], {}).get("zone")
+    if moved and moved[0] != "battlefield":
+        return Untranslated(f"source moved from {moved[0]} by the trigger itself")
     return {"op": "castSpell", **_TURN, "player": controller, "name": source}
 
 
@@ -174,9 +179,13 @@ def translate(golden: dict) -> list[dict] | Untranslated:
             zones[owner, new_zone] += 1
             exiled += (new_zone == "exile") - (old_zone == "exile")
     for label, token in sorted((delta.get("created") or {}).items()):
+        owner = seats[_label_owner(label)]
         if token.get("zone") == "battlefield":
-            seat = seats.get(token.get("controller"), seats[_label_owner(label)])
+            seat = seats.get(token.get("controller"), owner)
             perms[seat, _label_name(label)] += 1
+        elif token.get("zone"):
+            zones[owner, token["zone"]] += 1
+            exiled += token["zone"] == "exile"
 
     asserts: list[dict] = []
     for player, change in sorted((delta.get("players") or {}).items()):
