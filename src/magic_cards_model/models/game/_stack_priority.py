@@ -397,6 +397,10 @@ class StackPriorityMixin:
         from ...machines.conditions import history as condition_history
 
         condition_history.record_crime(self, controller, card_state.targets)
+        if record is not None and record.modes:
+            # CR 700.17: the caster chose this spell's modes (CR 601.2b) - once
+            # for the spell, however many. A copy never reaches here (CR 700.2g).
+            condition_history.record_dilemma(self, controller)
 
         if card_state.prepare_spell_face:
             # CR 601.2i: "That permanent loses the prepared designation at
@@ -2120,6 +2124,11 @@ class StackPriorityMixin:
                     continue
                 self.stack.append(ability)
                 self._emit_ability_becomes_target(ability)
+                if not modal.chosen_at_random:
+                    # CR 700.17: its controller chose its modes (CR 700.2b).
+                    from ...machines.conditions import history as condition_history
+
+                    condition_history.record_dilemma(self, ability.controller)
                 placed.append(ability)
                 continue
             targets = self._targets_for_trigger(ability)

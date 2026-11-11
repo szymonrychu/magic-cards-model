@@ -281,6 +281,9 @@ _ENLISTS_A_CREATURE_CONDITION = re.compile(r"^(?:this creature|it) enlists? a cr
 #: Miner's identical condition, always "you" (CR 700.13 is a self-designation
 #: - a player commits a crime, never "an opponent commits a crime").
 _CRIME_COMMITTED_CONDITION = re.compile(r"^you(?:'ve| have)? commits? a crime$", re.IGNORECASE)
+#: CR 700.17: "you face a dilemma" - the "Face a dilemma" cards' shared
+#: condition. Like a crime, always the ability's own controller.
+_DILEMMA_FACED_CONDITION = re.compile(r"^you faces? a dilemma$", re.IGNORECASE)
 #: CR 701.23a: "an opponent searches their library" - Wan Shi Tong,
 #: Librarian's and Ob Nixilis, Unshackled's identical condition. "You search
 #: your library" is the same event from the controller's own side, kept for

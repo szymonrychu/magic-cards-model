@@ -483,6 +483,12 @@ def _normalized_ability_word(word: str) -> str:
     return re.sub(r"\s+\d+$", "", normalized)
 
 
+#: The three CR 700.17 readers a "Face a dilemma" card prints.
+_DILEMMA_READER = re.compile(
+    r"whenever you face a dilemma|faced a dilemma this turn|dilemmas? you'?ve faced this turn",
+    re.IGNORECASE,
+)
+
 #: `Keyword` values in declaration order (iterating the enum itself is slow).
 _KEYWORD_VALUES = tuple(keyword.value for keyword in Keyword)
 
@@ -585,6 +591,15 @@ def executed_keywords(printing: Card) -> dict[str, str]:
 
     if adventure_face(printing) is not None:
         found["adventure"] = "machines/casting.py"
+
+    # Face a dilemma (CR 700.17): no ability of its own, the word Scryfall
+    # lists for a card that reads the dilemma record - "Whenever you face a
+    # dilemma", "if you faced a dilemma this turn", "for each dilemma you've
+    # faced this turn". `machines/conditions/history.record_dilemma` keeps
+    # that record wherever modes are chosen; the gate is that the card prints
+    # one of the readers, not the bare keyword name.
+    if "face a dilemma" in printed and _DILEMMA_READER.search(printing.oracle_text or ""):
+        found["face a dilemma"] = "machines/conditions/history.py (record_dilemma, CR 700.17)"
 
     # Plot named only by a resolving-exile rider ("If you do, it becomes
     # plotted.", Lilah, Undefeated Slickshot): CR 702.170c's "some spells

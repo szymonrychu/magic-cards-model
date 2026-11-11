@@ -1454,6 +1454,14 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     if match := _SPELLS_CAST_THIS_TURN_AMOUNT_RE.fullmatch(stripped):
         return _spells_cast_this_turn_count(match)
 
+    if _DILEMMAS_FACED_THIS_TURN_RE.fullmatch(stripped):
+        from ..conditions.history import DILEMMAS_FACED
+
+        def dilemmas_faced_this_turn(game: "Game", controller: str) -> int:
+            return game.turn_count(DILEMMAS_FACED, controller)
+
+        return dilemmas_faced_this_turn
+
     if _COUNT_DAMAGE_ALREADY_DEALT_TO_YOU_RE.fullmatch(stripped):
         # CR 120.3a counts what was *dealt*: `Game.damage_dealt_this_turn`
         # holds each damage event as it happened, after prevention (CR 615.6:
@@ -1718,6 +1726,17 @@ _CARDS_EXILED_WITH_IT_RE = re.compile(
 _SPELLS_CAST_THIS_TURN_AMOUNT_RE = re.compile(
     r"^(?:the number of )?(?P<other>other )?(?:(?P<types>[a-z, -]+?) )?spells? "
     r"(?:you'?ve|they'?ve|that player has) cast this turn(?P<not_first> other than the first)?$",
+    re.IGNORECASE,
+)
+
+
+#: "dilemma you've faced this turn" (Captain Benjamin Sisko) - CR 700.17:
+#: "the number of dilemmas a player has faced in a turn counts the number of
+#: spells and/or abilities the player has chosen one or more modes for that
+#: turn", the count `machines/conditions/history.record_dilemma` keeps.
+_DILEMMAS_FACED_THIS_TURN_RE = re.compile(
+    r"^(?:the number of )?dilemmas? (?:you'?ve|you have|they'?ve|that player has) "
+    r"faced this turn$",
     re.IGNORECASE,
 )
 

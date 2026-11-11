@@ -306,6 +306,13 @@ class ModalProfile(EngineModel):
         # were announced.
         return tuple(sorted(modes, key=lambda mode: mode.number))
 
+    @property
+    def chosen_at_random(self) -> bool:
+        """ "Choose one at random" (Outlaws' Merriment): the game picks the
+        mode, not the controller - so CR 700.17's "a player faces a dilemma
+        whenever they choose one or more modes" does not happen."""
+        return "at random" in self.instruction.lower()
+
     def allowed_range(
         self, *, entwined: bool = False, alternative: bool = False
     ) -> tuple[int, int]:

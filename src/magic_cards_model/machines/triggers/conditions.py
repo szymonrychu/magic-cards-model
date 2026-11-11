@@ -3968,6 +3968,11 @@ def _unread_condition_matches(
         # controller, never an opponent's crime.
         return event.event is ExtraTriggerEvent.CRIME_COMMITTED and event.player == controller
 
+    if _DILEMMA_FACED_CONDITION.match(condition):
+        # CR 700.17: "you face a dilemma" - the ability's own controller
+        # chose one or more modes, never an opponent.
+        return event.event is ExtraTriggerEvent.DILEMMA_FACED and event.player == controller
+
     match = _SEARCHES_LIBRARY_CONDITION.match(condition)
     if match is not None:
         if event.event is not ExtraTriggerEvent.SEARCHES_LIBRARY or event.player is None:
@@ -6229,6 +6234,7 @@ from ._common import (  # noqa: E402
     _CREATURES_OR_GRAVEYARD_CREATURE_CARDS_EXILED_CONDITION,
     _CRIME_COMMITTED_CONDITION,
     _CYCLE_CONDITION,
+    _DILEMMA_FACED_CONDITION,
     _DOOR_UNLOCKED_CONDITION,
     _ENLISTS_A_CREATURE_CONDITION,
     _ENTERING_CAUSE_RE,

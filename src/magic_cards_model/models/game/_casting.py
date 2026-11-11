@@ -1469,7 +1469,7 @@ class CastingMixin:
         instruction_lower = modal.instruction.lower()
         exclusive_this_turn = "hasn't been chosen this turn" in instruction_lower
         exclusive = exclusive_this_turn or "hasn't been chosen" in instruction_lower
-        at_random = "at random" in instruction_lower
+        at_random = modal.chosen_at_random
         source_state = ability.source(self) if exclusive else None
         if exclusive and source_state is not None:
             already = (

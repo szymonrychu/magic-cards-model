@@ -55,6 +55,10 @@ Rules verified with `mise run rules:find`:
 - CR 122.6 / 122.6a: counters put on a permanent, and who puts them.
 - CR 606.3: loyalty abilities.
 - CR 708.2: a face-down permanent.
+- CR 700.17: a player faces a dilemma whenever they choose one or more modes
+  for a spell or ability; "the number of dilemmas a player has faced in a
+  turn counts the number of spells and/or abilities the player has chosen
+  one or more modes for that turn".
 """
 
 import re
@@ -96,6 +100,9 @@ COMMITTED_CRIME = "committed_crime"
 PLAYED_NOT_FROM_HAND = "played_not_from_hand"
 PLAYED_FROM_EXILE = "played_from_exile"
 LOYALTY_ABILITY_ACTIVATED = "loyalty_ability_activated"
+#: `Game.turn_counts` key for CR 700.17's dilemmas: one per spell or ability
+#: its controller chose one or more modes for, however many modes it was.
+DILEMMAS_FACED = "dilemmas_faced"
 #: CR 702.185c: "a spell was warped this turn" - a spell cast for its warp
 #: cost, per caster.
 SPELL_WARPED = "spell_warped"
@@ -509,6 +516,27 @@ def _commit_crime(game: "Game", controller: str) -> None:
 
     game.record_turn_fact(COMMITTED_CRIME, controller)
     game.emit(GameEvent(event=ExtraTriggerEvent.CRIME_COMMITTED, player=controller))
+
+
+def record_dilemma(game: "Game", player: str) -> None:
+    """CR 700.17: `player` just chose one or more modes for a spell or
+    ability, so they face a dilemma - once per spell or ability, never once
+    per mode chosen ("counts the number of spells and/or abilities the player
+    has chosen one or more modes for that turn"). Both halves a card reads:
+    the per-turn count ("for each dilemma you've faced this turn", "if you
+    faced a dilemma this turn") and the `GameEvent` a "Whenever you face a
+    dilemma" trigger watches (`ExtraTriggerEvent.DILEMMA_FACED`).
+
+    Called where the modes are chosen and the object is on the stack: a
+    spell as it becomes cast (`Game._put_on_stack`, from its cast record's
+    modes), an activated ability as it is activated, a modal triggered
+    ability as it is put on the stack. A copy is never recorded: CR 700.2g
+    copies the modes, and "the controller of the copy can't choose a
+    different mode", so nobody chose any."""
+    from ..triggers import ExtraTriggerEvent, GameEvent
+
+    game.note_turn_count(DILEMMAS_FACED, player)
+    game.emit(GameEvent(event=ExtraTriggerEvent.DILEMMA_FACED, player=player))
 
 
 def record_crime(game: "Game", controller: str | None, targets: "list[TargetRef]") -> None:
@@ -1654,6 +1682,12 @@ def _committed_crime(context: "ConditionContext", match: re.Match[str]) -> bool:
     return context.game.turn_fact_holds(COMMITTED_CRIME, context.controller)
 
 
+def _faced_a_dilemma(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "you faced a dilemma this turn" (CR 700.17): "that player has chosen
+    one or more modes for a spell or ability this turn"."""
+    return context.game.turn_count(DILEMMAS_FACED, context.controller) > 0
+
+
 def _played_not_from_hand(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "you've played a land or cast a spell this turn from anywhere other
     than your hand"."""
@@ -2057,6 +2091,7 @@ READERS: tuple[ConditionReader, ...] = (
         _you_put_a_counter,
     ),
     ConditionReader(re.compile(r"you(?:'ve| have)? committed a crime this turn"), _committed_crime),
+    ConditionReader(re.compile(r"you(?:'ve| have)? faced a dilemma this turn"), _faced_a_dilemma),
     ConditionReader(
         re.compile(
             r"you(?:'ve| have)? played a land or cast a spell this turn from anywhere "
