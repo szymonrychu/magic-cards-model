@@ -4,12 +4,14 @@ on:
   push:
   pull_request:
 
+env:
+  # Keep in step with the matrix `shard` list below.
+  SHARD_COUNT: "16"
+
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
-    # The suite runs in about 130s locally; this leaves headroom for a colder
-    # runner plus tool installation.
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
 
@@ -17,9 +19,8 @@ jobs:
 
       # `mise install` installs the tools pinned in mise.toml. It does NOT run
       # the repo's own `install` task, which is what syncs the virtualenv. Both
-      # are needed: without the second, `uv run pytest` fails to spawn pytest,
-      # because pytest arrives through an extra that `uv run` does not install
-      # on its own.
+      # are needed: without the second, `uv run` fails to spawn tools that
+      # arrive through an extra.
       - name: Install pinned tools
         run: mise install
 
@@ -29,5 +30,49 @@ jobs:
       - name: Lint
         run: mise run lint
 
-      - name: Test
-        run: mise run test
+      - name: Shards cover every test file exactly once
+        run: mise run test:shard-check
+
+  # The quick suite is ~40k tests (hours of cpu), far past what one 20-minute job
+  # can run, so it is split by test file into SHARD_COUNT parallel jobs. Same
+  # scope as `mise run test` (everything but the behavioural sweep); nothing is
+  # skipped, and the lint job's shard check fails if a file ever falls out.
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    env:
+      SHARD_INDEX: ${{ matrix.shard }}
+      UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
+      # Tests build throwaway git repos and commit in them; runners have no identity.
+      GIT_AUTHOR_NAME: ci
+      GIT_AUTHOR_EMAIL: ci@example.invalid
+      GIT_COMMITTER_NAME: ci
+      GIT_COMMITTER_EMAIL: ci@example.invalid
+    steps:
+      # Full history: tests/test_split_manifests.py reads sources deleted by the
+      # split commits from git history.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: jdx/mise-action@v4
+
+      - name: Cache uv downloads
+        uses: actions/cache@v4
+        with:
+          path: .uv-cache
+          key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+          restore-keys: uv-${{ runner.os }}-
+
+      - name: Install pinned tools
+        run: mise install
+
+      - name: Sync the virtualenv
+        run: mise run install
+
+      - name: Test shard ${{ matrix.shard }}
+        run: mise run test:shard

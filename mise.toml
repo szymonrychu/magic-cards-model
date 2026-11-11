@@ -26,6 +26,18 @@ run = ["uv run ruff format .", "uv run ruff check --fix ."]
 description = "Run the test suite (all but the behavioural pool sweep)"
 run = "uv run pytest --ignore=tests/test_behavioural_sweep.py -n 6"
 
+# One CI shard of the quick suite (same scope as `test`: everything but the
+# behavioural sweep). Files are split by scripts/ci_shard.py (balanced on
+# tests/ci_weights.json); the workflow runs SHARD_COUNT of these in parallel.
+# Locally: SHARD_INDEX=3 SHARD_COUNT=16 PYTEST_XDIST_N=6 mise run test:shard
+[tasks."test:shard"]
+description = "Run one CI shard of the quick suite: SHARD_INDEX=<0-based> SHARD_COUNT=<n> [PYTEST_XDIST_N=<workers>]"
+run = 'uv run pytest -n "${PYTEST_XDIST_N:-auto}" $(python3 scripts/ci_shard.py "$SHARD_INDEX" "$SHARD_COUNT")'
+
+[tasks."test:shard-check"]
+description = "Check that the CI shards partition every test file exactly once: SHARD_COUNT=<n>"
+run = 'python3 scripts/ci_shard.py --check "$SHARD_COUNT"'
+
 # The behavioural pool sweep (`tests/test_behavioural_sweep.py`) executes
 # every handled trigger and activation of every Modern/Pioneer/Standard card
 # in the pool through the real engine - several minutes, so it is its own
