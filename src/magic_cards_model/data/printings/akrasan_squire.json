@@ -1,0 +1,122 @@
+{
+  "object": "card",
+  "id": "59fdc045-b938-4321-aec3-51685cbbaa52",
+  "oracle_id": "2b8ef83b-1a1d-4299-ab69-e9e296bb224d",
+  "multiverse_ids": [
+    174963
+  ],
+  "mtgo_id": 31031,
+  "mtgo_foil_id": 31032,
+  "tcgplayer_id": 27604,
+  "cardmarket_id": 19777,
+  "name": "Akrasan Squire",
+  "lang": "en",
+  "released_at": "2008-10-03",
+  "uri": "https://api.scryfall.com/cards/59fdc045-b938-4321-aec3-51685cbbaa52",
+  "scryfall_uri": "https://scryfall.com/card/ala/1/akrasan-squire?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:36:24Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/9/59fdc045-b938-4321-aec3-51685cbbaa52.jpg?1783942584",
+    "normal": "https://cards.scryfall.io/normal/front/5/9/59fdc045-b938-4321-aec3-51685cbbaa52.jpg?1783942584",
+    "large": "https://cards.scryfall.io/large/front/5/9/59fdc045-b938-4321-aec3-51685cbbaa52.jpg?1783942584",
+    "png": "https://cards.scryfall.io/png/front/5/9/59fdc045-b938-4321-aec3-51685cbbaa52.png?1783942584",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/9/59fdc045-b938-4321-aec3-51685cbbaa52.jpg?1783942584",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/9/59fdc045-b938-4321-aec3-51685cbbaa52.jpg?1783942584",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/9/59fdc045-b938-4321-aec3-51685cbbaa52.webp?1783942584",
+    "grid": "https://cards.scryfall.io/grid/front/5/9/59fdc045-b938-4321-aec3-51685cbbaa52.webp?1783942584",
+    "display": "https://cards.scryfall.io/display/front/5/9/59fdc045-b938-4321-aec3-51685cbbaa52.webp?1783942584",
+    "art": "https://cards.scryfall.io/art/front/5/9/59fdc045-b938-4321-aec3-51685cbbaa52.webp?1783942584",
+    "crop": "https://cards.scryfall.io/crop/front/5/9/59fdc045-b938-4321-aec3-51685cbbaa52.webp?1783942584",
+    "jpeg": "https://cards.scryfall.io/normal/front/5/9/59fdc045-b938-4321-aec3-51685cbbaa52.jpg?1783942584"
+  },
+  "mana_cost": "{W}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Human Soldier",
+  "oracle_text": "Exalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Exalted"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d667aaec-09b7-4406-b6fa-60795132dc11",
+  "set": "ala",
+  "set_name": "Shards of Alara",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/d667aaec-09b7-4406-b6fa-60795132dc11",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aala&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ala?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/59fdc045-b938-4321-aec3-51685cbbaa52/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A2b8ef83b-1a1d-4299-ab69-e9e296bb224d&unique=prints",
+  "collector_number": "1",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "d0b9f3cc-13fb-42b6-bc43-b034728e5c7b"
+  ],
+  "illustration_id": "15601de1-ea82-4fc6-a6ab-145a3fbf3044",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 15273,
+  "penny_rank": 9831,
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=174963&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAkrasan%2BSquire",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAkrasan%2BSquire",
+    "edhrec": "https://edhrec.com/route/?cc=Akrasan+Squire"
+  }
+}
