@@ -12,3 +12,4 @@ build/
 .survey-cache/
 .rules/
 .scryfall-cache
+.ironsmith-compare/

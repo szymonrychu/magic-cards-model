@@ -20,6 +20,8 @@ mise run install
 - `mise run test:full` - everything; with `mise run lint`, the gate that must
   be green before any merge to `main`
 - `mise run lint` / `mise run fmt` - ruff
+- `mise run compare:ironsmith` - local, on-demand comparison with a pinned ironsmith
+  checkout; see [Comparing with ironsmith](#comparing-with-ironsmith)
 
 ## Layout
 
@@ -49,6 +51,27 @@ assert beast.zone is Zone.BATTLEFIELD
 See [docs/scenario-tests.md](docs/scenario-tests.md) before writing one. Card
 data is always a real Scryfall printing; add one with
 `uv run python scripts/add_card.py "Card Name"`.
+
+## Comparing with ironsmith
+
+A local, on-demand comparison with [ironsmith](https://github.com/Chiplis/ironsmith): per-card
+coverage of Modern/Pioneer/Standard-legal cards and a ranked worklist of the cards MCM
+leaves silent. It never runs in CI, and ironsmith is only ever run as separate, unmodified
+processes on your machine. Full guide: [docs/ironsmith-compare.md](docs/ironsmith-compare.md).
+
+```sh
+# once: clone ironsmith next to this repo at the pin (scripts/ironsmith_compare/pin.toml)
+git clone --filter=blob:none --no-checkout https://github.com/Chiplis/ironsmith ../ironsmith
+git -C ../ironsmith sparse-checkout set --no-cone '/*' '!/web/ui/public/'
+git -C ../ironsmith checkout a59720c3966b02437c50807b8ed664496862810b
+
+mise run compare:ironsmith:doctor                  # pin, clean tree, tools
+mise run compare:ironsmith:build                         # ironsmith's own cargo build
+mise run compare:ironsmith:collect                       # card pool -> ironsmith status DB
+mise run compare:ironsmith                         # report.md, report.json, worklist.csv
+```
+
+Outputs land in the gitignored `.ironsmith-compare/<ironsmith sha12>-<mcm sha12>/`.
 
 ## Rules lookup
 

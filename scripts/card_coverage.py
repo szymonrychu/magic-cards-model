@@ -745,6 +745,23 @@ def _normalize_template(text: str, card_name: str) -> str:
     return working
 
 
+def clause_signature(card_name: str, clause_text: str) -> tuple[str, str]:
+    """The `(signature, label)` a failing clause clusters under in
+    `cluster_missing_mechanics`: a chapter clause by its effect text's
+    template, a keyword-led clause by its keyword, anything else by its
+    normalized template, and an empty template by the card itself."""
+    chapter_remainder = _chapter_lead_strip(clause_text)
+    is_chapter = chapter_remainder is not None
+    effect_text = chapter_remainder if is_chapter else clause_text
+    keyword = None if is_chapter else _keyword_lead_label(effect_text)
+    if keyword:
+        return f"kw:{keyword.lower()}", keyword
+    template = _normalize_template(effect_text, card_name)
+    if not template:
+        return f"__unsignatured__:{card_name}", clause_text
+    return f"tmpl:{template}", template
+
+
 def cluster_missing_mechanics(
     entries: Sequence[tuple[str, str, str, str, str, str]],
 ) -> list[MechanicCluster]:
@@ -769,22 +786,8 @@ def cluster_missing_mechanics(
     clauses that happen to open the same way land in separate clusters."""
     groups: dict[str, dict[str, object]] = {}
     for card_name, _status, _kind, clause_text, reason, set_code in entries:
-        chapter_remainder = _chapter_lead_strip(clause_text)
-        is_chapter = chapter_remainder is not None
-        effect_text = chapter_remainder if is_chapter else clause_text
-
-        keyword = None if is_chapter else _keyword_lead_label(effect_text)
-        if keyword:
-            signature = f"kw:{keyword.lower()}"
-            label = keyword
-        else:
-            template = _normalize_template(effect_text, card_name)
-            if not template:
-                signature = f"__unsignatured__:{card_name}"
-                label = clause_text
-            else:
-                signature = f"tmpl:{template}"
-                label = template
+        is_chapter = _chapter_lead_strip(clause_text) is not None
+        signature, label = clause_signature(card_name, clause_text)
         bucket = groups.setdefault(signature, {"label": label, "cards": {}, "sets": set()})
         bucket["cards"][card_name] = None  # dict used as an ordered set
         bucket["sets"].add(set_code)
