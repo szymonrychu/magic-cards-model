@@ -1,0 +1,16 @@
+# The one ironsmith commit the comparison is checked against. Bump only by a reviewed PR:
+# change `commit` and `date`, re-run `mise run compare:ironsmith:doctor` locally.
+repo = "https://github.com/Chiplis/ironsmith"
+commit = "a59720c3966b02437c50807b8ed664496862810b"
+date = "2026-11-11"
+# ironsmith is dual-licensed BUSL-1.1 OR AGPL-3.0-or-later; we elect AGPL-3.0-or-later and
+# run an unmodified copy locally, as separate processes only.
+licence = "AGPL-3.0-or-later"
+
+# Run inside the checkout. Coverage needs only these two status binaries.
+coverage_build = [
+  "cargo", "build", "--release", "-p", "ironsmith-tools",
+  "--bin", "sync_registry_db", "--bin", "sync_card_status_db",
+]
+# Behaviour needs the WASM engine the test runner loads (ironsmith's own build script).
+behaviour_build = ["./rebuild-wasm.sh"]
