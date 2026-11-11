@@ -823,6 +823,46 @@ def _parse_kind_put_or_remove(text: str):
     return effect
 
 
+#: T-110 B6: "Choose a counter on target `<description>` you control. Put another
+#: counter of that kind on it." (Dathon, His Heart Open) - the controller picks
+#: one kind among the counters the target has (CR 122.1, CR 608.2d) and the
+#: target gets one more of it. No counters on it: nothing to choose, nothing
+#: happens.
+_CHOOSE_COUNTER_PUT_ANOTHER_RE = re.compile(
+    r"^choose a counter on (?P<phrase>target [a-z ]+? you control)\.\s*"
+    r"put another counter of that kind on it\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_choose_counter_put_another(text: str):
+    """`_CHOOSE_COUNTER_PUT_ANOTHER_RE`'s shape - see the banner above."""
+    match = _CHOOSE_COUNTER_PUT_ANOTHER_RE.fullmatch(collapsed(text))
+    if match is None:
+        return None
+    from .effects._common import _targets_understood
+
+    if not _targets_understood(match.group("phrase")):
+        return None
+
+    def effect(game: "Game", ability) -> None:
+        for target in game.resolve_card_targets(ability):
+            if target.zone is not Zone.BATTLEFIELD:
+                continue
+            kinds = kinds_on([target])
+            if not kinds:
+                continue
+            kind = (
+                kinds[0]
+                if len(kinds) == 1
+                else _ask_option(game, ability, f"choose a counter on {target.name}", tuple(kinds))
+            )
+            game.add_counters(target, kind, 1)
+
+    return effect
+
+
 _DOUBLE_COUNTERS_RE = re.compile(
     rf"^double the number of (?P<kind>{_KIND}) counters on "
     rf"(?:(?P<target>target [a-z ]+?)|(?P<self>{_SELF_OBJECT}))\.?$",

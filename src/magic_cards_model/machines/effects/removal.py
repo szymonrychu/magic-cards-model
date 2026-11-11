@@ -10333,6 +10333,79 @@ def _parse_destroy_random_attacked_creature_text(text: str) -> TargetedClause | 
     return effect
 
 
+#: T-110 B6: "[Draw N cards, then ][you may ]exile a card from your hand[. If you
+#: do, <effect>]" - All Good Things...'s chapters I-III ("Draw two cards, then
+#: exile a card from your hand.") and The Wrath of Khan's chapter II ("You may
+#: exile a card from your hand. If you do, draw a card."). Which card goes is the
+#: controller's own choice (CR 608.2d); the optional "you may" is asked first, and
+#: "if you do" asks whether a card was actually exiled (CR 608.2c). That the
+#: exiled card is "exiled with this Saga" for a later chapter is the structural
+#: link `link_cards_exiled_during` makes after every ability, so it is not done
+#: here. A bare "Exile a card from your hand." is the ordinary player clause and
+#: not claimed.
+_EXILE_CARD_FROM_YOUR_HAND_RE = re.compile(
+    rf"^(?:draw (?P<n>{COUNT}) cards?,\s*then )?(?P<may>you may )?exile a card from your hand"
+    r"(?:\.\s*if you do, (?P<rest>.+?))?\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s20")
+def _parse_exile_card_from_your_hand_text(text: str) -> AbilityEffect | None:
+    """`_EXILE_CARD_FROM_YOUR_HAND_RE`'s shape - see the banner above."""
+    match = _EXILE_CARD_FROM_YOUR_HAND_RE.fullmatch(
+        collapsed(_strip_non_effect_preamble(text).strip())
+    )
+    if match is None or (
+        not match.group("n") and not match.group("may") and not match.group("rest")
+    ):
+        return None
+    draw_count = parse_count(match.group("n")) if match.group("n") else 0
+    if draw_count is None:
+        return None
+    optional = match.group("may") is not None
+    rest_effect = None
+    if match.group("rest"):
+        rest_effect = parse_mixed_effect(match.group("rest").strip().rstrip(".") + ".")
+        if rest_effect is None:
+            return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        if draw_count:
+            game.draw_cards(controller, draw_count)
+        hand = list(controller.hand)
+        if not hand:
+            return
+        if optional and not game.may(
+            controller,
+            "exile a card from your hand",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt="exile a card from your hand",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                amount=1,
+                cards=tuple(state.id for state in hand),
+            )
+        )
+        by_id = {state.id: state for state in hand}
+        chosen = next((by_id[card_id] for card_id in chosen_ids if card_id in by_id), None)
+        if chosen is None:
+            return
+        game.exile_cards([chosen])
+        if rest_effect is not None and chosen.zone is Zone.EXILE:
+            rest_effect(game, ability)
+
+    return effect
+
+
 from ..d20_tables import roll_table_effect  # noqa: E402
 from ..ep01_r3_amounts import event_referent_permanent  # noqa: E402
 from ..ep02_r1_controller_recipients import destroy_event_subject_effect  # noqa: E402

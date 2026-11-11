@@ -4721,6 +4721,54 @@ def _parse_self_counter_then_rider(text: str) -> AbilityEffect | None:
     return counter_then_reflexive
 
 
+#: T-110 B6: "Put a <kind> counter on this <noun>. <rest>" where <rest> asks how
+#: many <kind> counters this <noun> has - Conquest Mission's and Support
+#: Mission's quest counters ("If this enchantment has six or more quest counters
+#: on it, create two of those tokens instead."). CR 608.2c: instructions are
+#: followed in order, so the counter is already there when <rest> counts them;
+#: the generic clause machinery reads <rest> but reads the counted threshold of a
+#: counter this very ability just added in no pair of its own. Only this
+#: dependency is claimed: a leading counter followed by anything that does not
+#: count that kind is left to the ordinary clause reader.
+_PUT_COUNTER_ON_THIS_THEN_COUNT_RE = re.compile(
+    r"^put (?:a|one) (?P<kind>[a-z][a-z+/-]*) counter on this "
+    r"(?P<noun>[a-z]+)\.\s*(?P<rest>.+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+@ABILITY_TEXT.rung("s20")
+def _parse_put_counter_on_this_then_count_text(text: str) -> AbilityEffect | None:
+    """`_PUT_COUNTER_ON_THIS_THEN_COUNT_RE`'s shape - see the banner above."""
+    match = _PUT_COUNTER_ON_THIS_THEN_COUNT_RE.fullmatch(
+        collapsed(_strip_non_effect_preamble(text).strip())
+    )
+    if match is None:
+        return None
+    kind = match.group("kind").lower()
+    noun = match.group("noun").lower()
+    rest = match.group("rest").strip()
+    counted = re.search(
+        rf"\bif this {noun} has (?:\w+) or (?:more|fewer|less) {re.escape(kind)} counters on it",
+        rest,
+        re.IGNORECASE,
+    )
+    if counted is None:
+        return None
+    rest_effect = _ability_effect_or_notice(rest)
+    if rest_effect is None:
+        return None
+    counter = _counter_kind(kind)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            game.add_counters(source, counter, 1, putter=ability.controller)
+        rest_effect(game, ability)
+
+    return effect
+
+
 from ._common import (  # noqa: E402
     _ADD_ANY_COMBINATION_MANA_RE,
     _ANAPHOR_GAINS_KEYWORDS_RE,

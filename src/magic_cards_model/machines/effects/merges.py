@@ -989,6 +989,16 @@ _PUT_REVEALED_CARDS_ONTO_BATTLEFIELD_RE = re.compile(
 )
 
 
+#: Will Riker, First in the Field's fourth sentence: "Sacrifice those lands at
+#: the beginning of your next end step." - the delayed trigger about exactly the
+#: cards the reveal put onto the battlefield (CR 603.7c: it affects those
+#: objects only), one ability for all of them (`SacrificeEach`).
+_SACRIFICE_THOSE_AT_NEXT_END_STEP_RE = re.compile(
+    r"^sacrifice those (?P<kind>[a-z]+)s at the beginning of (?P<whose>your|the) next end step$",
+    re.IGNORECASE,
+)
+
+
 def _merge_reveal_until_n_kind_put_onto_battlefield_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
@@ -997,7 +1007,9 @@ def _merge_reveal_until_n_kind_put_onto_battlefield_clauses(
     RANDOM_RE` - a three-clause merge for the same reason `_merge_reveal_
     until_kind_then_put_clauses` is one: the cards that stopped the reveal
     are live objects only the caller resolving this ability holds, and "the
-    rest" is everything else that same reveal showed.
+    rest" is everything else that same reveal showed. An optional fourth
+    clause, `_SACRIFICE_THOSE_AT_NEXT_END_STEP_RE`, sacrifices the cards put
+    onto the battlefield at the next end step.
     """
     if index + 2 >= len(clauses):
         return None
@@ -1021,6 +1033,14 @@ def _merge_reveal_until_n_kind_put_onto_battlefield_clauses(
     if count is None:
         return None
     tapped = put_match.group("tapped") is not None
+    sacrifice_match = (
+        _SACRIFICE_THOSE_AT_NEXT_END_STEP_RE.fullmatch(clauses[index + 3].strip().rstrip("."))
+        if index + 3 < len(clauses)
+        else None
+    )
+    if sacrifice_match is not None and sacrifice_match.group("kind").lower() != kind_word:
+        sacrifice_match = None
+    yours_only = sacrifice_match is not None and sacrifice_match.group("whose").lower() == "your"
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
@@ -1028,11 +1048,30 @@ def _merge_reveal_until_n_kind_put_onto_battlefield_clauses(
         matches, remainder = _reveal_until_n_of_kind(
             game, controller, predicate, count, source=source
         )
-        for state in matches:
-            game.put_onto_battlefield(state, controller.username, tapped=tapped)
+        put = [
+            state
+            for state in matches
+            if game.put_onto_battlefield(state, controller.username, tapped=tapped).zone
+            is Zone.BATTLEFIELD
+        ]
         _shuffle_remainder_to_bottom(game, controller, remainder)
+        if sacrifice_match is not None and put:
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text=clauses[index + 3].strip(),
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=Step.END_STEP,
+                    controller=controller.username,
+                    source_id=source_id_of(stack_object),
+                    source_name=source,
+                    only_when_active=controller.username if yours_only else None,
+                    effect=SacrificeEach(
+                        subjects=tuple((state.id, state.zone_change_stamp) for state in put)
+                    ),
+                )
+            )
 
-    return 3, effect
+    return (4 if sacrifice_match is not None else 3), effect
 
 
 #: Part in Friendship's own trigger: "reveal cards from the top of your
@@ -6345,6 +6384,9 @@ def _merge_return_target_from_graveyard_tapped_then_attacking_clauses(
     return 2, effect
 
 
+from ..abilities import TriggerEvent  # noqa: E402
+from ..delayed import DelayedTrigger, SacrificeEach  # noqa: E402
+from ..turn import Step  # noqa: E402
 from ._common import (  # noqa: E402
     _ANY_TYPE_MANA_STANDALONE_RE,
     _COLOR_COUNT_WORDS,

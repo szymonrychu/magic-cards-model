@@ -177,6 +177,14 @@ class CopyException(EngineModel):
     #: `(kind, amount)` pairs, placed as the copy enters, only when
     #: `if_type` holds (or always, with no gate).
     enters_with_counters: tuple[tuple[str, int], ...] = ()
+    #: "except it isn't legendary" (Dominion Saboteur) - CR 707.9b: the copy
+    #: has every copied supertype but legendary.
+    not_legendary: bool = False
+    #: "it enters with additional counters on it equal to the same number and
+    #: kinds of counters the copied permanent has on it" (Dominion Saboteur) -
+    #: CR 707.9e's additional effect, read off the copied permanent as it is
+    #: when the copy is chosen (CR 608.2h's last known information).
+    copy_counters: bool = False
 
 
 class ReplacementEffect(EngineModel):

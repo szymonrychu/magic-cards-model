@@ -2010,7 +2010,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 176
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 177
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2460,6 +2460,8 @@ class Game(
     #: counts ("for each <type> card in your graveyard", "card types among
     #: cards in your graveyard", "that player's graveyard") now resolve where
     #: an older dump would have resolved the same text as a no-op.
+    #: 177 (T-110 B6): `Player` gained `spells_cast_this_game` ("the first spell you've
+    #: cast this game"); an older dump could not say how many spells a player had cast.
     #: 176 (EP02-R3-T8): `PlayPermission` gained `harmonize` (CR 702.180a), so a graveyard
     #: card that "gains harmonize" (Songcrafter Mage) is cast with the tap-a-creature discount
     #: and exiled instead of going to the graveyard; and `DelayedEffectSpec` gained the

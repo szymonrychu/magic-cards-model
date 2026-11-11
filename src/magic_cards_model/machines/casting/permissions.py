@@ -1045,6 +1045,9 @@ def normalized_spell_quality(what: str | None) -> str:
     return _QUALITY_SPELLS_WORD_RE.sub("", quality)
 
 
+_TYPE_WORDS = frozenset(type_.value for type_ in Type)
+
+
 @lru_cache(maxsize=1024)
 def spell_quality_predicate(quality: str) -> Callable[[CardState], bool] | None:
     """A predicate for a printed spell quality, or None when a word of it is
@@ -1071,6 +1074,11 @@ def spell_quality_predicate(quality: str) -> Callable[[CardState], bool] | None:
             predicates.append(lambda spell: Supertype.LEGENDARY in spell.supertypes)
         elif spell_quality_is_readable(atom):
             predicates.append(lambda spell, atom=atom: spell_has_quality(spell, atom))
+        elif len(atom.split()) > 1 and all(word in _TYPE_WORDS for word in atom.split()):
+            # "artifact creature" (Overflow Submatrix): a spell with every one of
+            # the named card types (CR 205.2a), not either.
+            wanted = [Type(word) for word in atom.split()]
+            predicates.append(lambda spell, wanted=wanted: all(t in spell.types for t in wanted))
         else:
             return None
     if len(atoms) > 1 and all(atom.startswith("non") for atom in atoms):
@@ -1161,7 +1169,8 @@ _PLAY_THE_TOP_CARD_RE = re.compile(
 #: creature spell this way" puts nothing on a Ninja sorcery.
 _ENTERS_WITH_A_COUNTER_RIDER_RE = re.compile(
     r"^if you cast an? (?:(?P<type>[a-z]+) )?spell this way, that "
-    r"(?:creature|artifact|enchantment|permanent) enters with (?:an additional|an?|one) "
+    r"(?:artifact creature|creature|artifact|enchantment|permanent) enters with "
+    r"(?:an additional|an?|one) "
     r"(?P<counter>\+1/\+1|[a-z]+) counter on it\.?$",
     re.IGNORECASE,
 )
@@ -1252,7 +1261,7 @@ def static_zone_cast_permission(text: str) -> StaticZoneCastPermission | None:
     mana value rather than pay its mana cost." is a different permission, not
     this one with a sentence ignored."""
     line, word_condition = strip_ability_word(_REMINDER_TEXT_RE.sub("", text))
-    if not line or _ONCE_EACH_TURN_CAST_FROM_GRAVEYARD.match(line):
+    if not line or reads_as_graveyard_cast_permission_line(line):
         return None  # the plain once-per-turn graveyard shape has its own reader
     conditions: list[str] = [word_condition] if word_condition else []
     whole_line = line

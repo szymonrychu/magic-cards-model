@@ -390,6 +390,7 @@ class StackPriorityMixin:
         if card_state not in self.stack:
             self.stack.append(card_state)
         self.spells_cast_this_turn.setdefault(controller, []).append(card_state)
+        self.player(controller).spells_cast_this_game += 1
         if origin_zone is Zone.HAND:
             self.record_turn_fact("cast_spell_from_hand", controller)
         # CR 700.13: casting a spell that targets an opponent or what they

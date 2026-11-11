@@ -1492,6 +1492,7 @@ def _become_a_copy_builder(
     copiable_values: Characteristics | None = None,
     added_supertypes: Sequence[Supertype] = (),
     added_colors: Sequence[Color] = (),
+    removed_supertypes: Sequence[Supertype] = (),
 ) -> EffectBuilder:
     """`_BECOME_A_COPY_RE`'s shape.
 
@@ -1576,7 +1577,9 @@ def _become_a_copy_builder(
             mana_value=copied.mana_value,
             # Moritte of the Frost's "legendary and snow in addition to its
             # other types" (CR 707.9b, CR 205.1b).
-            supertypes=copied.supertypes
+            supertypes=tuple(
+                supertype for supertype in copied.supertypes if supertype not in removed_supertypes
+            )
             + tuple(
                 supertype for supertype in added_supertypes if supertype not in copied.supertypes
             ),
@@ -6638,6 +6641,18 @@ _ATTACHED_CREATURE_PUMP_KEYWORDS_AND_TYPE_RE = re.compile(
     r"in addition to its other types\.?$"
 )
 
+#: T-110 B6: "Enchanted creature gets -4/-0, can't block, and is a Salamander."
+#: (De-evolve; its reminder "It loses all other creature types." is stripped
+#: before the sentence is read) - `_ATTACHED_CREATURE_PUMP_KEYWORDS_AND_TYPE_RE`'s
+#: sibling for a restriction instead of keywords and a *set* creature type
+#: (CR 205.1a) instead of an added one: sublayer 7c (CR 613.4c), layer 6
+#: (CR 613.1f) and layer 4 (CR 613.1d), one ability in three layers (CR 613.6).
+_ATTACHED_CREATURE_PUMP_CANT_BLOCK_AND_IS_SUBTYPE_RE = re.compile(
+    r"^(?P<attachment>[Ee]quipped|[Ee]nchanted) creature gets (?P<power>[+-]\d+)/"
+    r"(?P<toughness>[+-]\d+), can'?t block, and is an? "
+    r"(?P<subtypes>[A-Z][a-z]+(?: [A-Z][a-z]+)*)\.?$"
+)
+
 #: "Equipped creature can't be blocked as long as its power is 3 or less."
 #: (Thieves' Tools), the unconditional "Equipped creature can't be blocked."
 #: (Prowler's Helm), and the quality-gated "Equipped creature can't be
@@ -9951,6 +9966,40 @@ def _attached_permanent_becomes_creature_builder(
     return builder
 
 
+def _attached_creature_pump_cant_block_and_is_subtype_builder(
+    power: int, toughness: int, subtypes: tuple[str, ...], *, subject: str, line: str
+) -> EffectBuilder:
+    """`_ATTACHED_CREATURE_PUMP_CANT_BLOCK_AND_IS_SUBTYPE_RE`'s shape - see its banner."""
+    pump_and_restriction = _attached_creature_static_builder(
+        power, toughness, ["This creature can't block."], subject=subject, line=line
+    )
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        attached = source.attached_to
+        if attached is None:
+            return []
+        effects = list(pump_and_restriction(source, timestamp, targets, context))
+        effects.append(
+            ContinuousEffect(
+                description=f"{source.name}: {subject} creature is {' '.join(subtypes)}",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(attached),
+                modification=SetCreatureTypes(subtypes=subtypes),
+            )
+        )
+        return effects
+
+    return builder
+
+
 def _attached_creature_pump_keywords_and_type_builder(
     power: int,
     toughness: int,
@@ -11672,7 +11721,48 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         or parse_attached_compound_grant(sentence)
         or parse_gated_self_static(sentence)
         or parse_static_pump(sentence)
+        or _parse_pump_and_becomes_sentence(sentence)
     )
+
+
+#: T-110 B6: "<subject> gets +1/+1 and becomes a Doctor until end of turn." (I'm a
+#: Doctor, Not a . . .) - a pump (sublayer 7c, CR 613.4c) and a type change
+#: (layer 4, CR 613.1d) in one sentence, with one shared duration. Read as the
+#: two sentences it joins, each by its own existing shape, and built together as
+#: one ability (CR 613.6).
+_PUMP_AND_BECOMES_RE = re.compile(
+    r"^(?P<subject>.+?) gets (?P<pump>[+-]\d+/[+-]\d+) and becomes (?P<rest>an? [A-Z].*?)"
+    r"(?P<duration> until end of turn)?\.?$"
+)
+
+
+def _parse_pump_and_becomes_sentence(sentence: str) -> EffectBuilder | None:
+    """`_PUMP_AND_BECOMES_RE`'s shape - see its banner."""
+    match = _PUMP_AND_BECOMES_RE.fullmatch(_normalize_duration_first(sentence))
+    if match is None:
+        return None
+    duration = match.group("duration") or ""
+    pump = _parse_layer_sentence_ungated(
+        f"{match.group('subject')} gets {match.group('pump')}{duration}."
+    )
+    becomes = _parse_layer_sentence_ungated(
+        f"{match.group('subject')} becomes {match.group('rest')}{duration}."
+    )
+    if pump is None or becomes is None:
+        return None
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            *pump(source, timestamp, targets, context),
+            *becomes(source, timestamp, targets, context),
+        ]
+
+    return builder
 
 
 def _parse_protection_static(sentence: str) -> EffectBuilder | None:
@@ -12955,6 +13045,14 @@ def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             loses_all=False,
             keywords=[],
             restrictions=[f"This creature can't {match.group('what')}."],
+        )
+    if match := _ATTACHED_CREATURE_PUMP_CANT_BLOCK_AND_IS_SUBTYPE_RE.fullmatch(sentence):
+        return _attached_creature_pump_cant_block_and_is_subtype_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            tuple(match.group("subtypes").split()),
+            subject=match.group("attachment").lower(),
+            line=sentence,
         )
     if match := _ATTACHED_CREATURE_PUMP_KEYWORDS_AND_TYPE_RE.fullmatch(sentence):
         pump_keywords: list[str] = []

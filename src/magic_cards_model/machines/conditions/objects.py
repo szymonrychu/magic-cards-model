@@ -66,7 +66,7 @@ if TYPE_CHECKING:
 
 _SELF_NOUN = (
     r"this (?:creature|permanent|artifact|enchantment|card|land|aura|equipment|vehicle"
-    r"|planeswalker|spell|battle|mount|spacecraft)"
+    r"|planeswalker|spell|battle|mount|spacecraft|saga)"
 )
 _EVENT_PRONOUN = r"it|he|she|they|that creature|that permanent|that spell|that card|that land"
 _ATTACHED_TO = (
@@ -315,6 +315,20 @@ def _cards_exiled_with(context: "ConditionContext", match: re.Match[str]) -> boo
     if cards is None or test is None:
         return False
     return test(len(cards))
+
+
+def _exiled_cards_share_a_type(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "all cards exiled with this Saga share a card type" (All Good Things...):
+    CR 607.2a's pile of the holder, every card of which has at least one card type
+    (CR 205.2a) in common with all the others. An empty pile shares nothing, so
+    the condition is false; a single card shares a type with itself."""
+    cards = _exiled_with(context, match.group("holder"))
+    if not cards:
+        return False
+    shared = set(cards[0].card.types)
+    for card in cards[1:]:
+        shared &= set(card.card.types)
+    return bool(shared)
 
 
 def _same_name_as_exiled(context: "ConditionContext", match: re.Match[str]) -> bool:
@@ -1179,6 +1193,10 @@ READERS: tuple[ConditionReader, ...] = (
             rf"there (?:is|are) (?:(?P<q>{QUANTITY}) )?cards? exiled with (?P<holder>{SUBJECT})"
         ),
         _cards_exiled_with,
+    ),
+    ConditionReader(
+        re.compile(rf"all cards exiled with (?P<holder>{SUBJECT}) share a card type"),
+        _exiled_cards_share_a_type,
     ),
     ConditionReader(
         re.compile(

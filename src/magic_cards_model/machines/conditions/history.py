@@ -1544,6 +1544,12 @@ def _cast_a_spell(context: "ConditionContext", match: re.Match[str]) -> bool:
     return not cast if match.group("neg") else cast
 
 
+def _first_spell_this_game(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "this spell is the first spell you've cast this game" - the controller
+    has cast exactly one spell, counted as it became cast (CR 601.2i)."""
+    return context.game.player(context.controller).spells_cast_this_game == 1
+
+
 def _cast_mana_value(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "you've cast a spell with mana value 4 or greater this turn" (CR
     202.3)."""
@@ -2057,6 +2063,10 @@ READERS: tuple[ConditionReader, ...] = (
         _you_put_a_counter,
     ),
     ConditionReader(re.compile(r"you(?:'ve| have)? committed a crime this turn"), _committed_crime),
+    ConditionReader(
+        re.compile(r"(?:this spell|it) is the first spell you(?:'ve| have)? cast this game"),
+        _first_spell_this_game,
+    ),
     ConditionReader(
         re.compile(
             r"you(?:'ve| have)? played a land or cast a spell this turn from anywhere "

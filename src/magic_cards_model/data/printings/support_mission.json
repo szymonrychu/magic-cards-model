@@ -1,0 +1,121 @@
+{
+  "object": "card",
+  "id": "9e8b404c-6e2a-4966-ac4b-c9981c1c6fee",
+  "oracle_id": "59a4c4cf-07b4-4009-bbea-7da7b31f09a1",
+  "multiverse_ids": [],
+  "resource_id": "BB3A4F9F3A3C07E03F1E356B9F00FE322FD087C33E1B205665A53198B6E0B58B",
+  "mtgo_id": 158572,
+  "tcgplayer_id": 729633,
+  "cardmarket_id": 917777,
+  "name": "Support Mission",
+  "lang": "en",
+  "released_at": "2026-11-13",
+  "uri": "https://api.scryfall.com/cards/9e8b404c-6e2a-4966-ac4b-c9981c1c6fee",
+  "scryfall_uri": "https://scryfall.com/card/trk/216/support-mission?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-08-06T02:00:05Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/e/9e8b404c-6e2a-4966-ac4b-c9981c1c6fee.jpg?1785981605",
+    "normal": "https://cards.scryfall.io/normal/front/9/e/9e8b404c-6e2a-4966-ac4b-c9981c1c6fee.jpg?1785981605",
+    "large": "https://cards.scryfall.io/large/front/9/e/9e8b404c-6e2a-4966-ac4b-c9981c1c6fee.jpg?1785981605",
+    "png": "https://cards.scryfall.io/png/front/9/e/9e8b404c-6e2a-4966-ac4b-c9981c1c6fee.png?1785981605",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/e/9e8b404c-6e2a-4966-ac4b-c9981c1c6fee.jpg?1785981605",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/e/9e8b404c-6e2a-4966-ac4b-c9981c1c6fee.jpg?1785981605",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/e/9e8b404c-6e2a-4966-ac4b-c9981c1c6fee.webp?1785981605",
+    "grid": "https://cards.scryfall.io/grid/front/9/e/9e8b404c-6e2a-4966-ac4b-c9981c1c6fee.webp?1785981605",
+    "display": "https://cards.scryfall.io/display/front/9/e/9e8b404c-6e2a-4966-ac4b-c9981c1c6fee.webp?1785981605",
+    "art": "https://cards.scryfall.io/art/front/9/e/9e8b404c-6e2a-4966-ac4b-c9981c1c6fee.webp?1785981605",
+    "crop": "https://cards.scryfall.io/crop/front/9/e/9e8b404c-6e2a-4966-ac4b-c9981c1c6fee.webp?1785981605",
+    "jpeg": "https://cards.scryfall.io/normal/front/9/e/9e8b404c-6e2a-4966-ac4b-c9981c1c6fee.jpg?1785981605"
+  },
+  "mana_cost": "{2}{G}",
+  "cmc": 3.0,
+  "type_line": "Enchantment",
+  "oracle_text": "Whenever a creature you control enters, put a quest counter on this enchantment. Put a +1/+1 counter on that creature. If this enchantment has five or more quest counters on it, instead put two +1/+1 counters on that creature.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set": "trk",
+  "set_name": "Star Trek",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atrk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/trk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9e8b404c-6e2a-4966-ac4b-c9981c1c6fee/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A59a4c4cf-07b4-4009-bbea-7da7b31f09a1&unique=prints",
+  "collector_number": "216",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "1ba1c5be-7a22-46e0-912c-79c87c197bdc"
+  ],
+  "illustration_id": "a988d455-c045-4fb5-8261-c3e991fd8eb6",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 28693,
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSupport%2BMission",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSupport%2BMission",
+    "edhrec": "https://edhrec.com/route/?cc=Support+Mission"
+  }
+}

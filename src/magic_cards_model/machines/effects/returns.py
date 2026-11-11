@@ -3073,8 +3073,8 @@ from .continuous import (  # noqa: E402
 )
 from .counters import _counter_kind  # noqa: E402
 from .damage import _clause_slots  # noqa: E402
-from .dispatch import parse_mixed_effect  # noqa: E402
-from .library import _dead_self_found, _reveal_and_bring_into_hand  # noqa: E402
+from .dispatch import parse_mixed_effect, parse_mixed_effect_for_spell  # noqa: E402
+from .library import _dead_self_found, _mill, _reveal_and_bring_into_hand  # noqa: E402
 from .text import _singular_card_type, _strip_non_effect_preamble  # noqa: E402
 from .tokens import _parse_token_clause  # noqa: E402
 
@@ -3113,3 +3113,100 @@ def _parse_return_if_mana_value_text(
     its mana value is less than or equal to <amount>. Otherwise, put it into your hand."
     (`ep02_r2_devotion_domain_party`)."""
     return return_if_mana_value_effect(text)
+
+
+#: T-110 B6: "[Mill N cards. Then ]return a <quality> card from your graveyard to
+#: your hand. If you can't, <effect>." - Temporal Conqueror, Roots of Wisdom. "If you can't" asks
+#: whether the return could be done (CR 608.2c): with no card of that quality in
+#: the graveyard (counted after the mill) nothing moves and the fallback runs.
+_RETURN_FROM_GRAVEYARD_IF_YOU_CANT_RE = re.compile(
+    rf"^(?:mill (?P<mill>{COUNT}) cards?(?:\.\s*|,\s*)then )?"
+    r"return (?:a|an) (?P<quality>[a-z]+(?: card)?(?: or [a-z]+)?) card from your graveyard "
+    r"to your hand\.\s*"
+    r"if you can't, (?P<tail>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s1", for_spell=False)
+@SPELL_TEXT.rung("s1", for_spell=True)
+def _parse_return_from_graveyard_if_you_cant_text(
+    text: str, *, for_spell: bool
+) -> Effect | AbilityEffect | None:
+    """`_RETURN_FROM_GRAVEYARD_IF_YOU_CANT_RE`'s shape; the fallback is read by
+    the general reader and refused whole when it is not readable."""
+    if "if you can't" not in text.lower():
+        return None
+    match = _RETURN_FROM_GRAVEYARD_IF_YOU_CANT_RE.fullmatch(
+        collapsed(_strip_non_effect_preamble(text).strip())
+    )
+    if match is None:
+        return None
+    mill_count = parse_count(match.group("mill")) if match.group("mill") else 0
+    if mill_count is None:
+        return None
+    quality_matches = _quality_matcher(match.group("quality").replace(" card", ""))
+    tail = match.group("tail").strip().rstrip(".") + "."
+    fallback = parse_mixed_effect_for_spell(tail) if for_spell else parse_mixed_effect(tail)
+    if fallback is None:
+        return None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        controller = game.controller_of(stack_object)
+        if mill_count:
+            _mill(game, controller, mill_count)
+        candidates = [state for state in controller.graveyard if quality_matches(state)]
+        if not candidates:
+            fallback(game, stack_object)
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt="return a card from your graveyard to your hand",
+                source=stack_object.name if for_spell else stack_object.source_name,
+                source_id=source_id_of(stack_object),
+                amount=1,
+                cards=tuple(state.id for state in candidates),
+            )
+        )
+        by_id = {state.id: state for state in candidates}
+        chosen = next((by_id[card_id] for card_id in chosen_ids if card_id in by_id), None)
+        if chosen is not None:
+            controller.move(chosen, Zone.HAND)
+
+    return effect
+
+
+#: T-110 B6: "Return the exiled card to the battlefield under its owner's control.
+#: <rest>" - The Measure of a Man's chapter III ("... You gain 2 life."). The
+#: first sentence is champion's own linked return (CR 702.72a, CR 607.2a: the card
+#: an earlier chapter exiled with this Saga, `parse_champion_clause`); the rest is
+#: read by the general ability reader and runs after it (CR 608.2c).
+_RETURN_EXILED_CARD_THEN_RE = re.compile(
+    r"^(?P<first>return the exiled card to the battlefield under its owner's control\.)"
+    r"\s*(?P<rest>.+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+@ABILITY_TEXT.rung("s1")
+def _parse_return_exiled_card_then_text(text: str) -> AbilityEffect | None:
+    """`_RETURN_EXILED_CARD_THEN_RE`'s shape - see the banner above."""
+    from ..legacy_keywords import parse_champion_clause
+
+    match = _RETURN_EXILED_CARD_THEN_RE.fullmatch(
+        collapsed(_strip_non_effect_preamble(text).strip())
+    )
+    if match is None:
+        return None
+    first = parse_champion_clause(match.group("first"))
+    rest = parse_mixed_effect(match.group("rest").strip())
+    if first is None or rest is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        first(game, ability)
+        rest(game, ability)
+
+    return effect
