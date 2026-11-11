@@ -102,9 +102,7 @@
   "collector_number": "126",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"We love you, Spider-Man!\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Kim Sokol",
   "artist_ids": [
     "f2bd4ad3-6359-4592-9b34-90a70cfe1b61"
   ],
@@ -126,22 +124,9 @@
     "source_uri": "https://www.bilibili.com/opus/1108443690917953544",
     "previewed_at": "2025-09-03"
   },
-  "prices": {
-    "usd": "0.25",
-    "usd_foil": "0.34",
-    "usd_etched": null,
-    "eur": "0.13",
-    "eur_foil": "0.26",
-    "tix": "0.04"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCheering%2BCrowd",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCheering%2BCrowd",
     "edhrec": "https://edhrec.com/route/?cc=Cheering+Crowd"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F652030%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=846663&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/153495?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

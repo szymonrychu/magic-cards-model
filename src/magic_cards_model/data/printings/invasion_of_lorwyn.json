@@ -40,7 +40,6 @@
         "G"
       ],
       "defense": "5",
-      "artist": "Dan Murayama Scott",
       "artist_id": "f852fa13-137e-40f2-bbc1-0f01df09c0e0",
       "illustration_id": "84af66c6-ee7d-4021-aed6-0f0701d064ec",
       "image_uris": {
@@ -73,8 +72,6 @@
       ],
       "power": "*",
       "toughness": "*",
-      "flavor_text": "The Phyrexian appearance was so offensive that perfects and eyeblights worked together in unprecedented kinship to destroy them.",
-      "artist": "Dan Murayama Scott",
       "artist_id": "f852fa13-137e-40f2-bbc1-0f01df09c0e0",
       "illustration_id": "ca3cbba5-80e4-4198-a579-0a347cff54dd",
       "image_uris": {
@@ -146,7 +143,6 @@
   "collector_number": "236",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Dan Murayama Scott",
   "artist_ids": [
     "f852fa13-137e-40f2-bbc1-0f01df09c0e0"
   ],
@@ -157,23 +153,10 @@
   "booster": true,
   "story_spotlight": false,
   "edhrec_rank": 18508,
-  "prices": {
-    "usd": "0.15",
-    "usd_foil": "0.23",
-    "usd_etched": null,
-    "eur": "0.05",
-    "eur_foil": "0.13",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607300&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BLorwyn%2B%252F%252F%2BWinnowing%2BForces",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BLorwyn%2B%252F%252F%2BWinnowing%2BForces",
     "edhrec": "https://edhrec.com/route/?cc=Invasion+of+Lorwyn"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490563%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704060&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/110372?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

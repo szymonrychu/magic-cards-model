@@ -41,7 +41,6 @@
       ],
       "power": "4",
       "toughness": "4",
-      "artist": "James Ryman",
       "artist_id": "3852bbc9-11c0-4fe3-8722-a06ad7e2bcc5",
       "illustration_id": "f90dd248-e671-4055-8031-c0f9938132ee",
       "image_uris": {
@@ -72,8 +71,6 @@
       ],
       "power": "6",
       "toughness": "5",
-      "flavor_text": "\"Wings that once bore hope are now stained with blood. She is our guardian no longer.\"\n\u2014Grete, cathar apostate",
-      "artist": "James Ryman",
       "artist_id": "3852bbc9-11c0-4fe3-8722-a06ad7e2bcc5",
       "illustration_id": "7c028c56-e6d0-4ce9-aea9-994ba128245f",
       "image_uris": {
@@ -162,7 +159,6 @@
   "collector_number": "11",
   "digital": false,
   "rarity": "mythic",
-  "artist": "James Ryman",
   "artist_ids": [
     "3852bbc9-11c0-4fe3-8722-a06ad7e2bcc5"
   ],
@@ -183,23 +179,10 @@
     "source_uri": "",
     "previewed_at": "2024-12-03"
   },
-  "prices": {
-    "usd": "3.86",
-    "usd_foil": "4.35",
-    "usd_etched": null,
-    "eur": "2.25",
-    "eur_foil": "2.05",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=685826&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DArchangel%2BAvacyn%2B%252F%252F%2BAvacyn%252C%2Bthe%2BPurifier",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DArchangel%2BAvacyn%2B%252F%252F%2BAvacyn%252C%2Bthe%2BPurifier",
     "edhrec": "https://edhrec.com/route/?cc=Archangel+Avacyn"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F600427%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=802795&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/135378?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

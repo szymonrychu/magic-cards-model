@@ -94,9 +94,7 @@
   "collector_number": "243",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "These boots were made for far more than walking.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Mila Pesic",
   "artist_ids": [
     "81c5ec23-220b-4efa-b7df-9e49dd371e8d"
   ],
@@ -109,23 +107,10 @@
   "story_spotlight": false,
   "edhrec_rank": 1527,
   "penny_rank": 3716,
-  "prices": {
-    "usd": "1.79",
-    "usd_foil": "2.93",
-    "usd_etched": null,
-    "eur": "1.35",
-    "eur_foil": "1.86",
-    "tix": "0.42"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=655184&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLavaspur%2BBoots",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLavaspur%2BBoots",
     "edhrec": "https://edhrec.com/route/?cc=Lavaspur+Boots"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F544354%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=763893&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/124397?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

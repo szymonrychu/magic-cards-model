@@ -94,7 +94,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "James Paick",
   "artist_ids": [
     "1a7be0a2-d8ac-45c7-b0a0-eb0886f47b5f"
   ],
@@ -108,23 +107,10 @@
   "story_spotlight": false,
   "edhrec_rank": 1942,
   "penny_rank": 8462,
-  "prices": {
-    "usd": "5.60",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "3.55",
-    "eur_foil": null,
-    "tix": "0.19"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=625234&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DNorn%2527s%2BAnnex",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DNorn%2527s%2BAnnex",
     "edhrec": "https://edhrec.com/route/?cc=Norn%27s+Annex"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F505789%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=723012&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/113999?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

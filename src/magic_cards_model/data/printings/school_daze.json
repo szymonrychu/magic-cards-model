@@ -98,9 +98,7 @@
   "collector_number": "42",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"Peter possesses a brilliant scientific mind. It's a shame he can't grasp being on time.\"\n\u2014Dr. Curt Connors",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Domenico Cava",
   "artist_ids": [
     "15eda809-1e56-4583-89e6-c9ccda740e16"
   ],
@@ -120,22 +118,9 @@
     "source_uri": "https://x.com/Marshall_LR/status/1963143129953132993",
     "previewed_at": "2025-09-03"
   },
-  "prices": {
-    "usd": "0.19",
-    "usd_foil": "0.24",
-    "usd_etched": null,
-    "eur": "0.06",
-    "eur_foil": "0.17",
-    "tix": "0.05"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSchool%2BDaze",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSchool%2BDaze",
     "edhrec": "https://edhrec.com/route/?cc=School+Daze"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F652012%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=846638&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/153321?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

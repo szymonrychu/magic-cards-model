@@ -47,7 +47,6 @@
       "mana_cost": "{2}{W}{W}",
       "type_line": "Enchantment",
       "oracle_text": "As this enchantment enters, choose a creature type.\nCreatures you control of the chosen type get +2/+2.",
-      "artist": "Matt Stewart",
       "artist_id": "20871267-2d8a-41d5-b03a-be3d557c5734",
       "illustration_id": "ed6b0bc0-b0b4-45fc-a812-9f17cf391007"
     },
@@ -57,7 +56,6 @@
       "mana_cost": "{X}{2}{W}",
       "type_line": "Sorcery \u2014 Adventure",
       "oracle_text": "Create X 2/2 red Dwarf creature tokens. (Then exile this card. You may cast the enchantment later from exile.)",
-      "artist": "Matt Stewart",
       "artist_id": "20871267-2d8a-41d5-b03a-be3d557c5734"
     }
   ],
@@ -134,7 +132,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Matt Stewart",
   "artist_ids": [
     "20871267-2d8a-41d5-b03a-be3d557c5734"
   ],
@@ -153,22 +150,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 10328,
-  "prices": {
-    "usd": "0.33",
-    "usd_foil": "0.38",
-    "usd_etched": null,
-    "eur": "0.22",
-    "eur_foil": "0.27",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAn%2BUnexpected%2BParty%2B%252F%252F%2BAt%2Bthe%2BDoor",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAn%2BUnexpected%2BParty%2B%252F%252F%2BAt%2Bthe%2BDoor",
     "edhrec": "https://edhrec.com/route/?cc=An+Unexpected+Party"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F692999%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=898484&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/153972?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

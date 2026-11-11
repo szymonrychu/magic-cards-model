@@ -102,7 +102,6 @@
   "rarity": "mythic",
   "watermark": "phyrexian",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Martina Fa\u010dkov\u00e1",
   "artist_ids": [
     "6338124e-8e53-498d-8bf9-93a55db2f61c"
   ],
@@ -124,23 +123,10 @@
     "source_uri": "https://www.twitch.tv/videos/1678101037",
     "previewed_at": "2022-12-13"
   },
-  "prices": {
-    "usd": "25.36",
-    "usd_foil": "26.91",
-    "usd_etched": null,
-    "eur": "20.60",
-    "eur_foil": "22.67",
-    "tix": "0.15"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=602540&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DElesh%2BNorn%252C%2BMother%2Bof%2BMachines",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DElesh%2BNorn%252C%2BMother%2Bof%2BMachines",
     "edhrec": "https://edhrec.com/route/?cc=Elesh+Norn%2C+Mother+of+Machines"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F475507%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=689721&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/106235?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

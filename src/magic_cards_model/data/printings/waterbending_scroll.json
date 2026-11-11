@@ -96,9 +96,7 @@
   "digital": false,
   "rarity": "uncommon",
   "watermark": "watertribe",
-  "flavor_text": "The scroll taught Katara many useful skills. So did fighting the angry pirates she stole it from.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Dee Nguyen",
   "artist_ids": [
     "558ebe03-18ee-4089-9c55-49302d09df7f"
   ],
@@ -114,22 +112,9 @@
   ],
   "edhrec_rank": 7518,
   "penny_rank": 161,
-  "prices": {
-    "usd": "0.18",
-    "usd_foil": "0.30",
-    "usd_etched": null,
-    "eur": "0.18",
-    "eur_foil": "0.18",
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWaterbending%2BScroll",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWaterbending%2BScroll",
     "edhrec": "https://edhrec.com/route/?cc=Waterbending+Scroll"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F662752%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=858195&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/144642?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

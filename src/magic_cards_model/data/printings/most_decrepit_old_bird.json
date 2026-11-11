@@ -55,7 +55,6 @@
       "oracle_text": "Flying\nThreshold \u2014 This creature gets +1/+1 as long as there are seven or more cards in your graveyard.",
       "power": "1",
       "toughness": "1",
-      "artist": "Josu Solano",
       "artist_id": "fb7b61a8-13c5-4813-a749-9d3396801906",
       "illustration_id": "930bb92f-c5e1-448f-a8e5-23daaf84c48c"
     },
@@ -65,7 +64,6 @@
       "mana_cost": "{1}{U}",
       "type_line": "Sorcery \u2014 Adventure",
       "oracle_text": "Mill four cards, then put an instant or sorcery card from among them into your hand.",
-      "artist": "Josu Solano",
       "artist_id": "fb7b61a8-13c5-4813-a749-9d3396801906"
     }
   ],
@@ -124,7 +122,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Josu Solano",
   "artist_ids": [
     "fb7b61a8-13c5-4813-a749-9d3396801906"
   ],
@@ -140,22 +137,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 18140,
-  "prices": {
-    "usd": "0.28",
-    "usd_foil": "0.33",
-    "usd_etched": null,
-    "eur": "0.23",
-    "eur_foil": "0.29",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMost%2BDecrepit%2BOld%2BBird%2B%252F%252F%2BSpeak%2BSecrets",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMost%2BDecrepit%2BOld%2BBird%2B%252F%252F%2BSpeak%2BSecrets",
     "edhrec": "https://edhrec.com/route/?cc=Most+Decrepit+Old+Bird"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F708754%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=899780&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/154022?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

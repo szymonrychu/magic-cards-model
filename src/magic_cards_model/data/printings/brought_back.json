@@ -96,9 +96,7 @@
   "collector_number": "9",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"As long as your courage remains, your life will not falter.\"\n\u2014Sephara, Sky's Blade",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Mitchell Malloy",
   "artist_ids": [
     "23547f21-a6c7-44e0-bbb7-fd5e5e32d97c"
   ],
@@ -117,23 +115,10 @@
     "source_uri": "https://twitter.com/theMMcast/status/1143195544661061632",
     "previewed_at": "2019-06-24"
   },
-  "prices": {
-    "usd": "2.26",
-    "usd_foil": "3.53",
-    "usd_etched": null,
-    "eur": "1.50",
-    "eur_foil": "2.81",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=466763&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBrought%2BBack",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBrought%2BBack",
     "edhrec": "https://edhrec.com/route/?cc=Brought+Back"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F192792%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=379266&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/72917?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

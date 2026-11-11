@@ -53,7 +53,6 @@
       "oracle_text": "Lifelink\nWhen this creature dies, put it on the bottom of its owner's library.",
       "power": "2",
       "toughness": "3",
-      "artist": "Josh Hass",
       "artist_id": "8fa1fdf0-96d6-46f4-a7ff-b1c0257c3735",
       "illustration_id": "a97fba85-e4ea-4373-8bdd-6085618953ca"
     },
@@ -63,7 +62,6 @@
       "mana_cost": "{1}{B}{B}",
       "type_line": "Instant \u2014 Adventure",
       "oracle_text": "Destroy target creature or planeswalker. You lose 2 life. (Then exile this card. You may cast the creature later from exile.)",
-      "artist": "Josh Hass",
       "artist_id": "8fa1fdf0-96d6-46f4-a7ff-b1c0257c3735"
     }
   ],
@@ -138,7 +136,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Josh Hass",
   "artist_ids": [
     "8fa1fdf0-96d6-46f4-a7ff-b1c0257c3735"
   ],
@@ -152,23 +149,10 @@
   "story_spotlight": false,
   "edhrec_rank": 1654,
   "penny_rank": 817,
-  "prices": {
-    "usd": "0.37",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.45",
-    "eur_foil": null,
-    "tix": "0.49"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=612506&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMurderous%2BRider%2B%252F%252F%2BSwift%2BEnd",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMurderous%2BRider%2B%252F%252F%2BSwift%2BEnd",
     "edhrec": "https://edhrec.com/route/?cc=Murderous+Rider"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F491374%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=705757&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/110966?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

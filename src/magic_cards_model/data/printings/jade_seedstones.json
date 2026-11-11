@@ -38,7 +38,6 @@
       "colors": [
         "G"
       ],
-      "artist": "Alexandre Honor\u00e9",
       "artist_id": "82ae431c-d7fa-438b-9611-01f704c3a958",
       "illustration_id": "abfc52f9-8b91-427d-ad11-a3f80c22db85",
       "image_uris": {
@@ -69,8 +68,6 @@
       ],
       "power": "7",
       "toughness": "7",
-      "flavor_text": "When the merfolk fled underground, they brought the life force of the jungle with them.",
-      "artist": "Alexandre Honor\u00e9",
       "artist_id": "82ae431c-d7fa-438b-9611-01f704c3a958",
       "illustration_id": "18a550e4-463b-471a-ba48-94a7ca5f8ed9",
       "image_uris": {
@@ -142,7 +139,6 @@
   "collector_number": "195",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Alexandre Honor\u00e9",
   "artist_ids": [
     "82ae431c-d7fa-438b-9611-01f704c3a958"
   ],
@@ -158,23 +154,10 @@
     "source_uri": "https://t.bilibili.com/858691273925591043",
     "previewed_at": "2023-10-31"
   },
-  "prices": {
-    "usd": "0.10",
-    "usd_foil": "0.21",
-    "usd_etched": null,
-    "eur": "0.04",
-    "eur_foil": "0.05",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=636911&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DJade%2BSeedstones%2B%252F%252F%2BJadeheart%2BAttendant",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DJade%2BSeedstones%2B%252F%252F%2BJadeheart%2BAttendant",
     "edhrec": "https://edhrec.com/route/?cc=Jade+Seedstones"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F526268%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=743393&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/118218?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

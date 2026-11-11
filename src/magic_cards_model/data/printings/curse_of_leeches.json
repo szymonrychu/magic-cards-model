@@ -42,7 +42,6 @@
       "colors": [
         "B"
       ],
-      "artist": "Uriah Voth",
       "artist_id": "14cf4c0c-1a83-4366-ba61-6d0a26ee5a69",
       "illustration_id": "55ad1852-d1b9-4a6d-b0f1-42b8ff2e566b",
       "image_uris": {
@@ -73,8 +72,6 @@
       ],
       "power": "4",
       "toughness": "4",
-      "flavor_text": "First darkness falls. Then it burrows in.",
-      "artist": "Uriah Voth",
       "artist_id": "14cf4c0c-1a83-4366-ba61-6d0a26ee5a69",
       "illustration_id": "156d8287-fd30-4bfc-92be-2ed2af9f3486",
       "image_uris": {
@@ -164,7 +161,6 @@
   "collector_number": "94",
   "digital": false,
   "rarity": "rare",
-  "artist": "Uriah Voth",
   "artist_ids": [
     "14cf4c0c-1a83-4366-ba61-6d0a26ee5a69"
   ],
@@ -185,23 +181,10 @@
     "source_uri": "https://corocoro.jp/303027/",
     "previewed_at": "2021-09-03"
   },
-  "prices": {
-    "usd": "0.30",
-    "usd_foil": "0.40",
-    "usd_etched": null,
-    "eur": "0.16",
-    "eur_foil": "0.34",
-    "tix": "0.06"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=534863&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCurse%2Bof%2BLeeches%2B%252F%252F%2BLeeching%2BLurker",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCurse%2Bof%2BLeeches%2B%252F%252F%2BLeeching%2BLurker",
     "edhrec": "https://edhrec.com/route/?cc=Curse+of+Leeches"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F247912%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=574766&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/93140?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

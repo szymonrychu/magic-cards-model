@@ -97,9 +97,7 @@
   "collector_number": "46",
   "digital": false,
   "rarity": "mythic",
-  "flavor_text": "\"Stealth-o-rama, huh? Righteous.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Ma\u00ebl Ollivier-Henry",
   "artist_ids": [
     "01d7a674-0768-4251-89bb-85ef02a70f4a"
   ],
@@ -119,22 +117,9 @@
   ],
   "edhrec_rank": 19399,
   "penny_rank": 6664,
-  "prices": {
-    "usd": "0.39",
-    "usd_foil": "0.82",
-    "usd_etched": null,
-    "eur": "0.46",
-    "eur_foil": "0.85",
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMondo%2BGecko",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMondo%2BGecko",
     "edhrec": "https://edhrec.com/route/?cc=Mondo+Gecko"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F673580%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=868289&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/147715?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

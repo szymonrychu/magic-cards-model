@@ -103,7 +103,6 @@
   "digital": false,
   "rarity": "mythic",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Igor Kieryluk",
   "artist_ids": [
     "9c3e9d17-509f-485c-9360-46d897ce716b"
   ],
@@ -124,23 +123,10 @@
     "source_uri": "https://twitter.com/day9tv/status/1171090892201086976?s=21",
     "previewed_at": "2019-09-09"
   },
-  "prices": {
-    "usd": "3.90",
-    "usd_foil": "5.35",
-    "usd_etched": null,
-    "eur": "3.64",
-    "eur_foil": "6.06",
-    "tix": "0.09"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473133&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DQuesting%2BBeast",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DQuesting%2BBeast",
     "edhrec": "https://edhrec.com/route/?cc=Questing+Beast"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F198763%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=399999&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/78482?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

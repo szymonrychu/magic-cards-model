@@ -115,9 +115,7 @@
   "collector_number": "174",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"The Simic can grow anything out of a puddle of sludge. I just hope they never join forces with the Golgari.\"\n\u2014Teysa Karlov, Grand Envoy of Orzhov",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Mike Bierek",
   "artist_ids": [
     "e5f52ef5-1a2e-4128-90b0-ccc71cd47ea7"
   ],
@@ -130,23 +128,10 @@
   "story_spotlight": false,
   "edhrec_rank": 18691,
   "penny_rank": 12077,
-  "prices": {
-    "usd": "0.18",
-    "usd_foil": "0.33",
-    "usd_etched": null,
-    "eur": "0.14",
-    "eur_foil": "0.36",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=425999&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMystic%2BGenesis",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMystic%2BGenesis",
     "edhrec": "https://edhrec.com/route/?cc=Mystic+Genesis"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F128905%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=296021&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/63423?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

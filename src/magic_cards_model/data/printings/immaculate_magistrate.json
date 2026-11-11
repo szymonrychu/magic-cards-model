@@ -96,9 +96,7 @@
   "collector_number": "234",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "Elves of the immaculate class weave flora into living creatures\u2014sometimes to endorse an elite warrior, sometimes to create a breathing work of art.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Jim Nelson",
   "artist_ids": [
     "aa9f64d1-29e1-4c82-877e-44c18183f40b"
   ],
@@ -117,23 +115,10 @@
     "source_uri": "https://www.instagram.com/p/CG3tsglHqsi/",
     "previewed_at": "2020-10-28"
   },
-  "prices": {
-    "usd": "4.76",
-    "usd_foil": "5.11",
-    "usd_etched": null,
-    "eur": "1.32",
-    "eur_foil": "2.24",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=497754&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DImmaculate%2BMagistrate",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DImmaculate%2BMagistrate",
     "edhrec": "https://edhrec.com/route/?cc=Immaculate+Magistrate"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F226769%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=510325&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/85250?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -425,7 +425,6 @@
   "digital": false,
   "rarity": "common",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "",
   "border_color": "black",
   "frame": "2015",
   "full_art": false,
@@ -437,23 +436,10 @@
     "source_uri": "https://magic.wizards.com/en/articles/archive/feature/adventures-forgotten-realms-mechanics-2021-06-24",
     "previewed_at": "2021-06-24"
   },
-  "prices": {
-    "usd": null,
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": null,
-    "eur_foil": null,
-    "tix": null
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=530449&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTomb%2Bof%2BAnnihilation",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTomb%2Bof%2BAnnihilation",
     "edhrec": "https://edhrec.com/route/?cc=Tomb+of+Annihilation"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DTomb%2Bof%2BAnnihilation%26view%3Dgrid",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products/Search?referrer=scryfall&searchString=Tomb+of+Annihilation&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Tomb+of+Annihilation&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

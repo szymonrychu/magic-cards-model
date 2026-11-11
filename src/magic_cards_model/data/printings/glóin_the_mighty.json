@@ -54,7 +54,6 @@
       "oracle_text": "At the beginning of your first main phase, add {R}{R}.",
       "power": "4",
       "toughness": "3",
-      "artist": "Colin Boyer",
       "artist_id": "9c201dbe-db56-429a-87e6-189ea70c2632",
       "illustration_id": "2dc7b931-b20e-4561-9021-8a6c3cf021f6"
     },
@@ -64,7 +63,6 @@
       "mana_cost": "{2}{R}",
       "type_line": "Sorcery \u2014 Adventure",
       "oracle_text": "Easy Pickings deals 1 damage to each creature your opponents control. (Then exile this card. You may cast the creature later from exile.)",
-      "artist": "Colin Boyer",
       "artist_id": "9c201dbe-db56-429a-87e6-189ea70c2632"
     }
   ],
@@ -123,7 +121,6 @@
   "digital": false,
   "rarity": "uncommon",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Colin Boyer",
   "artist_ids": [
     "9c201dbe-db56-429a-87e6-189ea70c2632"
   ],
@@ -146,22 +143,9 @@
     "source_uri": "https://variety.com/2026/gaming/news/magic-the-gathering-hobbit-spoiler-card-gloin-1236822100/",
     "previewed_at": "2026-07-28"
   },
-  "prices": {
-    "usd": "0.24",
-    "usd_foil": "0.31",
-    "usd_etched": null,
-    "eur": "0.12",
-    "eur_foil": "0.18",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGl%25C3%25B3in%2Bthe%2BMighty%2B%252F%252F%2BEasy%2BPickings",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGl%25C3%25B3in%2Bthe%2BMighty%2B%252F%252F%2BEasy%2BPickings",
     "edhrec": "https://edhrec.com/route/?cc=Gl%C3%B3in+the+Mighty"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F708795%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=900326&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/154130?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

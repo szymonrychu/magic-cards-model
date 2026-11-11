@@ -38,7 +38,6 @@
       ],
       "power": "0",
       "toughness": "4",
-      "artist": "Svetlin Velinov",
       "artist_id": "ffd063ae-c097-4f26-b2e6-b1e2137708bc",
       "illustration_id": "3f33b99f-86d5-4d4b-a640-f408b8cf7c6f",
       "image_uris": {
@@ -69,8 +68,6 @@
       ],
       "power": "7",
       "toughness": "8",
-      "flavor_text": "\"It serves as evidence of the ancient power of the deep, a reminder that the sea is the only thing worthy of reverence.\"\n\u2014Runo Stromkirk",
-      "artist": "Svetlin Velinov",
       "artist_id": "ffd063ae-c097-4f26-b2e6-b1e2137708bc",
       "illustration_id": "686a0e8e-db23-4ca8-bd30-db7777db7e45",
       "image_uris": {
@@ -159,7 +156,6 @@
   "collector_number": "91",
   "digital": false,
   "rarity": "rare",
-  "artist": "Svetlin Velinov",
   "artist_ids": [
     "ffd063ae-c097-4f26-b2e6-b1e2137708bc"
   ],
@@ -177,23 +173,10 @@
     "source_uri": "",
     "previewed_at": "2025-01-07"
   },
-  "prices": {
-    "usd": "0.82",
-    "usd_foil": "1.03",
-    "usd_etched": null,
-    "eur": "0.62",
-    "eur_foil": "0.90",
-    "tix": "0.12"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=685919&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThing%2Bin%2Bthe%2BIce%2B%252F%252F%2BAwoken%2BHorror",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThing%2Bin%2Bthe%2BIce%2B%252F%252F%2BAwoken%2BHorror",
     "edhrec": "https://edhrec.com/route/?cc=Thing+in+the+Ice"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F609701%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=804974&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/135566?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

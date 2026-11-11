@@ -48,7 +48,6 @@
       "mana_cost": "{1}{W}",
       "type_line": "Enchantment \u2014 Room",
       "oracle_text": "Whenever one or more non-Toy creatures you control attack a player, create a 1/1 white Toy artifact creature token.\n(You may cast either half. That door unlocks on the battlefield. As a sorcery, you may pay the mana cost of a locked door to unlock it.)",
-      "artist": "Chris Cold",
       "artist_id": "2622d22b-3fd8-4831-9b2b-adc5fac01b85",
       "illustration_id": "c3d576e0-ec36-44a9-8d60-2e0584556610"
     },
@@ -58,7 +57,6 @@
       "mana_cost": "{4}{W}{W}",
       "type_line": "Enchantment \u2014 Room",
       "oracle_text": "Creatures you control have base power and toughness each equal to the number of creatures you control.\n(You may cast either half. That door unlocks on the battlefield. As a sorcery, you may pay the mana cost of a locked door to unlock it.)",
-      "artist": "Chris Cold",
       "artist_id": "2622d22b-3fd8-4831-9b2b-adc5fac01b85"
     }
   ],
@@ -135,7 +133,6 @@
   "digital": false,
   "rarity": "mythic",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Chris Cold",
   "artist_ids": [
     "2622d22b-3fd8-4831-9b2b-adc5fac01b85"
   ],
@@ -148,23 +145,10 @@
   "booster": true,
   "story_spotlight": false,
   "edhrec_rank": 2508,
-  "prices": {
-    "usd": "5.85",
-    "usd_foil": "6.34",
-    "usd_etched": null,
-    "eur": "3.99",
-    "eur_foil": "5.85",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=673409&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDollmaker%2527s%2BShop%2B%252F%252F%2BPorcelain%2BGallery",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDollmaker%2527s%2BShop%2B%252F%252F%2BPorcelain%2BGallery",
     "edhrec": "https://edhrec.com/route/?cc=Dollmaker%27s+Shop+%2F%2F+Porcelain+Gallery"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F575044%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=786368&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/130139?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -94,9 +94,7 @@
   "collector_number": "58",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "The fatal flaw in every plan is the assumption that you know more than your enemy.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Howard Lyon",
   "artist_ids": [
     "6dd06426-59fe-4b9c-aad5-6da8446a5c3d"
   ],
@@ -114,23 +112,10 @@
     "source_uri": "https://www.twitch.tv/videos/1512208234",
     "previewed_at": "2022-06-23"
   },
-  "prices": {
-    "usd": "0.36",
-    "usd_foil": "0.38",
-    "usd_etched": null,
-    "eur": "0.18",
-    "eur_foil": "0.32",
-    "tix": "0.04"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=571391&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMana%2BLeak",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMana%2BLeak",
     "edhrec": "https://edhrec.com/route/?cc=Mana+Leak"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F277152%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=665725&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/101600?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -96,9 +96,7 @@
   "collector_number": "263",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"We are Llanowar's children, but also its protectors. Our destinies are one.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Quintin Gleim",
   "artist_ids": [
     "25fbebee-23a4-4431-bd63-14ec82f3c2b9"
   ],
@@ -118,22 +116,9 @@
     "source_uri": "https://www.instagram.com/scottnomana/p/DdXaUbdnwkj/",
     "previewed_at": "2026-09-16"
   },
-  "prices": {
-    "usd": "0.29",
-    "usd_foil": "0.67",
-    "usd_etched": null,
-    "eur": "0.18",
-    "eur_foil": "0.29",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMarwyn%252C%2Bthe%2BPreserver",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMarwyn%252C%2Bthe%2BPreserver",
     "edhrec": "https://edhrec.com/route/?cc=Marwyn%2C+the+Preserver"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F717894%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=909942&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/155672?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

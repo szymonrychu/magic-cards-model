@@ -102,9 +102,7 @@
   "collector_number": "102",
   "digital": false,
   "rarity": "mythic",
-  "flavor_text": "\"You guys must be studying the abridged book of ninja fighting.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Fajareka Setiawan",
   "artist_ids": [
     "0cc534e0-be18-4cb1-8521-50fabd0dac6f"
   ],
@@ -123,22 +121,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 14635,
-  "prices": {
-    "usd": "1.19",
-    "usd_foil": "1.73",
-    "usd_etched": null,
-    "eur": "0.86",
-    "eur_foil": "1.41",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRaphael%252C%2BNinja%2BDestroyer",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRaphael%252C%2BNinja%2BDestroyer",
     "edhrec": "https://edhrec.com/route/?cc=Raphael%2C+Ninja+Destroyer"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F673626%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=868312&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/147827?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

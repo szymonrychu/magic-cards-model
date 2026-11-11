@@ -94,9 +94,7 @@
   "collector_number": "167",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"Do the innocent pay for the crimes of the guilty? Of course they do. That's the fate of the weak.\"\n\u2014Nicol Bolas",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Thomas M. Baxa",
   "artist_ids": [
     "ff346569-557d-4043-ae44-97c2c7cabd7d"
   ],
@@ -115,23 +113,10 @@
     "source_uri": "https://www.mtggoldfish.com/articles/exclusive-commander-masters-preview-cards-revealed",
     "previewed_at": "2023-07-14"
   },
-  "prices": {
-    "usd": "9.66",
-    "usd_foil": "12.12",
-    "usd_etched": null,
-    "eur": "6.70",
-    "eur_foil": "8.64",
-    "tix": "0.05"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=622775&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DImp%2527s%2BMischief",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DImp%2527s%2BMischief",
     "edhrec": "https://edhrec.com/route/?cc=Imp%27s+Mischief"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F504533%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=722752&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/115433?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

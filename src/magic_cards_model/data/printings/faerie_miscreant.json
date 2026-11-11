@@ -100,9 +100,7 @@
   "collector_number": "58",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "One faerie distracts the judge while a second steals the law.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Steven Belledin",
   "artist_ids": [
     "f07d73b9-52a0-4fe5-858b-61f7b42174a5"
   ],
@@ -120,23 +118,10 @@
     "source_uri": "https://magic.wizards.com/en/articles/archive/making-magic/core-meets-eye-2019-06-24",
     "previewed_at": "2019-06-25"
   },
-  "prices": {
-    "usd": "0.23",
-    "usd_foil": "1.55",
-    "usd_etched": null,
-    "eur": "0.21",
-    "eur_foil": "4.06",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=466812&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFaerie%2BMiscreant",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFaerie%2BMiscreant",
     "edhrec": "https://edhrec.com/route/?cc=Faerie+Miscreant"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F192784%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=379170&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/73015?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

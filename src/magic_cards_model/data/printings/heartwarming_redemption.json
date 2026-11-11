@@ -98,9 +98,7 @@
   "collector_number": "199",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "Kytheon had known war every day of his life. Now he finally knew peace.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Howard Lyon",
   "artist_ids": [
     "6dd06426-59fe-4b9c-aad5-6da8446a5c3d"
   ],
@@ -118,23 +116,10 @@
     "source_uri": "https://www.youtube.com/watch?v=FfLGdmGHVgc",
     "previewed_at": "2019-04-18"
   },
-  "prices": {
-    "usd": "0.27",
-    "usd_foil": "0.39",
-    "usd_etched": null,
-    "eur": "0.13",
-    "eur_foil": "0.35",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=461126&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHeartwarming%2BRedemption",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHeartwarming%2BRedemption",
     "edhrec": "https://edhrec.com/route/?cc=Heartwarming+Redemption"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F188877%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=372557&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/72004?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

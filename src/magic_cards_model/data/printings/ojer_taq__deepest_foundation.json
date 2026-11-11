@@ -43,7 +43,6 @@
       ],
       "power": "6",
       "toughness": "6",
-      "artist": "Cristi Balanescu",
       "artist_id": "c09ede88-a1b5-4a18-9895-dc8a965d28a5",
       "illustration_id": "b48923ff-64d7-4329-a572-04e8235d6f1c",
       "image_uris": {
@@ -67,8 +66,6 @@
       "type_line": "Land",
       "oracle_text": "(Transforms from Ojer Taq, Deepest Foundation.)\n{T}: Add {W}.\n{2}{W}, {T}: Transform this land. Activate only if you attacked with three or more creatures this turn and only as a sorcery.",
       "colors": [],
-      "flavor_text": "Chimil gave the Oltec life. Ojer Taq taught them how to live together.",
-      "artist": "Cristi Balanescu",
       "artist_id": "c09ede88-a1b5-4a18-9895-dc8a965d28a5",
       "illustration_id": "993edfed-2a1f-4604-88df-cd0217e143cd",
       "image_uris": {
@@ -140,7 +137,6 @@
   "collector_number": "26",
   "digital": false,
   "rarity": "mythic",
-  "artist": "Cristi Balanescu",
   "artist_ids": [
     "c09ede88-a1b5-4a18-9895-dc8a965d28a5"
   ],
@@ -160,23 +156,10 @@
     "source_uri": "https://www.youtube.com/watch?v=Szm0yzSUUm0",
     "previewed_at": "2023-10-24"
   },
-  "prices": {
-    "usd": "28.02",
-    "usd_foil": "38.25",
-    "usd_etched": null,
-    "eur": "20.27",
-    "eur_foil": "22.69",
-    "tix": "0.06"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=636717&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DOjer%2BTaq%252C%2BDeepest%2BFoundation%2B%252F%252F%2BTemple%2Bof%2BCivilization",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DOjer%2BTaq%252C%2BDeepest%2BFoundation%2B%252F%252F%2BTemple%2Bof%2BCivilization",
     "edhrec": "https://edhrec.com/route/?cc=Ojer+Taq%2C+Deepest+Foundation"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F524230%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=740857&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/117830?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

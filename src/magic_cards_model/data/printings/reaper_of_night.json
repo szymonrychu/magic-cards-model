@@ -52,7 +52,6 @@
       "oracle_text": "Whenever this creature attacks, if defending player has two or fewer cards in hand, it gains flying until end of turn.",
       "power": "4",
       "toughness": "5",
-      "artist": "Jeff Simpson",
       "artist_id": "bb21cc10-54bf-4d10-b90c-72ba55dd3d37",
       "illustration_id": "688d681d-bd7d-461a-ac4b-0663b23cd4a0"
     },
@@ -62,7 +61,6 @@
       "mana_cost": "{3}{B}",
       "type_line": "Sorcery \u2014 Adventure",
       "oracle_text": "Target opponent discards two cards. (Then exile this card. You may cast the creature later from exile.)",
-      "artist": "Jeff Simpson",
       "artist_id": "bb21cc10-54bf-4d10-b90c-72ba55dd3d37"
     }
   ],
@@ -139,7 +137,6 @@
   "digital": false,
   "rarity": "common",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Jeff Simpson",
   "artist_ids": [
     "bb21cc10-54bf-4d10-b90c-72ba55dd3d37"
   ],
@@ -152,23 +149,10 @@
   "story_spotlight": false,
   "edhrec_rank": 24287,
   "penny_rank": 11247,
-  "prices": {
-    "usd": "0.13",
-    "usd_foil": "0.31",
-    "usd_etched": null,
-    "eur": "0.04",
-    "eur_foil": "0.13",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473064&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DReaper%2Bof%2BNight%2B%252F%252F%2BHarvest%2BFear",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DReaper%2Bof%2BNight%2B%252F%252F%2BHarvest%2BFear",
     "edhrec": "https://edhrec.com/route/?cc=Reaper+of+Night"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F199528%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=401969&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/78322?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

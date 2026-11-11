@@ -95,7 +95,6 @@
   "digital": false,
   "rarity": "mythic",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Ron Spears",
   "artist_ids": [
     "fce9030b-86bd-4439-b06a-920a1eeb184c"
   ],
@@ -108,23 +107,10 @@
   "story_spotlight": false,
   "edhrec_rank": 7503,
   "penny_rank": 7170,
-  "prices": {
-    "usd": "16.28",
-    "usd_foil": "65.91",
-    "usd_etched": null,
-    "eur": "6.90",
-    "eur_foil": "20.47",
-    "tix": null
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=382324&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPhage%2Bthe%2BUntouchable",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPhage%2Bthe%2BUntouchable",
     "edhrec": "https://edhrec.com/route/?cc=Phage+the+Untouchable"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F83270%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=267275&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Phage+the+Untouchable&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

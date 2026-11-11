@@ -38,8 +38,6 @@
       "colors": [
         "R"
       ],
-      "flavor_text": "\"My ancestors reshaped the world to their vision. I have a few ideas of my own.\"\n\u2014Tars Olan, stoneforge mystic",
-      "artist": "Campbell White",
       "artist_id": "d281eab4-463a-4ba8-9039-8943737960a0",
       "illustration_id": "80241297-0f88-4877-a9b2-8000490e471f",
       "image_uris": {
@@ -63,8 +61,6 @@
       "type_line": "Land",
       "oracle_text": "This land enters tapped.\n{T}: Add {R}.",
       "colors": [],
-      "flavor_text": "\"I can hear the echo of their hammers, long stilled.\"\n\u2014Tars Olan, stoneforge mystic",
-      "artist": "Campbell White",
       "artist_id": "d281eab4-463a-4ba8-9039-8943737960a0",
       "illustration_id": "6ba5d698-299e-4644-bb34-d20709bd56f4",
       "image_uris": {
@@ -136,7 +132,6 @@
   "collector_number": "174",
   "digital": false,
   "rarity": "rare",
-  "artist": "Campbell White",
   "artist_ids": [
     "d281eab4-463a-4ba8-9039-8943737960a0"
   ],
@@ -154,23 +149,10 @@
     "source_uri": "http://twitch.tv/videos/728086792",
     "previewed_at": "2020-09-01"
   },
-  "prices": {
-    "usd": "16.43",
-    "usd_foil": "18.20",
-    "usd_etched": null,
-    "eur": "12.55",
-    "eur_foil": "14.70",
-    "tix": "0.45"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=491818&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DValakut%2BAwakening%2B%252F%252F%2BValakut%2BStoneforge",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DValakut%2BAwakening%2B%252F%252F%2BValakut%2BStoneforge",
     "edhrec": "https://edhrec.com/route/?cc=Valakut+Awakening"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F221774%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=494569&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/83329?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

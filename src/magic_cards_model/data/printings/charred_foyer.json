@@ -48,7 +48,6 @@
       "mana_cost": "{3}{R}",
       "type_line": "Enchantment \u2014 Room",
       "oracle_text": "At the beginning of your upkeep, exile the top card of your library. You may play it this turn.\n(You may cast either half. That door unlocks on the battlefield. As a sorcery, you may pay the mana cost of a locked door to unlock it.)",
-      "artist": "Andrew Mar",
       "artist_id": "adad79bf-cd52-456a-b170-740ed8bff0fc",
       "illustration_id": "b2858f01-9a36-48d9-9cc6-73d1b566b5cf"
     },
@@ -58,7 +57,6 @@
       "mana_cost": "{4}{R}{R}",
       "type_line": "Enchantment \u2014 Room",
       "oracle_text": "Once each turn, you may pay {0} rather than pay the mana cost for a spell you cast from exile.\n(You may cast either half. That door unlocks on the battlefield. As a sorcery, you may pay the mana cost of a locked door to unlock it.)",
-      "artist": "Andrew Mar",
       "artist_id": "adad79bf-cd52-456a-b170-740ed8bff0fc"
     }
   ],
@@ -117,7 +115,6 @@
   "digital": false,
   "rarity": "mythic",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Andrew Mar",
   "artist_ids": [
     "adad79bf-cd52-456a-b170-740ed8bff0fc"
   ],
@@ -136,23 +133,10 @@
     "source_uri": "https://www.facebook.com/photo?fbid=1083502700445570&set=a.536664855129360",
     "previewed_at": "2024-09-09"
   },
-  "prices": {
-    "usd": "3.10",
-    "usd_foil": "3.45",
-    "usd_etched": null,
-    "eur": "1.53",
-    "eur_foil": "1.79",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=673534&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCharred%2BFoyer%2B%252F%252F%2BWarped%2BSpace",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCharred%2BFoyer%2B%252F%252F%2BWarped%2BSpace",
     "edhrec": "https://edhrec.com/route/?cc=Charred+Foyer+%2F%2F+Warped+Space"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F577671%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=788295&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/130389?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

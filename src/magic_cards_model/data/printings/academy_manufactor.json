@@ -128,9 +128,7 @@
   "collector_number": "251",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "Automated systems at the Tolarian Academy sort new acquisitions for optimal use, determining which should be studied, eaten, or sold.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Campbell White",
   "artist_ids": [
     "d281eab4-463a-4ba8-9039-8943737960a0"
   ],
@@ -144,23 +142,10 @@
   "story_spotlight": false,
   "edhrec_rank": 262,
   "penny_rank": 2676,
-  "prices": {
-    "usd": "9.52",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "6.35",
-    "eur_foil": null,
-    "tix": "0.12"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=658695&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAcademy%2BManufactor",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAcademy%2BManufactor",
     "edhrec": "https://edhrec.com/route/?cc=Academy+Manufactor"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F545341%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=764937&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/124965?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

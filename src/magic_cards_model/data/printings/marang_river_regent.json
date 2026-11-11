@@ -54,7 +54,6 @@
       "oracle_text": "Flying\nWhen this creature enters, return up to two other target nonland permanents to their owners' hands.",
       "power": "6",
       "toughness": "7",
-      "artist": "John Tedrick",
       "artist_id": "4da667fd-a4ad-4aea-ba20-db542810e01b",
       "illustration_id": "fbf61d3f-f98e-4dae-a3ed-b361a8bc625f"
     },
@@ -64,7 +63,6 @@
       "mana_cost": "{3}{U}",
       "type_line": "Instant \u2014 Omen",
       "oracle_text": "Draw three cards, then discard a card. (Then shuffle this card into its owner's library.)",
-      "artist": "John Tedrick",
       "artist_id": "4da667fd-a4ad-4aea-ba20-db542810e01b"
     }
   ],
@@ -123,7 +121,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "John Tedrick",
   "artist_ids": [
     "4da667fd-a4ad-4aea-ba20-db542810e01b"
   ],
@@ -137,23 +134,10 @@
   "story_spotlight": false,
   "edhrec_rank": 3295,
   "penny_rank": 1916,
-  "prices": {
-    "usd": "1.28",
-    "usd_foil": "1.48",
-    "usd_etched": null,
-    "eur": "1.86",
-    "eur_foil": "2.26",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=693531&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMarang%2BRiver%2BRegent%2B%252F%252F%2BCoil%2Band%2BCatch",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMarang%2BRiver%2BRegent%2B%252F%252F%2BCoil%2Band%2BCatch",
     "edhrec": "https://edhrec.com/route/?cc=Marang+River+Regent"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F623887%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=818009&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/139049?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

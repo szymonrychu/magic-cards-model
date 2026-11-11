@@ -39,7 +39,6 @@
         "B"
       ],
       "defense": "4",
-      "artist": "Cristi Balanescu",
       "artist_id": "c09ede88-a1b5-4a18-9895-dc8a965d28a5",
       "illustration_id": "85d2bd7f-c8f7-4802-803b-b33c294a8f7a",
       "image_uris": {
@@ -70,8 +69,6 @@
       ],
       "power": "2",
       "toughness": "2",
-      "flavor_text": "When the courts fell, Eldraine's fae turned from their usual pranks to deadlier tricks.",
-      "artist": "Cristi Balanescu",
       "artist_id": "c09ede88-a1b5-4a18-9895-dc8a965d28a5",
       "illustration_id": "3cb097e3-b427-4e97-a051-2030a93db977",
       "image_uris": {
@@ -143,7 +140,6 @@
   "collector_number": "113",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Cristi Balanescu",
   "artist_ids": [
     "c09ede88-a1b5-4a18-9895-dc8a965d28a5"
   ],
@@ -160,23 +156,10 @@
     "source_uri": "https://twitter.com/CoolStuffInc/status/1642905042821709825",
     "previewed_at": "2023-04-03"
   },
-  "prices": {
-    "usd": "0.26",
-    "usd_foil": "0.28",
-    "usd_etched": null,
-    "eur": "0.07",
-    "eur_foil": "0.14",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607145&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BEldraine%2B%252F%252F%2BPrickle%2BFaeries",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BEldraine%2B%252F%252F%2BPrickle%2BFaeries",
     "edhrec": "https://edhrec.com/route/?cc=Invasion+of+Eldraine"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490766%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704369&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/110062?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

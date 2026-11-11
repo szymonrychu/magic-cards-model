@@ -97,9 +97,7 @@
   "collector_number": "52",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"I have found the courage to face death\u2014twice, if I must.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Matt Stewart",
   "artist_ids": [
     "20871267-2d8a-41d5-b03a-be3d557c5734"
   ],
@@ -112,23 +110,10 @@
   "story_spotlight": false,
   "edhrec_rank": 4335,
   "penny_rank": 11575,
-  "prices": {
-    "usd": "6.64",
-    "usd_foil": "25.22",
-    "usd_etched": null,
-    "eur": "3.19",
-    "eur_foil": "9.07",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=193416&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DUmbra%2BMystic",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DUmbra%2BMystic",
     "edhrec": "https://edhrec.com/route/?cc=Umbra+Mystic"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F34746%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=22630&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/36352?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

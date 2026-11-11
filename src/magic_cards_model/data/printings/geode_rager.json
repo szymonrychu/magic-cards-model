@@ -97,9 +97,7 @@
   "collector_number": "794",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "Its crystalline core refracts light into chaos.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Caio Monteiro",
   "artist_ids": [
     "d5053eb6-af72-47a0-b6e8-023cc3b9aefb"
   ],
@@ -112,23 +110,10 @@
   "booster": false,
   "story_spotlight": false,
   "edhrec_rank": 2918,
-  "prices": {
-    "usd": "1.47",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "2.00",
-    "eur_foil": null,
-    "tix": null
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=567611&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGeode%2BRager",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGeode%2BRager",
     "edhrec": "https://edhrec.com/route/?cc=Geode+Rager"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F273556%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=661935&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Geode+Rager&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

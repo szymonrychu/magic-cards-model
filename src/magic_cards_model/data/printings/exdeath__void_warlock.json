@@ -40,8 +40,6 @@
       ],
       "power": "3",
       "toughness": "3",
-      "flavor_text": "\"Mwa-hahahaha! Witness what befalls those who stand against me!\"",
-      "artist": "Jessica Fong",
       "artist_id": "8c8ef7c7-ea98-4ec9-8ea7-5ed6d0357700",
       "illustration_id": "80323096-2f0c-4be3-b409-a45d02021fe8",
       "image_uris": {
@@ -74,8 +72,6 @@
       ],
       "power": "*",
       "toughness": "3",
-      "flavor_text": "\"All memories . . . dimensions . . . existence . . . All that is shall be returned to nothing.\"",
-      "artist": "Jessica Fong",
       "artist_id": "8c8ef7c7-ea98-4ec9-8ea7-5ed6d0357700",
       "illustration_id": "4b51f3f1-ba44-45bc-a8a8-480f2b9aeff6",
       "image_uris": {
@@ -147,7 +143,6 @@
   "collector_number": "220",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Jessica Fong",
   "artist_ids": [
     "8c8ef7c7-ea98-4ec9-8ea7-5ed6d0357700"
   ],
@@ -172,22 +167,9 @@
     "source_uri": "https://www.mtgsalvation.com/articles/features/49840-exclusive-this-magic-the-gathering-final-fantasy",
     "previewed_at": "2025-05-29"
   },
-  "prices": {
-    "usd": "0.22",
-    "usd_foil": "0.27",
-    "usd_etched": null,
-    "eur": "0.07",
-    "eur_foil": "0.21",
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DExdeath%252C%2BVoid%2BWarlock%2B%252F%252F%2BNeo%2BExdeath%252C%2BDimension%2527s%2BEnd",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DExdeath%252C%2BVoid%2BWarlock%2B%252F%252F%2BNeo%2BExdeath%252C%2BDimension%2527s%2BEnd",
     "edhrec": "https://edhrec.com/route/?cc=Exdeath%2C+Void+Warlock"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F634956%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=827778&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/141391?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

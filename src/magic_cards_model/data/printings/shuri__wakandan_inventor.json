@@ -97,9 +97,7 @@
   "collector_number": "75",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "While her older brother T'Challa ruled Wakanda, Shuri perfected its defenses and vibranium-based weapons.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Wayne Wu",
   "artist_ids": [
     "2b551106-f94f-4c81-8b5c-197cdfa29d4a"
   ],
@@ -117,22 +115,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 6260,
-  "prices": {
-    "usd": "0.36",
-    "usd_foil": "1.26",
-    "usd_etched": null,
-    "eur": "0.47",
-    "eur_foil": "0.99",
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DShuri%252C%2BWakandan%2BInventor",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DShuri%252C%2BWakandan%2BInventor",
     "edhrec": "https://edhrec.com/route/?cc=Shuri%2C+Wakandan+Inventor"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696278%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=890553&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/152335?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

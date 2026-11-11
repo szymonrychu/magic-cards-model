@@ -99,9 +99,7 @@
   "collector_number": "144",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "Under Drana's leadership, vampires are finding new strength in unity.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Heonhwa",
   "artist_ids": [
     "ce415f9e-8a20-4d64-bcba-2b1b7e94012e"
   ],
@@ -115,23 +113,10 @@
   "story_spotlight": false,
   "edhrec_rank": 1874,
   "penny_rank": 743,
-  "prices": {
-    "usd": "0.40",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.50",
-    "eur_foil": null,
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=658588&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DNighthawk%2BScavenger",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DNighthawk%2BScavenger",
     "edhrec": "https://edhrec.com/route/?cc=Nighthawk+Scavenger"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F545298%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=764652&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/124747?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

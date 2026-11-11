@@ -46,9 +46,7 @@
       ],
       "power": "4",
       "toughness": "4",
-      "flavor_text": "When the world needed him most, the Avatar returned.",
       "watermark": "firenation",
-      "artist": "Fahmi Fauzi",
       "artist_id": "71e0cca2-5ded-4a60-91aa-65a131b35987",
       "illustration_id": "56d3f9bb-cd23-466a-b6da-7a8ea8e13a10",
       "image_uris": {
@@ -74,7 +72,6 @@
       "colors": [],
       "power": "6",
       "toughness": "6",
-      "artist": "Fahmi Fauzi",
       "artist_id": "71e0cca2-5ded-4a60-91aa-65a131b35987",
       "illustration_id": "fb2fb3d9-f6ad-48ad-b050-7a60596b8bd9",
       "image_uris": {
@@ -146,7 +143,6 @@
   "collector_number": "207",
   "digital": false,
   "rarity": "mythic",
-  "artist": "Fahmi Fauzi",
   "artist_ids": [
     "71e0cca2-5ded-4a60-91aa-65a131b35987"
   ],
@@ -165,22 +161,9 @@
   ],
   "edhrec_rank": 6943,
   "penny_rank": 11121,
-  "prices": {
-    "usd": "3.14",
-    "usd_foil": "4.96",
-    "usd_etched": null,
-    "eur": "3.34",
-    "eur_foil": "4.98",
-    "tix": "1.00"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAvatar%2BAang%2B%252F%252F%2BAang%252C%2BMaster%2Bof%2BElements",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAvatar%2BAang%2B%252F%252F%2BAang%252C%2BMaster%2Bof%2BElements",
     "edhrec": "https://edhrec.com/route/?cc=Avatar+Aang"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F648733%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=842856&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/144906?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

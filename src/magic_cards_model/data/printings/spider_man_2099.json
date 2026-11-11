@@ -104,7 +104,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Toni Infante",
   "artist_ids": [
     "958bbc4a-3420-439a-b261-c988b8e4b580"
   ],
@@ -129,22 +128,9 @@
     "source_uri": "https://www.ign.com/articles/spider-man-magic-the-gathering-card-reveal-spoiler-spider-verse",
     "previewed_at": "2025-07-23"
   },
-  "prices": {
-    "usd": "0.51",
-    "usd_foil": "0.72",
-    "usd_etched": null,
-    "eur": "0.35",
-    "eur_foil": "1.00",
-    "tix": "0.15"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSpider-Man%2B2099",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSpider-Man%2B2099",
     "edhrec": "https://edhrec.com/route/?cc=Spider-Man+2099"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F646166%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=839577&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/153543?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

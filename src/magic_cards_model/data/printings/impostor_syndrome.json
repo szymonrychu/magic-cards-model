@@ -113,9 +113,7 @@
   "collector_number": "34",
   "digital": false,
   "rarity": "mythic",
-  "flavor_text": "\"I'm the real Spider-Man!\"\n\"No, *I'm* the real Spider-Man!\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Javier Charro",
   "artist_ids": [
     "8fd2d5fa-3b94-4e48-9cec-9d148acc8180"
   ],
@@ -139,22 +137,9 @@
     "source_uri": "https://bsky.app/profile/magic.wizards.com/post/3lxsinubdt72x",
     "previewed_at": "2025-09-01"
   },
-  "prices": {
-    "usd": "7.18",
-    "usd_foil": "8.31",
-    "usd_etched": null,
-    "eur": "4.99",
-    "eur_foil": "5.81",
-    "tix": "0.09"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DImpostor%2BSyndrome",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DImpostor%2BSyndrome",
     "edhrec": "https://edhrec.com/route/?cc=Impostor+Syndrome"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F651851%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=845930&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/153303?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

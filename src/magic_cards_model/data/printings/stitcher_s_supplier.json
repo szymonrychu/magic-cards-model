@@ -97,9 +97,7 @@
   "collector_number": "196",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "No part goes to waste.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Chris Seaman",
   "artist_ids": [
     "b9c49463-6f55-4039-9d32-c02a658af100"
   ],
@@ -111,23 +109,10 @@
   "booster": false,
   "story_spotlight": false,
   "edhrec_rank": 619,
-  "prices": {
-    "usd": "0.37",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.59",
-    "eur_foil": null,
-    "tix": "2.06"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=696352&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DStitcher%2527s%2BSupplier",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DStitcher%2527s%2BSupplier",
     "edhrec": "https://edhrec.com/route/?cc=Stitcher%27s+Supplier"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F624435%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=818805&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/138329?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -98,7 +98,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Rafater",
   "artist_ids": [
     "5157b931-ac23-49b6-a2c4-c4cf4bbc2118"
   ],
@@ -123,22 +122,9 @@
     "source_uri": "https://www.tcgplayer.com/content/article/Check-Out-TCGplayer-s-EXCLUSIVE-Magic-The-Gathering-%7C-Marvel-Super-Heroes-Preview-Cards/cc834c75-9762-446e-8b41-76a03e55a5be/",
     "previewed_at": "2026-06-03"
   },
-  "prices": {
-    "usd": "0.79",
-    "usd_foil": "1.17",
-    "usd_etched": null,
-    "eur": "0.57",
-    "eur_foil": "0.59",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSuper-Soldier%2BSerum",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSuper-Soldier%2BSerum",
     "edhrec": "https://edhrec.com/route/?cc=Super-Soldier+Serum"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696467%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891153&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/152259?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

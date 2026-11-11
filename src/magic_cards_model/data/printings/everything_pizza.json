@@ -98,7 +98,6 @@
   "digital": false,
   "rarity": "uncommon",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "James Bousema",
   "artist_ids": [
     "371aeb61-4800-423e-84c3-c2ebd6cad439"
   ],
@@ -114,22 +113,9 @@
   ],
   "edhrec_rank": 14823,
   "penny_rank": 10199,
-  "prices": {
-    "usd": "0.22",
-    "usd_foil": "0.24",
-    "usd_etched": null,
-    "eur": "0.09",
-    "eur_foil": "0.19",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEverything%2BPizza",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEverything%2BPizza",
     "edhrec": "https://edhrec.com/route/?cc=Everything+Pizza"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F679601%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=873751&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/147969?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -96,9 +96,7 @@
   "collector_number": "79",
   "digital": false,
   "rarity": "mythic",
-  "flavor_text": "\"'Did I do it?' You'll have to be more specific.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Billy Christian",
   "artist_ids": [
     "10f26f94-64fc-4174-856e-701bea4f1521"
   ],
@@ -115,22 +113,9 @@
   "story_spotlight": false,
   "edhrec_rank": 1698,
   "penny_rank": 7637,
-  "prices": {
-    "usd": "0.55",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "1.09",
-    "eur_foil": null,
-    "tix": "0.06"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMassacre%2BGirl%252C%2BKnown%2BKiller",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMassacre%2BGirl%252C%2BKnown%2BKiller",
     "edhrec": "https://edhrec.com/route/?cc=Massacre+Girl%2C+Known+Killer"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671152%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=865011&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/146093?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

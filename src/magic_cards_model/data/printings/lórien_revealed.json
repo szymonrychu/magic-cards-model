@@ -99,9 +99,7 @@
   "collector_number": "179",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "\"Look on us now with friendly eyes! Behold the trees of the Naith of L\u00f3rien and be glad!\"\n\u2014Haldir",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Randy Gallegos",
   "artist_ids": [
     "a5048cc7-438a-4378-98e4-da99b78e1db0"
   ],
@@ -116,22 +114,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 1210,
-  "prices": {
-    "usd": "4.73",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "4.39",
-    "eur_foil": null,
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DL%25C3%25B3rien%2BRevealed",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DL%25C3%25B3rien%2BRevealed",
     "edhrec": "https://edhrec.com/route/?cc=L%C3%B3rien+Revealed"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709592%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=900697&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/154774?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

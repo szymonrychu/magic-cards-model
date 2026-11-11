@@ -93,9 +93,7 @@
   "collector_number": "268",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"Let's get the hell out of here!\"\n\u2014Zell Dincht",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Kevin Glint",
   "artist_ids": [
     "1d9ddf35-c50d-4fc7-987c-4e2bf909f75a"
   ],
@@ -117,22 +115,9 @@
     "source_uri": "https://www.marca.com/videojuegos/juegos/2025/05/28/magic-x-final-fantasy-desvelamos-exclusiva-nueva-criatura-artefacto-arrasaras-campo-rival.html",
     "previewed_at": "2025-05-28"
   },
-  "prices": {
-    "usd": "0.22",
-    "usd_foil": "0.29",
-    "usd_etched": null,
-    "eur": "0.09",
-    "eur_foil": "0.16",
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRelentless%2BX-ATM092",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRelentless%2BX-ATM092",
     "edhrec": "https://edhrec.com/route/?cc=Relentless+X-ATM092"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F634443%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=827793&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/141503?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

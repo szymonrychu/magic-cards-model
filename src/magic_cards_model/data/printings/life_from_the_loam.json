@@ -96,9 +96,7 @@
   "collector_number": "96",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"On a good day, I am not Fangkeeper, war hero, or sibsig, but a farmer again.\"\n\u2014Kotis, the Fangkeeper",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Carlos Palma Cruchaga",
   "artist_ids": [
     "f0c43e1b-1853-4abc-8a1b-d7dda6c1d592"
   ],
@@ -111,23 +109,10 @@
   "booster": false,
   "story_spotlight": false,
   "edhrec_rank": 709,
-  "prices": {
-    "usd": "5.40",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "5.30",
-    "eur_foil": null,
-    "tix": "3.71"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=696185&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLife%2Bfrom%2Bthe%2BLoam",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLife%2Bfrom%2Bthe%2BLoam",
     "edhrec": "https://edhrec.com/route/?cc=Life+from+the+Loam"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F624487%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=818711&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/138135?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

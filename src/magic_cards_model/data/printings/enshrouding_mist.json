@@ -95,9 +95,7 @@
   "collector_number": "13",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "True faith is letting the blade fall without parry. True cunning is using that moment to strike a deadly blow.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Howard Lyon",
   "artist_ids": [
     "6dd06426-59fe-4b9c-aad5-6da8446a5c3d"
   ],
@@ -110,23 +108,10 @@
   "story_spotlight": false,
   "edhrec_rank": 24619,
   "penny_rank": 10554,
-  "prices": {
-    "usd": "0.17",
-    "usd_foil": "0.10",
-    "usd_etched": null,
-    "eur": "0.06",
-    "eur_foil": "0.17",
-    "tix": "0.04"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=398654&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEnshrouding%2BMist",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEnshrouding%2BMist",
     "edhrec": "https://edhrec.com/route/?cc=Enshrouding+Mist"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F100031%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=283369&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/57826?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

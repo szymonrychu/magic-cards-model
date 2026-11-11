@@ -43,7 +43,6 @@
       ],
       "power": "3",
       "toughness": "3",
-      "artist": "Chris Rallis",
       "artist_id": "a8e7b854-b15a-421a-b66d-6e68187ae285",
       "illustration_id": "cf0d9332-9365-4c6a-b8cd-7625244f9c22",
       "image_uris": {
@@ -74,7 +73,6 @@
       ],
       "power": "4",
       "toughness": "4",
-      "artist": "Chris Rallis",
       "artist_id": "a8e7b854-b15a-421a-b66d-6e68187ae285",
       "illustration_id": "63579eec-6769-4392-9257-00aac0f556aa",
       "image_uris": {
@@ -164,7 +162,6 @@
   "collector_number": "104",
   "digital": false,
   "rarity": "rare",
-  "artist": "Chris Rallis",
   "artist_ids": [
     "a8e7b854-b15a-421a-b66d-6e68187ae285"
   ],
@@ -184,23 +181,10 @@
     "source_uri": "https://www.reddit.com/r/magicTCG/comments/phc8rs/mid_graveyard_trespasser_graveyard_glutton/",
     "previewed_at": "2021-09-03"
   },
-  "prices": {
-    "usd": "0.38",
-    "usd_foil": "0.72",
-    "usd_etched": null,
-    "eur": "0.58",
-    "eur_foil": "1.32",
-    "tix": "0.53"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=534875&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGraveyard%2BTrespasser%2B%252F%252F%2BGraveyard%2BGlutton",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGraveyard%2BTrespasser%2B%252F%252F%2BGraveyard%2BGlutton",
     "edhrec": "https://edhrec.com/route/?cc=Graveyard+Trespasser"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F247971%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=574791&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/93164?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

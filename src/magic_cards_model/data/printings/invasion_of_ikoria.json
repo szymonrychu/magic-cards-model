@@ -39,7 +39,6 @@
         "G"
       ],
       "defense": "6",
-      "artist": "Antonio Jos\u00e9 Manzanedo",
       "artist_id": "74986d28-0001-4a78-827c-e490b325d0e3",
       "illustration_id": "4e5a5dbe-5ae7-47c3-83fe-1e2ef7c255e5",
       "image_uris": {
@@ -70,8 +69,6 @@
       ],
       "power": "8",
       "toughness": "8",
-      "flavor_text": "Phyrexia's largest goliaths stormed Ikoria, ready to challenge the world's great monsters. Zilortha was unimpressed.",
-      "artist": "Antonio Jos\u00e9 Manzanedo",
       "artist_id": "74986d28-0001-4a78-827c-e490b325d0e3",
       "illustration_id": "c5e54496-d13e-47be-a71c-68b6ea3f107a",
       "image_uris": {
@@ -143,7 +140,6 @@
   "collector_number": "190",
   "digital": false,
   "rarity": "rare",
-  "artist": "Antonio Jos\u00e9 Manzanedo",
   "artist_ids": [
     "74986d28-0001-4a78-827c-e490b325d0e3"
   ],
@@ -159,23 +155,10 @@
   "story_spotlight": false,
   "edhrec_rank": 1381,
   "penny_rank": 571,
-  "prices": {
-    "usd": "13.76",
-    "usd_foil": "16.40",
-    "usd_etched": null,
-    "eur": "7.73",
-    "eur_foil": "12.78",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607241&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BIkoria%2B%252F%252F%2BZilortha%252C%2BApex%2Bof%2BIkoria",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BIkoria%2B%252F%252F%2BZilortha%252C%2BApex%2Bof%2BIkoria",
     "edhrec": "https://edhrec.com/route/?cc=Invasion+of+Ikoria"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490335%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704045&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/110254?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

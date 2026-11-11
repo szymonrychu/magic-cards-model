@@ -42,8 +42,6 @@
       ],
       "power": "2",
       "toughness": "5",
-      "flavor_text": "She dispatched every challenger with a sickening snap of bone.",
-      "artist": "Zoltan Boros",
       "artist_id": "1885e6cb-c827-4896-994e-3d0a027d602f",
       "illustration_id": "697c51c4-7fb3-4458-a43d-90cb84719c82",
       "image_uris": {
@@ -74,8 +72,6 @@
       ],
       "power": "6",
       "toughness": "5",
-      "flavor_text": "With every arm in sight broken, she turned her attention to the furniture.",
-      "artist": "Zoltan Boros",
       "artist_id": "1885e6cb-c827-4896-994e-3d0a027d602f",
       "illustration_id": "bde568ca-15df-431f-80bd-4b3907f02e6f",
       "image_uris": {
@@ -165,7 +161,6 @@
   "collector_number": "163",
   "digital": false,
   "rarity": "common",
-  "artist": "Zoltan Boros",
   "artist_ids": [
     "1885e6cb-c827-4896-994e-3d0a027d602f"
   ],
@@ -184,23 +179,10 @@
     "source_uri": "https://magic.wizards.com/en/articles/archive/feature/innistrad-midnight-hunt-mechanics-2021-09-02",
     "previewed_at": "2021-09-02"
   },
-  "prices": {
-    "usd": "0.15",
-    "usd_foil": "0.24",
-    "usd_etched": null,
-    "eur": "0.04",
-    "eur_foil": "0.08",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=534945&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTavern%2BRuffian%2B%252F%252F%2BTavern%2BSmasher",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTavern%2BRuffian%2B%252F%252F%2BTavern%2BSmasher",
     "edhrec": "https://edhrec.com/route/?cc=Tavern+Ruffian"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F247846%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=574701&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/93304?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

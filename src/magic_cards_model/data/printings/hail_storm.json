@@ -95,9 +95,7 @@
   "collector_number": "79",
   "digital": false,
   "rarity": "special",
-  "flavor_text": "\"If they can't take the hail, they'd better stay home.\"\n\u2014Arna Kenner\u00fcd, skycaptain",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Jeff A. Menges",
   "artist_ids": [
     "14a1de4b-1237-4e7b-8868-b71e87c9a46e"
   ],
@@ -110,23 +108,10 @@
   "story_spotlight": false,
   "edhrec_rank": 28589,
   "penny_rank": 12695,
-  "prices": {
-    "usd": "0.18",
-    "usd_foil": "1.37",
-    "usd_etched": null,
-    "eur": "0.30",
-    "eur_foil": "1.23",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=107296&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHail%2BStorm",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHail%2BStorm",
     "edhrec": "https://edhrec.com/route/?cc=Hail+Storm"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F14603%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=14104&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/26067?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

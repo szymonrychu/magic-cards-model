@@ -98,9 +98,7 @@
   "collector_number": "170",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"My streets, my rules. You picked the wrong neighborhood for a fight.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "David Auden Nash",
   "artist_ids": [
     "092827e0-03f2-4e73-852e-d95eba0fef20"
   ],
@@ -118,23 +116,10 @@
     "source_uri": "https://twitter.com/oh_joohyun/status/1487052611274432533",
     "previewed_at": "2022-01-28"
   },
-  "prices": {
-    "usd": "0.22",
-    "usd_foil": "0.23",
-    "usd_etched": null,
-    "eur": "0.06",
-    "eur_foil": "0.13",
-    "tix": "0.01"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=548475&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DUpriser%2BRenegade",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DUpriser%2BRenegade",
     "edhrec": "https://edhrec.com/route/?cc=Upriser+Renegade"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F262254%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=607372&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/97274?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

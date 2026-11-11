@@ -103,7 +103,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Ekaterina Burmak",
   "artist_ids": [
     "2a9f3780-fcc8-4ec5-b403-ee1d1370d3b4"
   ],
@@ -125,23 +124,10 @@
     "source_uri": "https://www.gameinformer.com/2022/02/03/risona-asari-commander-exclusive-magic-the-gathering-kamigawa-neon-dynasty-preview-card",
     "previewed_at": "2022-02-03"
   },
-  "prices": {
-    "usd": "0.24",
-    "usd_foil": "0.34",
-    "usd_etched": null,
-    "eur": "0.17",
-    "eur_foil": "0.25",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=548546&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRisona%252C%2BAsari%2BCommander",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRisona%252C%2BAsari%2BCommander",
     "edhrec": "https://edhrec.com/route/?cc=Risona%2C+Asari+Commander"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F262673%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=608281&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/97416?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

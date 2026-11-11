@@ -124,9 +124,7 @@
   "collector_number": "190",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"Why squabble for trinkets when we could be living large off all this gold?\"\n\u2014Admiral Beckett Brass",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Grzegorz Rutkowski",
   "artist_ids": [
     "b5f49d0d-8056-48e3-b614-090e656b4f9c"
   ],
@@ -145,23 +143,10 @@
     "source_uri": "https://www.cnet.com/tech/gaming/exclusive-magic-foundations-reveals-scavenging-storms-and-treasures/",
     "previewed_at": "2024-10-30"
   },
-  "prices": {
-    "usd": "0.55",
-    "usd_foil": "0.69",
-    "usd_etched": null,
-    "eur": "0.35",
-    "eur_foil": "0.41",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=679932&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBrass%2527s%2BBounty",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBrass%2527s%2BBounty",
     "edhrec": "https://edhrec.com/route/?cc=Brass%27s+Bounty"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F591719%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=797281&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/133406?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

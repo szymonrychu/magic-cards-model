@@ -103,9 +103,7 @@
   "collector_number": "204",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "The right poem lifts more than spirits.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Mark Zug",
   "artist_ids": [
     "48e2b98c-5467-4671-bd42-4c3746115117"
   ],
@@ -122,22 +120,9 @@
   "story_spotlight": false,
   "edhrec_rank": 8471,
   "penny_rank": 4077,
-  "prices": {
-    "usd": "0.33",
-    "usd_foil": "0.66",
-    "usd_etched": null,
-    "eur": "0.57",
-    "eur_foil": "0.80",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAbigale%252C%2BEloquent%2BFirst-Year",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAbigale%252C%2BEloquent%2BFirst-Year",
     "edhrec": "https://edhrec.com/route/?cc=Abigale%2C+Eloquent+First-Year"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F670978%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=864611&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/146801?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

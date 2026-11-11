@@ -41,8 +41,6 @@
       "colors": [
         "B"
       ],
-      "flavor_text": "Arguel's vision led him into the jungles of Ixalan . . .",
-      "artist": "Daarken",
       "artist_id": "e607a0d4-fc12-4c01-9e3f-501f5269b9cb",
       "illustration_id": "a1e9f54d-adde-4c8a-acd0-5c63c2fece55",
       "image_uris": {
@@ -66,8 +64,6 @@
       "type_line": "Legendary Land",
       "oracle_text": "(Transforms from Arguel's Blood Fast.)\n{T}: Add {B}.\n{T}, Sacrifice a creature: You gain life equal to the sacrificed creature's toughness.",
       "colors": [],
-      "flavor_text": ". . . to the lost temple of a bat-god of night, eternal enemy to the Threefold Sun.",
-      "artist": "Daarken",
       "artist_id": "e607a0d4-fc12-4c01-9e3f-501f5269b9cb",
       "illustration_id": "872bd01d-10b1-4050-84e8-bf128e624b6d",
       "image_uris": {
@@ -165,7 +161,6 @@
   "collector_number": "90",
   "digital": false,
   "rarity": "rare",
-  "artist": "Daarken",
   "artist_ids": [
     "e607a0d4-fc12-4c01-9e3f-501f5269b9cb"
   ],
@@ -181,23 +176,10 @@
   "story_spotlight": false,
   "edhrec_rank": 8414,
   "penny_rank": 3412,
-  "prices": {
-    "usd": "0.32",
-    "usd_foil": "1.12",
-    "usd_etched": null,
-    "eur": "0.34",
-    "eur_foil": "0.66",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=435243&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DArguel%2527s%2BBlood%2BFast%2B%252F%252F%2BTemple%2Bof%2BAclazotz",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DArguel%2527s%2BBlood%2BFast%2B%252F%252F%2BTemple%2Bof%2BAclazotz",
     "edhrec": "https://edhrec.com/route/?cc=Arguel%27s+Blood+Fast"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F145261%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=301387&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/65194?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

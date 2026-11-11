@@ -103,9 +103,7 @@
   "digital": false,
   "rarity": "uncommon",
   "watermark": "gruul",
-  "flavor_text": "Among the Zhur-Taa Clan, goblins are the first to enter battlefury. When the battle is over, the survivors are still frothing at the mouth, looking for someone to hit.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Wayne Reynolds",
   "artist_ids": [
     "afc47cec-3ccc-404e-a8c6-4d83dd504271"
   ],
@@ -123,23 +121,10 @@
     "source_uri": "http://www.toplevelpodcast.com/zhur-taa-goblin/",
     "previewed_at": "2019-01-04"
   },
-  "prices": {
-    "usd": "0.08",
-    "usd_foil": "0.37",
-    "usd_etched": null,
-    "eur": "0.12",
-    "eur_foil": "0.46",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=457359&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DZhur-Taa%2BGoblin",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DZhur-Taa%2BGoblin",
     "edhrec": "https://edhrec.com/route/?cc=Zhur-Taa+Goblin"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F183030%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=368139&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/71430?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

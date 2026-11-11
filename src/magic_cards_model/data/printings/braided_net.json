@@ -38,7 +38,6 @@
       "colors": [
         "U"
       ],
-      "artist": "Diego Gisbert",
       "artist_id": "3f4e975d-092c-40e4-b850-2d582bf4b5cb",
       "illustration_id": "df5cbe95-09cb-44a2-9897-8fc58758aa71",
       "image_uris": {
@@ -67,8 +66,6 @@
       "color_indicator": [
         "U"
       ],
-      "flavor_text": "The Oltec repurpose objects out of reverence rather than scarcity, believing them strengthened by the memory of each past function.",
-      "artist": "Diego Gisbert",
       "artist_id": "3f4e975d-092c-40e4-b850-2d582bf4b5cb",
       "illustration_id": "d30de764-d04e-4137-996c-d54fcc317399",
       "image_uris": {
@@ -140,7 +137,6 @@
   "collector_number": "47",
   "digital": false,
   "rarity": "rare",
-  "artist": "Diego Gisbert",
   "artist_ids": [
     "3f4e975d-092c-40e4-b850-2d582bf4b5cb"
   ],
@@ -153,23 +149,10 @@
   "story_spotlight": false,
   "edhrec_rank": 12521,
   "penny_rank": 4531,
-  "prices": {
-    "usd": "0.32",
-    "usd_foil": "0.26",
-    "usd_etched": null,
-    "eur": "0.16",
-    "eur_foil": "0.27",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=636743&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBraided%2BNet%2B%252F%252F%2BBraided%2BQuipu",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBraided%2BNet%2B%252F%252F%2BBraided%2BQuipu",
     "edhrec": "https://edhrec.com/route/?cc=Braided+Net"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F525204%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=743013&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/117882?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

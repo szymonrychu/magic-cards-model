@@ -102,7 +102,6 @@
   "digital": false,
   "rarity": "common",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Fariba Khamseh",
   "artist_ids": [
     "f18a7bd6-4aca-4201-b2f5-942c28ee4f18"
   ],
@@ -120,23 +119,10 @@
     "source_uri": "https://www.pcgamer.com/magic-the-gatherings-newest-set-brings-the-cyber-half-of-cyberpunk/",
     "previewed_at": "2022-01-28"
   },
-  "prices": {
-    "usd": "0.33",
-    "usd_foil": "0.35",
-    "usd_etched": null,
-    "eur": "0.16",
-    "eur_foil": "0.50",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=548367&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMoonsnare%2BPrototype",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMoonsnare%2BPrototype",
     "edhrec": "https://edhrec.com/route/?cc=Moonsnare+Prototype"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F262132%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=607156&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/97058?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -101,7 +101,6 @@
   "digital": false,
   "rarity": "mythic",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Izzy",
   "artist_ids": [
     "2c3d2473-ff5d-4309-8194-e0b2def2ab65"
   ],
@@ -114,22 +113,9 @@
   "booster": true,
   "story_spotlight": false,
   "edhrec_rank": 9425,
-  "prices": {
-    "usd": "31.16",
-    "usd_foil": "38.28",
-    "usd_etched": null,
-    "eur": "47.15",
-    "eur_foil": "60.04",
-    "tix": "61.86"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DQuantum%2BRiddler",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DQuantum%2BRiddler",
     "edhrec": "https://edhrec.com/route/?cc=Quantum+Riddler"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F641734%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=833842&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/142757?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

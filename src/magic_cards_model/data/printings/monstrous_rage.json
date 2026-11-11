@@ -116,9 +116,7 @@
   "collector_number": "142",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"My, what big paws y\u2014\"\n\u2014Thomas the woodsman, last words",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Borja Pindado",
   "artist_ids": [
     "1624a1a8-3492-4c0b-9abc-83dcf2653111"
   ],
@@ -136,23 +134,10 @@
     "source_uri": "https://twitter.com/RapsoloM/status/1691540261594394624/photo/1",
     "previewed_at": "2023-08-15"
   },
-  "prices": {
-    "usd": "0.35",
-    "usd_foil": "0.45",
-    "usd_etched": null,
-    "eur": "0.52",
-    "eur_foil": "1.18",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=629643&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMonstrous%2BRage",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMonstrous%2BRage",
     "edhrec": "https://edhrec.com/route/?cc=Monstrous+Rage"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F512529%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=728373&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/116610?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

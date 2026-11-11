@@ -96,9 +96,7 @@
   "collector_number": "119",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"Just think how strong I'll be if my arms don't tear off!\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Matt Stewart",
   "artist_ids": [
     "20871267-2d8a-41d5-b03a-be3d557c5734"
   ],
@@ -110,23 +108,10 @@
   "booster": true,
   "story_spotlight": false,
   "edhrec_rank": 25170,
-  "prices": {
-    "usd": "0.15",
-    "usd_foil": "0.21",
-    "usd_etched": null,
-    "eur": "0.05",
-    "eur_foil": "0.10",
-    "tix": "0.04"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=489792&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBloodshot%2BTrainee",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBloodshot%2BTrainee",
     "edhrec": "https://edhrec.com/route/?cc=Bloodshot+Trainee"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F219513%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=486499&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/82272?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

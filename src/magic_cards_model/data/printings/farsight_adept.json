@@ -98,9 +98,7 @@
   "collector_number": "14",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "\"I've walked every one of the Teetering Peaks and never set a foot wrong. I can get you to safety.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Cristi Balanescu",
   "artist_ids": [
     "c09ede88-a1b5-4a18-9895-dc8a965d28a5"
   ],
@@ -118,23 +116,10 @@
     "source_uri": "http://twitch.tv/videos/728086792",
     "previewed_at": "2020-09-01"
   },
-  "prices": {
-    "usd": "0.25",
-    "usd_foil": "0.25",
-    "usd_etched": null,
-    "eur": "0.06",
-    "eur_foil": "0.13",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=491636&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFarsight%2BAdept",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFarsight%2BAdept",
     "edhrec": "https://edhrec.com/route/?cc=Farsight+Adept"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F221865%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=494629&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/82965?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -55,7 +55,6 @@
       "oracle_text": "Flash\nWard {2}\nThis creature enters tapped unless it's your turn.",
       "power": "6",
       "toughness": "6",
-      "artist": "Simon Dominic",
       "artist_id": "b0e80135-db5a-4b88-a0bc-815a0e94faa1",
       "illustration_id": "f0a9966b-76cf-4624-b048-2525c8a6e767"
     },
@@ -65,7 +64,6 @@
       "mana_cost": "{1}{U}",
       "type_line": "Instant \u2014 Adventure",
       "oracle_text": "The owner of target attacking creature you don't control puts it on their choice of the top or bottom of their library.",
-      "artist": "Simon Dominic",
       "artist_id": "b0e80135-db5a-4b88-a0bc-815a0e94faa1"
     }
   ],
@@ -142,7 +140,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Simon Dominic",
   "artist_ids": [
     "b0e80135-db5a-4b88-a0bc-815a0e94faa1"
   ],
@@ -161,23 +158,10 @@
     "source_uri": "https://twitter.com/annamt1992/status/1694365755310047456",
     "previewed_at": "2023-08-23"
   },
-  "prices": {
-    "usd": "0.34",
-    "usd_foil": "0.33",
-    "usd_etched": null,
-    "eur": "0.22",
-    "eur_foil": "0.63",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=629554&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHorned%2BLoch-Whale%2B%252F%252F%2BLagoon%2BBreach",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHorned%2BLoch-Whale%2B%252F%252F%2BLagoon%2BBreach",
     "edhrec": "https://edhrec.com/route/?cc=Horned+Loch-Whale"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F513617%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=729941&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/116406?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

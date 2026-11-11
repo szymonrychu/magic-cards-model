@@ -115,9 +115,7 @@
   "digital": false,
   "rarity": "common",
   "watermark": "quandrix",
-  "flavor_text": "\"Math bites.\"\n\u2014Bim, Lorehold mage-student",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Kekai Kotaki",
   "artist_ids": [
     "4b771085-c049-4308-930d-ec9665f803a4"
   ],
@@ -135,23 +133,10 @@
     "source_uri": "https://twitter.com/GabySpartz/status/1377395545149296640",
     "previewed_at": "2021-03-31"
   },
-  "prices": {
-    "usd": "0.13",
-    "usd_foil": "0.13",
-    "usd_etched": null,
-    "eur": "0.11",
-    "eur_foil": "0.22",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=513529&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSerpentine%2BCurve",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSerpentine%2BCurve",
     "edhrec": "https://edhrec.com/route/?cc=Serpentine+Curve"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F235871%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=557649&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/88581?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

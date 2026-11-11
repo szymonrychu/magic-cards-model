@@ -99,9 +99,7 @@
   "collector_number": "51",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"Sabin...let's settle this with the toss of a coin.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Jake Murray",
   "artist_ids": [
     "be53e4e1-ab31-494a-b154-e00ee97eb463"
   ],
@@ -127,22 +125,9 @@
     "source_uri": "http://bsky.app/profile/did:plc:bhupyjynaldld7dsjlrvl6jf/post/3lpmsqazod22s",
     "previewed_at": "2025-05-20"
   },
-  "prices": {
-    "usd": "0.27",
-    "usd_foil": "0.55",
-    "usd_etched": null,
-    "eur": "0.21",
-    "eur_foil": "0.71",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEdgar%252C%2BKing%2Bof%2BFigaro",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEdgar%252C%2BKing%2Bof%2BFigaro",
     "edhrec": "https://edhrec.com/route/?cc=Edgar%2C+King+of+Figaro"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F633121%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=826821&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/141027?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

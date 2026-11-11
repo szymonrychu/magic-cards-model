@@ -97,9 +97,7 @@
   "collector_number": "238",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "Where water is the canvas and lava the paint.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Richard Wright",
   "artist_ids": [
     "7b1b0ce9-2c58-4321-a2a7-cdc94feae082"
   ],
@@ -117,23 +115,10 @@
     "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/lands-horizon-2019-05-21",
     "previewed_at": "2019-05-21"
   },
-  "prices": {
-    "usd": "6.20",
-    "usd_foil": "20.58",
-    "usd_etched": null,
-    "eur": "4.41",
-    "eur_foil": "15.51",
-    "tix": "3.05"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=464187&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFiery%2BIslet",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFiery%2BIslet",
     "edhrec": "https://edhrec.com/route/?cc=Fiery+Islet"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F190806%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=374514&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/72848?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

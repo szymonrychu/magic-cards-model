@@ -100,9 +100,7 @@
   "collector_number": "185",
   "digital": false,
   "rarity": "mythic",
-  "flavor_text": "A thundering roar calls forth a primeval army.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Lars Grant-West",
   "artist_ids": [
     "21ed6499-c4d3-4965-ab02-6c7228275bec"
   ],
@@ -118,23 +116,10 @@
   "booster": true,
   "story_spotlight": false,
   "edhrec_rank": 1074,
-  "prices": {
-    "usd": "29.42",
-    "usd_foil": "30.15",
-    "usd_etched": null,
-    "eur": "25.36",
-    "eur_foil": "30.85",
-    "tix": "2.06"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=636899&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGhalta%252C%2BStampede%2BTyrant",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGhalta%252C%2BStampede%2BTyrant",
     "edhrec": "https://edhrec.com/route/?cc=Ghalta%2C+Stampede+Tyrant"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F517522%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=734657&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/118194?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

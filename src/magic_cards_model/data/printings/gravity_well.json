@@ -95,9 +95,7 @@
   "collector_number": "185",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "Storms spread throughout Oran-Rief, ripping the skies with wind and rain. Airborne creatures sought shelter where they could.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Rob Alexander",
   "artist_ids": [
     "35906871-6c78-4ab2-9ed1-e6792c8efb74"
   ],
@@ -110,23 +108,10 @@
   "story_spotlight": false,
   "edhrec_rank": 13711,
   "penny_rank": 14824,
-  "prices": {
-    "usd": "0.53",
-    "usd_foil": "4.28",
-    "usd_etched": null,
-    "eur": "0.45",
-    "eur_foil": "2.70",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=194919&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGravity%2BWell",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGravity%2BWell",
     "edhrec": "https://edhrec.com/route/?cc=Gravity+Well"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F34879%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=22577&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/36678?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -94,9 +94,7 @@
   "collector_number": "194",
   "digital": true,
   "rarity": "uncommon",
-  "flavor_text": "\"Too many of us have died in the explosions that wrack these hills.\"\n\u2014Klazina Jansdotter, leader of the Order of the Sacred Torch",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Drew Tucker",
   "artist_ids": [
     "22eef389-7b21-4dda-95dc-4c9a0f1bf4dd"
   ],
@@ -109,23 +107,10 @@
   "story_spotlight": false,
   "edhrec_rank": 30280,
   "penny_rank": 14697,
-  "prices": {
-    "usd": null,
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": null,
-    "eur_foil": null,
-    "tix": "0.04"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=184626&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFumarole",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFumarole",
     "edhrec": "https://edhrec.com/route/?cc=Fumarole"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DFumarole%26view%3Dgrid",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products/Search?referrer=scryfall&searchString=Fumarole&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/30446?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

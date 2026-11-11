@@ -101,9 +101,7 @@
   "collector_number": "53",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "Dragons avoid the bright colors of its wings.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Daniel Ljunggren",
   "artist_ids": [
     "0fbd4798-76eb-46d5-a5d4-1e3a25870e34"
   ],
@@ -121,23 +119,10 @@
     "source_uri": "https://twitter.com/maro254/status/1141758553553641472",
     "previewed_at": "2019-06-20"
   },
-  "prices": {
-    "usd": "0.11",
-    "usd_foil": "0.42",
-    "usd_etched": null,
-    "eur": "0.12",
-    "eur_foil": "0.54",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=466807&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCerulean%2BDrake",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCerulean%2BDrake",
     "edhrec": "https://edhrec.com/route/?cc=Cerulean+Drake"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F192634%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=378783&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/73005?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

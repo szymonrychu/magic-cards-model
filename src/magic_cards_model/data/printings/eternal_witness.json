@@ -96,9 +96,7 @@
   "collector_number": "286",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "She remembers every word spoken, from the hero's oath to the baby's cry.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Chris Rahn",
   "artist_ids": [
     "7742047e-0f80-4c0f-a530-d07460165e86"
   ],
@@ -111,23 +109,10 @@
   "story_spotlight": false,
   "edhrec_rank": 115,
   "penny_rank": 700,
-  "prices": {
-    "usd": "2.52",
-    "usd_foil": "2.12",
-    "usd_etched": null,
-    "eur": "0.59",
-    "eur_foil": "1.34",
-    "tix": "0.05"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=627750&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEternal%2BWitness",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEternal%2BWitness",
     "edhrec": "https://edhrec.com/route/?cc=Eternal+Witness"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F507278%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=723669&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/114801?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

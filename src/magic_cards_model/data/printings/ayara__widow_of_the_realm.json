@@ -40,7 +40,6 @@
       ],
       "power": "3",
       "toughness": "3",
-      "artist": "Anna Podedworna",
       "artist_id": "1874cb2c-f690-475f-a217-c14f11166758",
       "illustration_id": "b641215d-7836-48c6-956b-5c677ca98270",
       "image_uris": {
@@ -73,8 +72,6 @@
       ],
       "power": "4",
       "toughness": "4",
-      "flavor_text": "Ayara cherished her new machine servitors just as much as she once did her many suitors: not at all.",
-      "artist": "Anna Podedworna",
       "artist_id": "1874cb2c-f690-475f-a217-c14f11166758",
       "illustration_id": "bcc22e1e-97c3-4be6-ad1b-ac88c3375a15",
       "image_uris": {
@@ -146,7 +143,6 @@
   "collector_number": "90",
   "digital": false,
   "rarity": "rare",
-  "artist": "Anna Podedworna",
   "artist_ids": [
     "1874cb2c-f690-475f-a217-c14f11166758"
   ],
@@ -167,23 +163,10 @@
     "source_uri": "https://twitter.com/SheldonMenery/status/1641624752291758082",
     "previewed_at": "2023-03-30"
   },
-  "prices": {
-    "usd": "0.43",
-    "usd_foil": "0.47",
-    "usd_etched": null,
-    "eur": "0.24",
-    "eur_foil": "0.32",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607120&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAyara%252C%2BWidow%2Bof%2Bthe%2BRealm%2B%252F%252F%2BAyara%252C%2BFurnace%2BQueen",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAyara%252C%2BWidow%2Bof%2Bthe%2BRealm%2B%252F%252F%2BAyara%252C%2BFurnace%2BQueen",
     "edhrec": "https://edhrec.com/route/?cc=Ayara%2C+Widow+of+the+Realm"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490562%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704361&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/110012?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

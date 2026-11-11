@@ -101,9 +101,7 @@
   "collector_number": "215",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"Each year that passes rots you with scars. Shelter your heart, for the world is cruel.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Carl Critchlow",
   "artist_ids": [
     "17948f16-611a-44b8-8d10-9895a0bdfff1"
   ],
@@ -120,22 +118,9 @@
   "story_spotlight": false,
   "edhrec_rank": 5780,
   "penny_rank": 8180,
-  "prices": {
-    "usd": "0.53",
-    "usd_foil": "0.91",
-    "usd_etched": null,
-    "eur": "0.51",
-    "eur_foil": "0.91",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDoran%252C%2BBesieged%2Bby%2BTime",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDoran%252C%2BBesieged%2Bby%2BTime",
     "edhrec": "https://edhrec.com/route/?cc=Doran%2C+Besieged+by+Time"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671516%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=865180&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/146823?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

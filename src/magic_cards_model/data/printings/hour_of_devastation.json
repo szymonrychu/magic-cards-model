@@ -96,9 +96,7 @@
   "digital": false,
   "rarity": "rare",
   "watermark": "planeswalker",
-  "flavor_text": "\"Everything here exists or perishes at my whim. Including you, Gatewatch.\"\n\u2014Nicol Bolas",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Simon Dominic",
   "artist_ids": [
     "b0e80135-db5a-4b88-a0bc-815a0e94faa1"
   ],
@@ -112,23 +110,10 @@
   "story_spotlight": true,
   "edhrec_rank": 10303,
   "penny_rank": 5668,
-  "prices": {
-    "usd": "0.44",
-    "usd_foil": "1.05",
-    "usd_etched": null,
-    "eur": "0.36",
-    "eur_foil": "1.42",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=430786&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHour%2Bof%2BDevastation",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHour%2Bof%2BDevastation",
     "edhrec": "https://edhrec.com/route/?cc=Hour+of+Devastation"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F136610%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=298794&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/64678?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -98,9 +98,7 @@
   "collector_number": "143",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "The purest virtue burns brighter than the sun and hotter than dragonfire.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Heonhwa",
   "artist_ids": [
     "ce415f9e-8a20-4d64-bcba-2b1b7e94012e"
   ],
@@ -118,23 +116,10 @@
     "source_uri": "https://magic.wizards.com/en/articles/archive/feature/throne-eldraine-mechanics-2019-09-04",
     "previewed_at": "2019-09-04"
   },
-  "prices": {
-    "usd": "0.15",
-    "usd_foil": "0.32",
-    "usd_etched": null,
-    "eur": "0.04",
-    "eur_foil": "0.32",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473105&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSlaying%2BFire",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSlaying%2BFire",
     "edhrec": "https://edhrec.com/route/?cc=Slaying+Fire"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F198422%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=398934&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/78416?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

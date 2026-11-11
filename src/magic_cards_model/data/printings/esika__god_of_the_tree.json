@@ -50,8 +50,6 @@
       ],
       "power": "1",
       "toughness": "4",
-      "flavor_text": "\"I know this world, from canopy to roots.\"",
-      "artist": "Johannes Voss",
       "artist_id": "3593dd7e-c547-4a32-81cd-7da725f60118",
       "illustration_id": "b02e8c7b-b733-4d3b-9d71-7a48c4d2e713",
       "image_uris": {
@@ -81,8 +79,6 @@
         "U",
         "W"
       ],
-      "flavor_text": "Starnheim awaits.",
-      "artist": "Johannes Voss",
       "artist_id": "3593dd7e-c547-4a32-81cd-7da725f60118",
       "illustration_id": "959283a3-5d90-4e9b-95ce-abc0ab93f75c",
       "image_uris": {
@@ -154,7 +150,6 @@
   "collector_number": "168",
   "digital": false,
   "rarity": "mythic",
-  "artist": "Johannes Voss",
   "artist_ids": [
     "3593dd7e-c547-4a32-81cd-7da725f60118"
   ],
@@ -175,23 +170,10 @@
     "source_uri": "https://strategy.channelfireball.com/all-strategy/mtg/kaldheim-card-preview-esika-god-of-the-tree-the-prismatic-bridge/",
     "previewed_at": "2021-01-08"
   },
-  "prices": {
-    "usd": "21.39",
-    "usd_foil": "23.40",
-    "usd_etched": null,
-    "eur": "15.63",
-    "eur_foil": "17.86",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=503781&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEsika%252C%2BGod%2Bof%2Bthe%2BTree%2B%252F%252F%2BThe%2BPrismatic%2BBridge",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEsika%252C%2BGod%2Bof%2Bthe%2BTree%2B%252F%252F%2BThe%2BPrismatic%2BBridge",
     "edhrec": "https://edhrec.com/route/?cc=Esika%2C+God+of+the+Tree"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F230163%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=530332&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/87673?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

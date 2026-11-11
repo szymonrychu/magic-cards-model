@@ -101,9 +101,7 @@
   "collector_number": "155",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"I will be Spider-Man. With my unparalleled genius, I shall become the *Superior* Spider-Man.\"\n\u2014Otto Octavius",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Carlos Dattoli",
   "artist_ids": [
     "c8b4dbe7-33a8-4ca7-8974-d4c356f14510"
   ],
@@ -127,22 +125,9 @@
     "source_uri": "https://www.twitch.tv/magic",
     "previewed_at": "2025-09-02"
   },
-  "prices": {
-    "usd": "2.32",
-    "usd_foil": "2.94",
-    "usd_etched": null,
-    "eur": "2.53",
-    "eur_foil": "3.71",
-    "tix": "6.59"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSuperior%2BSpider-Man",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSuperior%2BSpider-Man",
     "edhrec": "https://edhrec.com/route/?cc=Superior+Spider-Man"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F651942%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=846675&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/153553?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

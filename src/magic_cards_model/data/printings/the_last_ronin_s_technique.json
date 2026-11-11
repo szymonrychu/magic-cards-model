@@ -115,9 +115,7 @@
   "collector_number": "12",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "They stood beside him. Whether they were figments or true spirits no longer mattered.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Adam Volker",
   "artist_ids": [
     "73924cc0-faa0-4c71-80e7-ef2a1a1ab005"
   ],
@@ -133,22 +131,9 @@
   ],
   "edhrec_rank": 12259,
   "penny_rank": 6428,
-  "prices": {
-    "usd": "0.24",
-    "usd_foil": "0.35",
-    "usd_etched": null,
-    "eur": "0.13",
-    "eur_foil": "0.20",
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThe%2BLast%2BRonin%2527s%2BTechnique",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThe%2BLast%2BRonin%2527s%2BTechnique",
     "edhrec": "https://edhrec.com/route/?cc=The+Last+Ronin%27s+Technique"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F679053%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=873323&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/147647?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

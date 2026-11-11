@@ -116,7 +116,6 @@
   "digital": false,
   "rarity": "uncommon",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Narendra Bintara Adi",
   "artist_ids": [
     "1be2b84d-99c5-4a51-b741-105cbeb53078"
   ],
@@ -135,22 +134,9 @@
   ],
   "edhrec_rank": 8928,
   "penny_rank": 9338,
-  "prices": {
-    "usd": "0.25",
-    "usd_foil": "0.31",
-    "usd_etched": null,
-    "eur": "0.11",
-    "eur_foil": "0.15",
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMichelangelo%252C%2BMutant%2BBFF",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMichelangelo%252C%2BMutant%2BBFF",
     "edhrec": "https://edhrec.com/route/?cc=Michelangelo%2C+Mutant+BFF"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F679855%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=873790&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/147863?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

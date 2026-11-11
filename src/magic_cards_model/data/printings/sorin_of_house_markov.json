@@ -43,7 +43,6 @@
       ],
       "power": "1",
       "toughness": "4",
-      "artist": "Matt Stewart",
       "artist_id": "20871267-2d8a-41d5-b03a-be3d557c5734",
       "illustration_id": "47d243ef-5482-4b70-9692-9eed3d801e8e",
       "image_uris": {
@@ -75,7 +74,6 @@
         "W"
       ],
       "loyalty": "3",
-      "artist": "Matt Stewart",
       "artist_id": "20871267-2d8a-41d5-b03a-be3d557c5734",
       "illustration_id": "97f977d0-0ffc-4da2-8c55-5cdda449d5eb",
       "image_uris": {
@@ -165,7 +163,6 @@
   "collector_number": "245",
   "digital": false,
   "rarity": "mythic",
-  "artist": "Matt Stewart",
   "artist_ids": [
     "20871267-2d8a-41d5-b03a-be3d557c5734"
   ],
@@ -185,23 +182,10 @@
     "source_uri": "",
     "previewed_at": "2024-05-21"
   },
-  "prices": {
-    "usd": "4.08",
-    "usd_foil": "4.52",
-    "usd_etched": null,
-    "eur": "3.30",
-    "eur_foil": "5.16",
-    "tix": "0.06"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=661769&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSorin%2Bof%2BHouse%2BMarkov%2B%252F%252F%2BSorin%252C%2BRavenous%2BNeonate",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSorin%2Bof%2BHouse%2BMarkov%2B%252F%252F%2BSorin%252C%2BRavenous%2BNeonate",
     "edhrec": "https://edhrec.com/route/?cc=Sorin+of+House+Markov"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F552341%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=771176&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/126525?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

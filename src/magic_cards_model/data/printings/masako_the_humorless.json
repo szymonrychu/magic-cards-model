@@ -99,9 +99,7 @@
   "collector_number": "33",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "Konda's servants dared not neglect their duties for a moment under Masako's icy gaze, knowing that what she saw, Lord Konda would hear.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Ben Thompson",
   "artist_ids": [
     "f3116c88-57f4-4fd1-95f3-cfd163977661"
   ],
@@ -114,23 +112,10 @@
   "story_spotlight": false,
   "edhrec_rank": 11705,
   "penny_rank": 12390,
-  "prices": {
-    "usd": "22.86",
-    "usd_foil": "58.16",
-    "usd_etched": null,
-    "eur": "4.34",
-    "eur_foil": "21.64",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=79215&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMasako%2Bthe%2BHumorless",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMasako%2Bthe%2BHumorless",
     "edhrec": "https://edhrec.com/route/?cc=Masako+the+Humorless"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F12089%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=12108&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/21221?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

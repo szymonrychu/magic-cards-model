@@ -98,7 +98,6 @@
   "digital": false,
   "rarity": "mythic",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Martin de Diego S\u00e1daba",
   "artist_ids": [
     "bc760b5e-6f98-4a17-9b12-5f4eccd12bb2"
   ],
@@ -120,22 +119,9 @@
     "source_uri": "https://www.youtube.com/watch?v=Swjj0JGhFco",
     "previewed_at": "2025-07-10"
   },
-  "prices": {
-    "usd": "1.59",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "1.84",
-    "eur_foil": null,
-    "tix": "0.08"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTekuthal%252C%2BInquiry%2BDominus",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTekuthal%252C%2BInquiry%2BDominus",
     "edhrec": "https://edhrec.com/route/?cc=Tekuthal%2C+Inquiry+Dominus"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F642807%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=834258&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/142293?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

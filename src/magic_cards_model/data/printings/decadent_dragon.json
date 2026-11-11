@@ -57,7 +57,6 @@
       "oracle_text": "Flying, trample\nWhenever this creature attacks, create a Treasure token.",
       "power": "4",
       "toughness": "4",
-      "artist": "Wylie Beckert",
       "artist_id": "074daf3d-0849-4c4a-b5a5-c276384e81e5",
       "illustration_id": "822f4129-50da-4d66-b6ac-2380c8fdcbb0"
     },
@@ -67,7 +66,6 @@
       "mana_cost": "{2}{B}",
       "type_line": "Instant \u2014 Adventure",
       "oracle_text": "Exile the top two cards of target opponent's library face down. You may look at and play those cards for as long as they remain exiled.",
-      "artist": "Wylie Beckert",
       "artist_id": "074daf3d-0849-4c4a-b5a5-c276384e81e5"
     }
   ],
@@ -152,7 +150,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Wylie Beckert",
   "artist_ids": [
     "074daf3d-0849-4c4a-b5a5-c276384e81e5"
   ],
@@ -166,23 +163,10 @@
   "story_spotlight": false,
   "edhrec_rank": 3287,
   "penny_rank": 2249,
-  "prices": {
-    "usd": "2.09",
-    "usd_foil": "2.12",
-    "usd_etched": null,
-    "eur": "0.69",
-    "eur_foil": "1.10",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=629724&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDecadent%2BDragon%2B%252F%252F%2BExpensive%2BTaste",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDecadent%2BDragon%2B%252F%252F%2BExpensive%2BTaste",
     "edhrec": "https://edhrec.com/route/?cc=Decadent+Dragon"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F512172%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=728114&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/116796?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

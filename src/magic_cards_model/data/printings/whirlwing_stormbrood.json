@@ -56,7 +56,6 @@
       "oracle_text": "Flash\nFlying\nYou may cast sorcery spells and Dragon spells as though they had flash.",
       "power": "4",
       "toughness": "3",
-      "artist": "Fajareka Setiawan",
       "artist_id": "0cc534e0-be18-4cb1-8521-50fabd0dac6f",
       "illustration_id": "c367c537-5de8-4ccc-9f00-3962261a8339"
     },
@@ -66,7 +65,6 @@
       "mana_cost": "{2}{G}",
       "type_line": "Sorcery \u2014 Omen",
       "oracle_text": "Put three +1/+1 counters on target creature you control. (Then shuffle this card into its owner's library.)",
-      "artist": "Fajareka Setiawan",
       "artist_id": "0cc534e0-be18-4cb1-8521-50fabd0dac6f"
     }
   ],
@@ -125,7 +123,6 @@
   "digital": false,
   "rarity": "uncommon",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Fajareka Setiawan",
   "artist_ids": [
     "0cc534e0-be18-4cb1-8521-50fabd0dac6f"
   ],
@@ -142,23 +139,10 @@
     "source_uri": "https://www.gamespot.com/articles/magic-the-gathering-card-creators-reveal-two-new-tarkir-dragonstorm-cards/1100-6530230/",
     "previewed_at": "2025-03-20"
   },
-  "prices": {
-    "usd": "0.21",
-    "usd_foil": "0.29",
-    "usd_etched": null,
-    "eur": "0.04",
-    "eur_foil": "0.18",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=693714&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWhirlwing%2BStormbrood%2B%252F%252F%2BDynamic%2BSoar",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWhirlwing%2BStormbrood%2B%252F%252F%2BDynamic%2BSoar",
     "edhrec": "https://edhrec.com/route/?cc=Whirlwing+Stormbrood"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F624407%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=818281&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/139435?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

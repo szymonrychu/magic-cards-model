@@ -94,9 +94,7 @@
   "collector_number": "1284",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "Their favorite place in all of Ravnica was still the glade where they first met.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Aya Kakeda",
   "artist_ids": [
     "d0f1bb0c-1ac2-4d9d-b1a6-4131c21440e0"
   ],
@@ -114,22 +112,9 @@
   "story_spotlight": false,
   "edhrec_rank": 3359,
   "penny_rank": 6123,
-  "prices": {
-    "usd": "8.05",
-    "usd_foil": "14.91",
-    "usd_etched": null,
-    "eur": "5.14",
-    "eur_foil": "6.72",
-    "tix": null
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DYeva%252C%2BNature%2527s%2BHerald",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DYeva%252C%2BNature%2527s%2BHerald",
     "edhrec": "https://edhrec.com/route/?cc=Yeva%2C+Nature%27s+Herald"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F493984%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=710704&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Yeva%2C+Nature%27s+Herald&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

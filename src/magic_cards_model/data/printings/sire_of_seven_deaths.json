@@ -102,9 +102,7 @@
   "collector_number": "1",
   "digital": false,
   "rarity": "mythic",
-  "flavor_text": "Born of the infinite void between realities, the Eldrazi have one goal: to consume.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Lius Lasahido",
   "artist_ids": [
     "0a0e9093-ce44-4a69-93a7-09b63e7c330d"
   ],
@@ -122,23 +120,10 @@
     "source_uri": "https://geekculture.co/mtg-foundations-sire-of-seven-deaths-card-preview/",
     "previewed_at": "2024-10-29"
   },
-  "prices": {
-    "usd": "18.04",
-    "usd_foil": "21.79",
-    "usd_etched": null,
-    "eur": "19.07",
-    "eur_foil": "24.36",
-    "tix": "3.54"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=679078&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSire%2Bof%2BSeven%2BDeaths",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSire%2Bof%2BSeven%2BDeaths",
     "edhrec": "https://edhrec.com/route/?cc=Sire+of+Seven+Deaths"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F591199%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=796513&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/133570?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

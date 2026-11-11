@@ -42,8 +42,6 @@
       "colors": [
         "U"
       ],
-      "flavor_text": "The Sunken Ruin houses all the learning of a long-forgotten age.",
-      "artist": "Magali Villeneuve",
       "artist_id": "9e6a55ae-be4d-4c23-a2a5-135737ffd879",
       "illustration_id": "ce2e2b15-3e46-45d9-a7f2-435f7cbc897c",
       "image_uris": {
@@ -67,7 +65,6 @@
       "type_line": "Legendary Land",
       "oracle_text": "(Transforms from Search for Azcanta.)\n{T}: Add {U}.\n{2}{U}, {T}: Look at the top four cards of your library. You may reveal a noncreature, nonland card from among them and put it into your hand. Put the rest on the bottom of your library in any order.",
       "colors": [],
-      "artist": "Magali Villeneuve",
       "artist_id": "9e6a55ae-be4d-4c23-a2a5-135737ffd879",
       "illustration_id": "51cd7805-e8c7-47e5-9cd6-8f26bb162176",
       "image_uris": {
@@ -157,7 +154,6 @@
   "collector_number": "74",
   "digital": false,
   "rarity": "rare",
-  "artist": "Magali Villeneuve",
   "artist_ids": [
     "9e6a55ae-be4d-4c23-a2a5-135737ffd879"
   ],
@@ -173,23 +169,10 @@
   "story_spotlight": false,
   "edhrec_rank": 3969,
   "penny_rank": 184,
-  "prices": {
-    "usd": "1.41",
-    "usd_foil": "4.77",
-    "usd_etched": null,
-    "eur": "1.70",
-    "eur_foil": "2.62",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=435226&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSearch%2Bfor%2BAzcanta%2B%252F%252F%2BAzcanta%252C%2Bthe%2BSunken%2BRuin",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSearch%2Bfor%2BAzcanta%2B%252F%252F%2BAzcanta%252C%2Bthe%2BSunken%2BRuin",
     "edhrec": "https://edhrec.com/route/?cc=Search+for+Azcanta"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F145370%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=301546&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/65160?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -88,9 +88,7 @@
   "digital": true,
   "rarity": "uncommon",
   "watermark": "mirran",
-  "flavor_text": "Reminders of Memnarch's reign still skirr across Mirrodin, reminiscent of his form if not his power.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Svetlin Velinov",
   "artist_ids": [
     "ffd063ae-c097-4f26-b2e6-b1e2137708bc"
   ],
@@ -103,22 +101,9 @@
   "story_spotlight": false,
   "edhrec_rank": 2286,
   "penny_rank": 284,
-  "prices": {
-    "usd": null,
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": null,
-    "eur_foil": null,
-    "tix": "0.24"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMemnite",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMemnite",
     "edhrec": "https://edhrec.com/route/?cc=Memnite"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DMemnite%26view%3Dgrid",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products/Search?referrer=scryfall&searchString=Memnite&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/40246?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

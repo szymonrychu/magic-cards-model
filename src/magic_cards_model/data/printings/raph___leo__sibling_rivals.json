@@ -99,9 +99,7 @@
   "collector_number": "166",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "At odds as brothers, perfectly in sync as fighters.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Fajareka Setiawan",
   "artist_ids": [
     "0cc534e0-be18-4cb1-8521-50fabd0dac6f"
   ],
@@ -121,22 +119,9 @@
   ],
   "edhrec_rank": 8781,
   "penny_rank": 8287,
-  "prices": {
-    "usd": "0.71",
-    "usd_foil": "0.91",
-    "usd_etched": null,
-    "eur": "0.50",
-    "eur_foil": "0.96",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRaph%2B%2526%2BLeo%252C%2BSibling%2BRivals",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRaph%2B%2526%2BLeo%252C%2BSibling%2BRivals",
     "edhrec": "https://edhrec.com/route/?cc=Raph+%26+Leo%2C+Sibling+Rivals"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F673670%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=868400&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/147955?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

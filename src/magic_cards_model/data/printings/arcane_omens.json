@@ -97,9 +97,7 @@
   "collector_number": "73",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "Lluwen suddenly felt that he was seeing something very dangerous. The crackling magic, the thunderous chanting\u2014the urge to turn and run replaced all his curiosity.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Antonio Jos\u00e9 Manzanedo",
   "artist_ids": [
     "74986d28-0001-4a78-827c-e490b325d0e3"
   ],
@@ -117,22 +115,9 @@
     "source_uri": "https://magic.wizards.com/en/news/magic-story/secrets-of-strixhaven-episode-2-travels-and-travails",
     "previewed_at": "2026-03-24"
   },
-  "prices": {
-    "usd": "0.16",
-    "usd_foil": "0.21",
-    "usd_etched": null,
-    "eur": "0.06",
-    "eur_foil": "0.08",
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DArcane%2BOmens",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DArcane%2BOmens",
     "edhrec": "https://edhrec.com/route/?cc=Arcane+Omens"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F686520%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=880336&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/149645?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

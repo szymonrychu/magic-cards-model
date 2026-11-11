@@ -98,9 +98,7 @@
   "collector_number": "163",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "Five rivers encircle Theros, flowing with waters more ancient than the world itself.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Richard Wright",
   "artist_ids": [
     "7b1b0ce9-2c58-4321-a2a7-cdc94feae082"
   ],
@@ -112,23 +110,10 @@
   "booster": true,
   "story_spotlight": false,
   "edhrec_rank": 119,
-  "prices": {
-    "usd": "34.64",
-    "usd_foil": "47.25",
-    "usd_etched": null,
-    "eur": "24.58",
-    "eur_foil": "44.57",
-    "tix": "0.81"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=380453&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMana%2BConfluence",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMana%2BConfluence",
     "edhrec": "https://edhrec.com/route/?cc=Mana+Confluence"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F82224%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=266618&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/52120?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

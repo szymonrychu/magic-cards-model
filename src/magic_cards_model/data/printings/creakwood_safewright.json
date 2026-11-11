@@ -97,9 +97,7 @@
   "collector_number": "96",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"I will endure grasping vine and prickling bramble to preserve even one flower.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Heather Hudson",
   "artist_ids": [
     "4441fe52-9e41-40c1-9b74-8510426279ab"
   ],
@@ -111,22 +109,9 @@
   "booster": true,
   "story_spotlight": false,
   "edhrec_rank": 15840,
-  "prices": {
-    "usd": "0.18",
-    "usd_foil": "0.31",
-    "usd_etched": null,
-    "eur": "0.08",
-    "eur_foil": "0.13",
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCreakwood%2BSafewright",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCreakwood%2BSafewright",
     "edhrec": "https://edhrec.com/route/?cc=Creakwood+Safewright"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671928%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=865857&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/146579?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

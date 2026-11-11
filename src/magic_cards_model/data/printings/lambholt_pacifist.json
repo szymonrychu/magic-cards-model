@@ -39,7 +39,6 @@
       ],
       "power": "3",
       "toughness": "3",
-      "artist": "Ryan Pancoast",
       "artist_id": "89cc9475-dda2-4d13-bf88-54b92867a25c",
       "illustration_id": "aa3cb1e2-756c-419a-b3e5-21f7aa939ace",
       "image_uris": {
@@ -70,8 +69,6 @@
       ],
       "power": "4",
       "toughness": "4",
-      "flavor_text": "True peace can't be achieved until everyone else is dead.",
-      "artist": "Ryan Pancoast",
       "artist_id": "89cc9475-dda2-4d13-bf88-54b92867a25c",
       "illustration_id": "349821b6-7d00-4842-8dfb-23e9733fd7d4",
       "image_uris": {
@@ -160,7 +157,6 @@
   "collector_number": "215",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Ryan Pancoast",
   "artist_ids": [
     "89cc9475-dda2-4d13-bf88-54b92867a25c"
   ],
@@ -175,23 +171,10 @@
   "story_spotlight": false,
   "edhrec_rank": 24145,
   "penny_rank": 3817,
-  "prices": {
-    "usd": "0.25",
-    "usd_foil": "0.53",
-    "usd_etched": null,
-    "eur": "0.09",
-    "eur_foil": "0.59",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=409976&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLambholt%2BPacifist%2B%252F%252F%2BLambholt%2BButcher",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLambholt%2BPacifist%2B%252F%252F%2BLambholt%2BButcher",
     "edhrec": "https://edhrec.com/route/?cc=Lambholt+Pacifist"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F116496%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=289240&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/60112?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

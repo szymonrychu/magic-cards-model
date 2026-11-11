@@ -118,7 +118,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Ignatius Budi",
   "artist_ids": [
     "328c5dee-281f-4e4d-add9-c401f4e17cf6"
   ],
@@ -138,22 +137,9 @@
   ],
   "edhrec_rank": 6265,
   "penny_rank": 6578,
-  "prices": {
-    "usd": "2.11",
-    "usd_foil": "2.28",
-    "usd_etched": null,
-    "eur": "1.51",
-    "eur_foil": "2.01",
-    "tix": "0.36"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMutagen%2BMan%252C%2BLiving%2BOoze",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMutagen%2BMan%252C%2BLiving%2BOoze",
     "edhrec": "https://edhrec.com/route/?cc=Mutagen+Man%2C+Living+Ooze"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F673579%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=868361&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/147871?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -52,7 +52,6 @@
       "type_line": "Instant",
       "oracle_text": "Sacrifice a creature. Return up to X cards from your graveyard to your hand, where X is the number of colors that creature was. Exile this card.",
       "watermark": "golgari",
-      "artist": "Jim Nelson",
       "artist_id": "aa9f64d1-29e1-4c82-877e-44c18183f40b",
       "illustration_id": "7cc4186c-ea67-4ff3-b482-a0ed311153c8"
     },
@@ -63,7 +62,6 @@
       "type_line": "Instant",
       "oracle_text": "Other spells you control can't be countered this turn.\nDraw a card.",
       "watermark": "simic",
-      "artist": "Jim Nelson",
       "artist_id": "aa9f64d1-29e1-4c82-877e-44c18183f40b"
     }
   ],
@@ -121,7 +119,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Jim Nelson",
   "artist_ids": [
     "aa9f64d1-29e1-4c82-877e-44c18183f40b"
   ],
@@ -134,23 +131,10 @@
   "story_spotlight": false,
   "edhrec_rank": 24601,
   "penny_rank": 8664,
-  "prices": {
-    "usd": "0.42",
-    "usd_foil": "3.73",
-    "usd_etched": null,
-    "eur": "0.29",
-    "eur_foil": "1.31",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=107373&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBound%2B%252F%252F%2BDetermined",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBound%2B%252F%252F%2BDetermined",
     "edhrec": "https://edhrec.com/route/?cc=Bound+%2F%2F+Determined"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F13833%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=12969&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/24359?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

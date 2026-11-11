@@ -95,9 +95,7 @@
   "collector_number": "891",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"Vine-wreathed, he nurtures life among the dead.\"\n\u2014Psemilla, Meletian poet",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Scott Murphy",
   "artist_ids": [
     "07c7ac65-dfa6-4273-9c66-ec9d8f3e2226"
   ],
@@ -114,23 +112,10 @@
   "story_spotlight": false,
   "edhrec_rank": 301,
   "penny_rank": 3369,
-  "prices": {
-    "usd": "10.83",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "6.24",
-    "eur_foil": null,
-    "tix": "0.66"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=625296&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDryad%2Bof%2Bthe%2BIlysian%2BGrove",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDryad%2Bof%2Bthe%2BIlysian%2BGrove",
     "edhrec": "https://edhrec.com/route/?cc=Dryad+of+the+Ilysian+Grove"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F505970%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=723082&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/114123?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

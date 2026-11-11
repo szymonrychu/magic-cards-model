@@ -117,9 +117,7 @@
   "collector_number": "241",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "Jeskai scholars fashioned devices to forecast the behavior of the dragonstorms.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Adrián Rodríguez Pérez",
   "artist_ids": [
     "24f88106-bd8e-4fea-963d-c523bd8b8137"
   ],
@@ -136,23 +134,10 @@
     "source_uri": "https://games.mxdwn.com/news/mxdwn-exclusive-first-look-at-new-magic-the-gathering-cards-dragonstorm-forecaster-and-dragonstorm-globe-from-upcoming-tarkir-dragonstorm-set/",
     "previewed_at": "2025-03-21"
   },
-  "prices": {
-    "usd": "0.27",
-    "usd_foil": "0.35",
-    "usd_etched": null,
-    "eur": "0.11",
-    "eur_foil": "0.19",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=693721&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDragonstorm%2BGlobe",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDragonstorm%2BGlobe",
     "edhrec": "https://edhrec.com/route/?cc=Dragonstorm+Globe"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F624914%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=818284&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/139451?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

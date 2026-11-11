@@ -98,9 +98,7 @@
   "collector_number": "552",
   "digital": false,
   "rarity": "mythic",
-  "flavor_text": "\"It's not over yet... this isn't the end!\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Magali Villeneuve",
   "artist_ids": [
     "9e6a55ae-be4d-4c23-a2a5-135737ffd879"
   ],
@@ -121,22 +119,9 @@
     "ffvii"
   ],
   "edhrec_rank": 7023,
-  "prices": {
-    "usd": null,
-    "usd_foil": "1.42",
-    "usd_etched": null,
-    "eur": null,
-    "eur_foil": "2.25",
-    "tix": "0.60"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCloud%252C%2BPlanet%2527s%2BChampion",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCloud%252C%2BPlanet%2527s%2BChampion",
     "edhrec": "https://edhrec.com/route/?cc=Cloud%2C+Planet%27s+Champion"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F618869%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=826153&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/142123?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

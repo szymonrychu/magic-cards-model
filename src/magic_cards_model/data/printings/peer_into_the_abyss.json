@@ -96,9 +96,7 @@
   "collector_number": "117",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"Oh, don't be so dramatic. When your eyes bleed, and your brain leaks out your ears, then we'll talk about lost sanity.\"\n\u2014Braids, dementia summoner",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Izzy",
   "artist_ids": [
     "2c3d2473-ff5d-4309-8194-e0b2def2ab65"
   ],
@@ -117,23 +115,10 @@
     "source_uri": "https://twitter.com/StarCityGames/status/1268920511972749314?s=20",
     "previewed_at": "2020-06-05"
   },
-  "prices": {
-    "usd": "3.67",
-    "usd_foil": "4.08",
-    "usd_etched": null,
-    "eur": "1.41",
-    "eur_foil": "3.44",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=485440&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPeer%2Binto%2Bthe%2BAbyss",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPeer%2Binto%2Bthe%2BAbyss",
     "edhrec": "https://edhrec.com/route/?cc=Peer+into+the+Abyss"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F215373%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=466339&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/81461?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

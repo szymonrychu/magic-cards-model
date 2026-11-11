@@ -94,9 +94,7 @@
   "collector_number": "216",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "Humans still feared wolves, though no connection between them and the curse of lycanthropy had ever been proved.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Tomasz Jedruszek",
   "artist_ids": [
     "bba69285-2445-4a4b-a847-59397be972ea"
   ],
@@ -109,23 +107,10 @@
   "story_spotlight": false,
   "edhrec_rank": 19316,
   "penny_rank": 15284,
-  "prices": {
-    "usd": "0.10",
-    "usd_foil": "0.31",
-    "usd_etched": null,
-    "eur": "0.08",
-    "eur_foil": "0.41",
-    "tix": null
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=446184&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWandering%2BWolf",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWandering%2BWolf",
     "edhrec": "https://edhrec.com/route/?cc=Wandering+Wolf"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F167942%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=359033&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Wandering+Wolf&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

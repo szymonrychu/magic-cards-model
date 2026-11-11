@@ -115,9 +115,7 @@
   "collector_number": "123",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"Knock, knock . . . too late.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Josh Hass",
   "artist_ids": [
     "8fa1fdf0-96d6-46f4-a7ff-b1c0257c3735"
   ],
@@ -130,23 +128,10 @@
   "story_spotlight": false,
   "edhrec_rank": 26499,
   "penny_rank": 11739,
-  "prices": {
-    "usd": "0.06",
-    "usd_foil": "0.52",
-    "usd_etched": null,
-    "eur": "0.04",
-    "eur_foil": "0.11",
-    "tix": "0.04"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=417696&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMaulfist%2BDoorbuster",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMaulfist%2BDoorbuster",
     "edhrec": "https://edhrec.com/route/?cc=Maulfist+Doorbuster"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F123144%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=292837&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/61713?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

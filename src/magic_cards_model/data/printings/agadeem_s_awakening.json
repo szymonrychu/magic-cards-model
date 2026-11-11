@@ -38,8 +38,6 @@
       "colors": [
         "B"
       ],
-      "flavor_text": "\"Now is the death-hour, just before dawn. Wake, sleepers, and haunt the living!\"\n\u2014Vivias, Witch Vessel",
-      "artist": "Dmitry Burmak",
       "artist_id": "9872f5c0-274a-48ce-a9ad-6f0d5654e29c",
       "illustration_id": "9c4fd66b-b125-4e63-a0ee-d49ec58fc381",
       "image_uris": {
@@ -63,8 +61,6 @@
       "type_line": "Land",
       "oracle_text": "As this land enters, you may pay 3 life. If you don't, it enters tapped.\n{T}: Add {B}.",
       "colors": [],
-      "flavor_text": "\"Here below the hedron fields, souls and secrets lie entombed.\"\n\u2014Vivias, Witch Vessel",
-      "artist": "Dmitry Burmak",
       "artist_id": "9872f5c0-274a-48ce-a9ad-6f0d5654e29c",
       "illustration_id": "259cbafd-c75a-45b1-9b1e-a428796aa977",
       "image_uris": {
@@ -136,7 +132,6 @@
   "collector_number": "90",
   "digital": false,
   "rarity": "mythic",
-  "artist": "Dmitry Burmak",
   "artist_ids": [
     "9872f5c0-274a-48ce-a9ad-6f0d5654e29c"
   ],
@@ -153,23 +148,10 @@
     "source_uri": "https://articles.starcitygames.com/news/black-gets-modal-double-faced-mythic-in-agadeems-awakening/",
     "previewed_at": "2020-09-08"
   },
-  "prices": {
-    "usd": "28.51",
-    "usd_foil": "30.91",
-    "usd_etched": null,
-    "eur": "24.04",
-    "eur_foil": "23.10",
-    "tix": "1.37"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=491723&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAgadeem%2527s%2BAwakening%2B%252F%252F%2BAgadeem%252C%2Bthe%2BUndercrypt",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAgadeem%2527s%2BAwakening%2B%252F%252F%2BAgadeem%252C%2Bthe%2BUndercrypt",
     "edhrec": "https://edhrec.com/route/?cc=Agadeem%27s+Awakening"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F222163%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=496690&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/83139?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

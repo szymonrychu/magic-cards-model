@@ -100,9 +100,7 @@
   "digital": false,
   "rarity": "uncommon",
   "watermark": "echoverse",
-  "flavor_text": "\"Every exit is covered. You can't run.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Tuan Duong Chu",
   "artist_ids": [
     "d84246f9-a536-485f-a21d-a237302ed100"
   ],
@@ -117,22 +115,9 @@
   "booster": false,
   "story_spotlight": false,
   "edhrec_rank": 30007,
-  "prices": {
-    "usd": "0.24",
-    "usd_foil": "0.32",
-    "usd_etched": null,
-    "eur": "0.14",
-    "eur_foil": "0.23",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTetsuko%2BUmezawa%252C%2BPursuer",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTetsuko%2BUmezawa%252C%2BPursuer",
     "edhrec": "https://edhrec.com/route/?cc=Tetsuko+Umezawa%2C+Pursuer"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F716677%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908841&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/155650?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

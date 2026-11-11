@@ -40,7 +40,6 @@
       "colors": [
         "G"
       ],
-      "artist": "Solan",
       "artist_id": "5c034af9-d45f-4607-849a-fbdbc8bcbbe7",
       "illustration_id": "36e0968c-b808-482c-abf8-27698557cc5f",
       "image_uris": {
@@ -71,8 +70,6 @@
       ],
       "power": "4",
       "toughness": "4",
-      "flavor_text": "\"I've chosen a name for her . . . Terra.\"",
-      "artist": "Danciao",
       "artist_id": "5a05c4b4-32cf-41a0-98d5-26a485e77b5a",
       "illustration_id": "315416fc-a195-462e-ab31-b24143503f83",
       "image_uris": {
@@ -144,7 +141,6 @@
   "collector_number": "185",
   "digital": false,
   "rarity": "rare",
-  "artist": "Solan & Danciao",
   "artist_ids": [
     "5c034af9-d45f-4607-849a-fbdbc8bcbbe7",
     "5a05c4b4-32cf-41a0-98d5-26a485e77b5a"
@@ -169,22 +165,9 @@
     "source_uri": "https://magic.wizards.com/en/news/feature/final-fantasy-a-plethora-of-choices",
     "previewed_at": "2025-05-12"
   },
-  "prices": {
-    "usd": "1.50",
-    "usd_foil": "2.63",
-    "usd_etched": null,
-    "eur": "1.13",
-    "eur_foil": "1.82",
-    "tix": "0.70"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEsper%2BOrigins%2B%252F%252F%2BSummon%253A%2BEsper%2BMaduin",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEsper%2BOrigins%2B%252F%252F%2BSummon%253A%2BEsper%2BMaduin",
     "edhrec": "https://edhrec.com/route/?cc=Esper+Origins"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F635072%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=824950&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/141309?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

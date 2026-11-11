@@ -43,7 +43,6 @@
       ],
       "power": "2",
       "toughness": "1",
-      "artist": "John Stanko",
       "artist_id": "b0f038a0-73b5-4806-918e-9cd11b5f92e1",
       "illustration_id": "79d1bebf-7b04-4ec6-89e0-7dd1e2130cae",
       "image_uris": {
@@ -74,8 +73,6 @@
       ],
       "power": "2",
       "toughness": "2",
-      "flavor_text": "\"It has no need of wealth in the afterlife. It steals and kills purely for its own spiteful amusement.\"\n\u2014Kaya",
-      "artist": "John Stanko",
       "artist_id": "b0f038a0-73b5-4806-918e-9cd11b5f92e1",
       "illustration_id": "d97487be-f3e0-447e-9405-fa37907c3c28",
       "image_uris": {
@@ -147,7 +144,6 @@
   "collector_number": "92",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "John Stanko",
   "artist_ids": [
     "b0f038a0-73b5-4806-918e-9cd11b5f92e1"
   ],
@@ -166,23 +162,10 @@
     "source_uri": "https://twitter.com/val_pl_mafr/status/1434901009394974725",
     "previewed_at": "2021-09-06"
   },
-  "prices": {
-    "usd": "0.09",
-    "usd_foil": "0.40",
-    "usd_etched": null,
-    "eur": "0.10",
-    "eur_foil": "0.05",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=534860&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCovert%2BCutpurse%2B%252F%252F%2BCovetous%2BGeist",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCovert%2BCutpurse%2B%252F%252F%2BCovetous%2BGeist",
     "edhrec": "https://edhrec.com/route/?cc=Covert+Cutpurse"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F248053%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=574892&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/93134?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

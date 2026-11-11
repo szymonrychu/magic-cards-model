@@ -43,7 +43,6 @@
       ],
       "power": "2",
       "toughness": "3",
-      "artist": "Ryan Pancoast",
       "artist_id": "89cc9475-dda2-4d13-bf88-54b92867a25c",
       "illustration_id": "938b739f-4538-4ac6-b062-86eaec386b76",
       "image_uris": {
@@ -76,7 +75,6 @@
       ],
       "power": "4",
       "toughness": "4",
-      "artist": "Ryan Pancoast",
       "artist_id": "89cc9475-dda2-4d13-bf88-54b92867a25c",
       "illustration_id": "19c80351-3ec4-4894-8efb-b7b389f5dbfb",
       "image_uris": {
@@ -148,7 +146,6 @@
   "collector_number": "233",
   "digital": false,
   "rarity": "rare",
-  "artist": "Ryan Pancoast",
   "artist_ids": [
     "89cc9475-dda2-4d13-bf88-54b92867a25c"
   ],
@@ -170,23 +167,10 @@
     "source_uri": "https://mtg.bigweb.co.jp/article/preview/MID",
     "previewed_at": "2021-09-08"
   },
-  "prices": {
-    "usd": "0.24",
-    "usd_foil": "0.35",
-    "usd_etched": null,
-    "eur": "0.17",
-    "eur_foil": "0.46",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=535028&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLudevic%252C%2BNecrogenius%2B%252F%252F%2BOlag%252C%2BLudevic%2527s%2BHubris",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLudevic%252C%2BNecrogenius%2B%252F%252F%2BOlag%252C%2BLudevic%2527s%2BHubris",
     "edhrec": "https://edhrec.com/route/?cc=Ludevic%2C+Necrogenius"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F248305%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=575088&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/93470?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

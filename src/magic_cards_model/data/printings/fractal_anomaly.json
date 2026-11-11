@@ -114,9 +114,7 @@
   "digital": false,
   "rarity": "uncommon",
   "watermark": "quandrix",
-  "flavor_text": "\"Dear dad, please send sixteen tons of krill in your next care package. Will explain at semester break.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Steve Ellis",
   "artist_ids": [
     "39d8411c-2187-426c-8ad3-d4f688b22db1"
   ],
@@ -134,22 +132,9 @@
     "source_uri": "https://www.youtube.com/shorts/cgiOo7xPGS0",
     "previewed_at": "2026-04-04"
   },
-  "prices": {
-    "usd": "0.22",
-    "usd_foil": "0.27",
-    "usd_etched": null,
-    "eur": "0.07",
-    "eur_foil": "0.13",
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFractal%2BAnomaly",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFractal%2BAnomaly",
     "edhrec": "https://edhrec.com/route/?cc=Fractal+Anomaly"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F688816%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=882049&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/149599?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -100,9 +100,7 @@
   "digital": false,
   "rarity": "common",
   "watermark": "dimir",
-  "flavor_text": "In the undercity, forgetfulness is often encouraged at the point of a blade.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Ron Spears",
   "artist_ids": [
     "fce9030b-86bd-4439-b06a-920a1eeb184c"
   ],
@@ -115,23 +113,10 @@
   "story_spotlight": false,
   "edhrec_rank": 27099,
   "penny_rank": 11465,
-  "prices": {
-    "usd": "0.21",
-    "usd_foil": "0.47",
-    "usd_etched": null,
-    "eur": "0.09",
-    "eur_foil": "0.29",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=83834&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLurking%2BInformant",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLurking%2BInformant",
     "edhrec": "https://edhrec.com/route/?cc=Lurking+Informant"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F13346%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=13455&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/23102?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -114,9 +114,7 @@
   "collector_number": "97",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "\"I give you pain, you give me information. A simple trade, is it not?\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Eli Minaya",
   "artist_ids": [
     "fee369ac-08b5-4a69-8ef8-f2b42b81e807"
   ],
@@ -129,23 +127,10 @@
   "story_spotlight": false,
   "edhrec_rank": 2481,
   "penny_rank": 4610,
-  "prices": {
-    "usd": "0.42",
-    "usd_foil": "0.50",
-    "usd_etched": null,
-    "eur": "0.28",
-    "eur_foil": "0.52",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=602627&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInfectious%2BInquiry",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInfectious%2BInquiry",
     "edhrec": "https://edhrec.com/route/?cc=Infectious+Inquiry"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F479616%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=694737&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/106409?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

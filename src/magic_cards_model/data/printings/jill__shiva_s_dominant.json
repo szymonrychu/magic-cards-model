@@ -37,8 +37,6 @@
       ],
       "power": "2",
       "toughness": "2",
-      "flavor_text": "\"I'm going to help you. To give you what you need to protect us all.\"",
-      "artist": "Arif Wijaya",
       "artist_id": "a1d47f27-cbf6-4a7b-bbbb-8f051c9069d6",
       "illustration_id": "834f1171-88a0-434c-996c-9beedf86bd56",
       "image_uris": {
@@ -69,8 +67,6 @@
       ],
       "power": "4",
       "toughness": "5",
-      "flavor_text": "\"I will be your monster no more.\"",
-      "artist": "Arif Wijaya",
       "artist_id": "a1d47f27-cbf6-4a7b-bbbb-8f051c9069d6",
       "illustration_id": "ad381ac3-eb29-4504-b5f2-35bf8c1c83ca",
       "image_uris": {
@@ -142,7 +138,6 @@
   "collector_number": "58",
   "digital": false,
   "rarity": "rare",
-  "artist": "Arif Wijaya",
   "artist_ids": [
     "a1d47f27-cbf6-4a7b-bbbb-8f051c9069d6"
   ],
@@ -163,22 +158,9 @@
   ],
   "edhrec_rank": 6069,
   "penny_rank": 3795,
-  "prices": {
-    "usd": "0.41",
-    "usd_foil": "0.85",
-    "usd_etched": null,
-    "eur": "0.42",
-    "eur_foil": "0.88",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DJill%252C%2BShiva%2527s%2BDominant%2B%252F%252F%2BShiva%252C%2BWarden%2Bof%2BIce",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DJill%252C%2BShiva%2527s%2BDominant%2B%252F%252F%2BShiva%252C%2BWarden%2Bof%2BIce",
     "edhrec": "https://edhrec.com/route/?cc=Jill%2C+Shiva%27s+Dominant"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F630914%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=824131&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/141041?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -97,7 +97,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Anna Pavleeva",
   "artist_ids": [
     "32223955-c0eb-49b2-a323-4eec2e067acf"
   ],
@@ -118,22 +117,9 @@
     "source_uri": "https://www.youtube.com/shorts/7dhF0uZX8lw",
     "previewed_at": "2026-09-14"
   },
-  "prices": {
-    "usd": "0.37",
-    "usd_foil": "0.80",
-    "usd_etched": null,
-    "eur": "0.02",
-    "eur_foil": "1.05",
-    "tix": "0.04"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPuppet%2BCrafting",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPuppet%2BCrafting",
     "edhrec": "https://edhrec.com/route/?cc=Puppet+Crafting"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F717513%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=909243&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/155928?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

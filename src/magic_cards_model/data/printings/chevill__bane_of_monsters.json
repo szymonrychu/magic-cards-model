@@ -103,7 +103,6 @@
   "digital": false,
   "rarity": "mythic",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Yongjae Choi",
   "artist_ids": [
     "5ab91c3b-a6da-4751-a56e-81d0f61a67ab"
   ],
@@ -125,23 +124,10 @@
     "source_uri": "https://www.ladbible.com/technology/gaming-magic-the-gathering-check-out-our-exclusive-new-card-reveal-20200403?source=gamingbible",
     "previewed_at": "2020-04-03"
   },
-  "prices": {
-    "usd": "1.55",
-    "usd_foil": "1.57",
-    "usd_etched": null,
-    "eur": "2.02",
-    "eur_foil": "2.91",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=479701&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DChevill%252C%2BBane%2Bof%2BMonsters",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DChevill%252C%2BBane%2Bof%2BMonsters",
     "edhrec": "https://edhrec.com/route/?cc=Chevill%2C+Bane+of+Monsters"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F212116%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=451713&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/80371?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

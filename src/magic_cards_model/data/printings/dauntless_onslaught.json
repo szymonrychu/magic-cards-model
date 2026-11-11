@@ -93,9 +93,7 @@
   "collector_number": "99",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"The people of Akros must learn from our leonin adversaries. If we match their staunch ferocity with our superior faith, we cannot fail.\"\n\u2014Cymede, queen of Akros",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Peter Mohrbacher",
   "artist_ids": [
     "c8f27311-46a5-4eaf-9b2e-d660ed1db649"
   ],
@@ -113,23 +111,10 @@
     "source_uri": "",
     "previewed_at": "2020-06-19"
   },
-  "prices": {
-    "usd": "0.09",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.07",
-    "eur_foil": null,
-    "tix": null
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=489583&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDauntless%2BOnslaught",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDauntless%2BOnslaught",
     "edhrec": "https://edhrec.com/route/?cc=Dauntless+Onslaught"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F216359%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=473484&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Dauntless+Onslaught&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

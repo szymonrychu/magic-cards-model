@@ -39,8 +39,6 @@
       ],
       "power": "2",
       "toughness": "2",
-      "flavor_text": "\"Our own private heaven.\"",
-      "artist": "Carissa Susilo",
       "artist_id": "3b8ade17-3f98-484b-9e49-a694113d86d9",
       "illustration_id": "fb25b3bd-1638-4100-b590-719a2634f1bc",
       "image_uris": {
@@ -71,8 +69,6 @@
         "G",
         "W"
       ],
-      "flavor_text": "L'Cie who fulfill their Focus for their fal'Cie master are transformed into crystal and granted life eternal.",
-      "artist": "Carissa Susilo",
       "artist_id": "3b8ade17-3f98-484b-9e49-a694113d86d9",
       "illustration_id": "b297293b-31e4-4d9c-8adc-6a29312e26cf",
       "image_uris": {
@@ -144,7 +140,6 @@
   "collector_number": "240",
   "digital": false,
   "rarity": "rare",
-  "artist": "Carissa Susilo",
   "artist_ids": [
     "3b8ade17-3f98-484b-9e49-a694113d86d9"
   ],
@@ -169,22 +164,9 @@
     "source_uri": "https://x.com/TravisGafford/status/1923456130887401535",
     "previewed_at": "2025-05-16"
   },
-  "prices": {
-    "usd": "0.53",
-    "usd_foil": "1.06",
-    "usd_etched": null,
-    "eur": "0.37",
-    "eur_foil": "1.07",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSerah%2BFarron%2B%252F%252F%2BCrystallized%2BSerah",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSerah%2BFarron%2B%252F%252F%2BCrystallized%2BSerah",
     "edhrec": "https://edhrec.com/route/?cc=Serah+Farron"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F632700%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=826192&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/141441?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

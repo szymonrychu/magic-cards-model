@@ -97,9 +97,7 @@
   "collector_number": "81",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "To consult a sphinx is a test in patience. Perhaps that's the point.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Christine Choi",
   "artist_ids": [
     "b8266529-1ffe-41e7-9969-fcf39f61426b"
   ],
@@ -113,23 +111,10 @@
   "story_spotlight": false,
   "edhrec_rank": 8071,
   "penny_rank": 2946,
-  "prices": {
-    "usd": "0.37",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.42",
-    "eur_foil": null,
-    "tix": null
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=532468&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCurator%2Bof%2BMysteries",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCurator%2Bof%2BMysteries",
     "edhrec": "https://edhrec.com/route/?cc=Curator+of+Mysteries"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F243922%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=572254&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Curator+of+Mysteries&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

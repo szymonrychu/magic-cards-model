@@ -120,9 +120,7 @@
   "collector_number": "154",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"Today, you will be learning material repurposing and adaptation. This will be on the test.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Javier Charro",
   "artist_ids": [
     "8fd2d5fa-3b94-4e48-9cec-9d148acc8180"
   ],
@@ -140,22 +138,9 @@
     "source_uri": "https://gamewave.fr/magic-the-gathering/exclusivite-magic-the-gathering-nous-vous-presentons-une-carte-de-l-extension-realite-fracturee/",
     "previewed_at": "2026-09-11"
   },
-  "prices": {
-    "usd": "0.31",
-    "usd_foil": "0.49",
-    "usd_etched": null,
-    "eur": "0.09",
-    "eur_foil": "0.07",
-    "tix": "0.04"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTenured%2BTethermage",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTenured%2BTethermage",
     "edhrec": "https://edhrec.com/route/?cc=Tenured+Tethermage"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F717012%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=910180&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/156014?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

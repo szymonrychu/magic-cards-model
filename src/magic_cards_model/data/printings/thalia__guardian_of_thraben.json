@@ -100,9 +100,7 @@
   "collector_number": "38",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"Thraben belongs to the living. I will not rest until it is cleansed.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Magali Villeneuve",
   "artist_ids": [
     "9e6a55ae-be4d-4c23-a2a5-135737ffd879"
   ],
@@ -124,23 +122,10 @@
     "source_uri": "https://www.twitch.tv/videos/1189365133",
     "previewed_at": "2021-10-28"
   },
-  "prices": {
-    "usd": "0.39",
-    "usd_foil": "0.78",
-    "usd_etched": null,
-    "eur": "0.43",
-    "eur_foil": "0.92",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=540872&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThalia%252C%2BGuardian%2Bof%2BThraben",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThalia%252C%2BGuardian%2Bof%2BThraben",
     "edhrec": "https://edhrec.com/route/?cc=Thalia%2C+Guardian+of+Thraben"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F252859%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=581320&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/94372?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

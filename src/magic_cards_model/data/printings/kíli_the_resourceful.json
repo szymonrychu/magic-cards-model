@@ -100,7 +100,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Yuhong Ding",
   "artist_ids": [
     "27a68c2e-7f7e-4256-acc9-6b4fcad1e772"
   ],
@@ -124,22 +123,9 @@
     "source_uri": "https://www.instagram.com/p/Dba70h2DYAD?img_index=3",
     "previewed_at": "2026-07-30"
   },
-  "prices": {
-    "usd": "1.49",
-    "usd_foil": "1.67",
-    "usd_etched": null,
-    "eur": "1.28",
-    "eur_foil": "1.64",
-    "tix": "0.32"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DK%25C3%25ADli%2Bthe%2BResourceful",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DK%25C3%25ADli%2Bthe%2BResourceful",
     "edhrec": "https://edhrec.com/route/?cc=K%C3%ADli+the+Resourceful"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709458%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=900595&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/153948?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

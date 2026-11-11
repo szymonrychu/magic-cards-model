@@ -126,7 +126,6 @@
   "digital": false,
   "rarity": "mythic",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Simon Dominic",
   "artist_ids": [
     "b0e80135-db5a-4b88-a0bc-815a0e94faa1"
   ],
@@ -147,23 +146,10 @@
     "source_uri": "https://twitter.com/coL_Amazonian/status/1397966381434511360",
     "previewed_at": "2021-05-27"
   },
-  "prices": {
-    "usd": "43.97",
-    "usd_foil": "58.04",
-    "usd_etched": null,
-    "eur": "33.74",
-    "eur_foil": "52.51",
-    "tix": "7.65"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=522214&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRagavan%252C%2BNimble%2BPilferer",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRagavan%252C%2BNimble%2BPilferer",
     "edhrec": "https://edhrec.com/route/?cc=Ragavan%2C+Nimble+Pilferer"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F239857%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=566480&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/90653?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

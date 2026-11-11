@@ -91,9 +91,7 @@
   "collector_number": "204",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "Wakandan defenses are centuries ahead of the rest of the world.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Josu Hernaiz",
   "artist_ids": [
     "74246024-92b4-43d0-a5af-a3f9f2a35d5f"
   ],
@@ -111,22 +109,9 @@
   ],
   "edhrec_rank": 1670,
   "penny_rank": 1067,
-  "prices": {
-    "usd": "0.35",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.29",
-    "eur_foil": null,
-    "tix": "0.23"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMetalwork%2BColossus",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMetalwork%2BColossus",
     "edhrec": "https://edhrec.com/route/?cc=Metalwork+Colossus"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F698214%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=892721&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/150877?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -42,7 +42,6 @@
       "power": "1",
       "toughness": "1",
       "watermark": "witherbloom",
-      "artist": "Jesper Ejsing",
       "artist_id": "a5f8354a-8b51-4e59-96b2-0e3aeae4fa1d",
       "illustration_id": "27248b5f-0ad0-4ede-8346-a95f355d25f3",
       "image_uris": {
@@ -70,9 +69,7 @@
       ],
       "power": "4",
       "toughness": "4",
-      "flavor_text": "\"Life is as fleeting as it is vibrant. Embrace the brief blessing of a flower before it withers.\"",
       "watermark": "witherbloom",
-      "artist": "Jesper Ejsing",
       "artist_id": "a5f8354a-8b51-4e59-96b2-0e3aeae4fa1d",
       "illustration_id": "b2464630-4070-4199-8524-e625e32c09a3",
       "image_uris": {
@@ -162,7 +159,6 @@
   "collector_number": "161",
   "digital": false,
   "rarity": "rare",
-  "artist": "Jesper Ejsing",
   "artist_ids": [
     "a5f8354a-8b51-4e59-96b2-0e3aeae4fa1d"
   ],
@@ -183,23 +179,10 @@
     "source_uri": "",
     "previewed_at": "2021-03-26"
   },
-  "prices": {
-    "usd": "0.99",
-    "usd_foil": "1.02",
-    "usd_etched": null,
-    "eur": "0.76",
-    "eur_foil": "0.90",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=513652&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DValentin%252C%2BDean%2Bof%2Bthe%2BVein%2B%252F%252F%2BLisette%252C%2BDean%2Bof%2Bthe%2BRoot",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DValentin%252C%2BDean%2Bof%2Bthe%2BVein%2B%252F%252F%2BLisette%252C%2BDean%2Bof%2Bthe%2BRoot",
     "edhrec": "https://edhrec.com/route/?cc=Valentin%2C+Dean+of+the+Vein"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F235202%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=556454&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/88827?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

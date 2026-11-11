@@ -45,7 +45,6 @@
       "mana_cost": "{5}",
       "type_line": "Legendary Artifact",
       "oracle_text": "Creatures you control get +1/+1.\nAt the beginning of your end step, draw a card.",
-      "artist": "Gaboleps",
       "artist_id": "0c37cdfe-5651-4ae6-a3c8-e7153509f970",
       "illustration_id": "2c7093b5-a916-424a-ab1a-abcbad58a0c0"
     },
@@ -55,7 +54,6 @@
       "mana_cost": "{2}{W}",
       "type_line": "Sorcery \u2014 Adventure",
       "oracle_text": "Search your library for a legendary creature card, reveal it, put it into your hand, then shuffle. (Then exile this card. You may cast the artifact later from exile.)",
-      "artist": "Gaboleps",
       "artist_id": "0c37cdfe-5651-4ae6-a3c8-e7153509f970"
     }
   ],
@@ -132,7 +130,6 @@
   "digital": false,
   "rarity": "mythic",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Gaboleps",
   "artist_ids": [
     "0c37cdfe-5651-4ae6-a3c8-e7153509f970"
   ],
@@ -151,22 +148,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 7005,
-  "prices": {
-    "usd": "9.09",
-    "usd_foil": "13.40",
-    "usd_etched": null,
-    "eur": "8.40",
-    "eur_foil": "9.22",
-    "tix": "0.13"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThe%2BArkenstone%2B%252F%252F%2BSeek%2Bthe%2BHeart",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThe%2BArkenstone%2B%252F%252F%2BSeek%2Bthe%2BHeart",
     "edhrec": "https://edhrec.com/route/?cc=The+Arkenstone"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F693007%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=898512&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/154280?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

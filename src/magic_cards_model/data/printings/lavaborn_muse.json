@@ -96,9 +96,7 @@
   "collector_number": "50",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"Her voice is disaster, painful and final.\"\n\u2014Matoc, lavamancer",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Brian Sn\u00f5ddy",
   "artist_ids": [
     "770b4e16-de76-49ed-949f-84e6d2e06d25"
   ],
@@ -111,23 +109,10 @@
   "story_spotlight": false,
   "edhrec_rank": 22790,
   "penny_rank": 12353,
-  "prices": {
-    "usd": "0.27",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.22",
-    "eur_foil": null,
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=368526&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLavaborn%2BMuse",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLavaborn%2BMuse",
     "edhrec": "https://edhrec.com/route/?cc=Lavaborn+Muse"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F67846%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=260847&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/48153?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

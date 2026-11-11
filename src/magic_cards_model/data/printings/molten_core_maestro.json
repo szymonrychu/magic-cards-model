@@ -104,9 +104,7 @@
   "digital": false,
   "rarity": "rare",
   "watermark": "prismari",
-  "flavor_text": "\"My media? Fury and flame.\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Aleksi Briclot",
   "artist_ids": [
     "5e470014-31cb-41b0-b054-e23374484449"
   ],
@@ -119,22 +117,9 @@
   "booster": false,
   "story_spotlight": false,
   "edhrec_rank": 7900,
-  "prices": {
-    "usd": "0.44",
-    "usd_foil": "0.62",
-    "usd_etched": null,
-    "eur": "0.46",
-    "eur_foil": "0.48",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMolten-Core%2BMaestro",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMolten-Core%2BMaestro",
     "edhrec": "https://edhrec.com/route/?cc=Molten-Core+Maestro"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F686584%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=880509&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/149749?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

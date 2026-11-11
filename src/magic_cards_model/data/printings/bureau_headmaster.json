@@ -97,9 +97,7 @@
   "collector_number": "296",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"Don't let our creed fade.\"\n\u2014Tahira, the First Oath-Taker",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Thanh Tu\u1ea5n",
   "artist_ids": [
     "4092d03e-ede3-4946-bfdc-888fff30cfdf"
   ],
@@ -115,23 +113,10 @@
     "universesbeyond"
   ],
   "edhrec_rank": 3626,
-  "prices": {
-    "usd": "5.87",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "2.32",
-    "eur_foil": null,
-    "tix": "0.09"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=668421&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBureau%2BHeadmaster",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBureau%2BHeadmaster",
     "edhrec": "https://edhrec.com/route/?cc=Bureau+Headmaster"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F555954%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=775441&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/127622?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -89,9 +89,7 @@
   "collector_number": "731",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"Avacyn is gone, yet you remain.\"\n\u2014Traveler's prayer to Sigarda",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Scott M. Fischer",
   "artist_ids": [
     "23b0cf43-3e43-44c6-8329-96446eca5bce"
   ],
@@ -111,22 +109,9 @@
   ],
   "edhrec_rank": 831,
   "penny_rank": 4038,
-  "prices": {
-    "usd": null,
-    "usd_foil": "66.06",
-    "usd_etched": null,
-    "eur": null,
-    "eur_foil": "49.65",
-    "tix": null
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSigarda%2527s%2BAid",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSigarda%2527s%2BAid",
     "edhrec": "https://edhrec.com/route/?cc=Sigarda%27s+Aid"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F512987%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=728494&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Sigarda%27s+Aid&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

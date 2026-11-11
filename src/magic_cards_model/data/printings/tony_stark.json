@@ -40,7 +40,6 @@
       ],
       "power": "1",
       "toughness": "3",
-      "artist": "Alexander Lozano",
       "artist_id": "9b291924-a069-4da6-b77e-2e7db63ed8ec",
       "illustration_id": "86301c18-7f43-4cb4-a70c-0fc325842841",
       "image_uris": {
@@ -69,8 +68,6 @@
       ],
       "power": "5",
       "toughness": "5",
-      "flavor_text": "\"The future never stands still, and neither do I.\"",
-      "artist": "Alexander Lozano",
       "artist_id": "9b291924-a069-4da6-b77e-2e7db63ed8ec",
       "illustration_id": "5c70dc13-df86-4ea2-9990-8be820519483",
       "image_uris": {
@@ -142,7 +139,6 @@
   "collector_number": "80",
   "digital": false,
   "rarity": "mythic",
-  "artist": "Alexander Lozano",
   "artist_ids": [
     "9b291924-a069-4da6-b77e-2e7db63ed8ec"
   ],
@@ -160,22 +156,9 @@
     "universesbeyond"
   ],
   "edhrec_rank": 9140,
-  "prices": {
-    "usd": "3.96",
-    "usd_foil": "7.50",
-    "usd_etched": null,
-    "eur": "4.82",
-    "eur_foil": "7.63",
-    "tix": "0.09"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTony%2BStark%2B%252F%252F%2BThe%2BInvincible%2BIron%2BMan",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTony%2BStark%2B%252F%252F%2BThe%2BInvincible%2BIron%2BMan",
     "edhrec": "https://edhrec.com/route/?cc=Tony+Stark"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696279%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=890554&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/152345?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -53,7 +53,6 @@
       "oracle_text": "Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)\nCreatures with power less than this creature's power can't block it.",
       "power": "1",
       "toughness": "1",
-      "artist": "Christina Kraus",
       "artist_id": "685354c3-302d-486a-b575-cb19bb2c31c9",
       "illustration_id": "28bac664-022f-4ed1-83e1-c67dcac98698"
     },
@@ -63,7 +62,6 @@
       "mana_cost": "{X}{G}",
       "type_line": "Sorcery \u2014 Adventure",
       "oracle_text": "Distribute X +1/+1 counters among any number of target creatures you control. (Then exile this card. You may cast the creature later from exile.)",
-      "artist": "Christina Kraus",
       "artist_id": "685354c3-302d-486a-b575-cb19bb2c31c9"
     }
   ],
@@ -138,7 +136,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Christina Kraus",
   "artist_ids": [
     "685354c3-302d-486a-b575-cb19bb2c31c9"
   ],
@@ -152,22 +149,9 @@
   "story_spotlight": false,
   "edhrec_rank": 7014,
   "penny_rank": 4839,
-  "prices": {
-    "usd": "0.33",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.27",
-    "eur_foil": null,
-    "tix": "0.10"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DElusive%2BOtter%2B%252F%252F%2BGrove%2527s%2BBounty",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DElusive%2BOtter%2B%252F%252F%2BGrove%2527s%2BBounty",
     "edhrec": "https://edhrec.com/route/?cc=Elusive+Otter"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F687625%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=881640&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/149077?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

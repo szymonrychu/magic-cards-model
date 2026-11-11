@@ -97,9 +97,7 @@
   "collector_number": "84",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "As wild magic ripped into his arm, the path that was once so clear became shadowed by his own fear.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Jabari Weathers",
   "artist_ids": [
     "9ee86fec-e268-452c-af59-90360958923a"
   ],
@@ -112,22 +110,9 @@
   "story_spotlight": false,
   "edhrec_rank": 12507,
   "penny_rank": 2747,
-  "prices": {
-    "usd": "0.17",
-    "usd_foil": "0.24",
-    "usd_etched": null,
-    "eur": "0.05",
-    "eur_foil": "0.08",
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWild%2BUnraveling",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWild%2BUnraveling",
     "edhrec": "https://edhrec.com/route/?cc=Wild+Unraveling"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671649%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=865754&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/146555?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

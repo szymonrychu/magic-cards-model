@@ -95,9 +95,7 @@
   "collector_number": "94",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "The darkest corners of the Detention Bog hide natural laboratories that quietly spawn deadly infections.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Camille Alquier",
   "artist_ids": [
     "a0670296-0225-4630-95c6-feab68d14df4"
   ],
@@ -111,22 +109,9 @@
   "story_spotlight": false,
   "edhrec_rank": 10157,
   "penny_rank": 8552,
-  "prices": {
-    "usd": "0.34",
-    "usd_foil": "0.35",
-    "usd_etched": null,
-    "eur": "0.14",
-    "eur_foil": "0.23",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPox%2BPlague",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPox%2BPlague",
     "edhrec": "https://edhrec.com/route/?cc=Pox+Plague"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F689477%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=883011&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/149687?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -53,7 +53,6 @@
       "mana_cost": "{2}{R}",
       "type_line": "Enchantment \u2014 Room",
       "oracle_text": "At the beginning of your first main phase, add {R}{R}. Spend this mana only to cast Room spells and unlock doors.\n(You may cast either half. That door unlocks on the battlefield. As a sorcery, you may pay the mana cost of a locked door to unlock it.)",
-      "artist": "Marco Gorlei",
       "artist_id": "b6476cc7-1576-47e8-9f6a-68d05b45cf62",
       "illustration_id": "acc46671-7643-49a7-b118-01b09a5664c2"
     },
@@ -63,7 +62,6 @@
       "mana_cost": "{3}{U}",
       "type_line": "Enchantment \u2014 Room",
       "oracle_text": "When you unlock this door, create an X/X blue Spirit creature token with flying, where X is the number of unlocked doors among Rooms you control.\n(You may cast either half. That door unlocks on the battlefield. As a sorcery, you may pay the mana cost of a locked door to unlock it.)",
-      "artist": "Marco Gorlei",
       "artist_id": "b6476cc7-1576-47e8-9f6a-68d05b45cf62"
     }
   ],
@@ -140,7 +138,6 @@
   "digital": false,
   "rarity": "uncommon",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Marco Gorlei",
   "artist_ids": [
     "b6476cc7-1576-47e8-9f6a-68d05b45cf62"
   ],
@@ -158,23 +155,10 @@
     "source_uri": "https://magic.wizards.com/en/news/making-magic/top-of-the-duskmourning-part-1",
     "previewed_at": "2024-09-02"
   },
-  "prices": {
-    "usd": "0.15",
-    "usd_foil": "0.23",
-    "usd_etched": null,
-    "eur": "0.13",
-    "eur_foil": "0.19",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=673640&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSmoky%2BLounge%2B%252F%252F%2BMisty%2BSalon",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSmoky%2BLounge%2B%252F%252F%2BMisty%2BSalon",
     "edhrec": "https://edhrec.com/route/?cc=Smoky+Lounge+%2F%2F+Misty+Salon"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F575179%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=786609&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/130601?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

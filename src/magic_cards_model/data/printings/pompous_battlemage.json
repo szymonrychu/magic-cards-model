@@ -53,7 +53,6 @@
       "oracle_text": "Prowess\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
       "power": "1",
       "toughness": "1",
-      "artist": "Justin Gerard",
       "artist_id": "7548479e-1d37-42e1-ade0-9d88748f2f47",
       "illustration_id": "75797d9d-2143-4ded-acee-a954479b432d"
     },
@@ -63,7 +62,6 @@
       "mana_cost": "{R}",
       "type_line": "Sorcery",
       "oracle_text": "You may discard a card. If you do, draw a card.",
-      "artist": "Justin Gerard",
       "artist_id": "7548479e-1d37-42e1-ade0-9d88748f2f47"
     }
   ],
@@ -122,7 +120,6 @@
   "digital": false,
   "rarity": "rare",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Justin Gerard",
   "artist_ids": [
     "7548479e-1d37-42e1-ade0-9d88748f2f47"
   ],
@@ -135,22 +132,9 @@
   "booster": false,
   "story_spotlight": false,
   "edhrec_rank": 24521,
-  "prices": {
-    "usd": "1.37",
-    "usd_foil": "2.14",
-    "usd_etched": null,
-    "eur": "0.91",
-    "eur_foil": "1.05",
-    "tix": "5.59"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPompous%2BBattlemage%2B%252F%252F%2BImprovised%2BAct",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPompous%2BBattlemage%2B%252F%252F%2BImprovised%2BAct",
     "edhrec": "https://edhrec.com/route/?cc=Pompous+Battlemage"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F715911%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=907299&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/155886?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

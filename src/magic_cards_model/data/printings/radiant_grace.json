@@ -38,7 +38,6 @@
       "colors": [
         "W"
       ],
-      "artist": "Campbell White",
       "artist_id": "d281eab4-463a-4ba8-9039-8943737960a0",
       "illustration_id": "75a4140a-2cd4-4fc0-abe2-11bc55d5303a",
       "image_uris": {
@@ -67,8 +66,6 @@
       "color_indicator": [
         "W"
       ],
-      "flavor_text": "\"Even in times of brutal darkness, never mistake beauty and delicacy for weakness.\"\n\u2014Thalia, Guardian of Thraben",
-      "artist": "Campbell White",
       "artist_id": "d281eab4-463a-4ba8-9039-8943737960a0",
       "illustration_id": "f3d95092-4dc7-4b18-a0ed-0475e8ac3ce4",
       "image_uris": {
@@ -140,7 +137,6 @@
   "collector_number": "31",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Campbell White",
   "artist_ids": [
     "d281eab4-463a-4ba8-9039-8943737960a0"
   ],
@@ -160,23 +156,10 @@
     "source_uri": "https://www.facebook.com/GeekFactoryEden2Servon/photos/d41d8cd9/207586364830676/",
     "previewed_at": "2021-11-01"
   },
-  "prices": {
-    "usd": "0.29",
-    "usd_foil": "0.34",
-    "usd_etched": null,
-    "eur": "0.16",
-    "eur_foil": "0.36",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=540864&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRadiant%2BGrace%2B%252F%252F%2BRadiant%2BRestraints",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRadiant%2BGrace%2B%252F%252F%2BRadiant%2BRestraints",
     "edhrec": "https://edhrec.com/route/?cc=Radiant+Grace"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F253095%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=581907&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/94356?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

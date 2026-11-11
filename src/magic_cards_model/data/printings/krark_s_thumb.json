@@ -91,9 +91,7 @@
   "collector_number": "190",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"I can think of *one* goblin it ain't so lucky for.\"\n\u2014Slobad, goblin tinkerer",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Ron Spencer",
   "artist_ids": [
     "dab52c11-0564-4207-a4a1-c1735c946a65"
   ],
@@ -106,23 +104,10 @@
   "story_spotlight": false,
   "edhrec_rank": 5084,
   "penny_rank": 5278,
-  "prices": {
-    "usd": "16.61",
-    "usd_foil": "30.55",
-    "usd_etched": null,
-    "eur": "5.76",
-    "eur_foil": "13.06",
-    "tix": "0.02"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=48923&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKrark%2527s%2BThumb",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKrark%2527s%2BThumb",
     "edhrec": "https://edhrec.com/route/?cc=Krark%27s+Thumb"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F11503%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=190&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/20177?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -44,7 +44,6 @@
       ],
       "power": "1",
       "toughness": "1",
-      "artist": "Anastasia Ovchinnikova",
       "artist_id": "3605d81f-5c97-4958-9dcc-d44a85e10305",
       "illustration_id": "8f3d890b-3e1b-4389-b771-75f398b7ecea",
       "image_uris": {
@@ -75,7 +74,6 @@
       ],
       "power": "2",
       "toughness": "1",
-      "artist": "Anastasia Ovchinnikova",
       "artist_id": "3605d81f-5c97-4958-9dcc-d44a85e10305",
       "illustration_id": "4cd7a274-0335-4333-9a41-18ba42dba2ba",
       "image_uris": {
@@ -147,7 +145,6 @@
   "collector_number": "13",
   "digital": false,
   "rarity": "uncommon",
-  "artist": "Anastasia Ovchinnikova",
   "artist_ids": [
     "3605d81f-5c97-4958-9dcc-d44a85e10305"
   ],
@@ -167,23 +164,10 @@
     "source_uri": "https://twitter.com/MagicEsports/status/1434977208527986691",
     "previewed_at": "2021-09-06"
   },
-  "prices": {
-    "usd": "0.18",
-    "usd_foil": "0.13",
-    "usd_etched": null,
-    "eur": "0.15",
-    "eur_foil": "0.31",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=534767&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DChaplain%2Bof%2BAlms%2B%252F%252F%2BChapel%2BShieldgeist",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DChaplain%2Bof%2BAlms%2B%252F%252F%2BChapel%2BShieldgeist",
     "edhrec": "https://edhrec.com/route/?cc=Chaplain+of+Alms"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F248004%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=574858&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/92948?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -98,9 +98,7 @@
   "collector_number": "137",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "Most goblins can light a fuse and run, but only the cleverest remember to drop the bomb.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Joseph Weston",
   "artist_ids": [
     "50365a81-fa9f-4fcf-aa83-6a57c63ad43e"
   ],
@@ -118,23 +116,10 @@
     "source_uri": "https://www.ungeek.ph/2022/11/magic-the-gathering-the-brothers-war-card-preview-goblin-blast-runner/",
     "previewed_at": "2022-11-02"
   },
-  "prices": {
-    "usd": "0.21",
-    "usd_foil": "0.25",
-    "usd_etched": null,
-    "eur": "0.13",
-    "eur_foil": "0.25",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=583722&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGoblin%2BBlast-Runner",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGoblin%2BBlast-Runner",
     "edhrec": "https://edhrec.com/route/?cc=Goblin+Blast-Runner"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F452533%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=683326&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/104892?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

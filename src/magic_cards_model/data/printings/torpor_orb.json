@@ -92,9 +92,7 @@
   "collector_number": "27",
   "digital": false,
   "rarity": "mythic",
-  "flavor_text": "\"Devour the hope of a world and it will bow before you.\"\n\u2014Fomori inscription",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Robin Olausson",
   "artist_ids": [
     "adb9ad6d-6173-454b-8b50-a102b182548b"
   ],
@@ -107,23 +105,10 @@
   "booster": false,
   "story_spotlight": false,
   "edhrec_rank": 3437,
-  "prices": {
-    "usd": "5.15",
-    "usd_foil": "9.14",
-    "usd_etched": null,
-    "eur": "5.63",
-    "eur_foil": "10.45",
-    "tix": "0.61"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=660323&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTorpor%2BOrb",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTorpor%2BOrb",
     "edhrec": "https://edhrec.com/route/?cc=Torpor+Orb"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F544302%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=763668&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/125415?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

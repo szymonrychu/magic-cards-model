@@ -96,9 +96,7 @@
   "collector_number": "80",
   "digital": false,
   "rarity": "common",
-  "flavor_text": "The crawler doesn't care what gets in its way. It pushes everything into the boiling muck and waits for the meal to cook.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Jim Nelson",
   "artist_ids": [
     "aa9f64d1-29e1-4c82-877e-44c18183f40b"
   ],
@@ -110,23 +108,10 @@
   "booster": true,
   "story_spotlight": false,
   "edhrec_rank": 32228,
-  "prices": {
-    "usd": "0.14",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "0.13",
-    "eur_foil": null,
-    "tix": "0.09"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=6105&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCinder%2BCrawler",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCinder%2BCrawler",
     "edhrec": "https://edhrec.com/route/?cc=Cinder+Crawler"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F4302%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=9308&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/10705?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -91,9 +91,7 @@
   "collector_number": "160",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "In Akros, the penalty for running from battle is one night's stay in the Deserter's Quarters.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Daniel Ljunggren",
   "artist_ids": [
     "0fbd4798-76eb-46d5-a5d4-1e3a25870e34"
   ],
@@ -105,23 +103,10 @@
   "booster": true,
   "story_spotlight": false,
   "edhrec_rank": 29814,
-  "prices": {
-    "usd": "0.17",
-    "usd_foil": "0.69",
-    "usd_etched": null,
-    "eur": "0.04",
-    "eur_foil": "0.28",
-    "tix": "0.04"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=380397&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDeserter%2527s%2BQuarters",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDeserter%2527s%2BQuarters",
     "edhrec": "https://edhrec.com/route/?cc=Deserter%27s+Quarters"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F82290%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=266751&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/51978?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

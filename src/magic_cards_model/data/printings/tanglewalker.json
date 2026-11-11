@@ -97,9 +97,7 @@
   "collector_number": "86",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "In bringing life to Mirrodin, Memnarch was more successful than he knew\u2014for Mirrodin began to take on a life of its own.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Pete Venters",
   "artist_ids": [
     "d54c4a1a-c0c5-4834-84db-125d341f3ad8"
   ],
@@ -112,23 +110,10 @@
   "story_spotlight": false,
   "edhrec_rank": 29326,
   "penny_rank": 17932,
-  "prices": {
-    "usd": "0.22",
-    "usd_foil": "1.35",
-    "usd_etched": null,
-    "eur": "0.18",
-    "eur_foil": "0.28",
-    "tix": "0.03"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=43547&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTanglewalker",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTanglewalker",
     "edhrec": "https://edhrec.com/route/?cc=Tanglewalker"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F11696%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=410&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/20309?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

@@ -96,9 +96,7 @@
   "digital": false,
   "rarity": "uncommon",
   "watermark": "phyrexian",
-  "flavor_text": "\"We are a single entity. Dissenters must be sutured into the Orthodoxy.\"\n\u2014Elesh Norn, Grand Cenobite",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Raymond Swanland",
   "artist_ids": [
     "e956bacc-077d-4c12-b6bc-ba798b718af9"
   ],
@@ -111,23 +109,10 @@
   "story_spotlight": false,
   "edhrec_rank": 19701,
   "penny_rank": 5530,
-  "prices": {
-    "usd": "0.10",
-    "usd_foil": "8.74",
-    "usd_etched": null,
-    "eur": "0.22",
-    "eur_foil": "3.58",
-    "tix": "0.12"
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=230072&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMarrow%2BShards",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMarrow%2BShards",
     "edhrec": "https://edhrec.com/route/?cc=Marrow+Shards"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F39477%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=245851&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/39930?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

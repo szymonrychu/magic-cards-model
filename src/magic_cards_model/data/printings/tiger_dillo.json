@@ -97,9 +97,7 @@
   "collector_number": "155",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "Predators with armor plating can be as bold or as cowardly as they desire.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "John Di Giovanni",
   "artist_ids": [
     "dc7630d7-41e3-4fef-8630-058d1ba39d37"
   ],
@@ -115,22 +113,9 @@
   ],
   "edhrec_rank": 22446,
   "penny_rank": 2953,
-  "prices": {
-    "usd": "0.09",
-    "usd_foil": "0.19",
-    "usd_etched": null,
-    "eur": "0.10",
-    "eur_foil": "0.11",
-    "tix": "0.03"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTiger-Dillo",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTiger-Dillo",
     "edhrec": "https://edhrec.com/route/?cc=Tiger-Dillo"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F661958%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=857735&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/144794?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

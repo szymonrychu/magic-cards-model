@@ -96,9 +96,7 @@
   "collector_number": "158",
   "digital": false,
   "rarity": "uncommon",
-  "flavor_text": "\"Josu's ashes choke you even now. You failed, while I will have our brother live forever,\" said one Liliana to the other.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Lorenzo Mastroianni",
   "artist_ids": [
     "70213e7d-47e0-4543-a1ae-451009053e2d"
   ],
@@ -115,22 +113,9 @@
     "source_uri": "https://variety.com/2026/gaming/news/magic-the-gatherings-reality-fracture-spoiler-cards-interview-1236862973/",
     "previewed_at": "2026-09-15"
   },
-  "prices": {
-    "usd": "0.35",
-    "usd_foil": "0.45",
-    "usd_etched": null,
-    "eur": "0.08",
-    "eur_foil": "0.18",
-    "tix": "0.01"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTwisted%2BFates",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTwisted%2BFates",
     "edhrec": "https://edhrec.com/route/?cc=Twisted+Fates"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F717684%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=909557&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/156022?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

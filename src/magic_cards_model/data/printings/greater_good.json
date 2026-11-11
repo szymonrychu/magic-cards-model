@@ -93,9 +93,7 @@
   "collector_number": "174",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "A mantle passed on through sacrifice and love.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Eli Minaya",
   "artist_ids": [
     "fee369ac-08b5-4a69-8ef8-f2b42b81e807"
   ],
@@ -116,22 +114,9 @@
   ],
   "edhrec_rank": 636,
   "penny_rank": 2382,
-  "prices": {
-    "usd": "1.41",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "2.19",
-    "eur_foil": null,
-    "tix": "0.11"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGreater%2BGood",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGreater%2BGood",
     "edhrec": "https://edhrec.com/route/?cc=Greater+Good"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F698195%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=892702&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/150817?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

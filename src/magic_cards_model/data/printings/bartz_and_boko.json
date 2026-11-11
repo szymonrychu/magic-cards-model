@@ -99,9 +99,7 @@
   "collector_number": "175",
   "digital": false,
   "rarity": "rare",
-  "flavor_text": "\"Call me Bartz. Me and my chocobo just go wherever the trail leads us...\"",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Ryuichi Sakuma",
   "artist_ids": [
     "5fcc0c3d-7e18-438f-ae77-499314f132da"
   ],
@@ -122,22 +120,9 @@
   ],
   "edhrec_rank": 7162,
   "penny_rank": 8522,
-  "prices": {
-    "usd": "0.40",
-    "usd_foil": "0.49",
-    "usd_etched": null,
-    "eur": "0.28",
-    "eur_foil": "0.62",
-    "tix": "0.02"
-  },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBartz%2Band%2BBoko",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBartz%2Band%2BBoko",
     "edhrec": "https://edhrec.com/route/?cc=Bartz+and+Boko"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F630856%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=824147&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards/141289?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

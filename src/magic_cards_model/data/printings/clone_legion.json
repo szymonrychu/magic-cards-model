@@ -109,9 +109,7 @@
   "collector_number": "215",
   "digital": false,
   "rarity": "mythic",
-  "flavor_text": "Their lust for battle was so great that they didn't care their enemies wore their own faces.",
   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-  "artist": "Svetlin Velinov",
   "artist_ids": [
     "ffd063ae-c097-4f26-b2e6-b1e2137708bc"
   ],
@@ -125,23 +123,10 @@
   "story_spotlight": false,
   "edhrec_rank": 3625,
   "penny_rank": 16663,
-  "prices": {
-    "usd": "2.81",
-    "usd_foil": null,
-    "usd_etched": null,
-    "eur": "1.43",
-    "eur_foil": null,
-    "tix": null
-  },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=559787&printed=false",
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DClone%2BLegion",
     "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DClone%2BLegion",
     "edhrec": "https://edhrec.com/route/?cc=Clone+Legion"
-  },
-  "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F269275%3Fpage%3D1",
-    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=652799&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Clone+Legion&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }
