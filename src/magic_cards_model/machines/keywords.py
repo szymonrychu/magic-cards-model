@@ -399,6 +399,11 @@ def executes(keyword: str) -> bool:
         # name.
         "empower",
         "empower jace",
+        # CR 701.72a-b, the same shape once more: `machines/assimilate`
+        # performs it, reached through `machines/effects/returns.
+        # _parse_reanimate_by_assimilating_*` from inside another ability's
+        # effect text (Death Is Irrelevant, Borg Cube).
+        "assimilate",
         # CR 701.48a, the same shape once more: `machines/effects.learn`
         # performs both halves, discard-to-draw and the Lesson reveal from
         # outside the game, reached through `_parse_learn_clause`.
