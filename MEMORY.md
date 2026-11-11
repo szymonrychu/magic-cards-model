@@ -1699,3 +1699,7 @@ Flagged by `mise run regression:guard -- --base 57bcac56 --ratchet` on this bran
 - 2026-11-11 T-110 B2: a dilemma (CR 700.17) is recorded where the modes are already settled and the object is on the stack - `Game._put_on_stack` from the cast record's modes (so a rewound cast never counts and a cast copy that chose modes does), the activation path after its modes are announced, and the modal-trigger branch of `_put_pending_triggers_on_stack`. A copy is never counted (CR 700.2g: "The controller of the copy can't choose a different mode").
 - 2026-11-11 T-110 B2: "choose one at random" (Outlaws' Merriment) is not a dilemma - CR 700.17 says "whenever they choose", and a random mode is the game's pick. No trk ruling existed yet (pre-release); revisit in B10 if a ruling says otherwise.
 - 2026-11-11 T-110 B2: the opponent-chooses punisher ("target opponent may have you X. If they don't, Y") rewrites Y's leading "they <verb>" to "target opponent <verb>s" so `parse_mixed_effect` reads it against the ability's one target, rather than adding a new "they" referent to the clause readers.
+
+## T-109 S0: keyword oracle credit
+
+- [Keyword oracle credit and the "it" referent](memory/keyword-oracle-credit-and-it-referent.md) - exalted and ripple had machines but were not credited by keywords.executes; "it gains X" on a trigger now reaches the event subject, not the source
