@@ -322,6 +322,14 @@ def executes(keyword: str) -> bool:
         # `machines/effects._parse_event_subject_pump_clause`'s existing
         # event-subject reader.
         "flanking",
+        # CR 702.83a: `_exalted_ability` above (`_TRIGGER_EXPANSIONS`) - "Whenever
+        # a creature you control attacks alone, that creature gets +1/+1 until
+        # end of turn", one trigger per instance (CR 702.83b).
+        "exalted",
+        # CR 702.60a: `_ripple_ability` above (`_TRIGGER_EXPANSIONS`) - the
+        # cast trigger that reveals the top N cards and casts the same-name
+        # ones for free.
+        "ripple",
         # CR 702.115a: `_ingest_ability` above (`_TRIGGER_EXPANSIONS`).
         "ingest",
         # CR 702.45a, CR 702.135a, CR 702.134a: `_bushido_ability` above and
