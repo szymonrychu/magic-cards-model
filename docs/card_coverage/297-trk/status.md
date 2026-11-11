@@ -434,4 +434,15 @@
 
 ## Notes
 
-
+- 2026-11-10, T-110 B0: first measurement, from Scryfall preview text three days before
+  release (2026-11-13); refresh the printings and this file after release (batch B10).
+- Measured tiers for the 294 new cards (17 reprints are already Tested): auto 187 (the
+  support oracle reads every clause; each still needs its own test), simple 63 (template or
+  reader gaps on existing machinery), new primitive 44 (beam me up 12, face a dilemma 9,
+  assimilate and the Federation count 8, one-off engine shapes 15: CR 201.5c honorific short
+  names, "a card leaves your graveyard" trigger, McCoy's destroy replacement, phasing lock,
+  granted ability on an exiled card, extra-turn history, per-ability resolution count,
+  doubled triggers while tapped, enters tapped and attacking, outside-the-game play, face-down
+  exile with play permission).
+- New keywords and actions, CR 2026-11-06: beam me up 702.196, assimilate 701.72, face a
+  dilemma 700.17; Federation and Strange new worlds are ability words (207.2c).
