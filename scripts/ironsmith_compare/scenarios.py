@@ -315,3 +315,20 @@ def parse_junit(xml_text: str) -> dict[str, dict[str, str]]:
             verdict = {"verdict": kind, "message": message}
         verdicts[name.removeprefix(prefix)] = verdict
     return verdicts
+
+
+def behaviour_rows(
+    manifest: dict, verdicts: dict[str, dict[str, str]], cards: dict[str, str]
+) -> list[dict]:
+    """One normalised row per golden (`id`, `card`, `verdict`, `message`): the
+    runner's verdict for a translated golden (`ironsmith-error` when the report has no
+    result for it), `untranslated` with the reason otherwise."""
+    rows = []
+    for gid in manifest["translated"]:
+        verdict = verdicts.get(gid, {"verdict": "ironsmith-error", "message": "no JUnit result"})
+        rows.append({"id": gid, "card": cards.get(gid, ""), **verdict})
+    for gid, reason in manifest["untranslated"].items():
+        rows.append(
+            {"id": gid, "card": cards.get(gid, ""), "verdict": "untranslated", "message": reason}
+        )
+    return sorted(rows, key=lambda row: row["id"])

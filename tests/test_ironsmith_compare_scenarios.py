@@ -16,6 +16,7 @@ import pytest
 from scripts.ironsmith_compare.scenarios import (
     SOURCE_PATH,
     Untranslated,
+    behaviour_rows,
     golden_id,
     parse_junit,
     translate,
@@ -266,3 +267,27 @@ def test_every_golden_translates_or_says_why():
             translated += 1
             assert result[-1]["op"].startswith("assert")
     assert translated > 1000
+
+
+def test_behaviour_rows_join_the_manifest_with_the_junit_verdicts():
+    manifest = {
+        "translated": ["a/activated-0", "b/activated-0"],
+        "untranslated": {"c/triggered-0": "decision may (answers are not recorded)"},
+    }
+    verdicts = {"a/activated-0": {"verdict": "agree", "message": ""}}
+    cards = {"a/activated-0": "A", "b/activated-0": "B", "c/triggered-0": "C"}
+    assert behaviour_rows(manifest, verdicts, cards) == [
+        {"id": "a/activated-0", "card": "A", "verdict": "agree", "message": ""},
+        {
+            "id": "b/activated-0",
+            "card": "B",
+            "verdict": "ironsmith-error",
+            "message": "no JUnit result",
+        },
+        {
+            "id": "c/triggered-0",
+            "card": "C",
+            "verdict": "untranslated",
+            "message": "decision may (answers are not recorded)",
+        },
+    ]

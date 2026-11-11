@@ -48,7 +48,7 @@ class Comparison:
     worklist: list[CardRow] = field(default_factory=list)
 
 
-def _formats(raw: dict) -> list[str]:
+def legal_formats(raw: dict) -> list[str]:
     legalities = raw.get("legalities") or {}
     return [fmt for fmt in FORMATS if legalities.get(fmt, "not_legal") != "not_legal"]
 
@@ -86,7 +86,7 @@ def build_rows(
     rows: list[CardRow] = []
     joined: set[str] = set()
     for raw in pool:
-        formats = _formats(raw)
+        formats = legal_formats(raw)
         if fmt not in formats:
             continue
         key = join_name(raw["name"])

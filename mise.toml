@@ -150,6 +150,26 @@ run = "uv run python scripts/card_coverage.py --baseline-only --workers 6"
 description = "Fetch the 30-day competitive metagame snapshot from spellslinger into docs/card_coverage/metagame.json"
 run = "uv run python scripts/fetch_metagame.py"
 
+# -------------------------------------------------------- ironsmith compare --
+# Local, on-demand MCM vs ironsmith comparison (docs/ironsmith-compare.md). Never
+# in CI. ironsmith is run only as separate, unmodified processes on the user's
+# machine; extra arguments go after `--`.
+[tasks."compare:ironsmith:doctor"]
+description = "Check the ironsmith checkout (IRONSMITH_DIR, default ../ironsmith) against scripts/ironsmith_compare/pin.toml"
+run = "uv run python -m scripts.ironsmith_compare doctor"
+
+[tasks."compare:ironsmith:build"]
+description = "Build ironsmith's status binaries in its checkout (-- --behaviour: its WASM engine too)"
+run = "uv run python -m scripts.ironsmith_compare build"
+
+[tasks."compare:ironsmith:collect"]
+description = "Run ironsmith on our data: mise run compare:ironsmith:collect -- coverage|behaviour"
+run = "uv run python -m scripts.ironsmith_compare collect"
+
+[tasks."compare:ironsmith"]
+description = "Join MCM verdicts with the collected ironsmith data: report.md, report.json, worklist.csv under .ironsmith-compare/"
+run = "uv run python -m scripts.ironsmith_compare compare"
+
 # ----------------------------------------------------------------- split --
 # The engine module split (docs/engine-module-split-design.md): a manifest-driven
 # codemod lands each step as one script-made commit, and one gate command per
