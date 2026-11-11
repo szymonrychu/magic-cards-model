@@ -4129,11 +4129,12 @@ def _parse_choose_x_targets_copy_tokens_text(text: str) -> Effect | None:
 #: T-110 B6: "Create a token that's a copy of target creature an opponent
 #: controls, except it has menace. If this spell was kicked, instead for each
 #: creature target opponent controls, create a token that's a copy of that
-#: creature, except it has menace." - Mirror Universe Intrusion. The spell has
-#: both targets whether or not it was kicked (CR 601.2c: every "target" in the
-#: text is announced), the creature first and the opponent second; the kicker
-#: (CR 702.33d, `CastRecord.kicked`) picks which one the resolution uses, and
-#: "instead" means the unkicked half does nothing (CR 608.2c).
+#: creature, except it has menace." - Mirror Universe Intrusion. Which target is
+#: announced depends on the kicker (CR 601.2b, CR 601.2c,
+#: `targeting.kicked_instead_target_text`): the creature unkicked, the opponent
+#: kicked. Resolution reads the one that was announced (CR 702.33d,
+#: `CastRecord.kicked`), and "instead" means the unkicked half does nothing
+#: when kicked (CR 608.2c).
 _TOKEN_COPY_TARGET_OR_KICKED_EACH_RE = re.compile(
     r"^create a token that['’]?s a copy of target creature an opponent controls"
     r"(?:, except (?P<except>[^.]+?))?\.\s*"
