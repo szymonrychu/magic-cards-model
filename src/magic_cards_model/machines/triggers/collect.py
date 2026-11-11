@@ -130,6 +130,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.RING_TEMPTS_YOU})
     if _CRIME_COMMITTED_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.CRIME_COMMITTED})
+    if _DILEMMA_FACED_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.DILEMMA_FACED})
     if _SEARCHES_LIBRARY_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.SEARCHES_LIBRARY})
     if _EXPEND_CONDITION.match(lowered):
@@ -2119,6 +2121,7 @@ from ._common import (  # noqa: E402
     _CREATURES_OR_GRAVEYARD_CREATURE_CARDS_EXILED_CONDITION,
     _CRIME_COMMITTED_CONDITION,
     _CYCLE_CONDITION,
+    _DILEMMA_FACED_CONDITION,
     _DOOR_UNLOCKED_CONDITION,
     _ENLISTS_A_CREATURE_CONDITION,
     _ENTERING_CAUSE_RE,

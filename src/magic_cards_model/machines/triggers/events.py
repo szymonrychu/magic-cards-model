@@ -308,6 +308,13 @@ class ExtraTriggerEvent(StrEnum):
     #: a qualifying target - once per crime-committing action, never once per
     #: qualifying target (CR 700.13 is about the action, not the count).
     CRIME_COMMITTED = "crime_committed"
+    #: CR 700.17: "A player faces a dilemma whenever they choose one or more
+    #: modes for a spell or ability." Elim Garak, Simple Tailor's "Whenever
+    #: you face a dilemma, ..." and every other "Face a dilemma" card.
+    #: `GameEvent.player` is the player who chose. **Emitted by:**
+    #: `machines/conditions/history.record_dilemma`, once per spell or
+    #: ability, however many modes were chosen for it.
+    DILEMMA_FACED = "dilemma_faced"
     #: CR 701.23a: "To search for a card in a zone, look at all cards in that
     #: zone, either mentally or by looking at each card." Wan Shi Tong,
     #: Librarian's "Whenever an opponent searches their library, ..." and Ob

@@ -3433,6 +3433,13 @@ class ActivationMixin:
             # wholesale), and the ability is on the stack, so anything watching
             # "becomes the target of ... an ability" now has an event to see.
             self._emit_ability_becomes_target(on_stack)
+            if announced_modes is not None and announced_modes[0]:
+                modal = modal_trigger_profile(ability.effect)
+                if modal is None or not modal.chosen_at_random:
+                    # CR 700.17: the activator chose its modes (CR 700.2a).
+                    from ...machines.conditions import history as condition_history
+
+                    condition_history.record_dilemma(self, controller)
             # CR 602.2: the ability is on the stack and its costs are paid -
             # it has been activated, and it is not a mana ability (CR 605.3b
             # returned above for those). Flamescroll Celebrant's "Whenever an

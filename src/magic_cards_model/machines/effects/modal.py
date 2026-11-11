@@ -1368,6 +1368,79 @@ def _parse_choose_target_exile_until_leaves_then_instead_permanent_clause(
     return effect
 
 
+#: "Target opponent may have you `<action>`. If they don't, `<otherwise>`." -
+#: CR 608.2d's choice put to a player other than the controller ("the
+#: player ... announces these while applying the effect"): Tell Me What You
+#: See's "... have you draw a card. If they don't, they lose 4 life and you
+#: surveil 1." and Terrapact Intimidator's "... have you create two Lander
+#: tokens. If they don't, put two +1/+1 counters on this creature."
+#: Combustible Gearhulk's own whole-text reader runs first (its edge below).
+_OPPONENT_MAY_HAVE_YOU_RE = re.compile(
+    r"^target opponent may have you (?P<action>[^.]+)\.\s*"
+    r"if (?:they|that player|the player) (?:don'?t|doesn'?t), (?P<otherwise>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: "they `<verb>`" opening the "if they don't" half: CR 608.2d's chooser, the
+#: target opponent, as the subject of a plain player clause.
+_THEY_SUBJECT_RE = re.compile(r"^(?:they|that player|the player) (?P<verb>[a-z]+)\b", re.IGNORECASE)
+
+
+def _third_person(verb: str) -> str:
+    """ "lose" -> "loses", "discard" -> "discards": the subject's verb once
+    "they" is replaced by the singular "target opponent"."""
+    if verb.endswith(("s", "sh", "ch", "x", "z")):
+        return f"{verb}es"
+    if verb.endswith("y") and verb[-2:-1] not in "aeiou":
+        return f"{verb[:-1]}ies"
+    return f"{verb}s"
+
+
+@ABILITY_TEXT.rung("s8", after=("_parse_opponent_may_have_you_draw_else_mill_damage",))
+def _parse_opponent_may_have_you_else_clause(text: str) -> AbilityEffect | None:
+    """`_OPPONENT_MAY_HAVE_YOU_RE`: the targeted opponent (CR 115.1) answers
+    the "may" (CR 608.2d); yes performs `<action>` for the controller, no
+    performs `<otherwise>`, whose "they" is that same opponent - read as the
+    ability's own "target opponent", the one target the whole text has.
+    Both halves go through `parse_mixed_effect`; either unread fails the
+    whole reader closed."""
+    whole = collapsed(_strip_non_effect_preamble(text)).strip()
+    match = _OPPONENT_MAY_HAVE_YOU_RE.fullmatch(whole)
+    if match is None:
+        return None
+    action_text = match.group("action").strip()
+    action = parse_mixed_effect(f"{action_text}.")
+    otherwise_text = match.group("otherwise").strip()
+    otherwise_text = _THEY_SUBJECT_RE.sub(
+        lambda verb: f"target opponent {_third_person(verb.group('verb').lower())}",
+        otherwise_text,
+        count=1,
+    )
+    otherwise = parse_mixed_effect(f"{otherwise_text}.")
+    if action is None or otherwise is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        opponent = next(
+            (target for target in game.resolve_targets(ability) if isinstance(target, Player)),
+            None,
+        )
+        if opponent is None:
+            return  # CR 608.2b: the target is gone, so nobody chooses.
+        controller = game.controller_of(ability).username
+        if game.may(
+            opponent,
+            f"have {controller} {action_text}",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            action(game, ability)
+        else:
+            otherwise(game, ability)
+
+    return effect
+
+
 def _optional_targeted_clause(
     inner: TargetedClause, prompt: str, *, for_spell: bool
 ) -> TargetedClause:

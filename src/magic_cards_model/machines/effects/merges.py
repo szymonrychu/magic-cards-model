@@ -2812,10 +2812,16 @@ def _merge_exile_until_quality_then_counter_or_cast_clauses(
 #: Doom Reigns Supreme's "You may cast up to two spells from among the exiled
 #: cards without paying their mana costs." is the same instruction with an
 #: "up to" maximum and the antecedent named rather than pronouned.
+#: Captain Benjamin Sisko's "with mana value less than or equal to the number
+#: of Officers you control from among those cards" is the same instruction
+#: with its bound a count (`count_expression`, taken as the instruction
+#: resolves, CR 608.2h) and the antecedent "those cards" - the plural
+#: demonstrative for the same CR 607.1 pile "them" names.
 _CAST_ANY_NUMBER_FROM_AMONG_THEM_FREE_RE = re.compile(
     rf"^you may cast (?:any number of|up to {count_pattern('limit')}) spells"
-    r"(?: with mana value (?P<most>\d+) or less)? from among"
-    r" (?:them|the exiled cards|the (?P<this_way>[\w' -]+?) cards exiled this way)"
+    r"(?: with mana value (?:(?P<most>\d+) or less|less than or equal to (?P<most_count>.+?)))?"
+    r" from among"
+    r" (?:them|those cards|the exiled cards|the (?P<this_way>[\w' -]+?) cards exiled this way)"
     r" without paying their mana costs\.?$",
     re.IGNORECASE,
 )
@@ -2831,11 +2837,18 @@ def _merge_exile_then_cast_any_number_free_clauses(
         return None
     cast_match = _CAST_ANY_NUMBER_FROM_AMONG_THEM_FREE_RE.fullmatch(clauses[index + 1].strip())
     if cast_match is None:
-        return None
+        return _merge_exile_until_then_cast_that_card_free_clauses(
+            clauses, index, for_spell=for_spell
+        )
     limit = parse_count(cast_match.group("limit")) if cast_match.group("limit") else None
     # Kotis, the Fangkeeper's "spells with mana value X or less", its X read in
     # (CR 202.3): a card over it is never offered.
     most = int(cast_match.group("most")) if cast_match.group("most") else None
+    most_count = None
+    if cast_match.group("most_count"):
+        most_count = count_expression(cast_match.group("most_count"))
+        if most_count is None:
+            return None
     this_way = cast_match.group("this_way")
     each_player = _each_player_exile_until(clauses[index])
     if each_player is not None:
@@ -2872,9 +2885,10 @@ def _merge_exile_then_cast_any_number_free_clauses(
             else stack_object.source_name
         )
         found = exile(game, stack_object)
+        bound = most if most_count is None else most_count(game, caster)
         _offer_free_casts_from_among(
             game,
-            [card for card in found if most is None or card.mana_value <= most],
+            [card for card in found if bound is None or card.mana_value <= bound],
             caster,
             source_name=source_name,
             source_id=source_id_of(stack_object),
@@ -2883,6 +2897,105 @@ def _merge_exile_then_cast_any_number_free_clauses(
         )
 
     return 2, effect
+
+
+#: "You may cast that card without paying its mana cost." - the singular twin
+#: of `_CAST_ANY_NUMBER_FROM_AMONG_THEM_FREE_RE`, after an exile-until clause
+#: whose antecedent is the one card that stopped the process (CR 607.1): The
+#: Caretaker's "target opponent exiles cards from the top of their library
+#: until they exile a nonland card", Chaos Wand's "... an instant or sorcery
+#: card".
+_CAST_THAT_CARD_FREE_RE = re.compile(
+    r"^you may cast (?:that card|it) without paying its mana cost\.?$", re.IGNORECASE
+)
+
+#: Chaos Wand's trailing "Then put the exiled cards that weren't cast this way
+#: on the bottom of that library in a random order." - every card the
+#: exile-until process exiled and nobody cast, the stopper included when it
+#: was declined.
+_BOTTOM_EXILED_NOT_CAST_RANDOM_RE = re.compile(
+    r"^(?:then )?put (?:the exiled cards|all cards exiled this way|the rest)"
+    r"(?: that weren'?t cast(?: this way)?| not cast this way)?"
+    r" on the bottom of (?:that|their|your|its owner'?s) library in a random order\.?$",
+    re.IGNORECASE,
+)
+
+
+def _merge_exile_until_then_cast_that_card_free_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> "tuple[int, TargetedClause] | None":
+    """An exile-until clause naming one card, then `_CAST_THAT_CARD_FREE_RE`,
+    then optionally `_BOTTOM_EXILED_NOT_CAST_RANDOM_RE`, as one CR 608.2c
+    instruction. CR 608.2g: the cast happens during the resolution, without
+    paying its mana cost (CR 118.9); declining leaves the card in exile (CR
+    406.1) unless the bottom sentence moves it. A library that ran out before
+    a matching card stopped the process names nothing, so nothing is
+    offered."""
+    if (
+        index + 1 >= len(clauses)
+        or _CAST_THAT_CARD_FREE_RE.fullmatch(clauses[index + 1].strip()) is None
+    ):
+        return None
+    antecedent = (
+        _spell_safe_exile_antecedent(clauses[index])
+        if for_spell
+        else (
+            _parse_exile_until_antecedent(clauses[index])
+            or _parse_exile_until_antecedent_third_person(clauses[index])
+            or _parse_exile_until_antecedent_target_opponent(clauses[index])
+        )
+    )
+    if antecedent is None or not _EXILE_UNTIL_CLAUSE_RE.search(clauses[index]):
+        return None
+    exile, exiles_many = antecedent
+    if exiles_many:
+        return None
+    consumed = 2
+    bottom = index + 2 < len(clauses) and (
+        _BOTTOM_EXILED_NOT_CAST_RANDOM_RE.fullmatch(clauses[index + 2].strip()) is not None
+    )
+    if bottom:
+        consumed = 3
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        caster = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        before = {card.id for card in game.exile}
+        found = exile(game, stack_object)
+        exiled = [card for card in game.exile if card.id not in before]
+        _offer_free_casts_from_among(
+            game,
+            found,
+            caster,
+            source_name=source_name,
+            source_id=source_id_of(stack_object),
+            play=False,
+            limit=1,
+        )
+        if not bottom:
+            return
+        # "In a random order" is not a shuffle (CR 701.24a's verb is not
+        # printed); seeded the way cascade's own bottoming is, so a replay
+        # reproduces it. Each card goes under its owner's library.
+        rest = [card for card in exiled if card.zone is Zone.EXILE and card in game.exile]
+        if not rest:
+            return
+        Random(f"{game.shuffle_seed}:{game.shuffles_performed}:exile-until-rest").shuffle(rest)  # noqa: S311
+        game.shuffles_performed += 1
+        for card in rest:
+            game.exile.remove(card)
+            game.player(card.owner).add(card, Zone.LIBRARY)  # the bottom of the library
+
+    return consumed, effect
+
+
+#: The exile-until process, as `_merge_exile_until_then_cast_that_card_free_
+#: clauses` requires its first clause to print it.
+_EXILE_UNTIL_CLAUSE_RE = re.compile(r"\bexiles? cards from the top of\b.*\buntil\b", re.IGNORECASE)
 
 
 def _offer_free_casts_from_among(
@@ -6516,6 +6629,7 @@ from .removal import (  # noqa: E402
     _parse_exile_antecedent,
     _parse_exile_top_of_other_libraries_antecedent,
     _parse_exile_until_antecedent,
+    _parse_exile_until_antecedent_target_opponent,
     _parse_exile_until_antecedent_third_person,
     _parse_sacrifice_consequence,
     _process_exiled_cards,
