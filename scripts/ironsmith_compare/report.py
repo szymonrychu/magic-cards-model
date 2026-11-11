@@ -7,13 +7,11 @@ from __future__ import annotations
 import csv
 import io
 import json
-from collections import Counter
 from dataclasses import asdict
 
 from scripts.ironsmith_compare.compare import RANKING, CardRow, Comparison
 
 SCHEMA_VERSION = 1
-VERDICTS = ("agree", "disagree", "ironsmith-error", "untranslated")
 CSV_FIELDS = (
     "rank",
     "name",
@@ -32,39 +30,18 @@ CSV_FIELDS = (
 MD_WORKLIST_LIMIT = 300
 
 
-def behaviour_summary(rows: list[dict]) -> dict:
-    counts = Counter({verdict: 0 for verdict in VERDICTS})
-    counts.update(row["verdict"] for row in rows)
-    by_card: dict[str, Counter] = {}
-    for row in rows:
-        if row["verdict"] != "untranslated":
-            by_card.setdefault(row["card"], Counter())[row["verdict"]] += 1
-    reasons = Counter(row["message"] for row in rows if row["verdict"] == "untranslated")
-    return {
-        "counts": dict(counts),
-        "untranslated_reasons": dict(sorted(reasons.items(), key=lambda kv: (-kv[1], kv[0]))),
-        "by_card": {card: dict(sorted(c.items())) for card, c in sorted(by_card.items())},
-    }
+def _card(row: CardRow) -> dict:
+    return asdict(row)
 
 
-def _card(row: CardRow, by_card: dict) -> dict:
-    return {**asdict(row), "behaviour": by_card.get(row.name, {})}
-
-
-def render_json(comparison: Comparison, behaviour: list[dict], meta: dict) -> str:
-    summary = behaviour_summary(behaviour)
+def render_json(comparison: Comparison, meta: dict) -> str:
     report = {
         "schema_version": SCHEMA_VERSION,
         "meta": {**meta, "ranking": RANKING},
         "quadrants": comparison.quadrants,
         "unjoined_iron": comparison.unjoined_iron,
-        "behaviour": {
-            "counts": summary["counts"],
-            "untranslated_reasons": summary["untranslated_reasons"],
-            "goldens": behaviour,
-        },
-        "cards": [_card(row, summary["by_card"]) for row in comparison.rows],
-        "worklist": [_card(row, summary["by_card"]) for row in comparison.worklist],
+        "cards": [_card(row) for row in comparison.rows],
+        "worklist": [_card(row) for row in comparison.worklist],
     }
     return json.dumps(report, indent=1, ensure_ascii=False) + "\n"
 
@@ -73,8 +50,7 @@ def _cell(text: object) -> str:
     return str(text).replace("|", "\\|").replace("\n", " ")
 
 
-def render_md(comparison: Comparison, behaviour: list[dict], meta: dict) -> str:
-    summary = behaviour_summary(behaviour)
+def render_md(comparison: Comparison, meta: dict) -> str:
     lines = [
         f"# MCM vs ironsmith ({meta['format']})",
         "",
@@ -85,8 +61,7 @@ def render_md(comparison: Comparison, behaviour: list[dict], meta: dict) -> str:
         f"- worklist statuses: {', '.join(meta['statuses'])}",
         f"- ranking: {RANKING}",
         "",
-        "ironsmith 'supported' is its own compile acceptance, not proof of correct play;"
-        " a behaviour disagreement is a lead to check against the CR, never a verdict.",
+        "ironsmith 'supported' is its own compile acceptance, not proof of correct play.",
         "",
         "## Coverage quadrants",
         "",
@@ -117,26 +92,6 @@ def render_md(comparison: Comparison, behaviour: list[dict], meta: dict) -> str:
             ),
             "",
         ]
-    lines += [
-        "## Behaviour (MCM goldens replayed in ironsmith)",
-        "",
-        "| verdict | goldens |",
-        "|---|---|",
-        *(f"| {verdict} | {count} |" for verdict, count in summary["counts"].items()),
-        "",
-        "### Disagreements",
-        "",
-        *(
-            f"- {row['id']} ({_cell(row['card'])}): {_cell(row['message'])}"
-            for row in behaviour
-            if row["verdict"] == "disagree"
-        ),
-        "",
-        "### Untranslated, by reason",
-        "",
-        *(f"- {count} x {reason}" for reason, count in summary["untranslated_reasons"].items()),
-        "",
-    ]
     return "\n".join(lines)
 
 

@@ -38,7 +38,6 @@ def test_the_committed_pin_names_the_reviewed_ironsmith_commit():
     assert pin.commit == "a59720c3966b02437c50807b8ed664496862810b"
     assert pin.licence == "AGPL-3.0-or-later"
     assert pin.coverage_build[0] == "cargo"
-    assert pin.behaviour_build
 
 
 def test_a_clean_checkout_at_the_pin_has_no_problems(tmp_path):
@@ -73,7 +72,6 @@ def test_each_missing_tool_is_reported(tmp_path):
     pin = load_pin()._replace(commit=head_sha(repo))
     problems = check_checkout(repo, pin, which=lambda name: None)
     assert any("cargo" in p for p in problems)
-    assert any("node" in p for p in problems)
 
 
 def test_run_passes_argv_without_a_shell_and_logs_output(tmp_path):

@@ -1,9 +1,9 @@
 """`uv run python -m scripts.ironsmith_compare <command>` - see docs/ironsmith-compare.md.
 
     doctor              check the ironsmith checkout against the pin, and the tools
-    build               build ironsmith's status binaries (--behaviour: its WASM engine too)
-    collect coverage    feed our card pool to ironsmith's status binaries, normalise the result
-    collect behaviour   replay MCM goldens in ironsmith's scenario runner, normalise the result
+    build               build ironsmith's two status binaries
+    collect             feed our Modern/Standard/Pioneer-legal cards to ironsmith's status
+                        binaries, normalise the result
     compare             join with MCM's verdicts; write report.json, report.md, worklist.csv
 
 Only `build` and `collect` start ironsmith, always as separate processes on the user's
@@ -14,21 +14,18 @@ from __future__ import annotations
 
 import argparse
 import datetime
-import json
 import os
 import subprocess
 import sys
 from pathlib import Path
 
 from scripts import card_coverage
-from scripts.ironsmith_compare import checkout, coverage, report, scenarios
+from scripts.ironsmith_compare import checkout, coverage, report
 from scripts.ironsmith_compare.compare import FORMATS, build_rows, legal_formats
 
 ROOT = Path(__file__).resolve().parents[2]
-GOLDEN_DIR = ROOT / "tests" / "golden"
 DEFAULT_IRONSMITH = Path(os.environ.get("IRONSMITH_DIR", ROOT.parent / "ironsmith"))
 COVERAGE_JSONL = "ironsmith-coverage.jsonl"
-BEHAVIOUR_JSONL = "ironsmith-behaviour.jsonl"
 STATUS_BINARIES = ("sync_registry_db", "sync_card_status_db")
 STATUSES = {"silent": {"silent"}, "notice": {"notice"}, "both": {"silent", "notice"}}
 
@@ -74,7 +71,8 @@ def _pool(args: argparse.Namespace) -> list[dict]:
     bulk = args.bulk or card_coverage.download_bulk(
         "oracle-cards", cache_dir=ROOT / card_coverage.DEFAULT_CACHE_DIR
     )
-    return card_coverage.target_format_pool(card_coverage.load_bulk_json(bulk))
+    pool = card_coverage.target_format_pool(card_coverage.load_bulk_json(bulk))
+    return [raw for raw in pool if legal_formats(raw)]
 
 
 def cmd_doctor(args: argparse.Namespace, pin: checkout.Pin) -> int:
@@ -96,17 +94,15 @@ def cmd_build(args: argparse.Namespace, pin: checkout.Pin) -> int:
     if not _checked(args, pin):
         return 2
     log = _out_dir(args, pin) / "logs" / "build.log"
-    commands = [pin.coverage_build] + ([pin.behaviour_build] if args.behaviour else [])
-    for argv in commands:
-        code = checkout.run(argv, cwd=args.ironsmith, log=log)
-        if code:
-            print(f"build failed ({code}): {' '.join(argv)}; see {log}", file=sys.stderr)
-            return code
+    code = checkout.run(pin.coverage_build, cwd=args.ironsmith, log=log)
+    if code:
+        print(f"build failed ({code}): {' '.join(pin.coverage_build)}; see {log}", file=sys.stderr)
+        return code
     print(f"built; log {log}")
     return 0
 
 
-def cmd_collect_coverage(args: argparse.Namespace, pin: checkout.Pin) -> int:
+def cmd_collect(args: argparse.Namespace, pin: checkout.Pin) -> int:
     if not _checked(args, pin):
         return 2
     binaries = args.ironsmith / "target" / "release"
@@ -127,40 +123,6 @@ def cmd_collect_coverage(args: argparse.Namespace, pin: checkout.Pin) -> int:
     rows = coverage.read_status_db(db)
     coverage.write_jsonl(rows, out / COVERAGE_JSONL)
     print(f"{len(rows)} ironsmith rows -> {out / COVERAGE_JSONL}")
-    return 0
-
-
-def cmd_collect_behaviour(args: argparse.Namespace, pin: checkout.Pin) -> int:
-    if not _checked(args, pin):
-        return 2
-    runner = args.ironsmith / "scripts" / "mage-port-runner.mjs"
-    if not runner.is_file():
-        print(f"{runner} not found; is this an ironsmith checkout?", file=sys.stderr)
-        return 2
-    out = _out_dir(args, pin)
-    specs, junit, log = out / "behaviour", out / "behaviour.junit.xml", out / "logs/behaviour.log"
-    paths = sorted(GOLDEN_DIR.glob("*/*.json"))
-    manifest = scenarios.write_specs(paths, specs, runner)
-    junit.unlink(missing_ok=True)
-    argv = [
-        "node",
-        "--test",
-        "--test-isolation=none",
-        f"--test-concurrency={args.concurrency}",
-        "--test-reporter=junit",
-        f"--test-reporter-destination={junit}",
-        *(str(shim) for shim in sorted(specs.glob("*.test.mjs"))),
-    ]
-    # Failing scenarios make node exit non-zero; the JUnit file is the result.
-    checkout.run(argv, cwd=args.ironsmith, log=log)
-    if not junit.is_file():
-        print(f"no JUnit report at {junit}; see {log}", file=sys.stderr)
-        return 2
-    cards = {scenarios.golden_id(p): json.loads(p.read_text())["card"] for p in paths}
-    rows = scenarios.behaviour_rows(manifest, scenarios.parse_junit(junit.read_text()), cards)
-    coverage.write_jsonl(rows, out / BEHAVIOUR_JSONL)
-    replayed = len(manifest["translated"])
-    print(f"{len(rows)} goldens ({replayed} replayed) -> {out / BEHAVIOUR_JSONL}")
     return 0
 
 
@@ -207,11 +169,10 @@ def cmd_compare(args: argparse.Namespace, pin: checkout.Pin) -> int:
         source = latest_collected(out.parent, _sha(args.ironsmith, pin.commit)) or out
         if source != out:
             print(f"note: reading collected data from {source}", file=sys.stderr)
-    iron_path, behaviour_path = source / COVERAGE_JSONL, source / BEHAVIOUR_JSONL
+    iron_path = source / COVERAGE_JSONL
     if not iron_path.is_file():
         print(f"note: no {iron_path}; every card's ironsmith status is unknown", file=sys.stderr)
     iron = coverage.read_jsonl(iron_path) if iron_path.is_file() else []
-    behaviour = coverage.read_jsonl(behaviour_path) if behaviour_path.is_file() else []
     metagame = card_coverage.load_metagame(args.metagame)
     verdicts = _mcm_verdicts(args, pool, wanted)
     comparison = build_rows(pool, verdicts, iron, metagame, fmt=args.format, statuses=wanted)
@@ -225,8 +186,8 @@ def cmd_compare(args: argparse.Namespace, pin: checkout.Pin) -> int:
         "statuses": sorted(wanted),
     }
     out.mkdir(parents=True, exist_ok=True)
-    (out / "report.json").write_text(report.render_json(comparison, behaviour, meta))
-    (out / "report.md").write_text(report.render_md(comparison, behaviour, meta))
+    (out / "report.json").write_text(report.render_json(comparison, meta))
+    (out / "report.md").write_text(report.render_md(comparison, meta))
     (out / "worklist.csv").write_text(report.render_csv(comparison.worklist))
     print(f"quadrants {comparison.quadrants}; worklist {len(comparison.worklist)} cards")
     print(f"wrote {out / 'report.md'}, report.json, worklist.csv")
@@ -259,14 +220,8 @@ def _parser() -> argparse.ArgumentParser:
     )
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("doctor", parents=[common]).set_defaults(func=cmd_doctor)
-    build = sub.add_parser("build", parents=[common])
-    build.add_argument("--behaviour", action="store_true", help="also build the WASM engine")
-    build.set_defaults(func=cmd_build)
-    collect = sub.add_parser("collect").add_subparsers(dest="what", required=True)
-    collect.add_parser("coverage", parents=[common]).set_defaults(func=cmd_collect_coverage)
-    behaviour = collect.add_parser("behaviour", parents=[common])
-    behaviour.add_argument("--concurrency", type=int, default=8)
-    behaviour.set_defaults(func=cmd_collect_behaviour)
+    sub.add_parser("build", parents=[common]).set_defaults(func=cmd_build)
+    sub.add_parser("collect", parents=[common]).set_defaults(func=cmd_collect)
     compare = sub.add_parser("compare", parents=[common])
     compare.add_argument("--format", choices=FORMATS, default="modern")
     compare.add_argument("--status", choices=sorted(STATUSES), default="silent")

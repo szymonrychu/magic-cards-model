@@ -49,8 +49,10 @@ class Comparison:
 
 
 def legal_formats(raw: dict) -> list[str]:
+    """The formats of FORMATS the card is legal in right now (banned, restricted and
+    not_legal all count as not legal)."""
     legalities = raw.get("legalities") or {}
-    return [fmt for fmt in FORMATS if legalities.get(fmt, "not_legal") != "not_legal"]
+    return [fmt for fmt in FORMATS if legalities.get(fmt) == "legal"]
 
 
 def _weights(metagame: dict) -> dict[str, float]:

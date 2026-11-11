@@ -7,16 +7,17 @@ one `collect` test stops at the pin check, before anything would start.
 
 from __future__ import annotations
 
+import argparse
 import csv
 import io
 import json
 import subprocess
 
+from scripts.ironsmith_compare.__main__ import _pool as cli_pool
 from scripts.ironsmith_compare.__main__ import latest_collected, main
 from scripts.ironsmith_compare.compare import build_rows
 from scripts.ironsmith_compare.coverage import write_jsonl
 from scripts.ironsmith_compare.report import (
-    behaviour_summary,
     render_csv,
     render_json,
     render_md,
@@ -67,32 +68,8 @@ def _comparison():
     return build_rows(_pool(), mcm, iron, {"formats": {}}, fmt="modern", statuses={"silent"})
 
 
-_BEHAVIOUR = [
-    {"id": "alpha/activated-0", "card": "Alpha", "verdict": "agree", "message": ""},
-    {
-        "id": "alpha/triggered-0",
-        "card": "Alpha",
-        "verdict": "disagree",
-        "message": "expected 2 Alpha permanents, got 1",
-    },
-    {
-        "id": "beta/triggered-0",
-        "card": "Beta",
-        "verdict": "untranslated",
-        "message": "decision may (answers are not recorded)",
-    },
-]
-
-
-def test_behaviour_summary_counts_verdicts_and_reasons():
-    summary = behaviour_summary(_BEHAVIOUR)
-    assert summary["counts"] == {"agree": 1, "disagree": 1, "ironsmith-error": 0, "untranslated": 1}
-    assert summary["untranslated_reasons"] == {"decision may (answers are not recorded)": 1}
-    assert summary["by_card"]["Alpha"] == {"agree": 1, "disagree": 1}
-
-
 def test_report_json_is_versioned_and_never_carries_compiled_text():
-    report = json.loads(render_json(_comparison(), _BEHAVIOUR, _META))
+    report = json.loads(render_json(_comparison(), _META))
     assert report["schema_version"] == 1
     assert report["meta"]["iron_sha"] == "a" * 40
     assert report["quadrants"] == {"both": 1, "mcm_only": 0, "iron_only": 1, "neither": 1}
@@ -109,15 +86,12 @@ def test_report_json_is_versioned_and_never_carries_compiled_text():
         "cluster",
         "metagame_weight",
         "rank",
-        "behaviour",
     } <= keys
-    alpha = next(card for card in report["cards"] if card["name"] == "Alpha")
-    assert alpha["behaviour"] == {"agree": 1, "disagree": 1}
     assert [w["name"] for w in report["worklist"]] == ["Gamma", "Beta"]
 
 
-def test_report_md_header_tables_and_disagreements():
-    md = render_md(_comparison(), _BEHAVIOUR, _META)
+def test_report_md_header_tables_and_worklist():
+    md = render_md(_comparison(), _META)
     assert md.startswith("# MCM vs ironsmith (modern)\n")
     for text in (
         "a" * 12,
@@ -127,8 +101,6 @@ def test_report_md_header_tables_and_disagreements():
         "2026-11-11",
         "| both | 1 |",
         "Gamma",
-        "expected 2 Alpha permanents, got 1",
-        "decision may (answers are not recorded)",
     ):
         assert text in md
     assert chr(0x2014) not in md
@@ -216,7 +188,7 @@ def test_collect_refuses_an_unpinned_checkout_before_running_anything(tmp_path, 
             check=True,
         )
     out = tmp_path / "out"
-    code = main(["collect", "coverage", "--ironsmith", str(repo), "--out", str(out)])
+    code = main(["collect", "--ironsmith", str(repo), "--out", str(out)])
     assert code == 2
     assert "HEAD" in capsys.readouterr().err
     assert not out.exists()
@@ -236,3 +208,21 @@ def test_compare_finds_data_collected_before_an_mcm_commit(tmp_path):
     write_jsonl([], tmp_path / ("e" * 12 + "-" + "1" * 12) / "ironsmith-coverage.jsonl")
     assert latest_collected(tmp_path, "c" * 40) == collected
     assert latest_collected(tmp_path, "f" * 40) is None
+
+
+def test_the_pool_handed_to_ironsmith_holds_only_currently_legal_cards(tmp_path):
+    def card(name, oracle_id, legal):
+        return {
+            "name": name,
+            "oracle_id": oracle_id,
+            "legalities": {"modern": legal, "pioneer": "not_legal", "standard": "not_legal"},
+            "layout": "normal",
+            "set_type": "core",
+            "games": ["paper"],
+            "oracle_text": "x",
+        }
+
+    bulk = tmp_path / "oracle-cards.json"
+    bulk.write_text(json.dumps([card("Legal", "1", "legal"), card("Banned", "2", "banned")]))
+    args = argparse.Namespace(bulk=bulk)
+    assert [raw["name"] for raw in cli_pool(args)] == ["Legal"]

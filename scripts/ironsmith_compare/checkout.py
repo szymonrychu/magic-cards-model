@@ -14,8 +14,8 @@ from typing import NamedTuple
 
 PIN_PATH = Path(__file__).with_name("pin.toml")
 
-#: Tools `collect` starts: cargo for the status binaries, node for the scenario runner.
-REQUIRED_TOOLS = ("git", "cargo", "node")
+#: Tools `collect` starts: cargo for the status binaries.
+REQUIRED_TOOLS = ("git", "cargo")
 
 
 class Pin(NamedTuple):
@@ -24,7 +24,6 @@ class Pin(NamedTuple):
     date: str
     licence: str
     coverage_build: list[str]
-    behaviour_build: list[str]
 
 
 def load_pin(path: Path = PIN_PATH) -> Pin:

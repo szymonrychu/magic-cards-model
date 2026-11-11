@@ -12,5 +12,3 @@ coverage_build = [
   "cargo", "build", "--release", "-p", "ironsmith-tools",
   "--bin", "sync_registry_db", "--bin", "sync_card_status_db",
 ]
-# Behaviour needs the WASM engine the test runner loads (ironsmith's own build script).
-behaviour_build = ["./rebuild-wasm.sh"]

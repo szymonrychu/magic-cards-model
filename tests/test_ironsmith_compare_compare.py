@@ -5,7 +5,7 @@ dicts in Scryfall's shape, MCM verdicts, our own normalised ironsmith rows."""
 from __future__ import annotations
 
 from scripts.card_coverage import clause_signature
-from scripts.ironsmith_compare.compare import build_rows
+from scripts.ironsmith_compare.compare import build_rows, legal_formats
 
 _LEGAL = {"modern": "legal", "pioneer": "not_legal", "standard": "not_legal"}
 
@@ -144,3 +144,12 @@ def test_metagame_weight_is_the_highest_rate_over_formats_and_archetypes():
         pool, {"1": _mcm("silent", "x.")}, [], metagame, fmt="modern", statuses={"silent"}
     )
     assert result.worklist[0].metagame_weight == 0.5
+
+
+def test_only_cards_currently_legal_in_a_format_are_compared():
+    banned = {"modern": "banned", "pioneer": "restricted", "standard": "not_legal"}
+    pool = [_card("Legal", "1"), _card("Banned", "2", banned)]
+    mcm = {"1": _mcm("silent", "a."), "2": _mcm("silent", "b.")}
+    result = build_rows(pool, mcm, [], {"formats": {}}, fmt="modern", statuses={"silent"})
+    assert [r.name for r in result.rows] == ["Legal"]
+    assert legal_formats(pool[1]) == []

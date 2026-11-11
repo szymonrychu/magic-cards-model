@@ -55,8 +55,8 @@ data is always a real Scryfall printing; add one with
 ## Comparing with ironsmith
 
 A local, on-demand comparison with [ironsmith](https://github.com/Chiplis/ironsmith): per-card
-coverage, a ranked worklist of the cards MCM leaves silent, and MCM goldens replayed in
-ironsmith. It never runs in CI, and ironsmith is only ever run as separate, unmodified
+coverage of Modern/Pioneer/Standard-legal cards and a ranked worklist of the cards MCM
+leaves silent. It never runs in CI, and ironsmith is only ever run as separate, unmodified
 processes on your machine. Full guide: [docs/ironsmith-compare.md](docs/ironsmith-compare.md).
 
 ```sh
@@ -66,9 +66,8 @@ git -C ../ironsmith sparse-checkout set --no-cone '/*' '!/web/ui/public/'
 git -C ../ironsmith checkout a59720c3966b02437c50807b8ed664496862810b
 
 mise run compare:ironsmith:doctor                  # pin, clean tree, tools
-mise run compare:ironsmith:build -- --behaviour    # ironsmith's own cargo + WASM builds
-mise run compare:ironsmith:collect -- coverage     # card pool -> ironsmith status DB
-mise run compare:ironsmith:collect -- behaviour    # MCM goldens -> ironsmith runner
+mise run compare:ironsmith:build                         # ironsmith's own cargo build
+mise run compare:ironsmith:collect                       # card pool -> ironsmith status DB
 mise run compare:ironsmith                         # report.md, report.json, worklist.csv
 ```
 
