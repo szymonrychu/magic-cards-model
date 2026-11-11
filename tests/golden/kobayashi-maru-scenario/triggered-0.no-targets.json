@@ -1,0 +1,56 @@
+{
+  "ability": "At the beginning of your upkeep, choose one that hasn't been chosen — • Hail — Return up to one target creature an opponent controls with mana value 3 or less to its owner's hand. • Sensors — Draw two cards. • Transport — Create two 1/1 red Officer creature tokens. • Abandon Ship — You lose the game.",
+  "action": {
+    "controller": "alice",
+    "modes": [1],
+    "on_stack": true,
+    "source": "Kobayashi Maru Scenario@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Kobayashi Maru Scenario"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": null,
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Kobayashi Maru Scenario",
+  "delta": {
+    "created": {},
+    "decisions": [],
+    "fields_changed": [],
+    "notices": {},
+    "objects": {},
+    "players": {},
+    "stack": []
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "beginning_of_step",
+  "number": 0,
+  "recipe": {
+    "attempt": "staged",
+    "index": 0,
+    "optional_targets": "none",
+    "params": {},
+    "variant": "quiet"
+  }
+}

@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Spellweaver Helix@alice#1",
-    "targets": ["Abuelo's Awakening@alice#1"],
+    "targets": ["70,000 Light-Years from Home@alice#1"],
     "x": 0
   },
   "board": {
@@ -15,7 +15,7 @@
     "players": {
       "alice": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator"],
-        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel", "Abuelo's Awakening"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel", "70,000 Light-Years from Home"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Spellweaver Helix"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
@@ -49,7 +49,7 @@
     "fields_changed": ["exile_residents_seen", "turn_counts"],
     "notices": {},
     "objects": {
-      "Abuelo's Awakening@alice#1": {
+      "70,000 Light-Years from Home@alice#1": {
         "zone": ["graveyard", "exile"]
       }
     },
