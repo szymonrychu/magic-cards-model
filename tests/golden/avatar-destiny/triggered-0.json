@@ -46,7 +46,7 @@
         "source": "Avatar Destiny"
       }
     ],
-    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "known_carries"],
+    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "known_carries", "turn_counts"],
     "notices": {},
     "objects": {
       "Avatar Destiny@alice#1": {
