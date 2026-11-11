@@ -2384,3 +2384,14 @@ def test_main_baseline_only_writes_just_the_baseline(tmp_path: Path):
 
 def test_default_support_baseline_path_is_under_card_coverage_docs():
     assert cc.SUPPORT_BASELINE_PATH == "docs/card_coverage/support-baseline.json"
+
+
+def test_clause_signature_is_the_key_cluster_missing_mechanics_groups_by():
+    assert cc.clause_signature("Some Card", "Waterbend - Tap target creature.") == (
+        "kw:waterbend",
+        "Waterbend",
+    )
+    signature, label = cc.clause_signature("Some Card", "Some Card deals 3 damage to you.")
+    assert signature == "tmpl:~ deals N damage to you."
+    assert label == "~ deals N damage to you."
+    assert cc.clause_signature("Some Card", "") == ("__unsignatured__:Some Card", "")
