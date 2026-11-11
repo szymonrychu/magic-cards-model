@@ -2848,9 +2848,7 @@ def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
             scenario.no_blocks()
             source = _last(scenario, card.name, Zone.HAND, ALICE)
             try:
-                entered = scenario.game.put_onto_battlefield(
-                    source, ALICE, transformed=transformed
-                )
+                entered = scenario.game.put_onto_battlefield(source, ALICE, transformed=transformed)
             except ValueError as error:
                 raise _Unavailable(str(error)) from error
             _prime(scenario, entered, ability)
