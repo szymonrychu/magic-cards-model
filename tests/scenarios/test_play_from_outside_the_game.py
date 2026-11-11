@@ -22,7 +22,6 @@ from magic_cards_model.models.action import ActionKind
 from magic_cards_model.models.zone import Zone
 from tests.scenarios.harness import Scenario
 
-
 CAST_PERMISSION = "Cast permission"
 
 
