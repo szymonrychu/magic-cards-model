@@ -66,7 +66,7 @@ if TYPE_CHECKING:
 
 _SELF_NOUN = (
     r"this (?:creature|permanent|artifact|enchantment|card|land|aura|equipment|vehicle"
-    r"|planeswalker|spell|battle|mount)"
+    r"|planeswalker|spell|battle|mount|spacecraft)"
 )
 _EVENT_PRONOUN = r"it|he|she|they|that creature|that permanent|that spell|that card|that land"
 _ATTACHED_TO = (

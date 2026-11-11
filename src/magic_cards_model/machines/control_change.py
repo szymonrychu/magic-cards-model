@@ -21,6 +21,7 @@ from ..models.card import Color
 from ..models.card_state import CANT_BECOME_UNTAPPED_TEXT, CardState
 from ..models.player import Player
 from ..models.zone import Zone
+from ..numbers import COUNT, parse_count
 from .layers import (
     CANT_ACTIVATE_ABILITIES_TEXT,
     DOESNT_UNTAP_TEXT,
@@ -40,7 +41,7 @@ from .layers import (
 )
 
 if TYPE_CHECKING:
-    from ..models.game import Game
+    from ..models.game import Game, StackObject
     from .effects import AbilityEffect, Effect
     from .triggers import AbilityOnStack
 
@@ -796,6 +797,122 @@ def control_change_ability_effect(effect_text: str) -> AbilityEffect | None:
     return None
 
 
+def _controller_and_name(game: Game, stack_object: object) -> tuple[Player, str]:
+    """The controller of a resolving spell or ability, and the name it is
+    shown under (a spell's card name, an ability's source name)."""
+    name = stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name  # type: ignore[attr-defined]
+    return game.controller_of(stack_object), name  # type: ignore[arg-type]
+
+
+def _gain_control_indefinitely(
+    game: Game, stack_object: object, target: CardState, new_controller: str, name: str
+) -> None:
+    """CR 611.2a: with no stated duration, a control change lasts until the end
+    of the game - layer 2 (CR 613.1b), keyed to `target` as it is now
+    (CR 400.7)."""
+    store = game.continuous_effects
+    store.add(
+        ContinuousEffect(
+            description=f"{name}: {new_controller} gains control of {target.name}",
+            layer=Layer.CONTROL,
+            timestamp=store.tick(),
+            duration=Duration.INDEFINITE,
+            selector=only_this_incarnation(target, target.zone_change_stamp),
+            modification=set_controller(new_controller),
+        ),
+        game=game,
+    )
+
+
+#: "Gain control of `<target>`. That opponent draws three cards." (Rules of
+#: Acquisition, the 3rd Rule): an untimed steal (see `_GAIN_CONTROL_UNTIMED_RE`)
+#: and a draw by whoever controlled the permanent when it was chosen - "that
+#: opponent" / "that player" / "its controller" read back to the player the
+#: target was taken from, found before the steal (CR 608.2c).
+_GAIN_CONTROL_THEN_FORMER_CONTROLLER_DRAWS_RE = re.compile(
+    r"^gain control of (?P<phrase>target [^.]+?)\.\s*"
+    rf"(?:that (?:opponent|player)|its (?:former )?controller) draws (?P<n>{COUNT}) cards?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_gain_control_then_former_controller_draws_clause(effect_text: str) -> Effect | None:
+    """`_GAIN_CONTROL_THEN_FORMER_CONTROLLER_DRAWS_RE`'s shape, or `None`."""
+    match = _GAIN_CONTROL_THEN_FORMER_CONTROLLER_DRAWS_RE.fullmatch(collapsed(effect_text))
+    if match is None:
+        return None
+    from .effects import _targets_understood
+
+    phrase = match.group("phrase")
+    if _NOT_UNTIMED_RE.search(phrase) or not _targets_understood(phrase, count_agnostic=True):
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+
+    def effect(game: Game, stack_object: StackObject) -> None:
+        controller, name = _controller_and_name(game, stack_object)
+        for target in game.resolve_card_targets(stack_object):
+            if target.zone is not Zone.BATTLEFIELD:
+                continue
+            former = game.controller_of(target)
+            _gain_control_indefinitely(game, stack_object, target, controller.username, name)
+            game.draw_cards(former, amount)
+
+    return effect
+
+
+#: "Target opponent gains control of target `<permanent>` you control. If they
+#: do, you draw three cards." (Rules of Acquisition, the 98th Rule) and the bare
+#: "Target player gains control of target `<permanent>` you control." (Donate,
+#: Harmless Offering): the first target is the player who receives the
+#: permanent, the second the permanent given away (CR 115.1). "If they do" is
+#: CR 608.2c's dependency on the gift having happened.
+_TARGET_PLAYER_GAINS_CONTROL_RE = re.compile(
+    r"^target (?P<who>player|opponent) gains control of (?P<phrase>target [^.]+?)"
+    rf"(?:\.\s*if they do, you draw (?P<n>{COUNT}) cards?)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_player_gains_control_clause(effect_text: str) -> Effect | None:
+    """`_TARGET_PLAYER_GAINS_CONTROL_RE`'s shape, or `None`."""
+    match = _TARGET_PLAYER_GAINS_CONTROL_RE.fullmatch(collapsed(effect_text))
+    if match is None:
+        return None
+    from .effects import _targets_understood
+
+    phrase = match.group("phrase")
+    if _NOT_UNTIMED_RE.search(phrase) or not _targets_understood(phrase, count_agnostic=True):
+        return None
+    amount = parse_count(match.group("n")) if match.group("n") else None
+
+    def effect(game: Game, stack_object: StackObject) -> None:
+        controller, name = _controller_and_name(game, stack_object)
+        recipients = [t for t in game.resolve_targets(stack_object) if isinstance(t, Player)]
+        gifts = [
+            t
+            for t in game.resolve_card_targets(stack_object)
+            if t.zone is Zone.BATTLEFIELD and game.controller_of(t).username == controller.username
+        ]
+        if not recipients or not gifts:
+            return
+        for gift in gifts:
+            _gain_control_indefinitely(game, stack_object, gift, recipients[0].username, name)
+        if amount is not None:
+            game.draw_cards(controller, amount)
+
+    return effect
+
+
 def control_change_spell_effect(effect_text: str) -> Effect | None:
     """A control change or rider on a resolving spell."""
-    return _parse_gain_control_longer_if_clause(effect_text)
+    for reader in (
+        _parse_gain_control_longer_if_clause,
+        _parse_gain_control_then_former_controller_draws_clause,
+        _parse_target_player_gains_control_clause,
+    ):
+        effect = reader(effect_text)
+        if effect is not None:
+            return effect
+    return None

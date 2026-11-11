@@ -1,0 +1,130 @@
+{
+  "object": "card",
+  "id": "3667eb41-598e-4543-97ed-6da961f8b567",
+  "oracle_id": "8b2514e5-4124-4f6c-b6b7-24c0ab3d3971",
+  "multiverse_ids": [],
+  "resource_id": "3502BCE3820596F2DD6FD1E37C33E55FEA2F6DB30546B477D9366978A073FAD4",
+  "mtgo_id": 158438,
+  "tcgplayer_id": 725933,
+  "cardmarket_id": 919310,
+  "name": "Erica Ortegas, Plucky Pilot",
+  "lang": "en",
+  "released_at": "2026-11-13",
+  "uri": "https://api.scryfall.com/cards/3667eb41-598e-4543-97ed-6da961f8b567",
+  "scryfall_uri": "https://scryfall.com/card/trk/149/erica-ortegas-plucky-pilot?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-10-26T11:12:55Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/6/3667eb41-598e-4543-97ed-6da961f8b567.jpg?1793013175",
+    "normal": "https://cards.scryfall.io/normal/front/3/6/3667eb41-598e-4543-97ed-6da961f8b567.jpg?1793013175",
+    "large": "https://cards.scryfall.io/large/front/3/6/3667eb41-598e-4543-97ed-6da961f8b567.jpg?1793013175",
+    "png": "https://cards.scryfall.io/png/front/3/6/3667eb41-598e-4543-97ed-6da961f8b567.png?1793013175",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/6/3667eb41-598e-4543-97ed-6da961f8b567.jpg?1793013175",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/6/3667eb41-598e-4543-97ed-6da961f8b567.jpg?1793013175",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/6/3667eb41-598e-4543-97ed-6da961f8b567.webp?1793013175",
+    "grid": "https://cards.scryfall.io/grid/front/3/6/3667eb41-598e-4543-97ed-6da961f8b567.webp?1793013175",
+    "display": "https://cards.scryfall.io/display/front/3/6/3667eb41-598e-4543-97ed-6da961f8b567.webp?1793013175",
+    "art": "https://cards.scryfall.io/art/front/3/6/3667eb41-598e-4543-97ed-6da961f8b567.webp?1793013175",
+    "crop": "https://cards.scryfall.io/crop/front/3/6/3667eb41-598e-4543-97ed-6da961f8b567.webp?1793013175",
+    "jpeg": "https://cards.scryfall.io/normal/front/3/6/3667eb41-598e-4543-97ed-6da961f8b567.jpg?1793013175"
+  },
+  "mana_cost": "{3}{R}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature — Human Pilot",
+  "oracle_text": "Haste\nWhenever Erica Ortegas becomes tapped, you may put a land card from your hand onto the battlefield. If you do, return a land you control to its owner's hand at the beginning of the next end step.",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Haste"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set": "trk",
+  "set_name": "Star Trek",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atrk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/trk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3667eb41-598e-4543-97ed-6da961f8b567/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A8b2514e5-4124-4f6c-b6b7-24c0ab3d3971&unique=prints",
+  "collector_number": "149",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "2a7daaa0-e880-4925-a35e-5a4fc18b15e9"
+  ],
+  "illustration_id": "94954999-a266-4051-8df1-8474a3c90dba",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 30577,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.youtube.com/watch?v=g5OL_rHOQFU",
+    "previewed_at": "2026-10-24"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DErica%2BOrtegas%252C%2BPlucky%2BPilot",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DErica%2BOrtegas%252C%2BPlucky%2BPilot",
+    "edhrec": "https://edhrec.com/route/?cc=Erica+Ortegas%2C+Plucky+Pilot"
+  }
+}

@@ -314,6 +314,16 @@ def _player_has_life(context: "ConditionContext", match: re.Match[str]) -> bool:
     return _for(context, match.group("subject"), lambda name: test(_stat(context, name, "life")))
 
 
+def _life_total_quantity(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "your life total is 0 or less" (Georgiou, Terran Emperor) - the same
+    count test as `_player_has_life`, spelled with the life total as subject."""
+    test = _quantity_test(match.group("quantity"))
+    if test is None:
+        return False
+    subject = _LIFE_TOTAL_OWNER[match.group("owner")]
+    return _for(context, subject, lambda name: test(_stat(context, name, "life")))
+
+
 def _starting_life(context: "ConditionContext", username: str) -> int:
     return context.game.player(username).starting_life
 
@@ -835,6 +845,13 @@ READERS: tuple[ConditionReader, ...] = (
             rf"(?:(?P<number>{COUNT})|{_POSSESSIVE}starting life total)"
         ),
         _life_total_is,
+    ),
+    ConditionReader(
+        re.compile(
+            rf"(?P<owner>{'|'.join(re.escape(owner) for owner in _LIFE_TOTAL_OWNER)}) "
+            rf"life total is (?P<quantity>{COUNT} or (?:more|greater|fewer|less))"
+        ),
+        _life_total_quantity,
     ),
     ConditionReader(
         re.compile(rf"(?P<subject>{_SUBJECT}) (?:is|are) (?P<negated>not )?poisoned"),

@@ -1,0 +1,127 @@
+{
+  "object": "card",
+  "id": "62afa55d-d4ba-48d5-9991-0f8408f9c92c",
+  "oracle_id": "ee712451-01de-4486-9048-fafb5aa5a584",
+  "multiverse_ids": [],
+  "resource_id": "A1568C27448DFDD9FB97A87E96DB2994AE0AF242D9EDD6FF07CB303363D8F1E0",
+  "mtgo_id": 158632,
+  "tcgplayer_id": 725151,
+  "cardmarket_id": 918569,
+  "name": "Lore, Positronic Provocateur",
+  "lang": "en",
+  "released_at": "2026-11-13",
+  "uri": "https://api.scryfall.com/cards/62afa55d-d4ba-48d5-9991-0f8408f9c92c",
+  "scryfall_uri": "https://scryfall.com/card/trk/246/lore-positronic-provocateur?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-10-20T14:59:38Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/2/62afa55d-d4ba-48d5-9991-0f8408f9c92c.jpg?1792508378",
+    "normal": "https://cards.scryfall.io/normal/front/6/2/62afa55d-d4ba-48d5-9991-0f8408f9c92c.jpg?1792508378",
+    "large": "https://cards.scryfall.io/large/front/6/2/62afa55d-d4ba-48d5-9991-0f8408f9c92c.jpg?1792508378",
+    "png": "https://cards.scryfall.io/png/front/6/2/62afa55d-d4ba-48d5-9991-0f8408f9c92c.png?1792508378",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/2/62afa55d-d4ba-48d5-9991-0f8408f9c92c.jpg?1792508378",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/2/62afa55d-d4ba-48d5-9991-0f8408f9c92c.jpg?1792508378",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/2/62afa55d-d4ba-48d5-9991-0f8408f9c92c.webp?1792508378",
+    "grid": "https://cards.scryfall.io/grid/front/6/2/62afa55d-d4ba-48d5-9991-0f8408f9c92c.webp?1792508378",
+    "display": "https://cards.scryfall.io/display/front/6/2/62afa55d-d4ba-48d5-9991-0f8408f9c92c.webp?1792508378",
+    "art": "https://cards.scryfall.io/art/front/6/2/62afa55d-d4ba-48d5-9991-0f8408f9c92c.webp?1792508378",
+    "crop": "https://cards.scryfall.io/crop/front/6/2/62afa55d-d4ba-48d5-9991-0f8408f9c92c.webp?1792508378",
+    "jpeg": "https://cards.scryfall.io/normal/front/6/2/62afa55d-d4ba-48d5-9991-0f8408f9c92c.jpg?1792508378"
+  },
+  "mana_cost": "{1}{U/B}{U/B}",
+  "cmc": 3.0,
+  "type_line": "Legendary Artifact Creature — Android Rogue",
+  "oracle_text": "When Lore enters, choose one —\n• Target creature gets +1/+0 until end of turn and can't be blocked this turn.\n• Surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "B",
+    "U"
+  ],
+  "color_identity": [
+    "B",
+    "U"
+  ],
+  "keywords": [
+    "Surveil"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set": "trk",
+  "set_name": "Star Trek",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atrk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/trk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/62afa55d-d4ba-48d5-9991-0f8408f9c92c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aee712451-01de-4486-9048-fafb5aa5a584&unique=prints",
+  "collector_number": "246",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "6bd18163-aa22-4a41-82f6-8cdb8269d3c8"
+  ],
+  "illustration_id": "2bfe2f89-3438-4576-91fd-609dc845942b",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 31913,
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLore%252C%2BPositronic%2BProvocateur",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLore%252C%2BPositronic%2BProvocateur",
+    "edhrec": "https://edhrec.com/route/?cc=Lore%2C+Positronic+Provocateur"
+  }
+}

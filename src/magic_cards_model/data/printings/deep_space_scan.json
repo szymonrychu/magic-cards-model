@@ -1,0 +1,121 @@
+{
+  "object": "card",
+  "id": "15ffeda3-28ac-4adf-9844-d7b051aae227",
+  "oracle_id": "5dabb7c1-8937-42b0-87c6-1cc7af46aaae",
+  "multiverse_ids": [],
+  "resource_id": "21285105D5C6AAB37C8F1305187DF8C4FDF1564EE19920325AC9F7B35CC6AB52",
+  "mtgo_id": 158246,
+  "tcgplayer_id": 725015,
+  "cardmarket_id": 918534,
+  "name": "Deep Space Scan",
+  "lang": "en",
+  "released_at": "2026-11-13",
+  "uri": "https://api.scryfall.com/cards/15ffeda3-28ac-4adf-9844-d7b051aae227",
+  "scryfall_uri": "https://scryfall.com/card/trk/53/deep-space-scan?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-10-20T14:56:12Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/5/15ffeda3-28ac-4adf-9844-d7b051aae227.jpg?1792508172",
+    "normal": "https://cards.scryfall.io/normal/front/1/5/15ffeda3-28ac-4adf-9844-d7b051aae227.jpg?1792508172",
+    "large": "https://cards.scryfall.io/large/front/1/5/15ffeda3-28ac-4adf-9844-d7b051aae227.jpg?1792508172",
+    "png": "https://cards.scryfall.io/png/front/1/5/15ffeda3-28ac-4adf-9844-d7b051aae227.png?1792508172",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/5/15ffeda3-28ac-4adf-9844-d7b051aae227.jpg?1792508172",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/5/15ffeda3-28ac-4adf-9844-d7b051aae227.jpg?1792508172",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/5/15ffeda3-28ac-4adf-9844-d7b051aae227.webp?1792508172",
+    "grid": "https://cards.scryfall.io/grid/front/1/5/15ffeda3-28ac-4adf-9844-d7b051aae227.webp?1792508172",
+    "display": "https://cards.scryfall.io/display/front/1/5/15ffeda3-28ac-4adf-9844-d7b051aae227.webp?1792508172",
+    "art": "https://cards.scryfall.io/art/front/1/5/15ffeda3-28ac-4adf-9844-d7b051aae227.webp?1792508172",
+    "crop": "https://cards.scryfall.io/crop/front/1/5/15ffeda3-28ac-4adf-9844-d7b051aae227.webp?1792508172",
+    "jpeg": "https://cards.scryfall.io/normal/front/1/5/15ffeda3-28ac-4adf-9844-d7b051aae227.jpg?1792508172"
+  },
+  "mana_cost": "{4}{U}{U}",
+  "cmc": 6.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Strange new worlds — Draw X cards, where X is the number of differently named lands you control. You have no maximum hand size until your next turn.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Strange new worlds"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set": "trk",
+  "set_name": "Star Trek",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atrk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/trk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/15ffeda3-28ac-4adf-9844-d7b051aae227/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A5dabb7c1-8937-42b0-87c6-1cc7af46aaae&unique=prints",
+  "collector_number": "53",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "f72c1593-751b-45a4-ba65-205509b81b93"
+  ],
+  "illustration_id": "9b17949d-c2fe-43e5-83c1-4b2dca855666",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 28504,
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDeep%2BSpace%2BScan",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDeep%2BSpace%2BScan",
+    "edhrec": "https://edhrec.com/route/?cc=Deep+Space+Scan"
+  }
+}

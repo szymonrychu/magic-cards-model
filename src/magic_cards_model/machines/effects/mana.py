@@ -774,6 +774,38 @@ def _parse_if_condition_add_mana_equal_to_clause(
     return effect
 
 
+#: "Add an amount of {G} equal to `<expr>`." - Jadzia Dax, Living Legacy's
+#: "... then add an amount of {G} equal to the number of counters on her."
+#: `_IF_CONDITION_ADD_MANA_EQUAL_TO_RE`'s unconditional twin: CR 106.3, the
+#: amount is computed as the instruction is carried out (CR 608.2h), after the
+#: counter the same ability just put on its source.
+_ADD_MANA_EQUAL_TO_RE = re.compile(
+    r"^add an amount of \{(?P<symbol>[wubrgc])\} equal to (?P<expr>.+?)\.?$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
+def _parse_add_mana_equal_to_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_ADD_MANA_EQUAL_TO_RE`'s shape - see the banner above."""
+    match = _ADD_MANA_EQUAL_TO_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    reader = amount_expression(match.group("expr"))
+    if reader is None:
+        return None
+    color = Color(match.group("symbol").upper())
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = (
+            stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+        )
+        controller = game.controller_of(stack_object)
+        for _ in range(max(reader(game, controller.username, source, 0), 0)):
+            controller.mana_pool.add(color)
+
+    return effect
+
+
 #: How many mana an any-combination instruction adds, read as it resolves:
 #: `None` when there is nothing to read (a "that much" with no event count,
 #: which has already filed its own notice).

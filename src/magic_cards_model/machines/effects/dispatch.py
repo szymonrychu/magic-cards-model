@@ -3717,7 +3717,7 @@ def _unreadable_reflexive_clause(text: str) -> str | None:
 #: hand rather than a library's top card, so `machines/targeting.py` reads
 #: "target player's hand" as targeting the *player* (its own module-level
 #: docstring lists this exact phrase as one it reads that way).
-_LOOK_AT_TARGET_HAND_RE = re.compile(r"^look at target player'?s hand$", re.IGNORECASE)
+_LOOK_AT_TARGET_HAND_RE = re.compile(r"^look at target (?:player|opponent)'?s hand$", re.IGNORECASE)
 
 
 # --------------------------------------------------------------------------

@@ -1,0 +1,123 @@
+{
+  "object": "card",
+  "id": "47082081-bf52-4914-bac2-ace398beff56",
+  "oracle_id": "f5d32e5f-066b-42cf-8dd1-072a96275313",
+  "multiverse_ids": [
+    680764
+  ],
+  "resource_id": "5761CC078A915FF3401FF1168B0C4B5CC23F0767BD57C27262AD35026BD761B8",
+  "mtgo_id": 134586,
+  "arena_id": 94053,
+  "tcgplayer_id": 589343,
+  "cardmarket_id": 795988,
+  "name": "Harmless Offering",
+  "lang": "en",
+  "released_at": "2024-11-15",
+  "uri": "https://api.scryfall.com/cards/47082081-bf52-4914-bac2-ace398beff56",
+  "scryfall_uri": "https://scryfall.com/card/fdn/625/harmless-offering?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:15:22Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/7/47082081-bf52-4914-bac2-ace398beff56.jpg?1783908922",
+    "normal": "https://cards.scryfall.io/normal/front/4/7/47082081-bf52-4914-bac2-ace398beff56.jpg?1783908922",
+    "large": "https://cards.scryfall.io/large/front/4/7/47082081-bf52-4914-bac2-ace398beff56.jpg?1783908922",
+    "png": "https://cards.scryfall.io/png/front/4/7/47082081-bf52-4914-bac2-ace398beff56.png?1783908922",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/7/47082081-bf52-4914-bac2-ace398beff56.jpg?1783908922",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/7/47082081-bf52-4914-bac2-ace398beff56.jpg?1783908922",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/7/47082081-bf52-4914-bac2-ace398beff56.webp?1783908922",
+    "grid": "https://cards.scryfall.io/grid/front/4/7/47082081-bf52-4914-bac2-ace398beff56.webp?1783908922",
+    "display": "https://cards.scryfall.io/display/front/4/7/47082081-bf52-4914-bac2-ace398beff56.webp?1783908922",
+    "art": "https://cards.scryfall.io/art/front/4/7/47082081-bf52-4914-bac2-ace398beff56.webp?1783908922",
+    "crop": "https://cards.scryfall.io/crop/front/4/7/47082081-bf52-4914-bac2-ace398beff56.webp?1783908922",
+    "jpeg": "https://cards.scryfall.io/normal/front/4/7/47082081-bf52-4914-bac2-ace398beff56.jpg?1783908922"
+  },
+  "mana_cost": "{2}{R}",
+  "cmc": 3.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Target opponent gains control of target permanent you control.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
+  "set": "fdn",
+  "set_name": "Foundations",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afdn&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fdn?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/47082081-bf52-4914-bac2-ace398beff56/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af5d32e5f-066b-42cf-8dd1-072a96275313&unique=prints",
+  "collector_number": "625",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "6dd06426-59fe-4b9c-aad5-6da8446a5c3d"
+  ],
+  "illustration_id": "34f64ecd-d1d1-4aa6-be8e-e97d38134cf2",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "startercollection"
+  ],
+  "edhrec_rank": 5311,
+  "penny_rank": 8214,
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=680764&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHarmless%2BOffering",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHarmless%2BOffering",
+    "edhrec": "https://edhrec.com/route/?cc=Harmless+Offering"
+  }
+}

@@ -1519,9 +1519,8 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
                     continue
                 if subtype is not None and subtype not in {word.lower() for word in chars.subtypes}:
                     continue
-                name = permanent.name
-                if name:
-                    names.add(name)
+                if chars.name:
+                    names.add(chars.name)
             return len(names)
 
         return count_differently_named
@@ -1626,9 +1625,12 @@ def _greatest_mana_value_among_cards_in_your_graveyard(
 #: "the number of `<kind>` counters on it" / "... on this `<noun>`" - a term
 #: naming the object the expression is evaluated for, the way
 #: `_OBJECT_CHARACTERISTIC_RE` names its power: Ulamog, the Defiler's own
-#: "annihilator X, where X is the number of +1/+1 counters on it".
+#: "annihilator X, where X is the number of +1/+1 counters on it". The kind may
+#: be left out (counters of every kind, CR 122.1) and the object a gendered
+#: pronoun: Jadzia Dax's "the number of counters on her".
 _OBJECT_COUNTER_COUNT_RE = re.compile(
-    r"^the number of (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters on (?:it|this [a-z]+)$",
+    r"^the number of (?:(?P<kind>\+1/\+1|-1/-1|(?!counters\b)[a-z]+) )?counters "
+    r"on (?:it|her|him|this [a-z]+)$",
     re.IGNORECASE,
 )
 
@@ -1938,13 +1940,15 @@ def _amount_term(term: str) -> AmountReader | None:
             inner(game, controller, obj, x), round_up=round_up
         )
     if match := _OBJECT_COUNTER_COUNT_RE.fullmatch(text):
-        kind = _counter_kind(match.group("kind"))
+        kind = _counter_kind(match.group("kind")) if match.group("kind") else None
 
         def read_object_counters(
             _game: "Game", _controller: str, obj: CardState | None, _x: int
         ) -> int:
             # CR 608.2h: the object as it is now, or as it last existed.
-            return 0 if obj is None else obj.counters[kind]
+            if obj is None:
+                return 0
+            return sum(obj.counters.counts.values()) if kind is None else obj.counters[kind]
 
         return read_object_counters
     if lowered == "x":

@@ -2516,11 +2516,12 @@ def _first_reading(mode_text: str, *, card_name: str | None = None) -> object | 
         result = reader(mode_text)
         if result is not None:
             return result
-    if card_name is None:
-        return None
-    normalized = _self_normalized_effect_text(card_name, mode_text)
-    if normalized == mode_text:
-        return None
+    # The real dispatch reaches `_ability_effect_or_notice` on every unread
+    # mode, whether or not the CR 201.5 rewrite changed the text (Culber and
+    # Stamets' "Add two mana of any one color." is read only there).
+    normalized = (
+        mode_text if card_name is None else _self_normalized_effect_text(card_name, mode_text)
+    )
     for reader in (
         counter_resolution_text,
         parse_mixed_effect,

@@ -22,6 +22,9 @@ computed ability lines of every permanent on the battlefield (CR 613.5):
   every permanent but a land (CR 205.2a).
 - "Each opponent can't venture into the dungeon more than once each turn."
   (Keen-Eared Sentry): `venture_refused`.
+- "You can't sacrifice Treasure tokens." (Quark, Humble Proprietor):
+  `token_sacrifice_banned`, asked by `attacking_statics.cant_be_sacrificed`,
+  the one gate every sacrifice and sacrifice cost already passes (CR 701.21a).
 """
 
 import re
@@ -51,6 +54,9 @@ _CAUSE_SACRIFICE_RE = re.compile(
     r"^spells and abilities your opponents control can't cause you to "
     r"(?P<acts>sacrifice permanents|discard cards|discard cards or sacrifice permanents)\.?$",
     re.IGNORECASE,
+)
+_YOU_CANT_SACRIFICE_TOKENS_RE = re.compile(
+    r"^you can't sacrifice (?P<subtype>[a-z]+) tokens\.?$", re.IGNORECASE
 )
 _VENTURE_RE = re.compile(
     r"^each opponent can't venture into the dungeon more than once each turn\.?$", re.IGNORECASE
@@ -102,6 +108,7 @@ def reads_player_action_prohibition_line(text: str) -> bool:
         _payment_ban(line) is not None
         or _SEARCH_RE.match(line) is not None
         or _CAUSE_SACRIFICE_RE.match(line) is not None
+        or _YOU_CANT_SACRIFICE_TOKENS_RE.match(line) is not None
         or _VENTURE_RE.match(line) is not None
     )
 
@@ -172,6 +179,21 @@ def library_search_blocked(game: "Game", player: str) -> CardState | None:
                 return permanent
             continue
         return permanent
+    return None
+
+
+def token_sacrifice_banned(game: "Game", permanent: CardState) -> CardState | None:
+    """The permanent whose "You can't sacrifice <subtype> tokens." (CR 101.2)
+    stops its controller sacrificing `permanent`, or None. "You" is the
+    holder's controller (CR 109.5), so only that player's own tokens of the
+    named subtype are protected."""
+    for holder, line in _lines(game):
+        match = _YOU_CANT_SACRIFICE_TOKENS_RE.match(line)
+        if match is None or holder.controller != permanent.controller:
+            continue
+        chars = game.characteristics_of(permanent)
+        if chars.is_token and match["subtype"].lower() in {s.lower() for s in chars.subtypes}:
+            return holder
     return None
 
 

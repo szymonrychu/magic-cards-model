@@ -1289,7 +1289,10 @@ def _strip_keyword_ability_lines(text: str) -> str:
 #: parley, radiance, raid, rally, renew, repartee, revolt, secret council,
 #: spell mastery, strive, survival, sweep, tempting offer, threshold,
 #: undergrowth, valiant, vivid, void, and will of the council." Looked up in
-#: this session with `mise run rules:find 207.2`.
+#: this session with `mise run rules:find 207.2`. The current rule also names
+#: battlefront, federation, rulebreaker, seek out and strange new worlds;
+#: only "strange new worlds" is entered here (the Star Trek cards of this
+#: pool print it), the others when a card in the pool needs them.
 #:
 #: The rule goes on to say an ability word "[has] no special rules meaning
 #: and no individual entries in the Comprehensive Rules" - which is exactly
@@ -1358,6 +1361,7 @@ _ABILITY_WORDS = frozenset(
         "revolt",
         "secret council",
         "spell mastery",
+        "strange new worlds",
         "strive",
         "survival",
         "sweep",
@@ -1655,7 +1659,10 @@ def _has_period_outside_quotes(text: str) -> bool:
 #: in the way `_build_search_clause`'s own "you may" prefix is: every card
 #: this shape reaches prints it. The count slot is `_SEARCH_AND_PUT_RE`'s own
 #: (see its comment) - Dire-Strain Rampage's "may search ... for up to two
-#: basic land cards" is the same widening this family needed.
+#: basic land cards" is the same widening this family needed. The searcher
+#: is the referent player, so the destination may be "their hand" (70,000
+#: Light-Years from Home: "Its controller may search their library for a
+#: basic land card, reveal it, put it into their hand, then shuffle.").
 _REFERENT_SEARCH_RE = re.compile(
     rf"^may search (?:your|their) library for "
     rf"(?P<upto>up to )?(?:(?P<n>{COUNT})|(?P<that_many>that many)) "
@@ -1664,7 +1671,8 @@ _REFERENT_SEARCH_RE = re.compile(
     r"(?: with mana value (?P<max_mv>\d+) or less)?"
     r"(?P<reveal>, reveal (?:it|them|that card|those cards))?"
     r", put (?:it|them|that card|those cards) "
-    r"(?P<dest>into your hand|into your graveyard|onto the battlefield(?P<tapped> tapped)?)"
+    r"(?P<dest>into (?:your|their) hand|into (?:your|their) graveyard"
+    r"|onto the battlefield(?P<tapped> tapped)?)"
     r"(?:, then shuffle)?\.?$",
     re.IGNORECASE,
 )

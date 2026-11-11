@@ -181,6 +181,11 @@ class CastingRuleKind:
     counters (CR 122.6) while `while_source_id` is still the same object on
     the battlefield (CR 611.2b, CR 400.7). Read by `Game.player_counters_
     prohibited`."""
+    NO_MAXIMUM_HAND_SIZE_GRANT = "no_maximum_hand_size_grant"
+    """Deep Space Scan's "You have no maximum hand size until your next turn."
+    - CR 402.2's maximum hand size overridden for `controller` (CR 613.11)
+    until that player's next turn begins (CR 611.2a). Read by `Player.
+    has_no_maximum_hand_size`."""
     DAMAGE_CANT_BE_PREVENTED = "damage_cant_be_prevented"
     """Skullcrack's, Stomp's and Impractical Joke's "Damage can't be
     prevented this turn." - CR 615.12, read by `Game.damage_cant_be_
@@ -973,6 +978,21 @@ def graveyard_cast_grants_for(game: Any, caster: str) -> list[CastingRuleEffect]
     ]
 
 
+#: Deep Space Scan's "You have no maximum hand size until your next turn."
+_NO_MAXIMUM_HAND_SIZE_UNTIL_NEXT_TURN_RE = re.compile(
+    r"^you have no maximum hand size until your next turn\.?$", re.IGNORECASE
+)
+
+
+def has_no_maximum_hand_size_grant(game: Any, player: str) -> bool:
+    """Whether a recorded "no maximum hand size until your next turn" effect
+    (CR 611.2a) is running for `player`."""
+    return any(
+        effect.kind == CastingRuleKind.NO_MAXIMUM_HAND_SIZE_GRANT and effect.controller == player
+        for effect in getattr(game, "casting_rule_effects", [])
+    )
+
+
 def parse_casting_rule_clause(clause: str, *, for_spell: bool) -> Callable[[Any, Any], None] | None:
     """One clause that records a `CastingRuleEffect` when it resolves, or
     None.
@@ -1045,6 +1065,27 @@ def parse_casting_rule_clause(clause: str, *, for_spell: bool) -> Callable[[Any,
                 )
 
         return lock
+
+    if _NO_MAXIMUM_HAND_SIZE_UNTIL_NEXT_TURN_RE.match(stripped):
+
+        def grant_no_maximum_hand_size(game: Any, obj: Any) -> None:
+            controller = (
+                obj.controller
+                if isinstance(obj, AbilityOnStack)
+                else game.controller_of(obj).username
+            )
+            source_name = obj.source_name if isinstance(obj, AbilityOnStack) else obj.name
+            game.casting_rule_effects.append(
+                CastingRuleEffect(
+                    kind=CastingRuleKind.NO_MAXIMUM_HAND_SIZE_GRANT,
+                    controller=controller,
+                    source_name=source_name,
+                    duration=Duration.UNTIL_YOUR_NEXT_TURN,
+                    until_next_turn_of=controller,
+                )
+            )
+
+        return grant_no_maximum_hand_size
 
     if for_spell:
         return None

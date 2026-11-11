@@ -1,0 +1,129 @@
+{
+  "object": "card",
+  "id": "e4f041b3-e785-45ba-9a7e-33878614d3b0",
+  "oracle_id": "31e3f39f-8b18-4316-984f-4d57d2d480ca",
+  "multiverse_ids": [],
+  "resource_id": "11FE9746AE964CDB6F7A8190FC3C0A6380F7A952CE144AF8022A872C7755FC7B",
+  "mtgo_id": 158188,
+  "tcgplayer_id": 728486,
+  "cardmarket_id": 918722,
+  "name": "Miles O'Brien, Transporter Ops",
+  "lang": "en",
+  "released_at": "2026-11-13",
+  "uri": "https://api.scryfall.com/cards/e4f041b3-e785-45ba-9a7e-33878614d3b0",
+  "scryfall_uri": "https://scryfall.com/card/trk/24/miles-obrien-transporter-ops?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-10-30T11:52:44Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/4/e4f041b3-e785-45ba-9a7e-33878614d3b0.jpg?1793361164",
+    "normal": "https://cards.scryfall.io/normal/front/e/4/e4f041b3-e785-45ba-9a7e-33878614d3b0.jpg?1793361164",
+    "large": "https://cards.scryfall.io/large/front/e/4/e4f041b3-e785-45ba-9a7e-33878614d3b0.jpg?1793361164",
+    "png": "https://cards.scryfall.io/png/front/e/4/e4f041b3-e785-45ba-9a7e-33878614d3b0.png?1793361164",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/4/e4f041b3-e785-45ba-9a7e-33878614d3b0.jpg?1793361164",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/4/e4f041b3-e785-45ba-9a7e-33878614d3b0.jpg?1793361164",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/4/e4f041b3-e785-45ba-9a7e-33878614d3b0.webp?1793361164",
+    "grid": "https://cards.scryfall.io/grid/front/e/4/e4f041b3-e785-45ba-9a7e-33878614d3b0.webp?1793361164",
+    "display": "https://cards.scryfall.io/display/front/e/4/e4f041b3-e785-45ba-9a7e-33878614d3b0.webp?1793361164",
+    "art": "https://cards.scryfall.io/art/front/e/4/e4f041b3-e785-45ba-9a7e-33878614d3b0.webp?1793361164",
+    "crop": "https://cards.scryfall.io/crop/front/e/4/e4f041b3-e785-45ba-9a7e-33878614d3b0.webp?1793361164",
+    "jpeg": "https://cards.scryfall.io/normal/front/e/4/e4f041b3-e785-45ba-9a7e-33878614d3b0.jpg?1793361164"
+  },
+  "mana_cost": "{2}{W}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature — Human Artificer",
+  "oracle_text": "When Miles O'Brien enters, return up to one other target creature or artifact you control to its owner's hand.\nAt the beginning of each end step, if a permanent was returned to your hand from the battlefield this turn, draw a card.",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set": "trk",
+  "set_name": "Star Trek",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atrk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/trk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e4f041b3-e785-45ba-9a7e-33878614d3b0/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A31e3f39f-8b18-4316-984f-4d57d2d480ca&unique=prints",
+  "collector_number": "24",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "b029218f-baba-45aa-8f5a-24353077dcc9"
+  ],
+  "illustration_id": "6cd6ac6a-9d29-45bf-906a-b264e33e219d",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 30307,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.instagram.com/reels/DexKDcQAbnb/",
+    "previewed_at": "2026-10-21"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMiles%2BO%2527Brien%252C%2BTransporter%2BOps",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMiles%2BO%2527Brien%252C%2BTransporter%2BOps",
+    "edhrec": "https://edhrec.com/route/?cc=Miles+O%27Brien%2C+Transporter+Ops"
+  }
+}

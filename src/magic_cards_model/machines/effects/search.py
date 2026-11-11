@@ -325,7 +325,7 @@ def _search_and_place_for(match: re.Match[str], *, optional: bool) -> Callable[.
         return None
     matches, description = described
     tapped = bool(match.group("tapped"))
-    dest_text = match.group("dest")
+    dest_text = match.group("dest").replace("into their ", "into your ")  # referent searcher
     destination = (
         Zone.HAND
         if dest_text.startswith("into your hand")

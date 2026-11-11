@@ -805,7 +805,8 @@ def token_maker(rest: str) -> TokenMaker | None:
 # --------------------------------------------------------------------------
 
 _THEY_LOST_THIS_TURN_RE = re.compile(
-    r"^(?:the )?(?:amount of )?life they(?:'ve| have)? lost this turn$", re.IGNORECASE
+    r"^(?:the )?(?:amount of )?life (?:they|that player)(?:'ve| have)? lost this turn$",
+    re.IGNORECASE,
 )
 
 

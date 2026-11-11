@@ -2018,7 +2018,7 @@ def _untap_and_apply_control_sentences(
     source: CardState,
     controller: "Player",
     targets: Sequence[CardState],
-    sentences: tuple[str, str],
+    sentences: tuple[str, ...],
 ) -> None:
     """Untap each target still on the battlefield (CR 701.26b), then create the
     control change (CR 613.1b) and the keyword grant against them. A sentence
@@ -2202,6 +2202,54 @@ def _parse_untap_and_gain_control_ability(effect_text: str) -> AbilityEffect | N
                     text=f"{effect_text} (its source and its last known information are both gone)",
                 )
             )
+            return
+        _untap_and_apply_control_sentences(
+            game, source, game.controller_of(ability), game.resolve_card_targets(ability), sentences
+        )
+
+    return effect
+
+
+#: "For each opponent, gain control of up to one target `<creature>` that player
+#: controls[ with mana value N or less] until end of turn. Untap those
+#: creatures. Until end of turn, they become `<Subtype>`s in addition to their
+#: other types and gain `<keywords>`." - Worf, Intelligence Contractor.
+#: Act of Treason's three instructions (`_GAIN_CONTROL_THEN_UNTAP_RE`) over one
+#: optional target per opponent (CR 601.2c, `targeting._for_each_opponent_profile`),
+#: plus a layer 4 subtype addition (CR 613.1d) in the same last sentence as the
+#: layer 6 grant.
+_FOR_EACH_OPPONENT_BORROW_RE = re.compile(
+    r"^for each opponent, gain control of up to one target (?P<phrase>[^.,]*?) "
+    r"that player controls(?P<limit> with mana value \d+ or less)? until end of turn\.\s*"
+    r"untap (?:those|that) (?:creatures?|permanents?)\.\s*"
+    r"until end of turn, (?:they|it) becomes? (?P<subtype>[A-Za-z]+?)s? in addition to "
+    r"(?:their|its) other types and gains? (?P<keywords>[a-z][a-z, ]*?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s14")
+def _parse_for_each_opponent_borrow_ability(effect_text: str) -> AbilityEffect | None:
+    """`_FOR_EACH_OPPONENT_BORROW_RE`'s shape; see the banner above. The printed
+    phrase and mana value limit were checked as each target was announced
+    (CR 601.2c); the layer sentences only need a subject `machines/layers.py`
+    reads, as in `_gain_control_untap_grant`."""
+    text = collapsed(_REMINDER_OR_ACTIVATION_RULE_RE.sub(" ", effect_text))
+    match = _FOR_EACH_OPPONENT_BORROW_RE.fullmatch(text)
+    if match is None:
+        return None
+    if canonical_subtype(match.group("subtype")) is None:
+        return None
+    subtype = canonical_subtype(match.group("subtype"))
+    sentences = (
+        "gain control of it until end of turn.",
+        f"target creature becomes a {subtype} in addition to its other types until end of turn.",
+        f"target creature gains {match.group('keywords').strip()} until end of turn.",
+    )
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source_or_last_known(game)
+        if source is None:
             return
         _untap_and_apply_control_sentences(
             game, source, game.controller_of(ability), game.resolve_card_targets(ability), sentences
@@ -3770,6 +3818,21 @@ def _is_layer_effect_text(text: str) -> bool:
     return is_resolution_layer_effect_text(text)
 
 
+def _counter_rider_on_layer_objects(
+    rider: "Callable[[Game, CardState], None]",
+) -> TargetedClause:
+    """`rider` (`_protection_counter_rider`) run on each object the layer
+    sentence before it affected."""
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        from ..turn_scoped_riders import layer_antecedent_objects
+
+        for target in layer_antecedent_objects(game):
+            rider(game, target)
+
+    return effect
+
+
 def _layer_remainder_or_composed(
     remainder_text: str, *, for_spell: bool, layer_text: str | None = None
 ) -> TargetedClause | None:
@@ -3807,6 +3870,12 @@ def _layer_remainder_or_composed(
     )
     if read is not None or layer_text is None:
         return read
+    # Shields Up!'s "If it's a creature, put a +1/+1 counter on it." after a
+    # hexproof/indestructible grant: "it" is the layer sentence's one object,
+    # and the type is asked of it as the spell resolves (CR 608.2c).
+    counter_rider = _protection_counter_rider(remainder_text)
+    if counter_rider is not None:
+        return _counter_rider_on_layer_objects(counter_rider)
     # Crash Landing's "<self> deals damage to that creature equal to ..."
     # after "Target creature with flying loses flying until end of turn.":
     # CR 608.2c's "that creature" is the layer sentence's one target.
@@ -4288,7 +4357,9 @@ def _parse_target_plus_x_minus_x_clause(effect_text: str) -> AbilityEffect | Non
 #:
 #: A copied value is read once, as the ability resolves (CR 608.2h), and then
 #: fixed - a later pump on the object copied does not move it. The subject is
-#: fixed then too (CR 611.2c).
+#: fixed then too (CR 611.2c). With no duration printed (Seven of Nine,
+#: Unassimilated's "{6}{U}: Seven of Nine's base power and toughness become
+#: 7/9.") the effect lasts until the end of the game (CR 611.2a).
 _SELF_WORDS = r"this creature|this permanent"
 _BASE_PT_BECOME_RE = re.compile(
     r"^(?:(?P<choose>choose (?:up to one |one |a )?(?:other |another )?target creature"
@@ -4297,7 +4368,7 @@ _BASE_PT_BECOME_RE = re.compile(
     r" base power and toughness become "
     r"(?:(?P<power>\d+)/(?P<toughness>\d+)"
     rf"|equal to (?P<reference>{_SELF_WORDS}|that creature)['’]s power and toughness)"
-    r" until end of turn\.?$",
+    r"(?P<until> until end of turn)?\.?$",
     re.IGNORECASE,
 )
 
@@ -4353,10 +4424,11 @@ def _parse_base_pt_become_clause(effect_text: str) -> AbilityEffect | None:
                 # it is read by its last known information.
                 power, toughness = reference.power or 0, reference.toughness or 0
         controller = game.controller_of(ability)
+        until_end_of_turn = match.group("until") is not None
         if optional and not game.may(
             controller,
             f"have {subjects[0].name}'s base power and toughness become "
-            f"{power}/{toughness} until end of turn",
+            f"{power}/{toughness}{' until end of turn' if until_end_of_turn else ''}",
             source=ability.source_name,
             source_id=source_id_of(ability),
         ):
@@ -4373,7 +4445,9 @@ def _parse_base_pt_become_clause(effect_text: str) -> AbilityEffect | None:
                     layer=Layer.POWER_TOUGHNESS,
                     sublayer=Sublayer.SET,
                     timestamp=timestamp,
-                    duration=Duration.UNTIL_END_OF_TURN,
+                    duration=(
+                        Duration.UNTIL_END_OF_TURN if until_end_of_turn else Duration.INDEFINITE
+                    ),
                     selector=only_this_incarnation(subject, subject.zone_change_stamp),
                     modification=set_power_toughness(power, toughness),
                 ),
@@ -10550,6 +10624,13 @@ _DOUBLE_POWER_TARGET_RE = re.compile(
     r"^double the power of (?P<phrase>.*target .+?) until end of turn\.?$", re.IGNORECASE
 )
 
+#: "Double this creature's power until end of turn." (Worf, Honor-Bound
+#: Warrior, its own name already CR 201.5's "this creature") - the same CR 701.10b
+#: doubling of the ability's own source.
+_DOUBLE_SELF_POWER_RE = re.compile(
+    r"^double this (?:creature|permanent)'s power until end of turn\.?$", re.IGNORECASE
+)
+
 
 @ABILITY_TEXT.rung("s32")
 def _parse_double_power_target_clause(text: str) -> AbilityEffect | None:
@@ -10567,17 +10648,22 @@ def _parse_double_power_target_clause(text: str) -> AbilityEffect | None:
     it outright).
     """
     match = _DOUBLE_POWER_TARGET_RE.fullmatch(text.strip())
-    if match is None:
+    own_source = _DOUBLE_SELF_POWER_RE.fullmatch(text.strip()) is not None
+    if match is None and not own_source:
         return None
-    if not _targets_understood(match.group("phrase"), count_agnostic=False):
+    if match is not None and not _targets_understood(match.group("phrase"), count_agnostic=False):
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        targets = [
-            target
-            for target in game.resolve_targets(ability)
-            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
-        ]
+        if own_source:
+            source = ability.source(game)
+            targets = [source] if source is not None and source.zone is Zone.BATTLEFIELD else []
+        else:
+            targets = [
+                target
+                for target in game.resolve_targets(ability)
+                if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+            ]
         if not targets:
             return
         target = targets[0]
@@ -11649,17 +11735,37 @@ _GAINS_AND_CANT_BE_BLOCKED_THIS_TURN_RE = re.compile(
 )
 
 
+#: The pump twin: "`<target phrase>` gets +P/+T until end of turn and can't be
+#: blocked this turn." (Lore, Positronic Provocateur's first mode).
+_GETS_AND_CANT_BE_BLOCKED_THIS_TURN_RE = re.compile(
+    r"^(?P<phrase>target .+?) gets (?P<pt>[+-]\d+/[+-]\d+) until end of turn "
+    r"and can'?t be blocked this turn(?:\.\s*(?P<rest>.*))?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
 def _gains_and_cant_be_blocked_this_turn(
     text: str, rest_parser: Callable[[str], object]
 ) -> Callable[["Game", "StackObject"], None] | None:
     """`_GAINS_AND_CANT_BE_BLOCKED_THIS_TURN_RE`'s shape, with any following
     instruction read by `rest_parser` and run after it (CR 608.2c)."""
     match = _GAINS_AND_CANT_BE_BLOCKED_THIS_TURN_RE.fullmatch(collapsed(text.strip()))
+    pump = None
     if match is None:
-        return None
+        match = _GETS_AND_CANT_BE_BLOCKED_THIS_TURN_RE.fullmatch(collapsed(text.strip()))
+        if match is None:
+            return None
+        # Lore's "Target creature gets +1/+0 until end of turn and can't be
+        # blocked this turn.": the pump is its own layer 7c sentence over the
+        # same targets (CR 613.4c), the evasion the same grant as above.
+        pump_text = f"{match.group('phrase')} gets {match.group('pt')} until end of turn."
+        pump = (
+            _create_continuous_effect_for_mode_text(pump_text),
+            _create_continuous_effect_of_ability_for_mode_text(pump_text),
+        )
     if not _targets_understood(match.group("phrase"), count_agnostic=True):
         return None
-    keywords = split_and_validate_keywords(match.group("keywords"))
+    keywords = [] if pump is not None else split_and_validate_keywords(match.group("keywords"))
     if keywords is None:
         return None
     rest_text = (match.group("rest") or "").strip()
@@ -11670,6 +11776,12 @@ def _gains_and_cant_be_blocked_this_turn(
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         effects = game.continuous_effects
+        if pump is not None:
+            pump_spell, pump_ability = pump
+            (pump_spell if isinstance(stack_object, CardState) else pump_ability)(
+                game,
+                stack_object,  # type: ignore[arg-type]
+            )
         for target in game.resolve_targets(stack_object):
             if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
                 continue
