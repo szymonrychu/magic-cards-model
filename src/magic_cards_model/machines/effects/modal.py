@@ -1,7 +1,7 @@
 import hashlib
 import re
 from collections.abc import Callable, Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from magic_cards_model.phrases import with_indefinite_article
@@ -765,9 +765,9 @@ def _parse_choose_pair_fight_or_bite_clause(effect_text: str) -> Effect | None:
 # `ThatCreatureDiesConsequence`/`dies_consequence_effect`, never re-derived here.
 
 _CHOOSE_THEN_DIES_THIS_TURN_RE = re.compile(
-    r"^choose (?P<phrase>(?:up to one )?target creature"
+    r"^choose (?P<phrase>(?:up to one )?(?:other )?target creature"
     r"(?: (?:you don'?t control|an opponent controls))?)\. "
-    r"when that creature dies this turn, (?P<consequence>[^.]+)"
+    r"when (?:that creature|it) dies this turn, (?P<consequence>[^.]+)"
     r"(?:\. (?P<rest>target creature you control fights that creature))?$",
     re.IGNORECASE,
 )
@@ -788,9 +788,12 @@ def _dies_this_turn_consequence_text(consequence: str) -> str | None:
     return None
 
 
+@ABILITY_TEXT.rung("s12")
 @SPELL_TEXT.rung("s12")
 def _parse_choose_target_then_dies_this_turn_clause(effect_text: str) -> Effect | None:
-    """`_CHOOSE_THEN_DIES_THIS_TURN_RE`'s shape - see the banner above."""
+    """`_CHOOSE_THEN_DIES_THIS_TURN_RE`'s shape - see the banner above. Read
+    for a spell and for an ability alike: Dr. Leonard "Bones" McCoy's ETB mode
+    "Choose up to one other target creature. When it dies this turn, ..."."""
     whole = collapsed(_strip_non_effect_preamble(effect_text)).rstrip(".")
     match = _CHOOSE_THEN_DIES_THIS_TURN_RE.fullmatch(whole)
     if match is None:
@@ -810,7 +813,7 @@ def _parse_choose_target_then_dies_this_turn_clause(effect_text: str) -> Effect 
     if fights and not _targets_understood("target creature you control", count_agnostic=True):
         return None
 
-    def effect(game: "Game", spell: CardState) -> None:
+    def effect(game: "Game", spell: Any) -> None:
         from ..dies_this_turn import source_id_of_object
 
         controller = game.controller_of(spell)
@@ -832,7 +835,7 @@ def _parse_choose_target_then_dies_this_turn_clause(effect_text: str) -> Effect 
                 event=TriggerEvent.DIES,
                 controller=controller.username,
                 source_id=source_id_of_object(spell),
-                source_name=spell.card.name,
+                source_name=spell.card.name if isinstance(spell, CardState) else spell.source_name,
                 subject_id=chosen[0].id,
                 remaining=1,
                 expires_end_of_turn=True,

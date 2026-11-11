@@ -7,12 +7,13 @@ from magic_cards_model.text_norm import collapsed
 
 from ...ids import new_id
 from ...models.card import Card, Layout, Supertype
-from ...models.card_state import CardState
+from ...models.card_state import CardState, Counter
 from ...models.zone import Zone
 from ...numbers import COUNT, parse_count
 from ...snapshot import scan_pin
 from ..abilities import (
     HAUNTED_CREATURE_RE,
+    STATION_SYMBOL_RE,
     Ability,
     AbilityKind,
     ActivatedAbility,
@@ -24,6 +25,7 @@ from ..abilities import (
     parse_granted_ability_lines,
     self_reference_names,
     self_reference_pattern,
+    station_striations,
 )
 from ..counter_event_triggers import (
     counter_event_occurrences,
@@ -468,7 +470,7 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
         ability
         for ability in parse_abilities(card)
         if isinstance(ability, TriggeredAbility)
-        # CR 721.2a: a station striation's trigger is granted by the symbol's
+        # CR 722.2a: a station striation's trigger is granted by the symbol's
         # static ability (`layers._station_symbol_effects`) and is found
         # through `added_ability_lines` while the counters reach N - never as
         # a printed ability the permanent always has. CR 711.2a/b's level
@@ -1049,7 +1051,7 @@ def activated_abilities_of(card: Card, face: str | None = None) -> list[Activate
         for ability in parse_abilities(card)
         if isinstance(ability, ActivatedAbility)
         and (face is None or ability.face == face)
-        # CR 721.2a: granted by the station symbol's static ability at N
+        # CR 722.2a: granted by the station symbol's static ability at N
         # charge counters, and found then through `added_ability_lines`; a
         # CR 711.2a/b level striation's at its level counters.
         and ability.station_threshold is None
@@ -1156,7 +1158,6 @@ def added_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ...]:
         lines = permanent.abilities_as_it_left
         if lines is None:
             return ()
-        printed = set(leveler_lines(permanent.oracle_text, None))
         granted = set(permanent.granted_ability_texts)
         # A grant `machines/layers._sync_stored_grant_ability_texts` had
         # already reconciled onto `granted_ability_texts` before this
@@ -1165,15 +1166,43 @@ def added_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ...]:
         # `source.granted_as_it_left` already, read at its own call site
         # just above this one; counted here too it would double the
         # ability the permanent's dies trigger produces.
-        already_covered = granted | set(permanent.granted_as_it_left)
-        return tuple(line for line in lines if line not in printed and line not in already_covered)
+        return _beyond_printed(permanent, lines, granted | set(permanent.granted_as_it_left))
     try:
         computed = game.characteristics_of(permanent)
     except KeyError:
         return ()
-    printed = set(leveler_lines(permanent.oracle_text, None))
-    granted = set(permanent.granted_ability_texts)
-    return tuple(line for line in computed.abilities if line not in printed and line not in granted)
+    return _beyond_printed(permanent, computed.abilities, set(permanent.granted_ability_texts))
+
+
+def _beyond_printed(
+    permanent: CardState, lines: Sequence[str], covered: set[str]
+) -> tuple[str, ...]:
+    """`lines` less every printed line the permanent always has and every line
+    in `covered`, for `added_ability_lines`.
+
+    CR 722.2a: a line printed in a station striation is had only while the
+    charge counters reach N, through the symbol's static ability
+    (`layers._station_symbol_effects`). A striation's second line carries no
+    symbol of its own (H.M.S. Bounty, Unlikely Timeship's "Whenever H.M.S.
+    Bounty deals combat damage to a player, ..." under "8+ | Flying"), so its
+    grant is the printed text verbatim and the computed board shows it once
+    either way: on the battlefield it counts as added exactly while the
+    charge counters reach N. Off the battlefield there are no counters to read
+    and it stays printed, as before.
+    """
+    printed = leveler_lines(permanent.oracle_text, None)
+    on_battlefield = permanent.zone is Zone.BATTLEFIELD
+    charge = permanent.counter_count(Counter.CHARGE) if on_battlefield else 0
+    always = set(printed)
+    for line, (_, threshold) in zip(printed, station_striations(printed), strict=True):
+        if (
+            on_battlefield
+            and threshold is not None
+            and charge >= threshold
+            and STATION_SYMBOL_RE.match(line) is None
+        ):
+            always.discard(line)
+    return tuple(line for line in lines if line not in always and line not in covered)
 
 
 def activated_abilities_from_lines(

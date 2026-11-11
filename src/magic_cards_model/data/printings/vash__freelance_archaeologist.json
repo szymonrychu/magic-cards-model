@@ -1,0 +1,127 @@
+{
+  "object": "card",
+  "id": "d1f51765-f336-4ca2-a0f5-e42dc352c0fa",
+  "oracle_id": "ec5a9dde-b89d-4c54-8563-4a7170f5cefd",
+  "multiverse_ids": [],
+  "resource_id": "BDF38CAC11B0AF08645B750C5BC54CB09A43F29F8E3EFC107C1135C28975CE7D",
+  "mtgo_id": 158650,
+  "tcgplayer_id": 725156,
+  "cardmarket_id": 918574,
+  "name": "Vash, Freelance Archaeologist",
+  "lang": "en",
+  "released_at": "2026-11-13",
+  "uri": "https://api.scryfall.com/cards/d1f51765-f336-4ca2-a0f5-e42dc352c0fa",
+  "scryfall_uri": "https://scryfall.com/card/trk/255/vash-freelance-archaeologist?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-10-20T15:00:03Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/1/d1f51765-f336-4ca2-a0f5-e42dc352c0fa.jpg?1792508403",
+    "normal": "https://cards.scryfall.io/normal/front/d/1/d1f51765-f336-4ca2-a0f5-e42dc352c0fa.jpg?1792508403",
+    "large": "https://cards.scryfall.io/large/front/d/1/d1f51765-f336-4ca2-a0f5-e42dc352c0fa.jpg?1792508403",
+    "png": "https://cards.scryfall.io/png/front/d/1/d1f51765-f336-4ca2-a0f5-e42dc352c0fa.png?1792508403",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/1/d1f51765-f336-4ca2-a0f5-e42dc352c0fa.jpg?1792508403",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/1/d1f51765-f336-4ca2-a0f5-e42dc352c0fa.jpg?1792508403",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/1/d1f51765-f336-4ca2-a0f5-e42dc352c0fa.webp?1792508403",
+    "grid": "https://cards.scryfall.io/grid/front/d/1/d1f51765-f336-4ca2-a0f5-e42dc352c0fa.webp?1792508403",
+    "display": "https://cards.scryfall.io/display/front/d/1/d1f51765-f336-4ca2-a0f5-e42dc352c0fa.webp?1792508403",
+    "art": "https://cards.scryfall.io/art/front/d/1/d1f51765-f336-4ca2-a0f5-e42dc352c0fa.webp?1792508403",
+    "crop": "https://cards.scryfall.io/crop/front/d/1/d1f51765-f336-4ca2-a0f5-e42dc352c0fa.webp?1792508403",
+    "jpeg": "https://cards.scryfall.io/normal/front/d/1/d1f51765-f336-4ca2-a0f5-e42dc352c0fa.jpg?1792508403"
+  },
+  "mana_cost": "{1}{B}{G}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Human Rogue Scientist",
+  "oracle_text": "At the beginning of your upkeep, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)\nWhenever a card leaves your graveyard, draw a card. This ability triggers only once each turn.",
+  "power": "2",
+  "toughness": "4",
+  "colors": [
+    "B",
+    "G"
+  ],
+  "color_identity": [
+    "B",
+    "G"
+  ],
+  "keywords": [
+    "Surveil"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set": "trk",
+  "set_name": "Star Trek",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atrk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/trk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d1f51765-f336-4ca2-a0f5-e42dc352c0fa/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aec5a9dde-b89d-4c54-8563-4a7170f5cefd&unique=prints",
+  "collector_number": "255",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "54d8d5b4-9c71-4535-987b-11f3be9f3c82"
+  ],
+  "illustration_id": "f04d6c6e-c630-48c2-ac70-8419c7c7846d",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 30586,
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVash%252C%2BFreelance%2BArchaeologist",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVash%252C%2BFreelance%2BArchaeologist",
+    "edhrec": "https://edhrec.com/route/?cc=Vash%2C+Freelance+Archaeologist"
+  }
+}

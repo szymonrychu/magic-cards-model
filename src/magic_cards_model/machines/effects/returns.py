@@ -1652,7 +1652,8 @@ def _parse_return_dead_self_to_hand_clause(
 #: many (none when the subtraction reaches zero) when the step arrives. A fixed
 #: "with N `<kind>` counters on it" is the same shape without the subtraction.
 _RETURN_DEAD_SELF_WITH_COUNTERS_AT_STEP_RE = re.compile(
-    rf"^return (?:it|this card|that card) to the battlefield(?P<tapped> tapped)? with "
+    rf"^return (?:it|this card|that card) to the battlefield(?P<tapped> tapped)?"
+    rf"(?: under its owner's control)? with "
     rf"(?:(?P<fewer>{COUNT}) fewer|(?P<fixed>{COUNT}|an?)) (?P<kind>[a-z0-9+/-]+) counters? "
     rf"on it at (?P<timing>{'|'.join(map(re.escape, ANAPHORIC_TIMING_STEPS))})\.?$",
     re.IGNORECASE,

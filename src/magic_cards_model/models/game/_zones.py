@@ -728,6 +728,17 @@ class ZonesMixin:
                 # CR 702.104a's tribute: the opponent is the one who puts them.
                 self.add_counters(card_state, kind, amount, putter=putter)
 
+            if event.attacking:
+                # CR 508.4: put onto the battlefield attacking (Kira Nerys,
+                # Firebrand's replacement), into the attack its controller is
+                # already making; with no such attack it is not attacking.
+                from ...machines.effects.continuous import _defender_of_controllers_attack
+                from ..token import _put_onto_the_battlefield_attacking
+
+                defender = _defender_of_controllers_attack(self, card_state.controller)
+                if defender is not None:
+                    _put_onto_the_battlefield_attacking(self, card_state, defender)  # type: ignore[arg-type]
+
             if event.grants_haste:
                 # CR 702.136a's riot, declined: "it gains haste." No duration
                 # is stated, so CR 611.2a's default is indefinite -
@@ -2459,7 +2470,8 @@ class ZonesMixin:
         added for Static Prison's "until this enchantment leaves the
         battlefield" (CR 610.3c's kind of one-shot return): a bounced
         Static Prison is exactly as much a departure as a destroyed or exiled
-        one, and nothing watched this path before.
+        one, and nothing watched this path before. A card returned from a
+        graveyard raises `ExtraTriggerEvent.LEAVES_GRAVEYARD` (CR 603.10a).
         """
         with self._id_allocator_scope():
             if move_refused(permanent, Zone.HAND) is not None:
@@ -2474,6 +2486,7 @@ class ZonesMixin:
             # battlefield - "another nonland permanent you control is
             # returned" asks about then, not about the hand it lands in.
             controller = permanent.controller
+            origin_graveyard_owner = self._graveyard_owner_of(permanent)
             if was_on_battlefield:
                 self._note_left_battlefield(permanent)
             self._take_out_of_every_zone(permanent)
@@ -2507,6 +2520,11 @@ class ZonesMixin:
                     self._returning_together.append((to_hand, departure))
                 else:
                     self._announce_returns([(to_hand, departure)])
+            if origin_graveyard_owner is not None:
+                # CR 603.10a: a card returned from a graveyard to a hand left
+                # that graveyard (Hologram Stalker's own enters trigger
+                # feeding its "Whenever a card leaves your graveyard").
+                self._emit_left_graveyard(origin_graveyard_owner, [permanent], exiled=False)
             return permanent
 
     def put_cards_into_library(
@@ -3744,6 +3762,12 @@ class ZonesMixin:
         611.3d), or None. Read off the computed abilities of the permanents
         `username` controls (CR 613.5); "your graveyard" is the land's owner's,
         so only a land `username` owns qualifies."""
+        if land.zone is Zone.SIDEBOARD and land.owner == username:
+            # CR 400.11a: only a permission naming outside the game reaches it.
+            from ...machines.casting import static_graveyard_land_source
+
+            source = static_graveyard_land_source(self, land, username)
+            return None if source is None else source[0]
         if land.zone is not Zone.GRAVEYARD or land.owner != username:
             return None
         from ...machines.protection_statics import graveyard_land_play_prohibited

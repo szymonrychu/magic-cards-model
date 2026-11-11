@@ -2474,7 +2474,7 @@ class CastingMixin:
             self.spend_play_permission_choice(permission)
         gained_ability = (
             record_graveyard_land_use(self, land, username)
-            if permission is None and land.zone is Zone.GRAVEYARD
+            if permission is None and land.zone in (Zone.GRAVEYARD, Zone.SIDEBOARD)
             else None
         )
         # CR 406.3a: a card exiled face down "is turned face up just before

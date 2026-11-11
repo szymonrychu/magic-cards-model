@@ -10,6 +10,8 @@ the family, off each permanent's computed ability lines (CR 613.5):
   Karlov, Drivnod), "... a creature attacking ..." (Isshin), "... a legendary
   permanent or an artifact entering or leaving the battlefield ..." (Gandalf the
   White). "Dying" is one event; "leaving the battlefield" is every way out.
+  A player event as the cause: "If you gaining life causes ..." (Dr. Beverly
+  Crusher).
 - Source shapes with a stat or colour qualifier: "If a triggered ability of a
   creature you control with power 2 or less triggers, ..." (Delney), "... of a
   colorless spell you control or another colorless permanent you control ..."
@@ -47,6 +49,24 @@ _CAUSE_RE = re.compile(
     r"or leaving the battlefield|entering|dying|attacking|leaving the battlefield) causes a "
     r"triggered ability of a permanent you control to trigger, that ability triggers an "
     r"additional time\.?$",
+    re.IGNORECASE,
+)
+#: CR 603.2d's cause shape naming a player event instead of an object one:
+#: "If you gaining life causes a triggered ability of a permanent you control
+#: to trigger, that ability triggers an additional time." (Dr. Beverly
+#: Crusher). The event is the multiplier's controller gaining life.
+_PLAYER_CAUSE_RE = re.compile(
+    r"^if you (?P<verb>gaining life) causes a triggered ability of a permanent you control "
+    r"to trigger, that ability triggers an additional time\.?$",
+    re.IGNORECASE,
+)
+_PLAYER_VERB_EVENTS = {"gaining life": TriggerEvent.GAINS_LIFE}
+#: The multiplier's own abilities: "If a triggered ability of this creature
+#: triggers, that ability triggers an additional time." - the line Lwaxana
+#: Troi, Charming Guest grants one creature while she remains tapped.
+_SELF_WHOSE_RE = re.compile(
+    r"^if a triggered ability of this (?:creature|permanent) triggers, "
+    r"(?:that ability|it) triggers an additional time\.?$",
     re.IGNORECASE,
 )
 _WHOSE_RE = re.compile(
@@ -180,7 +200,11 @@ def reads_trigger_doubling_line(text: str) -> bool:
     if "additional time" in lowered:
         line = collapsed(text)
         return (
-            _cause(line) is not None or _whose(line) is not None or _ROOM_RE.match(line) is not None
+            _cause(line) is not None
+            or _whose(line) is not None
+            or _ROOM_RE.match(line) is not None
+            or _PLAYER_CAUSE_RE.match(line) is not None
+            or _SELF_WHOSE_RE.match(line) is not None
         )
     return "cause abilities to trigger" in lowered and _suppress(collapsed(text)) is not None
 
@@ -275,7 +299,17 @@ def extra_trigger_times(
             if "additional time" not in printed.lower() or is_additional_trigger_line(printed):
                 continue
             line = collapsed(printed)
-            if (cause := _cause(line)) is not None:
+            if _SELF_WHOSE_RE.match(line) is not None:
+                if source.id == permanent.id:
+                    extra += 1
+            elif (player_cause := _PLAYER_CAUSE_RE.match(line)) is not None:
+                if (
+                    event.event is _PLAYER_VERB_EVENTS[player_cause["verb"].lower()]
+                    and event.player == controller
+                    and source.zone is Zone.BATTLEFIELD
+                ):
+                    extra += 1
+            elif (cause := _cause(line)) is not None:
                 alternatives, events = cause
                 if event.event not in events:
                     continue

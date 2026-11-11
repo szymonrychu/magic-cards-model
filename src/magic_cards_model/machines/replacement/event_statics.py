@@ -20,8 +20,15 @@ from typing import TYPE_CHECKING
 
 from ...models.card import Color, Type
 from ...models.card_state import CardState
+from ...models.token import is_token
 from ...models.zone import Zone
-from .model import CardReplacement, EventKind, ReplaceableEvent, ReplacementEffect
+from .model import (
+    CardReplacement,
+    EventKind,
+    ReplaceableEvent,
+    ReplacementEffect,
+    ReplacementKind,
+)
 from .parse import _read_damage_life_floor, strip_reminder_text
 
 if TYPE_CHECKING:
@@ -459,3 +466,53 @@ EVENT_COMPILERS = (
     _compile_noncombat_damage_floor,
     _compile_assemble_twice,
 )
+
+
+# -- "If a creature you control would enter[ while <condition>], instead it --
+# -- enters tapped and attacking." (CR 614.1c, CR 508.4) ----------------------
+
+#: Kira Nerys, Firebrand's own group replacement. The condition is read by
+#: `Game.condition_holds` about the replacement's controller as the creature
+#: would enter; the "attacking" half is CR 508.4's put-onto-the-battlefield-
+#: attacking, its defender the one its controller is already attacking.
+_GROUP_ENTERS_ATTACKING_EVENT_RE = re.compile(
+    r"^an? (?P<type>creature|nontoken creature) you control would enter"
+    r"(?: while (?P<condition>.+))?$",
+    re.IGNORECASE,
+)
+_ENTERS_TAPPED_AND_ATTACKING_RE = re.compile(
+    r"^(?:it|that creature) enters tapped and attacking$", re.IGNORECASE
+)
+
+
+def _compile_group_enters_tapped_and_attacking(
+    effect: ReplacementEffect,
+) -> CardReplacement | None:
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD or effect.condition is not None:
+        return None
+    event_match = _GROUP_ENTERS_ATTACKING_EVENT_RE.fullmatch((effect.event or "").strip())
+    replacement = (effect.replacement or "").strip().rstrip(".")
+    if event_match is None or not _ENTERS_TAPPED_AND_ATTACKING_RE.fullmatch(replacement):
+        return None
+    condition = event_match.group("condition")
+    from ...models.game._conditions import condition_is_readable
+
+    if condition is not None and not condition_is_readable(condition):
+        return None
+    nontoken = event_match.group("type").lower().startswith("nontoken")
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        card = event.card
+        if event.kind is not EventKind.ENTERS_BATTLEFIELD or card is None or event.attacking:
+            return False
+        if card.controller is None or card.controller != source.controller:
+            return False
+        if Type.CREATURE not in card.types or (nontoken and is_token(card)):
+            return False
+        return condition is None or game.condition_holds(card.controller, condition, source) is True
+
+    def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+        event.tapped = True
+        event.attacking = True
+
+    return CardReplacement(label=effect.text, applies=applies, apply=apply)
