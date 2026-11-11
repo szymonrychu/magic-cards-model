@@ -2203,6 +2203,10 @@ def _action_history(scenario: PlayedScenario, source: CardState, lowered: str, c
         from magic_cards_model.machines.conditions.history import record_crime
 
         record_crime(game, ALICE, [TargetRef.to_player(BOB)])
+    if "faced a dilemma this turn" in lowered:
+        from magic_cards_model.machines.conditions.history import record_dilemma
+
+        record_dilemma(game, ALICE)
     mana_value = re.search(r"cast a spell with mana value (\w+) or greater this turn", lowered)
     if mana_value is not None:
         # The history the sweep has no casting driver for, staged as last
@@ -4840,6 +4844,30 @@ def _committing_crime(case: Case, ability: TriggeredAbility) -> Iterator[Attempt
     yield crime
 
 
+#: A real modal activated ability (CR 700.2a) the stock lands pay for:
+#: "{1}: Choose one that hasn't been chosen this turn -".
+_DILEMMA_MAKER = "Kargan Intimidator"
+
+
+def _facing_dilemma(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """CR 700.17: the controller faces a dilemma as they choose a mode for a
+    spell or ability - Kargan Intimidator's modal activation, its first
+    mode."""
+
+    def dilemma() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(case, ability, battlefield=(_DILEMMA_MAKER,))
+        kargan = _staged(scenario, _DILEMMA_MAKER)
+        if scenario.priority_holder != ALICE:
+            scenario.pass_priority(scenario.priority_holder)
+        try:
+            scenario.activate(kargan, username=ALICE, auto=True)
+        except (ValueError, AssertionError) as error:
+            raise _Unavailable(f"choosing a mode: {error}") from error
+        return scenario, source_id
+
+    yield dilemma
+
+
 #: A real library search (CR 701.23a) any player can make: a fetchland.
 _SEARCHER = "Wooded Foothills"
 
@@ -5306,6 +5334,8 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _exerting(case, ability)
         elif kind == "mutates":
             yield from _mutating(case, ability)
+        elif kind == "dilemma_faced":
+            yield from _facing_dilemma(case, ability)
 
 
 #: Attempts whose event happens later in the turn (or in the next ones), so
