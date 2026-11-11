@@ -181,6 +181,14 @@ ANNOUNCED_X = "X"
 _DEVOTION_AMOUNT = re.compile(
     r"^an amount of mana of that color equal to your devotion to that color$", re.IGNORECASE
 )
+#: Starfleet Academy: "Choose a color. Add an amount of mana of that color
+#: equal to the number of creature types among non-Borg creatures you
+#: control." - `_DEVOTION_AMOUNT`'s sentence with a board count in place of
+#: devotion, read through `_mana_count_expression_readable`/`resolve_mana_
+#: count_expression` the same way `_CHOSEN_COLOR_FOR_EACH_RE` is.
+_CHOSEN_COLOR_EQUAL_TO_RE = re.compile(
+    r"^an amount of mana of that color equal to (?P<expression>.+)$", re.IGNORECASE
+)
 #: Loot, the Nexus: "Choose a color. Add one mana of that color for each
 #: different power among creatures you control." The same "Choose a color"
 #: preamble and "that color" reference `_DEVOTION_AMOUNT` already reads for
@@ -1196,7 +1204,9 @@ def _parse_effect(effect: str, *, cost_announces_x: bool = False) -> ManaAbility
             any_color_count=1,
             amount_from_devotion=True,
         )
-    chosen_color_for_each = _CHOSEN_COLOR_FOR_EACH_RE.fullmatch(effect.strip().rstrip("."))
+    chosen_color_for_each = _CHOSEN_COLOR_FOR_EACH_RE.fullmatch(
+        effect.strip().rstrip(".")
+    ) or _CHOSEN_COLOR_EQUAL_TO_RE.fullmatch(effect.strip().rstrip("."))
     if chosen_color_for_each:
         expression = chosen_color_for_each.group("expression").strip()
         if not _mana_count_expression_readable(expression):

@@ -1291,8 +1291,9 @@ def _strip_keyword_ability_lines(text: str) -> str:
 #: undergrowth, valiant, vivid, void, and will of the council." Looked up in
 #: this session with `mise run rules:find 207.2`. The current rule also names
 #: battlefront, federation, rulebreaker, seek out and strange new worlds;
-#: only "strange new worlds" is entered here (the Star Trek cards of this
-#: pool print it), the others when a card in the pool needs them.
+#: "strange new worlds" and "federation" are entered here (the Star Trek
+#: cards of this pool print them), the others when a card in the pool needs
+#: them.
 #:
 #: The rule goes on to say an ability word "[has] no special rules meaning
 #: and no individual entries in the Comprehensive Rules" - which is exactly
@@ -1333,6 +1334,7 @@ _ABILITY_WORDS = frozenset(
         "enrage",
         "fateful hour",
         "fathomless descent",
+        "federation",
         "ferocious",
         "flurry",
         "formidable",

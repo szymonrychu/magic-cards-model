@@ -5462,6 +5462,97 @@ def _parse_exile_target_card_copy_it_cast_clause(text: str) -> AbilityEffect | N
     return effect
 
 
+#: "Exile target instant or sorcery card from your graveyard. Copy that card
+#: X times, where X is `<amount>`. You may cast the copies without paying
+#: their mana costs." - Infinite Diversity (a spell; its trailing "Exile
+#: Infinite Diversity." is CR 608.2n's self-exile, stripped before dispatch)
+#: and any ability printing the same body. The multiple-copies twin of
+#: `_EXILE_TARGET_CARD_COPY_IT_CAST_RE`: CR 707.12a lets the player choose
+#: individually, for each copy, whether to cast it.
+_EXILE_TARGET_CARD_COPY_N_TIMES_CAST_RE = re.compile(
+    r"^exile target [^.]+? from your graveyard\.\s*"
+    r"copy that card (?P<times>x|\w+) times?(?:, where x is (?P<where>[^.]+))?\.\s*"
+    r"you may cast the copies(?P<free> without paying their mana costs)?\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s22", for_spell=False)
+@SPELL_TEXT.rung("s14", for_spell=True)
+def _parse_exile_target_card_copy_n_times_cast_clause(
+    text: str, *, for_spell: bool
+) -> Effect | AbilityEffect | None:
+    """`_EXILE_TARGET_CARD_COPY_N_TIMES_CAST_RE`'s shape, or `None`.
+
+    The count is fixed once, as the effect copies (CR 608.2h), after the
+    exile: a card that never reached exile (CR 608.2b: an illegal target) is
+    not copied at all. CR 707.12: each copy is created in exile, the zone the
+    card is in; CR 707.12a: each is offered on its own; CR 707.10a: a copy
+    left uncast ceases to exist."""
+    match = _EXILE_TARGET_CARD_COPY_N_TIMES_CAST_RE.fullmatch(
+        collapsed(_strip_non_effect_preamble(text))
+    )
+    if match is None:
+        return None
+    times = match.group("times").lower()
+    if times == "x":
+        if match.group("where") is None:
+            return None
+        counted = count_expression(match.group("where"))
+        if counted is None:
+            return None
+    else:
+        fixed = parse_count(times)
+        if fixed is None:
+            return None
+        counted = lambda _game, _controller, n=fixed: n  # noqa: E731
+    free = match.group("free") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        _source_id, source_name = _permanent_id_and_name(stack_object, for_spell=for_spell)
+        targets = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.GRAVEYARD
+        ]
+        if not targets:
+            return
+        exiled = [card for card in game.exile_cards(targets) if card.zone is Zone.EXILE]
+        if not exiled:
+            return
+        original = exiled[0]
+        copies = []
+        for _ in range(counted(game, controller.username)):
+            copy = CardState(
+                card=original.card,
+                zone=Zone.EXILE,
+                controller=controller.username,
+                owner=controller.username,  # CR 112.2a
+                is_copy=True,
+            )
+            game.exile.append(copy)
+            copies.append(copy)
+        for copy in copies:
+            game.may_cast_during_resolution(
+                copy,
+                controller.username,
+                prompt=(
+                    f"cast a copy of {copy.name}"
+                    + (" without paying its mana cost" if free else "")
+                ),
+                source=source_name,
+                source_id=source_id_of(stack_object),
+                source_name=source_name,
+                rule="CR 707.12a",
+                pays_mana_cost=not free,
+            )
+            if copy.zone is Zone.EXILE and copy in game.exile:
+                game.exile.remove(copy)  # CR 707.10a
+
+    return effect
+
+
 #: "Exile up to one target nonland card of each card type from your
 #: graveyard. Copy those cards. You may cast any number of spells with total
 #: mana value `<n>` or less from among the copies without paying their mana
