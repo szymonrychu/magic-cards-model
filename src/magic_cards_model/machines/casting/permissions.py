@@ -16,6 +16,7 @@ from ...models.zone import Zone
 from ...numbers import COUNT, parse_count
 from ...snapshot import EngineModel
 from ..abilities import (
+    KEYWORD_ABILITY_NAMES,
     AbilityKind,
     KeywordAbility,
     parse_abilities,
@@ -391,12 +392,30 @@ _EXACT_COLOR_COUNT_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5
 #: retrace ("Instant and sorcery cards in your graveyard have retrace.").
 COSTLESS_GRANTED_KEYWORDS = frozenset({"jump-start", "retrace"})
 
+#: CR 702's keyword names of more than one word ("beam me up"), which the
+#: one-word `[A-Za-z-]+` keyword slot of a granting sentence cannot reach.
+_MULTI_WORD_KEYWORDS = "|".join(
+    re.escape(name) for name in sorted(KEYWORD_ABILITY_NAMES, key=len, reverse=True) if " " in name
+)
+
+#: Scotty, Miracle Worker: "During your main phase, each card in your graveyard
+#: has beam me up." - CR 505.1's main phase as the condition, and "each card"
+#: with no quality at all.
 _GRANTED_KEYWORD_ON_A_CARD_IN_A_ZONE = re.compile(
-    r"^(?P<during>During your turn, )?(?:[Ee]ach (?P<what>[\w' -]+?) card in your "
-    r"(?P<zone>hand|graveyard)(?: that's exactly (?P<ncolors>one|two|three|four|five) colors?)? has"
+    r"^(?P<during>During your (?:turn|main phase), )?(?:[Ee]ach (?:(?P<what>[\w' -]+?) )?card "
+    r"in your (?P<zone>hand|graveyard)"
+    r"(?: that's exactly (?P<ncolors>one|two|three|four|five) colors?)? has"
     r"|(?P<whats>[\w' -]+?) cards in your "
-    r"(?P<zones>hand|graveyard) have) (?P<keyword>[A-Za-z-]+)(?P<cost>[^.]*)\.(?P<tail>.*)$",
+    rf"(?P<zones>hand|graveyard) have) (?P<keyword>(?i:{_MULTI_WORD_KEYWORDS})|[A-Za-z-]+)"
+    r"(?P<cost>[^.]*)\.(?P<tail>.*)$",
     re.DOTALL,
+)
+
+#: The granting permanent's own "Scotty can't be beamed up to cast a spell this
+#: way." after a beam me up grant (CR 702.196b): the name group is checked
+#: against the permanent's own name by `_unbeamable_by_grant`.
+_CANT_BE_BEAMED_UP_THIS_WAY = re.compile(
+    r"\s*(?P<who>[^.]+?) can't be beamed up to cast a spell this way\.", re.IGNORECASE
 )
 
 #: "You may cast `<quality>` spells from your graveyard using their
@@ -502,7 +521,8 @@ def _rezoned_by_using(
 #: card's" for one and "its" for the other, English grammar rather than a
 #: rules difference.
 _COST_IS_THE_CARDS_MANA_COST = re.compile(
-    r"The (?P<keyword>[A-Za-z]+) cost is equal to (?:that card's|its|the card's) mana cost"
+    rf"The (?P<keyword>(?i:{_MULTI_WORD_KEYWORDS})|[A-Za-z]+) cost is equal to "
+    r"(?:that card's|that spell's|its|the card's) mana cost"
     r"(?: plus (?P<extra>exile [a-z]+ other cards? from your graveyard))?\.",
     re.IGNORECASE,
 )
@@ -657,7 +677,7 @@ def granted_cast_options(
                 )
             if option is None:
                 option = _grant_on_a_card_in_a_zone(
-                    text, game, spell, caster, origin_zone, up_face_name, ability.raw
+                    text, game, spell, caster, origin_zone, up_face_name, ability.raw, permanent.id
                 )
             if option is None:
                 option = _once_each_turn_cast_from_graveyard(
@@ -2326,6 +2346,7 @@ def _grant_on_a_card_in_a_zone(
     origin_zone: Zone,
     face: str,
     raw: str,
+    source_id: str | None = None,
 ) -> KeywordCastOption | None:
     """CR 611.3d's shape: "During your turn, each Lesson card in your graveyard
     has flashback {1}."
@@ -2349,11 +2370,17 @@ def _grant_on_a_card_in_a_zone(
         turn = getattr(game, "turn", None)
         if turn is None or turn.active_player != caster:
             return None
+        if "main phase" in match.group("during") and turn.step not in (
+            Step.PRECOMBAT_MAIN,
+            Step.POSTCOMBAT_MAIN,
+        ):
+            # CR 505.1: the main phase, either of them.
+            return None
     if (spell.owner or caster) != caster:
         # "in **your** graveyard/hand": CR 108.3's owner, not whoever is
         # asking about an opponent's card.
         return None
-    if not _spell_matches_grant_filter(spell, match.group("what") or match.group("whats")):
+    if not _spell_matches_grant_filter(spell, match.group("what") or match.group("whats") or ""):
         return None
     if (
         match.group("ncolors")
@@ -2375,12 +2402,27 @@ def _grant_on_a_card_in_a_zone(
     )
     if option is None:
         return None
+    if option.beam_me_up and source_id is not None:
+        unbeamable = _CANT_BE_BEAMED_UP_THIS_WAY.search(match.group("tail") or "")
+        if unbeamable is not None and _names_the_source(unbeamable.group("who"), face):
+            option = option.model_copy(update={"unbeamable_ids": (source_id,)})
     if option.zone is zone:
         return option
     # A granted keyword whose own rule casts from another zone - sneak, from
     # the hand - does nothing where it sits unless a "using their
     # `<keyword>` abilities" permission opens this zone to it.
     return _rezoned_by_using(option, spell, zone, _using_keyword_permissions(game, caster))
+
+
+def _names_the_source(who: str, face: str) -> bool:
+    """Whether a sentence's subject is the granting permanent naming itself
+    (CR 201.5): its full name, its CR 201.5c short name before the comma
+    ("Scotty" for Scotty, Miracle Worker), or "this creature"/"this permanent"."""
+    who = who.strip()
+    return who.lower() in {"this creature", "this permanent"} or who in {
+        face,
+        face.split(",")[0].strip(),
+    }
 
 
 def reads_granted_zone_keyword_line(card: Card, text: str) -> bool:
@@ -2409,8 +2451,16 @@ def reads_granted_zone_keyword_line(card: Card, text: str) -> bool:
         if tail:
             return False
     elif printed is None:
-        cost_tail = _COST_IS_THE_CARDS_MANA_COST.fullmatch(tail)
+        cost_tail = _COST_IS_THE_CARDS_MANA_COST.match(tail)
         if cost_tail is None or cost_tail.group("keyword").lower() != keyword.lower():
+            return False
+        rest = tail[cost_tail.end() :]
+        unbeamable = _CANT_BE_BEAMED_UP_THIS_WAY.fullmatch(rest)
+        if rest.strip() and not (
+            keyword.lower() == "beam me up"
+            and unbeamable is not None
+            and _names_the_source(unbeamable.group("who"), card.name)
+        ):
             return False
         printed = _completed_cost(cost_tail, "{0}")
     elif tail:

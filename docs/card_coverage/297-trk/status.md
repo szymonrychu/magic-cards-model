@@ -17,19 +17,17 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 5.5% |
-| Works (untested) | 187 | 60.1% |
-| Partial (unaudited) | 11 | 3.5% |
-| Not working | 96 | 30.9% |
+| Tested | 29 | 9.3% |
+| Works (untested) | 189 | 60.8% |
+| Partial (unaudited) | 9 | 2.9% |
+| Not working | 84 | 27.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Adversary by Algorithm | silent | Beam me up | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | All Good Things... | silent | I, II, III — Draw two cards, then exile a card from your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Andromedan Automatons | silent | When this creature enters, you may search your library for any number of cards named Andromedan Automatons, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Boarding Action | silent | Beam me up | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Borg Cube | silent | Whenever this Spacecraft enters or attacks, assimilate a creature card exiled with it. If you can't, exile up to one target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Branching Timeline | silent | Strange new worlds — Reveal the top X cards of your library, where X is the number of differently named lands you control. Put all permanent cards revealed this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Brazen Bluff | silent | Choose target noncreature spell an opponent controls. That player may exile it. If they don't, you may cast a noncreature spell from your hand without paying it | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -49,17 +47,14 @@
 | Dominion Supervisor | silent | Creatures you control with counters on them have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dr. Beverly Crusher | silent | Whenever you gain life, put a +1/+1 counter on Dr. Crusher. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Elim Garak, Simple Tailor | silent | Whenever you face a dilemma, each opponent loses 2 life and you gain 2 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Energize | silent | Beam me up | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Ensign Pavel Chekov | silent | Strange new worlds — When Ensign Chekov enters, each opponent exiles the top X cards of their library, where X is the number of differently named lands you cont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Federation Resupply | silent | Beam me up | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Final Frontier | silent | Beam me up | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | First Contact | silent | Mill four cards. You may put a permanent card from among them into your hand. If this spell is the first spell you've cast this game, you gain 2 life. (To mill  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gabriel Lorca, Mirror Menace | silent | Whenever you face a dilemma, you may pay {B}. If you do, return this card from your graveyard to your hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Georgiou, Terran Emperor | silent | At the beginning of your end step, you lose 3 life and draw a card. Then if your life total is 0 or less, create ten 1/1 red Officer creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gul Dukat, Colonial Prefect | silent | At the beginning of each end step, each opponent loses life equal to the life that player lost this turn. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gwyndala, the Progeny | silent | {2}: Each Equipment token you control becomes a copy of target Equipment you control until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | H.M.S. Bounty, Unlikely Timeship | silent | Whenever H.M.S. Bounty deals combat damage to a player, draw a card. If you control a Whale and haven't begun an extra turn this game, take an extra turn after  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Hit It! | silent | When this enchantment enters, reveal the top five cards of your library. Put a land card from among them onto the battlefield tapped and the rest into your grav | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Hit It! | silent | When this enchantment enters, look at the top five cards of your library. Put a land card from among them onto the battlefield tapped and the rest into your gra | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hologram Stalker | silent | Whenever a card leaves your graveyard, create a 3/3 colorless Illusion artifact creature token. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Hoshi Sato, Exolinguist | silent | Federation — When Hoshi Sato enters, look at the top X cards of your library, where X is the number of creature types among non-Borg creatures you control. Put  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | I'm a Doctor, Not a . . . | silent | Put a +1/+1 counter on target creature you control. Untap it. Until end of turn, it gets +1/+1 and becomes a Doctor. (It loses all other creature types.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -71,10 +66,7 @@
 | Melkotian Adjudicator | silent | Whenever you face a dilemma, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Nog, Ambitious Cadet | silent | {1}: If Nog is a Rogue, he becomes a Ferengi Scout with base power and toughness 3/4 and gains "Whenever Nog becomes tapped, surveil 2." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Obsidian Order Operative | silent | Whenever you face a dilemma, each opponent loses 1 life and you gain 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Open Communications | silent | Beam me up | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Pattern Buffer Preservation | silent | Beam me up | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Peace in Our Time | silent | At the beginning of combat on each player's turn, that player may draw a card. If they do, they can't attack this turn and you put a peace counter on this encha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Pure Energy | silent | Beam me up | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Q, Stacking the Deck | silent | When Q enters, shuffle your library, then exile cards from the top of your library until you exile a nonland card. That nonland card gains "Exile a card from yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Replicator | silent | {2}, {T}: Create a tapped token that's a copy of target token you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Saavik, Stoic Student | silent | Federation — When Saavik enters, she deals X damage to target attacking or blocking creature an opponent controls, where X is the number of creature types among | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -92,9 +84,7 @@
 | The Inner Light | silent | II — Choose target creature. Whenever it deals combat damage to a player this turn, you draw that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Measure of a Man | silent | III — Return the exiled card to the battlefield under its owner's control. You gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Wrath of Khan | silent | II — You may exile a card from your hand. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| There's Coffee in that Nebula | silent | Look at the top five cards of your library. You may reveal a Plains card or nonland permanent card with mana value 3 or less from among them and put it into you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Those Old Scientists | silent | III — Choose up to two target cards in graveyards. The owners of those cards shuffle them into their libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Transporter Malfunction | silent | Beam me up | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Vash, Freelance Archaeologist | silent | Whenever a card leaves your graveyard, draw a card. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Vulcan Mind-Meld | silent | Target opponent looks at the top card of your library, then exiles it face down. You look at the top two cards of their library, then exile them face down. For  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Will Riker, First in the Field | silent | At the beginning of combat on your turn, reveal cards from the top of your library until you reveal two land cards. Put those land cards onto the battlefield an | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -106,31 +96,27 @@
 | Dominion Saboteur | notice | You may have this creature enter as a copy of any artifact or creature on the battlefield, except it isn't legendary. If you do, it enters with additional count | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Dr. Leonard "Bones" McCoy | notice | When Dr. McCoy enters, choose one — • Return target non-Doctor permanent card from your graveyard to your hand. • Choose up to one other target creature. When i | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Erica Ortegas, Plucky Pilot | notice | Whenever Erica Ortegas becomes tapped, you may put a land card from your hand onto the battlefield. If you do, return a land you control to its owner's hand at  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Genesis Device | notice | When Genesis Device enters, search your library for a basic land card or Planet card, put it onto the battlefield tapped, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Gowron, Eager for Battle | notice | Sacrifice another creature: Gowron gains trample until end of turn. If you sacrificed a Klingon this way, you draw a card and lose 1 life. | unparsed remainder: If you sacrificed a Klingon this way, you draw a card and lose 1 life. | Y/Y/Y | not_working |
 | Hive Mind Coprocessor | notice | Artifact creatures you control have "Whenever this creature deals combat damage to a player, you may pay 1 life. If you do, draw a card." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Jadzia Dax, Living Legacy | notice | At the beginning of your first main phase, put a +1/+1 counter on Jadzia Dax, then add an amount of {G} equal to the number of counters on her. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kobayashi Maru Scenario | notice | At the beginning of your upkeep, choose one that hasn't been chosen — • Hail — Return up to one target creature an opponent controls with mana value 3 or less t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Lore, Positronic Provocateur | notice | When Lore enters, choose one — • Target creature gets +1/+0 until end of turn and can't be blocked this turn. • Surveil 2. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Miles O'Brien, Transporter Ops | notice | At the beginning of each end step, if a permanent was returned to your hand from the battlefield this turn, draw a card. | unread intervening "if": "a permanent was returned to your hand from the battlefield this turn" - the engine records an InterveningIfNotice and the ability never triggers (CR 603.4) | Y/Y/Y | not_working |
-| Mirror Universe Intrusion | notice | Kicker {4}{U}{B} (You may pay an additional 4 as you cast this spell.) Create a token that's a copy of target creature an opponent controls, except it has menac | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Mirror Universe Intrusion | notice | Kicker {4}{U}{B} (You may pay an additional {4}{U}{B} as you cast this spell.) Create a token that's a copy of target creature an opponent controls, except it h | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Rules of Acquisition | notice | Choose one — • Follow the 3rd Rule — Gain control of target nonland permanent an opponent controls. That opponent draws three cards. • Follow the 98th Rule — Ta | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Shields Up! | notice | Target artifact or creature you control gains hexproof and indestructible until end of turn. If it's a creature, put a +1/+1 counter on it. (It can't be the tar | unparsed remainder: If it's a creature, put a +1/+1 counter on it. | Y/Y/Y | not_working |
 | Sylvia Tilly, Joy of Discovery | notice | At the beginning of combat on your turn, you may pay {1} and exile a card from your graveyard. When you do, put a +1/+1 counter on target creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | The Doctor, EMH | notice | When The Doctor enters, put a +1/+1 counter on target creature. Then put a +1/+1 counter on each creature you control with a counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | V'Ger, the Intruder | notice | Whenever V'Ger enters or attacks, choose one — • Look at target opponent's hand, then draw a card. • Creatures your opponents control get -1/-0 until your next  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Warp Speed | notice | When this enchantment enters, search your library for a basic land card or Planet card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Wesley Crusher, Starfleet Cadet | notice | When Wesley Crusher enters, choose two — • Counter target noncreature spell unless its controller pays {2}. • Return target creature with mana value 2 or less t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Worf, Intelligence Contractor | notice | When Worf enters, for each opponent, gain control of up to one target creature that player controls with mana value 3 or less until end of turn. Untap those cre | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Dr. Joseph M'Benga | unaudited | Other creatures you control with counters on them have hexproof. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Dr. McCoy, Surly Surgeon | unaudited | If another creature you control with a +1/+1 counter on it would be destroyed, instead remove all +1/+1 counters from it and all damage already dealt to it is h | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Kira Nerys, Firebrand | unaudited | If a creature you control would enter while you control an attacking creature, instead it enters tapped and attacking. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Lt. Cmdr. Geordi La Forge | unaudited | If you would put one or more charge counters on an artifact you control, put twice that many charge counters on that artifact instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Marooned | unaudited | Enchanted permanent doesn't untap during its controller's untap step and can't be beamed up. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Overflow Submatrix | unaudited | Once during each of your turns, you may cast an artifact creature spell from your graveyard. If you cast a spell this way, that artifact creature enters with a  | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Quark, Humble Proprietor | unaudited | You can't sacrifice Treasure tokens. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Romulan Bird-of-Prey | unaudited | Cloaking Device — As long as this Spacecraft isn't a creature, it has hexproof. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Scotty, Miracle Worker | unaudited | During your main phase, each card in your graveyard has beam me up. The beam me up cost is equal to that spell's mana cost. Scotty can't be beamed up to cast a  | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | The Holodeck | unaudited | Once during each of your turns, you may play a permanent card you own from outside the game or from your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | The Traveler | unaudited | Strange new worlds — The Traveler's power is equal to the number of differently named lands you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | A Good Day to Die | handled | Target creature gets +2/+0 until end of turn. When that creature dies this turn, you draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -199,6 +185,7 @@
 | Fugitive Listener | handled | When this creature enters, each opponent discards a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gaseous Anomaly | handled | {5}{U}, {T}, Sacrifice this land: Draw two cards. Create a tapped Planet land token named New Planet with "{T}: Add one mana of any color." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | General Chang, Cold Warrior | handled | {1}, Sacrifice a creature: Put a +1/+1 counter on each Klingon you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Genesis Device | handled | When Genesis Device enters, search your library for a basic land card or Planet card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Genesis Effect | handled | Genesis Effect deals 6 damage to target creature. Destroy target land you control. Create a tapped Planet land token named New Planet with "{T}: Add one mana of | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ghost of Illyria | handled | When this creature enters, exile up to one other target nonland permanent you control. Return that card to the battlefield under its owner's control at the begi | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Grand Nagus Zek | handled | Grand Nagus Zek gets +1/+1 for each Treasure you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -315,6 +302,7 @@
 | Vexing Drone | handled | When this creature enters, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vulcan | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Warp Core | handled | When this artifact enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Warp Speed | handled | Lands you control enter untapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Xenobotanist | handled |  |  | Y/Y/Y | not_tested |
 | Xindi Surveyors | handled | Landfall — Whenever a land you control enters, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Year of Hell | handled | I, II, III — Each player draws a card. This Saga deals 2 damage to each player. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -324,24 +312,36 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>29 cards</summary>
 
+- Adversary by Algorithm
 - Blood Crypt
+- Boarding Action
 - Breeding Pool
+- Energize
 - Engineered Explosives
+- Federation Resupply
+- Final Frontier
 - Forest
 - Godless Shrine
 - Hallowed Fountain
 - Island
+- Marooned
 - Mountain
+- Open Communications
 - Overgrown Tomb
+- Pattern Buffer Preservation
 - Plains
+- Pure Energy
 - Reckless Impulse
 - Sacred Foundry
+- Scotty, Miracle Worker
 - Steam Vents
 - Stomping Ground
 - Swamp
 - Temple Garden
+- There's Coffee in that Nebula
+- Transporter Malfunction
 - Watery Grave
 
 </details>
@@ -350,7 +350,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| beam me up | 9 | Adversary by Algorithm, Boarding Action, Energize, Federation Resupply, Final Frontier | trk |
 | Federation | 6 | Captain Jonathan Archer, Hoshi Sato, Exolinguist, Infinite Diversity, Saavik, Stoic Student, Sarek, Federation Ambassador | trk |
 | Strange new worlds | 5 | Branching Timeline, Captain Pike, Fullness of Time, Deep Space Scan, Ensign Pavel Chekov, The Traveler | trk |
 | Landfall | 2 | Captain Michael Burnham, Dal R'El, Augment Orphan | trk |
@@ -376,16 +375,13 @@
 | choose up to two target cards in graveyards. the owners of those cards shuffle them into their libraries. | 1 | Those Old Scientists | trk |
 | creatures you control with counters on them have trample. | 1 | Dominion Supervisor | trk |
 | draw two cards, then exile a card from your hand. | 1 | All Good Things... | trk |
-| during your main phase, each card in your graveyard has beam me up. the beam me up cost is equal to that spell"..."t be beamed up to cast a spell ~. | 1 | Scotty, Miracle Worker | trk |
 | enchanted creature gets -N/-N, can't block, and is a salamander. | 1 | De-evolve | trk |
-| enchanted permanent doesn"..."s untap step and can't be beamed up. | 1 | Marooned | trk |
 | exile target creature or spacecraft. its controller may search their library for a basic land card, reveal it, put it into their hand, then shuffle. | 1 | 70,000 Light-Years from Home | trk |
 | face a dilemma | 1 | The Caretaker | trk |
 | if a creature you control would enter while you control an attacking creature, instead it enters tapped and attacking. | 1 | Kira Nerys, Firebrand | trk |
 | if another creature you control with a +N/+N counter on it would be destroyed, instead remove all +N/+N counters from it and all damage already dealt to it is h | 1 | Dr. McCoy, Surly Surgeon | trk |
 | if you would put one or more charge counters on an artifact you control, put twice that many charge counters on that artifact instead. | 1 | Lt. Cmdr. Geordi La Forge | trk |
-| kicker {M}{M}{M} (you may pay an additional N as you cast ~.) create a token that"..."s a copy of that creature, except it has menace. | 1 | Mirror Universe Intrusion | trk |
-| look at the top five cards of your library. you may reveal a plains card or nonland permanent card with mana value N or less from among them and put it into you | 1 | There's Coffee in that Nebula | trk |
+| kicker {M}{M}{M} (you may pay an additional {M}{M}{M} as you cast ~.) create a token that"..."s a copy of that creature, except it has menace. | 1 | Mirror Universe Intrusion | trk |
 | mill four cards. you may put a permanent card from among them into your hand. if ~ is the first spell you've cast ~, you gain N life. (to mill four cards, put t | 1 | First Contact | trk |
 | once during each of your turns, you may cast an artifact creature spell from your graveyard. if you cast a spell ~, that artifact creature enters with a finalit | 1 | Overflow Submatrix | trk |
 | once during each of your turns, you may play a permanent card you own from outside the game or from your graveyard. | 1 | The Holodeck | trk |
@@ -406,10 +402,8 @@
 | when worf enters, for each opponent, gain control of up to one target creature that player controls with mana value N or less until end of turn. untap those cre | 1 | Worf, Intelligence Contractor | trk |
 | when ~ enters and at the beginning of your upkeep, exile the top four cards of your library. put all permanent cards exiled ~ onto the battlefield. | 1 | Deep Space 9 | trk |
 | when ~ enters, look at target opponent's hand. you may choose a nonland card from it. if you do, that player exiles that card, then draws a card. | 1 | Salt Vampire | trk |
+| when ~ enters, look at the top five cards of your library. put a land card from among them onto the battlefield tapped and the rest into your graveyard. | 1 | Hit It! | trk |
 | when ~ enters, mill three cards. then return a land card from your graveyard to your hand. if you can't, create a treasure token. | 1 | Temporal Conqueror | trk |
-| when ~ enters, reveal the top five cards of your library. put a land card from among them onto the battlefield tapped and the rest into your graveyard. | 1 | Hit It! | trk |
-| when ~ enters, search your library for a basic land card or planet card, put it onto the battlefield tapped, then shuffle. | 1 | Genesis Device | trk |
-| when ~ enters, search your library for a basic land card or planet card, reveal it, put it into your hand, then shuffle. | 1 | Warp Speed | trk |
 | when ~ enters, target opponent may have you draw a card. if they don't, they lose N life and you surveil N. | 1 | Tell Me What You See | trk |
 | when ~ enters, you may search your library for any number of cards named ~, reveal them, put them into your hand, then shuffle. | 1 | Andromedan Automatons | trk |
 | whenever a card leaves your graveyard, create a N/N colorless illusion artifact creature token. ~ triggers only once each turn. | 1 | Hologram Stalker | trk |
@@ -440,15 +434,4 @@
 
 ## Notes
 
-- 2026-11-10, T-110 B0: first measurement, from Scryfall preview text three days before
-  release (2026-11-13); refresh the printings and this file after release (batch B10).
-- Measured tiers for the 294 new cards (17 reprints are already Tested): auto 187 (the
-  support oracle reads every clause; each still needs its own test), simple 63 (template or
-  reader gaps on existing machinery), new primitive 44 (beam me up 12, face a dilemma 9,
-  assimilate and the Federation count 8, one-off engine shapes 15: CR 201.5c honorific short
-  names, "a card leaves your graveyard" trigger, McCoy's destroy replacement, phasing lock,
-  granted ability on an exiled card, extra-turn history, per-ability resolution count,
-  doubled triggers while tapped, enters tapped and attacking, outside-the-game play, face-down
-  exile with play permission).
-- New keywords and actions, CR 2026-11-06: beam me up 702.196, assimilate 701.72, face a
-  dilemma 700.17; Federation and Strange new worlds are ability words (207.2c).
+

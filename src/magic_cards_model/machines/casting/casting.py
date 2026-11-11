@@ -2344,9 +2344,40 @@ class Casting(EngineModel):
             self._note_returned_creature_defender(option)
         if option.returns_tapped_creature:
             self._check_returned_tapped_creature(option)
+        if option.beam_me_up:
+            self._check_beamed_up_creature(option)
         if option.emerge_quality is not None:
             self._reduce_by_emerged_permanent(option)
         return self.step
+
+    def _check_beamed_up_creature(self, option: KeywordCastOption) -> None:
+        """CR 702.196a/b: the creature chosen (CR 601.2b) to return for beam
+        me up must be a creature the caster controls that can be beamed up -
+        checked now, so a wrong choice is refused with its own reason."""
+        assert self.alternative_cost is not None
+        component = next(
+            component
+            for component in self.alternative_cost.components
+            if component.kind is ComponentKind.RETURN_TO_HAND
+        )
+        if not component.cards:
+            raise ValueError(
+                f"{option.keyword} needs a creature {self.caster} controls chosen to return "
+                f"to its owner's hand ({option.rule})"
+            )
+        chosen = component.cards[0]
+        if chosen.zone is not Zone.BATTLEFIELD or not (
+            self.game.characteristics_of(chosen).is_creature
+        ):
+            raise ValueError(
+                f"{chosen.name} is not a creature on the battlefield, so it cannot be "
+                f"returned for {option.keyword} ({option.rule})"
+            )
+        reason = component.why_not(self.game) or beam_refusal(
+            self.game, chosen, option.unbeamable_ids
+        )
+        if reason is not None:
+            raise ValueError(reason)
 
     def _check_returned_tapped_creature(self, option: KeywordCastOption) -> None:
         """CR 702.188a: the creature chosen (CR 601.2b) to return for
@@ -6008,6 +6039,7 @@ from .options import (  # noqa: E402
     _splice_parameter,
     _spliced_rules_text,
     _turn_number,
+    beam_refusal,
     casualty_cost_phrase,
     conditional_alternative_cost_offers,
     keyword_cast_options,

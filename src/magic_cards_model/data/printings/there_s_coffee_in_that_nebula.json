@@ -1,0 +1,123 @@
+{
+  "object": "card",
+  "id": "8dd7e0c6-84f6-4570-af93-4c64e78c2868",
+  "oracle_id": "887614f9-f12f-47bc-ae56-1438cd7cad10",
+  "multiverse_ids": [],
+  "resource_id": "30C951FD1D880FAF6CF8286BD245177C62D9D86B167AC5B88EA25A6030B8821E",
+  "mtgo_id": 158220,
+  "tcgplayer_id": 725430,
+  "cardmarket_id": 918726,
+  "name": "There's Coffee in that Nebula",
+  "lang": "en",
+  "released_at": "2026-11-13",
+  "uri": "https://api.scryfall.com/cards/8dd7e0c6-84f6-4570-af93-4c64e78c2868",
+  "scryfall_uri": "https://scryfall.com/card/trk/40/theres-coffee-in-that-nebula?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-10-22T11:25:31Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/d/8dd7e0c6-84f6-4570-af93-4c64e78c2868.jpg?1792668331",
+    "normal": "https://cards.scryfall.io/normal/front/8/d/8dd7e0c6-84f6-4570-af93-4c64e78c2868.jpg?1792668331",
+    "large": "https://cards.scryfall.io/large/front/8/d/8dd7e0c6-84f6-4570-af93-4c64e78c2868.jpg?1792668331",
+    "png": "https://cards.scryfall.io/png/front/8/d/8dd7e0c6-84f6-4570-af93-4c64e78c2868.png?1792668331",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/d/8dd7e0c6-84f6-4570-af93-4c64e78c2868.jpg?1792668331",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/d/8dd7e0c6-84f6-4570-af93-4c64e78c2868.jpg?1792668331",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/d/8dd7e0c6-84f6-4570-af93-4c64e78c2868.webp?1792668331",
+    "grid": "https://cards.scryfall.io/grid/front/8/d/8dd7e0c6-84f6-4570-af93-4c64e78c2868.webp?1792668331",
+    "display": "https://cards.scryfall.io/display/front/8/d/8dd7e0c6-84f6-4570-af93-4c64e78c2868.webp?1792668331",
+    "art": "https://cards.scryfall.io/art/front/8/d/8dd7e0c6-84f6-4570-af93-4c64e78c2868.webp?1792668331",
+    "crop": "https://cards.scryfall.io/crop/front/8/d/8dd7e0c6-84f6-4570-af93-4c64e78c2868.webp?1792668331",
+    "jpeg": "https://cards.scryfall.io/normal/front/8/d/8dd7e0c6-84f6-4570-af93-4c64e78c2868.jpg?1792668331"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Look at the top five cards of your library. You may reveal a Plains card or nonland permanent card with mana value 3 or less from among them and put it into your hand. Put the rest on the bottom in a random order.\nBeam me up {2}{W} (You may cast this card from your graveyard for {2}{W} if you also return a creature you control to its owner's hand. Then exile this spell.)",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set": "trk",
+  "set_name": "Star Trek",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atrk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/trk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/8dd7e0c6-84f6-4570-af93-4c64e78c2868/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A887614f9-f12f-47bc-ae56-1438cd7cad10&unique=prints",
+  "collector_number": "40",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "d0d814a5-f4bc-4383-afe5-a3f329b68dce"
+  ],
+  "illustration_id": "a8f0d25d-03be-4634-aee0-058848243145",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 30430,
+  "preview": {
+    "source": "MaryCherry",
+    "source_uri": "https://www.instagram.com/p/DexbldLks2P",
+    "previewed_at": "2026-10-21"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThere%2527s%2BCoffee%2Bin%2Bthat%2BNebula",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThere%2527s%2BCoffee%2Bin%2Bthat%2BNebula",
+    "edhrec": "https://edhrec.com/route/?cc=There%27s+Coffee+in+that+Nebula"
+  }
+}

@@ -1327,6 +1327,19 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                 apply=_exile_instead,
             )
         )
+    if record.keyword is not None and record.keyword.lower() == "beam me up":
+        # CR 702.196a's stack half: "If the beam me up cost was paid, exile
+        # this card instead of putting it anywhere else any time it would
+        # leave the stack." Flashback's and harmonize's own clause, read off
+        # the same `record.keyword`.
+        found.append(
+            ApplicableEffect(
+                key=f"{card.id}:beam-me-up",
+                source=card,
+                label="if the beam me up cost was paid, exile this card instead (CR 702.196a)",
+                apply=_exile_instead,
+            )
+        )
     from ..aftermath import exiles_on_leaving_the_stack
 
     if exiles_on_leaving_the_stack(card, record.origin_zone, record.face):
