@@ -39,7 +39,6 @@ card that needed the reader:
   Captain Benjamin Sisko's widened cast-any-number reader.
 """
 
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.conditions.history import DILEMMAS_FACED
 from magic_cards_model.models import Zone
