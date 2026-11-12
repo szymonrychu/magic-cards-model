@@ -38,13 +38,15 @@ Rules verified with `mise run rules:find`:
   702.117a (surge), CR 702.119a (emerge), CR 702.190a (sneak), CR 702.188a
   (web-slinging): alternative costs, recorded as `CastRecord.keyword`.
 - CR 707.10: a copy of a spell isn't cast.
+- CR 601.2i: "... then the spell becomes cast" - the moment a spell's place
+  among its caster's casts this game is fixed.
 """
 
 import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from ...numbers import COUNT, MULTIPLIER, parse_count, parse_multiplier
+from ...numbers import COUNT, MULTIPLIER, ORDINAL, parse_count, parse_multiplier, parse_ordinal
 from . import ConditionReader
 
 if TYPE_CHECKING:
@@ -576,6 +578,20 @@ def _x_compared(context: "ConditionContext", match: re.Match[str]) -> bool:
     return x_value <= needed
 
 
+def _nth_spell_this_game(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "this spell is the first spell you've cast this game" (First Contact)
+    - the spell's own place among its caster's casts this game, fixed as it
+    became cast (CR 601.2i, `CastRecord.cast_number_this_game`), so a spell
+    cast in response before it resolves does not change the answer. A copy
+    (never cast, CR 707.10), an object with no record, and a spell "you" did
+    not cast all answer False."""
+    ordinal = parse_ordinal(match.group("ordinal"))
+    record = _record(context, match.group("subject"))
+    if ordinal is None or record is None or record.cast_number_this_game is None:
+        return False
+    return record.caster == context.controller and record.cast_number_this_game == ordinal
+
+
 # -- the registry ------------------------------------------------------------------
 
 _NEGATED = r"(?P<negated>n't| not)?"
@@ -695,6 +711,11 @@ READERS: tuple[ConditionReader, ...] = (
         _controlled_subtype_as_cast,
     ),
     _reader(r"tribute was(?P<negated>n't| not)? paid", _tribute_paid),
+    _reader(
+        rf"{_SUBJECT} (?:is|was|'s) the (?P<ordinal>{ORDINAL}) spell "
+        r"you(?:'ve| have)? cast this game",
+        _nth_spell_this_game,
+    ),
 )
 
 

@@ -236,11 +236,12 @@ _PUT_FROM_AMONG_LOOKED_AT_RE = re.compile(
 def _merge_look_top_put_onto_battlefield_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
-    """ "Look at the top N cards of your library. [Then you may sacrifice
-    `<restriction>`. If you do, ]`<put>` from among them onto the
+    """ "Look at/Reveal the top N cards of your library. [Then you may
+    sacrifice `<restriction>`. If you do, ]`<put>` from among them onto the
     battlefield. Put the rest on the bottom of your library in any/a random
-    order." - one anaphoric run of three or four clauses: "them"/"those
-    cards" is the looked-at set, "the rest" whatever of it was not put.
+    order | [Put ]the rest into your graveyard." - one anaphoric run of three
+    or four clauses: "them"/"those cards" is the looked-at set, "the rest"
+    whatever of it was not put.
 
     - Aang, at the Crossroads: "You may put a creature card with mana value
       4 or less from among them" - at most one, optional (CR 608.2d).
@@ -253,6 +254,15 @@ def _merge_look_top_put_onto_battlefield_clauses(
       value", the creature's last known mana value, CR 608.2h). Declining
       puts nothing and bottoms all of them.
 
+    - Hit It!: "Put a land card from among them onto the battlefield tapped
+      and the rest into your graveyard." - the rest goes to the graveyard
+      (through `Game.put_into_graveyard`, so a graveyard replacement still
+      applies), split off the put by `_CLAUSE_SEPARATOR`'s "and".
+    - Shigeki, Jukai Visionary: "Reveal the top four cards ... You may put a
+      land card from among them onto the battlefield tapped. Put the rest
+      into your graveyard." - a reveal shows every card first (CR 701.20a;
+      CR 701.20b: it does not move them).
+
     `Game.look_at_top_and_split` does the look (CR 701.20e's knowledge
     included), runs the sacrifice between the look and the choice, and asks
     only about cards the description admits - a card outside it is never a
@@ -260,6 +270,9 @@ def _merge_look_top_put_onto_battlefield_clauses(
     (CR 110.2a), so no "when you cast" trigger fires.
     """
     look_match = _LOOK_AT_TOP_N_CARDS_RE.fullmatch(clauses[index].strip())
+    revealing = look_match is None
+    if look_match is None:
+        look_match = _REVEAL_TOP_N_CARDS_RE.fullmatch(clauses[index].strip())
     if look_match is None:
         return None
     count = parse_count(look_match.group("count"))
@@ -308,12 +321,21 @@ def _merge_look_top_put_onto_battlefield_clauses(
     if description.x_bound != (offset is not None):
         # An X with no definition, or a definition with no X to define.
         return None
-    bottom = _PUT_REST_ON_BOTTOM_ANY_ORDER_RE.fullmatch(clauses[cursor + 1].strip())
-    if bottom is None:
+    rest_text = clauses[cursor + 1].strip()
+    bottom = _PUT_REST_ON_BOTTOM_ANY_ORDER_RE.fullmatch(rest_text)
+    graveyard = _THE_OTHER_INTO_A_DESTINATION_RE.fullmatch(rest_text)
+    to_graveyard = (
+        bottom is None
+        and graveyard is not None
+        and "the rest" in rest_text.lower()
+        and graveyard.group("destination").lower() == "into your graveyard"
+    )
+    if bottom is None and not to_graveyard:
         return None
-    randomised = bottom.group("random") is not None
+    randomised = bottom is not None and bottom.group("random") is not None
     tapped = put.group("tapped") is not None
     consumed = cursor + 2 - index
+    rest_label = "your graveyard" if to_graveyard else "bottom of your library"
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
@@ -341,6 +363,9 @@ def _merge_look_top_put_onto_battlefield_clauses(
             if offset is not None:
                 bound["x"] = offset + sacrificed
 
+        if revealing:
+            for state in player.library[:count]:
+                game.reveal(state, source=source)
         moved, rest = game.look_at_top_and_split(
             player,
             count,
@@ -348,7 +373,7 @@ def _merge_look_top_put_onto_battlefield_clauses(
             source_id=source_id,
             prompt=f"put {put.group('n').lower()} {description.text} onto the battlefield",
             moved_label="the battlefield",
-            kept_label="bottom of your library",
+            kept_label=rest_label,
             rest_in_random_order=randomised,
             moved_amount=quantity.amount,
             moved_exact=exact,
@@ -358,6 +383,10 @@ def _merge_look_top_put_onto_battlefield_clauses(
         with game.entering_together():  # CR 603.6a: one instruction, one event
             for state in moved:
                 game.put_onto_battlefield(state, player.username, tapped=tapped)
+        if to_graveyard:
+            for state in rest:
+                game.put_into_graveyard(state)
+            return
         _put_rest_on_bottom(
             game,
             player,

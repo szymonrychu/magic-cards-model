@@ -1199,6 +1199,13 @@ class Game(
     and emits `ExtraTriggerEvent.EXPEND` for every threshold the cast crossed;
     reset where `spells_cast_this_turn` is."""
 
+    spells_cast_this_game: dict[str, int] = Field(default_factory=dict)
+    """How many spells each player has cast this game, keyed by the caster
+    (CR 601.2i: a spell becomes cast; `put_on_stack` counts it here, a copy
+    never - CR 707.10). Never reset. `put_on_stack` also stamps the running
+    number onto the spell's `CastRecord.cast_number_this_game`, which is what
+    "the first spell you've cast this game" asks of one spell."""
+
     spells_cast_this_turn: dict[str, list[CardState]] = Field(default_factory=dict)
     """Every spell each player has cast this turn, keyed by controller
     (CR 601.2a marks the casting event; `put_on_stack` records it here).
@@ -2010,7 +2017,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 178
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 179
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2460,6 +2467,11 @@ class Game(
     #: counts ("for each <type> card in your graveyard", "card types among
     #: cards in your graveyard", "that player's graveyard") now resolve where
     #: an older dump would have resolved the same text as a no-op.
+    #: 179 (T-136 B3): `Game` gained `spells_cast_this_game` and `CastRecord`
+    #: gained `caster`/`cast_number_this_game` (CR 601.2i, "the first spell
+    #: you've cast this game"); look/reveal-top puts now send "the rest" to
+    #: the graveyard, "exiled this way" puts and "if you can't" fallbacks read,
+    #: so an older dump could resolve the same objects differently.
     #: 178 (T-136 b4): `layers.model.GrantGroup` gained `token` ("Nontoken creatures you
     #: control have ...", CR 111.1), reachable from `Game.continuous_effects` through a group
     #: quoted-ability grant; a decoded game's type-qualified grants ("Artifact creatures you

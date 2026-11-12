@@ -6031,11 +6031,17 @@ def _parse_mill_then_play_that_card(text: str) -> AbilityEffect | None:
 #                             a land card from your graveyard to your hand."
 #                             (a mode; the mill is the *targeted* player's,
 #                             the return is the controller's own)
+#   Temporal Conqueror        "mill three cards. Then return a land card from
+#                             your graveyard to your hand. If you can't, create
+#                             a Treasure token." (the return as its own
+#                             sentence, and `modal.if_you_cant_fallback`'s
+#                             consequence when no card was returned)
 
 _MILL_THEN_RETURN_TO_HAND_RE = re.compile(
-    rf"^(?:(?P<subject>target player|you) )?mills? (?P<n>{COUNT}) cards?, "
+    rf"^(?:(?P<subject>target player|you) )?mills? (?P<n>{COUNT}) cards?(?:,|\.)\s*"
     r"then (?:you )?(?P<may>may )?return (?P<group>.+?) "
-    r"from your graveyard to your hand\.?$",
+    r"from your graveyard to your hand"
+    r"(?:\.\s*if you can'?t,\s*(?P<fallback>[^.]+))?\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -6060,6 +6066,10 @@ def _parse_mill_then_return_to_hand_clause(text: str) -> TargetedClause | None:
 
     "Target player" mills each still-legal target (CR 608.2b); an illegal one
     mills nothing, and the return - which never involved it - still happens.
+
+    "If you can't, `<fallback>`" runs the fallback when no card was returned
+    (CR 101.3's printed consequence); it is read only after a mandatory
+    return, since a declined "may" is not an impossible one.
     """
     match = _MILL_THEN_RETURN_TO_HAND_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
@@ -6072,6 +6082,17 @@ def _parse_mill_then_return_to_hand_clause(text: str) -> TargetedClause | None:
         return None
     targets_a_player = (match.group("subject") or "").lower() == "target player"
     optional = match.group("may") is not None
+    # Both readings up front, picked at resolution by what resolves (a spell
+    # is a `CardState`), as `_mill_then_may_take_from_milled_runner` does: the
+    # same text is a spell, a mode of either, or an ability.
+    fallback_for_spell = fallback_for_ability = None
+    if match.group("fallback") is not None:
+        if optional:
+            return None
+        fallback_for_spell = if_you_cant_fallback(match.group("fallback"), for_spell=True)
+        fallback_for_ability = if_you_cant_fallback(match.group("fallback"), for_spell=False)
+        if fallback_for_spell is None and fallback_for_ability is None:
+            return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
@@ -6088,31 +6109,38 @@ def _parse_mill_then_return_to_hand_clause(text: str) -> TargetedClause | None:
         else:
             _mill(game, controller, count)
         candidates = [state for state in list(controller.graveyard) if predicate(state)]
-        if not candidates:
-            return
-        if optional and not game.may(
-            controller,
-            "return a card from your graveyard to your hand",
-            source=source_name,
-            source_id=source_id,
-        ):
-            return
-        chosen_ids = game.ask(
-            Decision(
-                kind=DecisionKind.CHOOSE_CARDS,
-                player=controller.username,
-                prompt="choose a card to return to your hand",
+        returned = False
+        if candidates and (
+            not optional
+            or game.may(
+                controller,
+                "return a card from your graveyard to your hand",
                 source=source_name,
                 source_id=source_id,
-                amount=1,
-                cards=tuple(state.id for state in candidates),
             )
-        )
-        by_id = {state.id: state for state in candidates}
-        for card_id in chosen_ids:
-            state = by_id.get(card_id)
-            if state is not None and state.zone is Zone.GRAVEYARD:
-                controller.move(state, Zone.HAND)
+        ):
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt="choose a card to return to your hand",
+                    source=source_name,
+                    source_id=source_id,
+                    amount=1,
+                    cards=tuple(state.id for state in candidates),
+                )
+            )
+            by_id = {state.id: state for state in candidates}
+            for card_id in chosen_ids:
+                state = by_id.get(card_id)
+                if state is not None and state.zone is Zone.GRAVEYARD:
+                    controller.move(state, Zone.HAND)
+                    returned = True
+        if not returned:
+            is_spell = isinstance(stack_object, CardState)
+            fallback = fallback_for_spell if is_spell else fallback_for_ability
+            if fallback is not None:
+                fallback(game, stack_object)
 
     return effect
 
@@ -6189,7 +6217,10 @@ _MILL_THEN_MAY_TAKE_FROM_MILLED_RE = re.compile(
     r"(?:from among (?:the milled cards|the cards milled this way|those cards|them)"
     r"|milled this way) "
     r"(?P<dest>into your hand|to your hand|onto the battlefield(?: under your control)?)"
-    r"\.(?:\s*you gain (?P<life>\d+) life\.?)?"
+    # Patient Naturalist's "If you can't, create a Treasure token." -
+    # `modal.if_you_cant_fallback`, run when the mandatory put moved nothing.
+    r"\.(?:\s*if you can'?t,\s*(?P<fallback>[^.]+)\.?)?"
+    r"(?:\s*you gain (?P<life>\d+) life\.?)?"
     # Cache Grab's own rider: "If you control a Squirrel or returned a
     # Squirrel card to your hand this way, create a Food token." - a
     # resolution-time condition (CR 608.2c, checked once the mill and the
@@ -6201,14 +6232,19 @@ _MILL_THEN_MAY_TAKE_FROM_MILLED_RE = re.compile(
     # consequence, read the ordinary way through `parse_mixed_effect[_for_
     # spell]` rather than pinned to Cache Grab's own "create a Food token."
     rf"(?:\s*if you control an? (?P<subtype>[a-z]+) or returned an? (?P=subtype) card"
-    rf"(?: to your hand)? this way, (?P<consequence>.+?)\.?)?$",
+    rf"(?: to your hand)? this way, (?P<consequence>.+?)\.?)?"
+    # Any further sentence (First Contact's "If this spell is the first
+    # spell you've cast this game, you gain 2 life."), read the ordinary way
+    # and run last (CR 608.2c: in the order written). The look-behind keeps
+    # it a whole sentence of its own, never the tail of a lazy group above.
+    r"(?:(?<=\.)\s*(?P<tail>[^.]+)\.?)?$",
     re.IGNORECASE | re.DOTALL,
 )
 
 
 def _mill_then_may_take_from_milled_runner(
     text: str,
-) -> Callable[["Game", Player, str, str | None], None] | None:
+) -> Callable[..., None] | None:
     """Compile `_MILL_THEN_MAY_TAKE_FROM_MILLED_RE`'s shape into one runner
     both the spell side (Rapid Rescue) and the ability side (Vorinclex //
     The Grand Evolution's own chapter I) call.
@@ -6284,6 +6320,22 @@ def _mill_then_may_take_from_milled_runner(
     )
     consequence_for_ability = parse_mixed_effect(consequence_text) if consequence_text else None
     if consequence_text and consequence_for_spell is None and consequence_for_ability is None:
+        return None
+    fallback_text = match.group("fallback")
+    fallback_for_spell = fallback_for_ability = None
+    if fallback_text is not None:
+        if not mandatory:
+            # CR 101.3's "if you can't" follows an instruction that had to
+            # be carried out; a declined "may" is not an impossible one.
+            return None
+        fallback_for_spell = if_you_cant_fallback(fallback_text, for_spell=True)
+        fallback_for_ability = if_you_cant_fallback(fallback_text, for_spell=False)
+        if fallback_for_spell is None and fallback_for_ability is None:
+            return None
+    tail_text = (match.group("tail") or "").strip()
+    tail_for_spell = parse_mixed_effect_for_spell(f"{tail_text}.") if tail_text else None
+    tail_for_ability = parse_mixed_effect(f"{tail_text}.") if tail_text else None
+    if tail_text and tail_for_spell is None and tail_for_ability is None:
         return None
     if take_all:
         take_noun = "all cards"
@@ -6383,6 +6435,7 @@ def _mill_then_may_take_from_milled_runner(
                 chosen = [
                     state for card_id in chosen_ids if (state := by_id.get(card_id)) is not None
                 ]
+        taken = 0
         for state in chosen:
             if state.zone is not Zone.GRAVEYARD:
                 continue
@@ -6392,6 +6445,12 @@ def _mill_then_may_take_from_milled_runner(
                 # CR 110.4a's permanent card, put onto the battlefield
                 # without being cast (no spell, so no cast trigger).
                 game.put_onto_battlefield(state, controller.username)
+            taken += 1
+        is_spell = isinstance(stack_object, CardState)
+        if not taken and fallback_text is not None and stack_object is not None:
+            fallback = fallback_for_spell if is_spell else fallback_for_ability
+            if fallback is not None:
+                fallback(game, stack_object)
         if life:
             game.gain_life(controller, life)
         if condition_subtype and stack_object is not None:
@@ -6421,6 +6480,10 @@ def _mill_then_may_take_from_milled_runner(
                 )
                 if consequence is not None:
                     consequence(game, stack_object)
+        if tail_text and stack_object is not None:
+            tail = tail_for_spell if is_spell else tail_for_ability
+            if tail is not None:
+                tail(game, stack_object)
 
     return run
 
@@ -7170,7 +7233,7 @@ from .dispatch import (  # noqa: E402
 )
 from .draw_discard import _discard_cards  # noqa: E402
 from .mana import _add_mana_in_any_combination, colored_mana_symbols  # noqa: E402
-from .modal import _choose_an_opponent, _choose_one_card  # noqa: E402
+from .modal import _choose_an_opponent, _choose_one_card, if_you_cant_fallback  # noqa: E402
 from .removal import _parse_mass_destroy_predicate  # noqa: E402
 from .returns import _reposition_in_owners_library  # noqa: E402
 from .search import _outside_the_game_card_phrase, _search_quality_is_readable  # noqa: E402

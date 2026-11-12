@@ -4942,7 +4942,9 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 if for_spell
                 else stack_object.source_name  # type: ignore[union-attr]
             )
-            mill_then_take_from_milled_run(game, player, source, source_id_of(stack_object))
+            mill_then_take_from_milled_run(
+                game, player, source, source_id_of(stack_object), stack_object
+            )
 
         return [mill_then_take_from_milled_whole]
     counter_threshold = _parse_counter_threshold_whole_text(text, for_spell=for_spell)

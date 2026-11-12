@@ -360,6 +360,13 @@ class CastRecord(EngineModel):
     `machines/conditions/timing.py`) asks about the cast, not about now.
     `None` for a copy, which was never cast (CR 707.10)."""
     cast_during_turn_of: str | None = None
+    caster: str | None = None
+    """Who cast the spell, and `cast_number_this_game` which of that player's
+    casts this game it was (1 for their first): `Game.spells_cast_this_game`
+    counted on as the spell becomes cast (CR 601.2i), in `Game.put_on_stack`.
+    "If this spell is the first spell you've cast this game" (First Contact)
+    reads both. `None` for a copy, which was never cast (CR 707.10)."""
+    cast_number_this_game: int | None = None
     kicked: int = 0
     """How many times a kicker cost was paid (CR 702.33d), copied from
     `Casting.kicked`."""
