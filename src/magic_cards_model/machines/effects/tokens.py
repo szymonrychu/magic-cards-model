@@ -73,6 +73,7 @@ from ..modes import (
 from ..replacement import (
     CreatedReplacement,
     DrawSkipReplacement,
+    copy_exception_keywords,
     created_replacement_spec,
     strip_reminder_text,
 )
@@ -4207,7 +4208,7 @@ def _read_token_copy_except(
     if keywords_only := _TOKEN_COPY_EXCEPT_KEYWORDS_RE.fullmatch(stripped):
         # CR 707.9a, unquoted: "except it has haste" (Kiki-Jiki, Mirror
         # Breaker; Reflection of Kiki-Jiki; Splinter Twin; Twinflame).
-        keywords = split_and_validate_keywords(keywords_only.group("keywords"))
+        keywords = copy_exception_keywords(keywords_only.group("keywords"))
         if keywords is None:
             return None
         return (", ".join(keywords),), None, None, None
