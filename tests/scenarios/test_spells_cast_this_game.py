@@ -183,3 +183,23 @@ def test_a_copy_of_the_first_spell_was_never_cast_and_gains_no_life() -> None:
     assert scenario.player("alice").life == 22
     assert scenario.player("alice").library == []
     assert scenario.game.spells_cast_this_game == {"alice": 2}
+
+
+def test_the_count_and_the_stamp_survive_a_game_dump_and_reload() -> None:
+    """The ledger is persisted game state: a game dumped while First Contact
+    is on the stack and decoded again keeps both alice's count and the
+    spell's own place in it."""
+    from magic_cards_model.models.game import Game
+
+    scenario = _board(hand=["First Contact"], battlefield=["Forest", "Forest"])
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _cast_first_contact(scenario)
+    spell = scenario.game.stack[-1]
+
+    reloaded = Game.model_validate_json(scenario.game.model_dump_json())
+
+    assert reloaded.spells_cast_this_game == {"alice": 1}
+    record = reloaded.cast_record_of(reloaded.stack[-1])
+    assert record is not None
+    assert reloaded.stack[-1].id == spell.id
+    assert (record.caster, record.cast_number_this_game) == ("alice", 1)
