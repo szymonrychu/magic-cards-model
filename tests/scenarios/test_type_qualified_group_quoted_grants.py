@@ -97,8 +97,8 @@ def test_a_nonartifact_creature_and_an_opponents_artifact_creature_get_nothing()
 
 
 def test_a_noncreature_artifact_is_not_in_the_group():
-    """ "Artifact creatures" needs both types (CR 205.2a lists them separately,
-    an object satisfies the group only with both)."""
+    """'Artifact creatures' needs both card types (CR 205.2a lists them as separate
+    card types), so a Sol Ring is outside the group."""
     scenario = _board(["Antagonist Incorporator", "Sol Ring"])
     ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
     assert BORG_TRIGGER not in _abilities(scenario, ring)
@@ -168,8 +168,8 @@ def test_no_mana_to_pay_makes_no_token():
 
 
 def test_a_blocked_artifact_creature_does_not_trigger():
-    """The trigger is combat damage to a *player* (CR 510.2 assigns it to the
-    blocker instead)."""
+    """The trigger is combat damage to a *player*; the blocker takes the damage
+    here, so nothing triggers."""
     scenario = _board(["Antagonist Incorporator", "Memnite", "Plains"], ["Sliver Construct"])
     memnite = scenario.creature("Memnite", "alice")
     construct = scenario.creature("Sliver Construct", "bob")

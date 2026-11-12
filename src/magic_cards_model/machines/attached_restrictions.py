@@ -267,19 +267,20 @@ _PART_BREAK_RE = re.compile(r",? and |, ")
 
 def _compound_parts(subject: str, predicate: str, *, gated: bool):  # noqa: ANN202
     """The layer builders of every part of an "and"/comma-joined predicate, or
-    None when some part is unread. A predicate a reader takes whole ("has first
-    strike and vigilance") is one part; otherwise it is split at each break
+    None when some part is unread. The predicate is split at each break first
     and both sides read the same way, so "gets -4/-0, can't block, and is a
-    Salamander" is three parts."""
-    whole = _compound_half(subject, predicate, gated=gated)
-    if whole is not None:
-        return [whole]
+    Salamander" is three parts and Marooned's "doesn't untap during its
+    controller's untap step and can't be beamed up" is a layer part and a
+    restriction (read whole, `parse_attached` would take the sentence as a pure
+    restriction and drop the untap lock). A predicate no split reads is one
+    part when a reader takes it whole ("has first strike and vigilance")."""
     for found in _PART_BREAK_RE.finditer(predicate):
         left = _compound_parts(subject, predicate[: found.start()], gated=gated)
         right = _compound_parts(subject, predicate[found.end() :], gated=gated)
         if left is not None and right is not None:
             return left + right
-    return None
+    whole = _compound_half(subject, predicate, gated=gated)
+    return None if whole is None else [whole]
 
 
 def parse_attached_compound_grant(sentence: str):  # noqa: ANN201
