@@ -65,3 +65,8 @@ Source: T-134 decision 454
 Question: "Q8. When B hits a question it cannot settle from code, rules or the decisions file, what should it do?"
 Answer: "Send it to the superleader (who posts it as a decision for you), keep working on other cards, and record your answer in the decisions file"
 Source: T-134 decision 455
+
+### 2026-11-12 - All Good Things share a card type
+Question: All Good Things... chapter IV ("If all cards exiled with this Saga share a card type, you gain 10 life"): how should the engine judge it when fewer than two cards were exiled with the Saga (e.g. empty hand on some chapters)? No rulings exist yet and the CR has no definition of "share a card type".
+Answer: "0 cards: no life; 1 card: true; 2+: true when their card-type sets intersect"
+Source: T-136 decision 464
