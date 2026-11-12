@@ -20,8 +20,11 @@ file:
 
 - **CR 122.1** - counters with the same name are interchangeable, so the
   "kind" is the name.
-- **CR 122.6** - giving a counter is putting one (replacement effects
-  such as Hardened Scales apply), and the ability's controller puts it.
+- **CR 122.6** - "put" counters refers to counters placed on an object on
+  the battlefield, so the counter given is a counter put (replacement
+  effects such as Hardened Scales apply).
+- **CR 109.5** - the instruction's "you" is the ability's controller, who is
+  therefore the putter.
 - **CR 608.2d** - the choice is made as the ability resolves, by its
   controller, and cannot be an illegal option: a kind the target has none of.
 - **CR 608.2b** - a target that went illegal is not affected.

@@ -4728,7 +4728,8 @@ def _parse_self_counter_then_rider(text: str) -> AbilityEffect | None:
 #: counter's kind is its name, so the choice is among the distinct names
 #: already on the target; CR 608.2d: its controller chooses as the ability
 #: resolves, from the kinds the target actually has. The giving is CR 122.6's
-#: putting, so replacement effects (Hardened Scales) apply. The target is a
+#: putting on a battlefield object, so replacement effects (Hardened Scales)
+#: apply, by the ability's controller (CR 109.5). The target is a
 #: permanent and/or a player, whichever the text names - legality is
 #: `machines/targeting.py`'s, read off the same sentence.
 _CHOOSE_A_COUNTER_ADD_ANOTHER_RE = re.compile(
