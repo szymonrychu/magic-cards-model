@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 95 | 30.5% |
+| Tested | 100 | 32.2% |
 | Works (untested) | 186 | 59.8% |
 | Partial (unaudited) | 1 | 0.3% |
-| Not working | 29 | 9.3% |
+| Not working | 24 | 7.7% |
 
 ## Cards needing work
 
@@ -36,12 +36,10 @@
 | De-evolve | silent | Enchanted creature gets -4/-0, can't block, and is a Salamander. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Deep Space 9 | silent | When Deep Space 9 enters and at the beginning of your upkeep, exile the top four cards of your library. Put all permanent cards exiled this way onto the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | First Contact | silent | Mill four cards. You may put a permanent card from among them into your hand. If this spell is the first spell you've cast this game, you gain 2 life. (To mill  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Gwyndala, the Progeny | silent | {2}: Each Equipment token you control becomes a copy of target Equipment you control until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hit It! | silent | When this enchantment enters, look at the top five cards of your library. Put a land card from among them onto the battlefield tapped and the rest into your gra | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | I'm a Doctor, Not a . . . | silent | Put a +1/+1 counter on target creature you control. Untap it. Until end of turn, it gets +1/+1 and becomes a Doctor. (It loses all other creature types.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Jett Reno, Problem Solver | silent | Whenever Jett Reno becomes tapped, surveil 1. If her power is 4 or greater, instead draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Peace in Our Time | silent | At the beginning of combat on each player's turn, that player may draw a card. If they do, they can't attack this turn and you put a peace counter on this encha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Replicator | silent | {2}, {T}: Create a tapped token that's a copy of target token you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Support Mission | silent | Whenever a creature you control enters, put a quest counter on this enchantment. Put a +1/+1 counter on that creature. If this enchantment has five or more ques | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Temporal Conqueror | silent | When this creature enters, mill three cards. Then return a land card from your graveyard to your hand. If you can't, create a Treasure token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Inner Light | silent | II — Choose target creature. Whenever it deals combat damage to a player this turn, you draw that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -50,10 +48,7 @@
 | Those Old Scientists | silent | III — Choose up to two target cards in graveyards. The owners of those cards shuffle them into their libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Will Riker, First in the Field | silent | At the beginning of combat on your turn, reveal cards from the top of your library until you reveal two land cards. Put those land cards onto the battlefield an | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Antagonist Incorporator | notice | Artifact creatures you control have "Whenever this creature deals combat damage to a player, you may pay {1}. If you do, create a 1/1 colorless Borg artifact cr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Dominion Infiltration | notice | Choose X target creatures your opponents control. For each of them, create a token that's a copy of that creature, except it has changeling. Those tokens gain h | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Dominion Saboteur | notice | You may have this creature enter as a copy of any artifact or creature on the battlefield, except it isn't legendary. If you do, it enters with additional count | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Hive Mind Coprocessor | notice | Artifact creatures you control have "Whenever this creature deals combat damage to a player, you may pay 1 life. If you do, draw a card." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Mirror Universe Intrusion | notice | Kicker {4}{U}{B} (You may pay an additional {4}{U}{B} as you cast this spell.) Create a token that's a copy of target creature an opponent controls, except it h | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Salt Vampire | notice | When this creature enters, look at target opponent's hand. You may choose a nonland card from it. If you do, that player exiles that card, then draws a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Overflow Submatrix | unaudited | Once during each of your turns, you may cast an artifact creature spell from your graveyard. If you cast a spell this way, that artifact creature enters with a  | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | A Good Day to Die | handled | Target creature gets +2/+0 until end of turn. When that creature dies this turn, you draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -246,7 +241,7 @@
 ## Fully supported
 
 <details>
-<summary>95 cards</summary>
+<summary>100 cards</summary>
 
 - 70,000 Light-Years from Home
 - Adversary by Algorithm
@@ -264,6 +259,8 @@
 - Culber and Stamets, Star-Crossed
 - Death Is Irrelevant
 - Deep Space Scan
+- Dominion Infiltration
+- Dominion Saboteur
 - Dominion Supervisor
 - Dr. Beverly Crusher
 - Dr. Joseph M'Benga
@@ -283,6 +280,7 @@
 - Godless Shrine
 - Gowron, Eager for Battle
 - Gul Dukat, Colonial Prefect
+- Gwyndala, the Progeny
 - H.M.S. Bounty, Unlikely Timeship
 - Hallowed Fountain
 - Hologram Stalker
@@ -299,6 +297,7 @@
 - Marooned
 - Melkotian Adjudicator
 - Miles O'Brien, Transporter Ops
+- Mirror Universe Intrusion
 - Mountain
 - Nog, Ambitious Cadet
 - Obsidian Order Operative
@@ -310,6 +309,7 @@
 - Q, Stacking the Deck
 - Quark, Humble Proprietor
 - Reckless Impulse
+- Replicator
 - Romulan Bird-of-Prey
 - Rules of Acquisition
 - Saavik, Stoic Student
@@ -354,13 +354,11 @@
 | Landfall | 1 | Dal R'El, Augment Orphan | trk |
 | at the beginning of combat on each player"..."t attack ~ and you put a peace counter on ~. | 1 | Peace in Our Time | trk |
 | at the beginning of combat on your turn, reveal cards from the top of your library until you reveal two land cards. put those land cards onto the battlefield an | 1 | Will Riker, First in the Field | trk |
-| choose N target creatures your opponents control. for each of them, create a token that"..."re every creature type.) | 1 | Dominion Infiltration | trk |
 | choose target creature. whenever it deals combat damage to a player ~, you draw that many cards. | 1 | The Inner Light | trk |
 | choose target noncreature spell an opponent controls. that player may exile it. if they don't, you may cast a noncreature spell from your hand without paying it | 1 | Brazen Bluff | trk |
 | choose up to two target cards in graveyards. the owners of those cards shuffle them into their libraries. | 1 | Those Old Scientists | trk |
 | draw two cards, then exile a card from your hand. | 1 | All Good Things... | trk |
 | enchanted creature gets -N/-N, can't block, and is a salamander. | 1 | De-evolve | trk |
-| kicker {M}{M}{M} (you may pay an additional {M}{M}{M} as you cast ~.) create a token that"..."s a copy of that creature, except it has menace. | 1 | Mirror Universe Intrusion | trk |
 | mill four cards. you may put a permanent card from among them into your hand. if ~ is the first spell you've cast ~, you gain N life. (to mill four cards, put t | 1 | First Contact | trk |
 | once during each of your turns, you may cast an artifact creature spell from your graveyard. if you cast a spell ~, that artifact creature enters with a finalit | 1 | Overflow Submatrix | trk |
 | put a +N/+N counter on target creature you control. untap it. until end of turn, it gets +N/+N and becomes a doctor. (it loses all other creature types.) | 1 | I'm a Doctor, Not a . . . | trk |
@@ -375,10 +373,7 @@
 | whenever a nontoken artifact you control enters, put a quest counter on ~. create a N/N colorless borg artifact creature token. if ~ has six or more quest count | 1 | Conquest Mission | trk |
 | whenever jett reno becomes tapped, surveil N. if her power is N or greater, instead draw a card. | 1 | Jett Reno, Problem Solver | trk |
 | you may exile a card from your hand. if you do, draw a card. | 1 | The Wrath of Khan | trk |
-| you may have ~ enter as a copy of any artifact or creature on the battlefield, except it isn't legendary. if you do, it enters with additional counters on it eq | 1 | Dominion Saboteur | trk |
-| {M}, {M}: create a tapped token that's a copy of target token you control. | 1 | Replicator | trk |
 | {M}: choose a counter on target enchantment you control. put another counter of that kind on it. activate only as a sorcery. | 1 | Dathon, His Heart Open | trk |
-| {M}: each equipment token you control becomes a copy of target equipment you control until end of turn. | 1 | Gwyndala, the Progeny | trk |
 
 ## Notes
 
