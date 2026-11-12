@@ -116,7 +116,7 @@ URL="$(curl -sL https://magic.wizards.com/en/rules \
 test -n "$URL" || { echo "could not find a CR txt link on magic.wizards.com/en/rules" >&2; exit 1; }
 echo "pulling $URL"
 # The href has a literal space in the filename; curl needs it percent-encoded.
-curl -fsSL "${URL// /%20}" -o .rules/MagicCompRules.txt
+curl -fsSL "$(printf '%s' "$URL" | sed 's/ /%20/g')" -o .rules/MagicCompRules.txt
 # UTF-8 BOM and CRLF line endings come with the file. Left as they are so the
 # bytes match what Wizards published; `rules:find` strips the CR for display.
 head -3 .rules/MagicCompRules.txt | tr -d '\\r' | sed -n '3p'

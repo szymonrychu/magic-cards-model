@@ -1444,6 +1444,106 @@ def _parse_opponent_may_have_you_else_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "That player may `<action>`. If they do, `<consequence>`[ and `<consequence>`]."
+#: - CR 118.12's "[A player] may [do something]. If [that player] does, [effect]",
+#: with "that player" the player the trigger's event names (Peace in Our Time:
+#: "At the beginning of combat on each player's turn, that player may draw a
+#: card. If they do, they can't attack this turn and you put a peace counter on
+#: this enchantment."). The consequence is a list of clauses, each with its own
+#: subject: "they `<clause>`" is the chooser, "you `<clause>`" (or a bare
+#: imperative) the ability's controller.
+_THAT_PLAYER_MAY_IF_THEY_DO_RE = re.compile(
+    r"^that player may (?P<action>[^.]+)\.\s*if (?:they|that player) do, "
+    r"(?P<consequence>[^.]+)\.?$",
+    re.IGNORECASE,
+)
+_CONSEQUENCE_SPLIT_RE = re.compile(r"\s+and\s+(?=(?:you|they|that player)\b)", re.IGNORECASE)
+_CONSEQUENCE_SUBJECT_RE = re.compile(
+    r"^(?:(?P<chooser>they|that player)|you)\s+(?P<rest>.+)$", re.IGNORECASE
+)
+
+
+def _consequence_part(part: str) -> Callable[["Game", AbilityOnStack, Player], None] | None:
+    """One consequence of `_THAT_PLAYER_MAY_IF_THEY_DO_RE`, as a step taking the
+    chooser: a "they ..." part runs for the chooser, anything else for the
+    ability's controller."""
+    part = part.strip()
+    subject = _CONSEQUENCE_SUBJECT_RE.fullmatch(part)
+    rest = subject.group("rest").strip() if subject is not None else part
+    for_chooser = subject is not None and subject.group("chooser") is not None
+    if for_chooser:
+        restriction = parse_player_cant_attack_this_turn_clause(f"they {rest}")
+        clause = restriction or parse_clause_effect(rest) or parse_clause_effect(f"you {rest}")
+        if clause is None:
+            return None
+
+        def run_for_chooser(game: "Game", ability: AbilityOnStack, chooser: Player) -> None:
+            clause(game, chooser, ability.source_name, source_id_of(ability))
+
+        return run_for_chooser
+    player_clause = parse_clause_effect(rest) or parse_clause_effect(f"you {rest}")
+    if player_clause is not None:
+
+        def run_for_controller(game: "Game", ability: AbilityOnStack, chooser: Player) -> None:
+            player_clause(
+                game, game.controller_of(ability), ability.source_name, source_id_of(ability)
+            )
+
+        return run_for_controller
+    ability_clause = parse_mixed_effect(f"{rest}.")
+    if ability_clause is None:
+        return None
+
+    def run_ability_clause(game: "Game", ability: AbilityOnStack, chooser: Player) -> None:
+        ability_clause(game, ability)
+
+    return run_ability_clause
+
+
+@ABILITY_TEXT.rung("s8")
+def _parse_that_player_may_if_they_do_clause(effect_text: str) -> AbilityEffect | None:
+    """`_THAT_PLAYER_MAY_IF_THEY_DO_RE`'s shape; see the banner above.
+
+    Ability-only: "that player" is `ability.event.player`, the same referent
+    `_parse_that_player_clause` resolves. The question is asked of that player
+    exactly once and the consequences run whenever the answer is yes, whatever
+    the accepted action actually did (CR 118.12: the clause "checks whether the
+    player chose to pay an optional cost ... regardless of what events actually
+    occurred") - a draw from an empty library still counts as done.
+    """
+    whole = collapsed(_strip_non_effect_preamble(effect_text)).strip()
+    match = _THAT_PLAYER_MAY_IF_THEY_DO_RE.fullmatch(whole)
+    if match is None:
+        return None
+    optional = _parse_you_may_clause(f"you may {match.group('action').strip()}")
+    if optional is None:
+        return None
+    action_text, action, default = optional
+    parts = [
+        _consequence_part(part)
+        for part in _CONSEQUENCE_SPLIT_RE.split(match.group("consequence").strip())
+    ]
+    if not parts or any(part is None for part in parts):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.player is None:
+            return  # no event player for "that player" to name
+        chooser = game.player(event.player)
+        source_id = source_id_of(ability)
+        if not game.may(
+            chooser, action_text, source=ability.source_name, source_id=source_id, default=default
+        ):
+            return
+        action(game, chooser, ability.source_name, source_id)
+        for part in parts:
+            assert part is not None
+            part(game, ability, chooser)
+
+    return effect
+
+
 def _optional_targeted_clause(
     inner: TargetedClause, prompt: str, *, for_spell: bool
 ) -> TargetedClause:
@@ -5382,6 +5482,73 @@ def _parse_condition_instead_clause_for_ability(effect_text: str) -> AbilityEffe
     return effect
 
 
+#: A sentence that is only the "if" half of `_CONDITION_INSTEAD_RE`'s shape,
+#: with its "instead" at either end: Conquest Mission's "If this enchantment has
+#: six or more quest counters on it, create two of those tokens instead." and
+#: Support Mission's "If this enchantment has five or more quest counters on it,
+#: instead put two +1/+1 counters on that creature."
+_INSTEAD_HALF_SENTENCE_RE = re.compile(
+    r"^(?:[a-z][a-z' ]*?\s+[\u2014-]\s+)?if [^,]+, (?:instead .+|.+ instead)\.?$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_instead_pair_after_leading_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """Every sentence of `text`, each "`<base>`. If `<condition>`, `<alt>`
+    instead." pair of adjacent sentences read whole by the one-base-sentence
+    readers (`_parse_condition_instead_clause` for a spell,
+    `_parse_condition_instead_clause_for_ability` otherwise), the rest one by
+    one through the ordinary pipeline; `None` when no sentence is an
+    "instead" half preceded by a base, when there is nothing before that base
+    (the whole-text readers already own a two-sentence pair), or when any
+    sentence fails to read (CR 608.2c: no half-run instruction).
+
+    Conquest Mission: "Whenever a nontoken artifact you control enters, put a
+    quest counter on this enchantment. Create a 1/1 colorless Borg artifact
+    creature token. If this enchantment has six or more quest counters on it,
+    create two of those tokens instead." The leading counter sentence runs
+    first, so the condition is asked after the counter went on (CR 614.1a: the
+    alternative replaces the base instruction, here the token, whole).
+    """
+    if "instead" not in text.lower():
+        return None
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
+    if len(sentences) < 3:
+        return None
+    pair_reader = (
+        _parse_condition_instead_clause
+        if for_spell
+        else _parse_condition_instead_clause_for_ability
+    )
+    effects: list[TargetedClause] = []
+    paired = False
+    index = 0
+    while index < len(sentences):
+        sentence = sentences[index].strip()
+        following = sentences[index + 1].strip() if index + 1 < len(sentences) else None
+        if (
+            index > 0
+            and following is not None
+            and _INSTEAD_HALF_SENTENCE_RE.fullmatch(following)
+            and not _INSTEAD_HALF_SENTENCE_RE.fullmatch(sentence)
+        ):
+            effect = pair_reader(f"{sentence} {following}")
+            if effect is None:
+                return None
+            effects.append(effect)
+            paired = True
+            index += 2
+            continue
+        rest = _parse_mixed_clauses(sentence, for_spell=for_spell)
+        if rest is None:
+            return None
+        effects.extend(rest)
+        index += 1
+    return effects if paired else None
+
+
 #: "Separate all `<quality>` target player controls into two piles.
 #: `<consequence>` all `<quality>` in the pile of that player's choice." -
 #: CR 700.3's pile primitive, read whole across both sentences the way
@@ -7028,6 +7195,7 @@ from .continuous import (  # noqa: E402
     _parse_mass_gain_control_untap_clause,
     continuous_effects,
     layer_context_for,
+    parse_player_cant_attack_this_turn_clause,
     until_eot_gain_control_and_grant_text,  # noqa: E402
 )
 from .control_copy import _parse_if_control_colored_permanent_damage_clause  # noqa: E402

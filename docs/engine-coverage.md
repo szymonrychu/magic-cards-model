@@ -8713,7 +8713,7 @@ Schema: `Game.CURRENT_SCHEMA_VERSION` 169 -> 170 (`PlayPermission.harmonize`, th
 | "Target opponent may have you `<action>`. If they don't, `<otherwise>`." - the opponent answers the may (CR 608.2d), "they" is that target | `modal._parse_opponent_may_have_you_else_clause` (after Combustible Gearhulk's own reader) | Tell Me What You See | Terrapact Intimidator | same |
 | "You may cast any number of spells with mana value less than or equal to `<count>` from among those cards without paying their mana costs." - the bound read at resolution (CR 608.2h), "those cards" the same pile as "them" | `merges._CAST_ANY_NUMBER_FROM_AMONG_THEM_FREE_RE` widened | Captain Benjamin Sisko | Etali, Primal Storm | same |
 
-Not modelled yet: Jett Reno, Problem Solver's "If her power is 4 or greater, instead draw a card." - pronoun self-reference is T-110 B4's reader; the two tap-trigger tests are strict xfail until B2 rebases on B4.
+Jett Reno, Problem Solver's "If her power is 4 or greater, instead draw a card." is read since T-136 b1 (see the next section).
 
 ## T-136 b4: layer static grants (CR 613) and the readers its trk cards needed
 
@@ -8724,3 +8724,13 @@ Not modelled yet: Jett Reno, Problem Solver's "If her power is 4 or greater, ins
 | "<target> gets +N/+N and becomes a <creature type> until end of turn" / "... and loses all creature types": the pump (sublayer 7c) and the type change (layer 4) are two readers of the one resolution, sharing its timestamp, one duration | 613.4c, 613.1d, 205.1a, 611.2a, 611.2c, 613.7b, 514.2, 704.5f | `layers/parse._parse_pump_and_type_change` (last rung of `_parse_layer_sentence_ungated`) | I'm a Doctor, Not a . . . (proof: Nameless Inversion) | `scenarios/test_pump_and_become_creature_type.py` |
 
 Schema: `Game.CURRENT_SCHEMA_VERSION` 177 -> 178 (`GrantGroup.token`).
+
+## T-136 b1: conditional instead and player choices (trk)
+
+| Mechanic | Reader | Card that exposed it | Proof printing | Test |
+|---|---|---|---|---|
+| "`<leading sentence>`. `<base>`. If `<condition>`, `<alternative>` instead." (or "instead `<alternative>`") - each base and its "instead" half read as a pair (CR 614.1a), the other sentences in written order (CR 608.2c) | `modal._parse_instead_pair_after_leading_clauses` (MIXED_CLAUSES) | Conquest Mission, Support Mission | each other (different base and "instead" position); no non-trk printing exists | `test_instead_after_a_leading_clause.py` |
+| A legend's possessive "his"/"her" before power, toughness, mana value, loyalty, controller or owner is the card itself (CR 700.7) | `abilities._LEGENDARY_SELF_POSSESSIVE_RE` in `legendary_self_pronoun_normalized` | Jett Reno, Problem Solver | Viv Vision, Teen Synthezoid (regression) | `test_legend_possessive_pronoun_in_condition.py` |
+| "Choose up to N target cards in graveyards. The owners of those cards shuffle them into their libraries." - each owner who received a card shuffles (CR 108.3, 701.24a) | `merges._merge_choose_targets_then_owners_shuffle_them_clauses` | Those Old Scientists | Turn the Earth | `test_owners_shuffle_those_cards.py` |
+| "Choose target `<X>`. That player may exile it. If they don't, `<otherwise>`." - the target's controller answers (CR 608.2d), `<otherwise>` runs for the resolving object's controller | `merges._merge_choose_target_then_controller_may_exile_it_else_clauses` | Brazen Bluff | none exists; board varied | `test_controller_may_exile_it_else_free_cast.py` |
+| "That player may `<action>`. If they do, they `<...>` and you `<...>`." (CR 118.12) and "they can't attack this turn" as a player-wide restriction (CR 508.1c, `Game.players_cant_attack_turns`, schema 179) | `modal._parse_that_player_may_if_they_do_clause`, `continuous.parse_player_cant_attack_this_turn_clause`, `combat.attack_refusal` | Peace in Our Time | none exists; board varied | `test_that_player_may_draw_cant_attack.py` |

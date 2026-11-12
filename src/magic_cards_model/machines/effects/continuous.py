@@ -3740,6 +3740,32 @@ def _parse_target_player_cant_cast_kicked_attack_clause(effect_text: str) -> Eff
     return effect
 
 
+#: "`<they|that player>` can't attack this turn." - a player-wide CR 508.1c
+#: restriction ("effects that say a creature can't attack"): none of that
+#: player's creatures may be declared as an attacker for the rest of the turn.
+#: Peace in Our Time's "If they do, they can't attack this turn". Recorded as
+#: `Game.players_cant_attack_turns[username] = turns_taken`, the same "this
+#: turn" comparison `creatures_cant_attack_until_turns_taken` makes for the
+#: blanket restriction on every creature; `combat.attack_refusal` reads it.
+_PLAYER_CANT_ATTACK_THIS_TURN_RE = re.compile(
+    r"^(?:they|that player) can'?t attack this turn\.?$", re.IGNORECASE
+)
+
+
+def parse_player_cant_attack_this_turn_clause(clause: str) -> ClauseEffect | None:
+    """`_PLAYER_CANT_ATTACK_THIS_TURN_RE`'s shape as a player clause - the
+    player it is run for is the one who can't attack. `None` for any other
+    text."""
+    if _PLAYER_CANT_ATTACK_THIS_TURN_RE.fullmatch(collapsed(clause.strip())) is None:
+        return None
+
+    def effect(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+        if game.turn is not None:
+            game.players_cant_attack_turns[player.username] = int(game.turn.turns_taken)
+
+    return effect
+
+
 #: "Flashback" (the spell, not the keyword): "Target instant or sorcery card
 #: in your graveyard gains flashback until end of turn. The flashback cost
 #: is equal to its mana cost." CR 702.34a's keyword is two static abilities
