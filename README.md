@@ -4,6 +4,10 @@ A Magic: the Gathering rules engine, built on pydantic. See
 [docs/engine-coverage.md](docs/engine-coverage.md) for what is modelled so far
 and what is not.
 
+Automation (daily sync of metagame, decklists and new sets; card implementor): see
+[docs/automation/](docs/automation/user-decisions.md) and the skills
+`.claude/skills/play-magic-daily-sync` and `.claude/skills/play-magic-card-implementor`.
+
 ## Setup
 
 ```sh
