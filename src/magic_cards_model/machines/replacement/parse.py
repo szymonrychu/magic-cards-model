@@ -172,6 +172,37 @@ _COPY_EXCEPT_ENTERS_WITH_COUNTERS = re.compile(
     re.IGNORECASE,
 )
 
+#: The same additional effect with its own gate, one per part (Spark Double):
+#: "it enters with an additional +1/+1 counter on it if it's a creature" (CR
+#: 707.9e's additional effect, CR 707.9f's "only if the copy is or has certain
+#: characteristics").
+_COPY_EXCEPT_GATED_COUNTERS = re.compile(
+    rf"^(?:he|she|it|they) enters? with (?P<n>{COUNT}) additional "
+    r"(?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?:him|her|it|them) "
+    r"if (?:he|she|it|they)(?:['\u2019]s| is|['\u2019]re| are) an? "
+    r"(?P<type>artifact|creature|enchantment|land|planeswalker)$",
+    re.IGNORECASE,
+)
+
+#: "it isn't legendary" - the exception that takes a supertype away.
+_COPY_EXCEPT_NOT_LEGENDARY = re.compile(
+    r"^(?:he|she|it|they)"
+    r"(?: isn['\u2019]t| is not|['\u2019]s not| aren['\u2019]t| are not) legendary$",
+    re.IGNORECASE,
+)
+
+#: The sentence after an "enter as a copy" one that carries the copied
+#: permanent's counters over: "If you do, it enters with additional counters
+#: on it equal to the same number and kinds of counters the copied permanent
+#: has on it." (Dominion Saboteur). Folded into the copy's `CopyException`
+#: (`copies_counters`) instead of being read as a bare `ENTERS_WITH`.
+_COPIED_COUNTERS_SENTENCE = re.compile(
+    r"^(?:if you do,\s*)?(?:he|she|it|they) enters? with additional counters on "
+    r"(?:him|her|it|them) equal to the same number and kinds of counters the copied "
+    r"(?:permanent|creature|artifact|object) has on (?:him|her|it|them)\.?$",
+    re.IGNORECASE,
+)
+
 _SUPERTYPE_WORDS = {"legendary": Supertype.LEGENDARY, "snow": Supertype.SNOW}
 
 #: A copy exception's own colour word ("black", "blue", ...) - kept local
@@ -222,6 +253,8 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
     if_type: Type | None = None
     if_type_abilities: list[str] = []
     enters_with_counters: list[tuple[str, int]] = []
+    if_type_counters: list[tuple[Type, str, int]] = []
+    not_legendary = False
 
     clause = clause.strip()
     if gated := _COPY_EXCEPT_IF_TYPE.match(clause):
@@ -251,6 +284,17 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
             return None
 
     for part in _split_exception_parts(clause.strip()):
+        if _COPY_EXCEPT_NOT_LEGENDARY.match(part):
+            not_legendary = True
+            continue
+        if match := _COPY_EXCEPT_GATED_COUNTERS.match(part):
+            amount = parse_count(match.group("n"))
+            if amount is None:
+                return None
+            if_type_counters.append(
+                (_CARD_TYPE_WORDS[match.group("type").lower()], match.group("kind").lower(), amount)
+            )
+            continue
         if match := _COPY_EXCEPT_NAME.match(part):
             name = match.group("name").strip()
             continue
@@ -300,6 +344,8 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
         and not added_colors
         and not if_type_abilities
         and not enters_with_counters
+        and not if_type_counters
+        and not not_legendary
     ):
         return None
     return CopyException(
@@ -314,6 +360,8 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
         if_type=if_type,
         if_type_abilities=tuple(if_type_abilities),
         enters_with_counters=tuple(enters_with_counters),
+        not_legendary=not_legendary,
+        if_type_counters=tuple(if_type_counters),
     )
 
 
@@ -364,9 +412,6 @@ def _granted_abilities(what: str) -> list[str] | None:
     Thousand Faces' "it has Sakashima's other abilities" - is `None`, which
     fails the whole tail closed.
     """
-    # Imported here: `machines/layers.py` imports this module.
-    from ..layers import split_and_validate_keywords
-
     what = what.strip().rstrip(".").strip()
     if what.startswith('"'):
         quoted = [match.group("ability").strip() for match in _QUOTED_ABILITY.finditer(what)]
@@ -374,14 +419,7 @@ def _granted_abilities(what: str) -> list[str] | None:
         if not quoted or re.sub(r"[\s,]|\band\b", "", leftover):
             return None
         return quoted
-    if what.lower() in _COPY_EXCEPTION_CDA_KEYWORDS:
-        # Omni-Changeling's "except it has changeling": CR 702.73a's
-        # characteristic-defining ability, gained as a copiable value (CR
-        # 707.9a) - so it defines the copy's creature types in layer 4 the
-        # way a printed changeling does (`machines/layers._changeling_
-        # effects` reads it off the board as layer 1 left it).
-        return [what.capitalize()]
-    return split_and_validate_keywords(what)
+    return copy_exception_keywords(what)
 
 
 #: Keywords a copy exception may grant that are not combat keywords and so
@@ -389,6 +427,44 @@ def _granted_abilities(what: str) -> list[str] | None:
 #: changeling, a characteristic-defining ability that only means something as
 #: a copiable value (CR 604.3a: one granted by a later effect is no CDA).
 _COPY_EXCEPTION_CDA_KEYWORDS = frozenset({"changeling"})
+
+_COPY_EXCEPTION_CDA_WORD = re.compile(
+    r"\b(?:" + "|".join(sorted(_COPY_EXCEPTION_CDA_KEYWORDS)) + r")\b", re.IGNORECASE
+)
+#: The list separators left dangling at either end of a keyword run once a
+#: characteristic-defining keyword is cut out of the middle of the list.
+_COPY_EXCEPTION_LIST_EDGE = re.compile(r"^(?:\s|,|\band\b)+|(?:\s|,|\band\b)+$", re.IGNORECASE)
+
+
+def copy_exception_keywords(what: str) -> list[str] | None:
+    """The keywords a copy exception's "it has `<keywords>`" grants (CR 707.9a),
+    each capitalised, or `None` when any item is not one.
+
+    A copy exception's keyword list is the layer 6 whitelist
+    (`split_and_validate_keywords`) plus `_COPY_EXCEPTION_CDA_KEYWORDS`:
+    Omni-Changeling's and Dominion Infiltration's "except it has changeling"
+    is CR 702.73a's characteristic-defining ability gained as a copiable
+    value - so it defines the copy's creature types in layer 4 the way a
+    printed changeling does (`machines/layers._changeling_effects` reads it
+    off the board as layer 1 left it) - alone or in a list ("it has menace
+    and changeling"). Shared by the enter-as-copy, become-a-copy and
+    token-copy exception readers so none of them refuses what another reads.
+    """
+    # Imported here: `machines/layers.py` imports this module.
+    from ..layers import split_and_validate_keywords
+
+    text = what.strip().rstrip(".").strip()
+    pieces = _COPY_EXCEPTION_CDA_WORD.split(text)
+    if len(pieces) == 1:
+        return split_and_validate_keywords(text)
+    found = [word.capitalize() for word in _COPY_EXCEPTION_CDA_WORD.findall(text)]
+    rest = ", ".join(
+        cleaned for piece in pieces if (cleaned := _COPY_EXCEPTION_LIST_EDGE.sub("", piece))
+    )
+    keywords = split_and_validate_keywords(rest) if rest else []
+    if keywords is None:
+        return None
+    return [*keywords, *dict.fromkeys(found)]
 
 
 # CR 614.1e.
@@ -518,6 +594,22 @@ def _parse_oracle_text(
             # CR 603.12's reflexive ability is linked to the sentence in front
             # of it and has no existence apart from it, so it is carried on
             # that sentence's effect rather than parsed as one of its own.
+            if (
+                _COPIED_COUNTERS_SENTENCE.match(sentence)
+                and effects
+                and effects[-1].kind is ReplacementKind.ENTERS_AS_COPY
+                and effects[-1].raw == paragraph
+                and effects[-1].copy_exception is not None
+            ):
+                # CR 707.9e's additional effect, printed as its own sentence.
+                effects[-1] = effects[-1].model_copy(
+                    update={
+                        "copy_exception": effects[-1].copy_exception.model_copy(
+                            update={"copies_counters": True}
+                        )
+                    }
+                )
+                continue
             following = sentences[index + 1] if index + 1 < len(sentences) else None
             linked = following if following and _REFLEXIVE_OPENER.match(following) else None
             for effect in _parse_sentence(sentence, names):

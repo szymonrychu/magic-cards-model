@@ -2725,6 +2725,42 @@ def _parse_choose_target_then_create_token_copies_pair(text: str) -> Effect | No
     return effect
 
 
+#: "Choose target `<phrase>`. Each [other] `<group>` becomes a copy of
+#: `<it|that noun>`[ until end of turn]." - Masterful Replication's second
+#: mode: "Choose target artifact you control. Each other artifact you control
+#: becomes a copy of that artifact until end of turn." The pronoun is CR 607.1
+#: anaphora back to the first sentence's own chosen target, exactly as in
+#: `_CHOOSE_TARGET_THEN_CREATE_TOKEN_COPIES_RE` above, so the second sentence is
+#: read as the targeted "each ... becomes a copy of target ..." clause
+#: (`copy_effects._parse_each_becomes_a_copy_clause`) with that sentence's own
+#: "target" phrase standing in for the pronoun: the one target the spell
+#: announced is the object copied, and "other" skips it.
+_CHOOSE_TARGET_THEN_EACH_BECOMES_A_COPY_RE = re.compile(
+    r"^choose (?P<phrase>target [^.]+?)\.\s*"
+    r"(?P<head>each [^.]+? becomes a copy of) (?:it|that [a-z]+)"
+    r"(?P<trail> until end of turn| until your next turn)?\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_choose_target_then_each_becomes_a_copy_pair(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """`_CHOOSE_TARGET_THEN_EACH_BECOMES_A_COPY_RE`'s shape - Masterful
+    Replication's mode. A mixed-clauses rung rather than a spell-text one, so a
+    modal spell's chosen mode (`parse_mode_effect`) reaches it too."""
+    from ..copy_effects import _parse_each_becomes_a_copy_clause
+
+    match = _CHOOSE_TARGET_THEN_EACH_BECOMES_A_COPY_RE.fullmatch(collapsed(text.strip()))
+    if match is None or not _targets_understood(match.group("phrase")):
+        return None
+    clause = _parse_each_becomes_a_copy_clause(
+        f"{match.group('head')} {match.group('phrase')}{match.group('trail') or ''}"
+    )
+    return None if clause is None else [clause]  # type: ignore[list-item]
+
+
 #: "<instruction>. If you have the city's blessing, <instruction> instead." -
 #: Secrets of the Golden City's "Draw two cards. If you have the city's
 #: blessing, draw three cards instead." The city's blessing (CR 702.131c) is a
@@ -5192,6 +5228,13 @@ _ABILITY_THOSE_TOKENS_ALTERNATIVE_RE = re.compile(
 _ABILITY_BASE_TOKEN_RE = re.compile(
     rf"^create (?P<count>{COUNT}) (?P<desc>.+?) tokens?(?P<tail>\b.*)$", re.IGNORECASE
 )
+#: ... and a base that makes one copy ("Create a token that's a copy of target
+#: creature[, except it has menace]" - Rite of Replication, Mirror Universe
+#: Intrusion): "N of those tokens" is N copies of the same object, so the base's
+#: own "a copy of `<what>`" tail is carried over whole, exception included.
+_ABILITY_BASE_TOKEN_COPY_RE = re.compile(
+    r"^create (?:a|one) token that['\u2019]?s a copy of (?P<copied>.+)$", re.IGNORECASE
+)
 
 
 def _ability_instead_alternative_text(base: str, alternative: str) -> str | None:
@@ -5207,6 +5250,10 @@ def _ability_instead_alternative_text(base: str, alternative: str) -> str | None
         found = amounts[0]
         return f"{base[: found.start('n')]}{elided.group('m')}{base[found.end('n') :]}"
     if those := _ABILITY_THOSE_TOKENS_ALTERNATIVE_RE.fullmatch(alternative):
+        if copy := _ABILITY_BASE_TOKEN_COPY_RE.fullmatch(base.strip()):
+            return collapsed(
+                f"create {those.group('count')} tokens that are copies of {copy.group('copied')}"
+            ) + (those.group("where") or "")
         token = _ABILITY_BASE_TOKEN_RE.fullmatch(base.strip())
         if token is None:
             return None

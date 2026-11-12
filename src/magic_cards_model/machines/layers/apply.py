@@ -149,6 +149,22 @@ def compute_board(
     return ComputedBoard(characteristics=board, journal=journal)
 
 
+def _copied_values(
+    permanent: CardState, copies: Sequence[ContinuousEffect]
+) -> Characteristics | None:
+    """`permanent`'s copiable values when a stored "becomes a copy" effect
+    (CR 707.4) makes it a different object, else `None`: the static abilities
+    it contributes are the copy's (CR 707.2, CR 604.2), which the battlefield
+    sweep cannot read off the printing."""
+    if not copies:
+        return None
+    printed = printed_characteristics(permanent, {})
+    values = copiable_characteristics(permanent, copies)
+    if values.name == printed.name and values.abilities == printed.abilities:
+        return None
+    return values
+
+
 def copiable_characteristics(
     state: CardState, effects: Iterable[ContinuousEffect] = ()
 ) -> Characteristics:
@@ -1415,6 +1431,11 @@ class ContinuousEffects(EngineModel):
         # one - a turn late, and never at all once the grant itself expires
         # within the same computation that first sees it.
         _sync_stored_grant_ability_texts([*permanents, *emblems], stored)
+        copies = [
+            effect
+            for effect in stored
+            if effect.layer is Layer.COPY and effect.modification.kind == "become_a_copy"
+        ]
         effects: list[ContinuousEffect] = []
         for permanent in [*permanents, *emblems]:
             effects.extend(
@@ -1425,6 +1446,7 @@ class ContinuousEffects(EngineModel):
                     shared,
                     self.layer_notices,
                     static_only=True,
+                    copied=_copied_values(permanent, copies),
                 )
             )
         return effects + stored + self.keyword_counter_grants(permanents)

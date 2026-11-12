@@ -3988,6 +3988,22 @@ _KICKED_INSTEAD_IMPERATIVE_TARGETS_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "`<instruction naming a target>`. If this spell was kicked, instead
+#: `<instruction naming a target>`." in any other word order - Mirror Universe
+#: Intrusion's "Create a token that's a copy of target creature an opponent
+#: controls, ... If this spell was kicked, instead for each creature target
+#: opponent controls, create a token ...". Neither half starts with a verb
+#: followed by its target, so the two forms above miss it, and the cast would
+#: announce both targets at once; the kicked sentence replaces the unkicked one
+#: whole (CR 614.1a), so only one of them is ever chosen for (CR 601.2c). Each
+#: half is handed on as its own sentence, which `profile_for_text` reads for
+#: its own "target" words.
+_KICKED_INSTEAD_ANY_TARGETS_RE = re.compile(
+    r"^(?:kicker [^\n]*\n)?(?P<base>[^.\n]*\btarget\b[^.\n]*)\.\s*"
+    r"if this spell was kicked, instead (?P<kicked>[^.\n]*\btarget\b[^.\n]*)\.?\s*$",
+    re.IGNORECASE,
+)
+
 
 #: "Choose any target, then choose another target for each time this spell was
 #: kicked." (Comet Storm) and "Choose target creature, then choose another
@@ -4027,9 +4043,12 @@ def kicked_instead_target_text(text: str) -> tuple[str, str] | None:
     match = _KICKED_INSTEAD_TARGETS_RE.search(
         text.strip()
     ) or _KICKED_INSTEAD_IMPERATIVE_TARGETS_RE.search(text.strip())
+    if match is not None:
+        return f"choose {match.group('base')}.", f"choose {match.group('kicked')}."
+    match = _KICKED_INSTEAD_ANY_TARGETS_RE.search(text.strip())
     if match is None:
         return None
-    return f"choose {match.group('base')}.", f"choose {match.group('kicked')}."
+    return f"{match.group('base')}.", f"{match.group('kicked')}."
 
 
 #: "You can't choose an untapped creature as this spell's target as you cast

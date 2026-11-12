@@ -561,6 +561,7 @@ def effects_for(
     *,
     static_only: bool = False,
     ability_text: str | None = None,
+    copied: Characteristics | None = None,
 ) -> list[ContinuousEffect]:
     """The continuous effects one card generates, or none if it is not registered
     and its own oracle text is not one of `parsed_layer_effects`'s shapes either.
@@ -615,12 +616,23 @@ def effects_for(
     it, and a card whose own text carries the ability reaches the same builder
     either way (the ability text is a subset of that text). The only new
     outcome is the granted one.
+
+    `copied` is the permanent's copiable values when a stored copy effect
+    ("becomes a copy of ... until end of turn", CR 707.4) is making it a
+    different object: its static abilities are the copied text's, not the
+    printing's (CR 707.2: the copy acquires the abilities of the object it
+    copies, CR 604.2: a static ability works while its permanent has it), and
+    the row, the self-reference and the legend check go by the copied name and
+    supertypes. `None` - an object no such effect touches - reads the printing.
     """
-    legendary = Supertype.LEGENDARY in source.card.supertypes
-    builder = LAYER_EFFECTS.get(source.name)
+    name = source.name if copied is None else copied.name
+    legendary = Supertype.LEGENDARY in (
+        source.card.supertypes if copied is None else copied.supertypes
+    )
+    builder = LAYER_EFFECTS.get(name)
     if builder is None and ability_text:
         builder = parsed_layer_effects(
-            ability_text, static_only=static_only, card_name=source.name, legendary=legendary
+            ability_text, static_only=static_only, card_name=name, legendary=legendary
         )
     granted_builder: EffectBuilder | None = None
     if builder is None:
@@ -637,7 +649,9 @@ def effects_for(
     # level - CR 716.2a's own gate. Without that, Innkeeper's Talent's level-2
     # "Permanents you control with counters on them have ward {1}" would be
     # read off a level-1 Class that does not have the ability yet.
-    text, printed_bullets = _mode_gated_text(source.class_ability_text, source)
+    text, printed_bullets = _mode_gated_text(
+        source.class_ability_text if copied is None else "\n".join(copied.abilities), source
+    )
     # A keyword's own static ability has no printed sentence for the parser to
     # read, so it is added beside whatever the text produced.
     keyword_statics = (
@@ -658,7 +672,7 @@ def effects_for(
         # conditional pump by its own "All Sliver creatures have ..." line and
         # still has to apply that line.
         own = parsed_layer_effects(
-            text, static_only=static_only, card_name=source.name, legendary=legendary
+            text, static_only=static_only, card_name=name, legendary=legendary
         )
         if builder is None:
             builder = own
@@ -668,7 +682,7 @@ def effects_for(
         if (
             notices is not None
             and looks_like_unparsed_layer_effect(
-                text, static_only=static_only, card_name=source.name, legendary=legendary
+                text, static_only=static_only, card_name=name, legendary=legendary
             )
             # The board is recomputed continually (CR 613.5), so the same
             # unreadable permanent is asked about over and over - record it
@@ -893,6 +907,7 @@ def static_effects(
 from .apply import LayerContext  # noqa: E402
 from .model import (  # noqa: E402
     AddType,
+    Characteristics,
     Condition,
     ContinuousEffect,
     Duration,
