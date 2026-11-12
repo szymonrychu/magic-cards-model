@@ -1550,7 +1550,7 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     # Ahead of `_parse_target_player_mode`: "Target player mills three cards,
     # then you return ..." names a second subject ("you") for its second
     # instruction, which that reader would wrongly run against the target.
-    mill_then_return_to_hand = _parse_mill_then_return_to_hand_clause(text)
+    mill_then_return_to_hand = _parse_mill_then_return_to_hand_clause(text, for_spell=True)
     if mill_then_return_to_hand is not None:
         return mill_then_return_to_hand
     mill_then_puts_into_own_hand = _parse_target_player_mills_then_puts_milled_into_own_hand_clause(
@@ -6978,6 +6978,32 @@ def _parse_if_self_isnt_a_creature_clause(effect_text: str) -> AbilityEffect | N
     return effect
 
 
+def if_you_cant_fallback(text: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "If you can't, `<fallback>`." - the printed consequence CR 101.3
+    leaves room for ("Any part of an instruction that's impossible to
+    perform is ignored. (In many cases the card will specify consequences
+    for this; ...)"). A reader whose own instruction moves a card captures
+    the sentence after it as `fallback` and runs it when that instruction
+    moved none: Temporal Conqueror's "Then return a land card from your
+    graveyard to your hand. If you can't, create a Treasure token." and
+    Patient Naturalist's "Put a land card from among the milled cards into
+    your hand. If you can't, ...".
+
+    Returns the fallback read the ordinary way (`parse_mixed_effect[_for_
+    spell]`), or `None` when it does not read or reads only as a fail-closed
+    notice - the caller then refuses its whole text rather than run the
+    instruction with its consequence dropped (CR 608.2c reads the whole
+    text)."""
+    fallback_text = text.strip().rstrip(".")
+    if not fallback_text:
+        return None
+    sentence = f"{fallback_text[0].upper()}{fallback_text[1:]}."
+    fallback = parse_mixed_effect_for_spell(sentence) if for_spell else parse_mixed_effect(sentence)
+    if fallback is None or _is_notice_only(fallback):
+        return None
+    return fallback
+
+
 from ..damage_modification import DamageModifierReplacement  # noqa: E402
 from ..ep02_r2_referenced_permanent_stat import (  # noqa: E402
     referenced_permanent_stat_effect,
@@ -7089,6 +7115,7 @@ from .text import (  # noqa: E402
 )
 from .tokens import (  # noqa: E402
     _create_continuous_effect_for_mode_text,
+    _is_notice_only,
     _parse_create_token_copies_except_clause,
     _parse_created_trigger_spell_text,
     _parse_generic_token_descriptor,
