@@ -507,7 +507,9 @@ def among_colors(effect: str, game: Any, controller: str | None) -> frozenset[Co
 
 
 def _activation_behind(
-    activations: Sequence[ActivatedAbility], ability: ManaAbility
+    activations: Sequence[ActivatedAbility],
+    ability: ManaAbility,
+    claimed: frozenset[int] = frozenset(),
 ) -> tuple[int, ActivatedAbility] | None:
     """The activated ability in `activations` that `ability` was read off,
     with the index `Game.why_cannot_activate` knows it by, or None when it
@@ -519,11 +521,23 @@ def _activation_behind(
     `ActivatedAbility` is what lets `tap_for_mana` ask CR 602.5 and CR 106.5
     the same questions `_auto_tap_candidates` asks, on the path where the
     player named the source themselves.
+
+    `claimed` holds the indices the source's earlier abilities were already
+    matched to. Two abilities can add the same mana - Chromatic Lantern grants
+    Great Hall of the Biblioplex "{T}: Add one mana of any color." beside its
+    printed "{T}, Pay 1 life: ..." one - and each is its own ability
+    (CR 605.1a) with its own cost (CR 602.1a), so an unclaimed match is
+    preferred and the first match is only the fallback.
     """
-    for index, activation in enumerate(activations):
-        if activation.mana == ability:
+    matches = [
+        (index, activation)
+        for index, activation in enumerate(activations)
+        if activation.mana == ability
+    ]
+    for index, activation in matches:
+        if index not in claimed:
             return index, activation
-    return None
+    return matches[0] if matches else None
 
 
 def _narrow_to_defined_colors(
@@ -2968,8 +2982,11 @@ def _activated_mana_ability(
     # mana carries and a *later* one is the ability carrying it.
     activated: _ActivatedMana | None = None
     named_restriction = restriction is not INFER_RESTRICTION
+    claimed: frozenset[int] = frozenset()
     for ability in abilities:
-        behind = _activation_behind(activations, ability)
+        behind = _activation_behind(activations, ability, claimed)
+        if behind is not None:
+            claimed |= {behind[0]}
         effect = behind[1].effect if behind is not None else ""
         if behind is not None and [piece.kind for piece in behind[1].costs] != [CostKind.TAP]:
             # A tap is all this path pays (CR 602.2b): an ability whose cost

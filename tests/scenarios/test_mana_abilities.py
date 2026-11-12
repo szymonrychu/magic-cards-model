@@ -639,3 +639,36 @@ def test_an_any_one_color_x_ability_with_an_unreadable_definition_does_not_parse
     from magic_cards_model.machines.abilities import _parse_effect
 
     assert _parse_effect("X mana of any one color, where X is the phase of the moon") is None
+
+
+def test_a_granted_bare_tap_ability_is_not_confused_with_a_printed_one_that_costs_more():
+    """Chromatic Lantern grants Great Hall of the Biblioplex "{T}: Add one mana
+    of any color." The Hall also prints "{T}, Pay 1 life: Add one mana of any
+    color. Spend this mana only to cast an instant or sorcery spell." Both add
+    the same mana, so a hand-picked tap for {U} used to be matched back to the
+    printed ability (the first activation adding that mana) and refused for
+    costing more than {T}, while the auto-tap solver offered the granted one.
+    Each mana ability is matched to its own activation (CR 605.1a, CR 602.1a):
+    the granted one pays with the tap alone and no life is paid.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Opt"],
+            battlefield=["Great Hall of the Biblioplex", "Chromatic Lantern"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    hall = scenario.find("Great Hall of the Biblioplex", Zone.BATTLEFIELD, "alice")
+
+    casting = scenario.cast("Opt", "alice")
+    payment = casting.begin_paying()
+    payment.tap_for_mana(hall, [Color.BLUE], None)
+    payment.pay()
+
+    assert hall.tapped
+    assert scenario.player().life == 20
+    assert scenario.player().mana_pool.is_empty
