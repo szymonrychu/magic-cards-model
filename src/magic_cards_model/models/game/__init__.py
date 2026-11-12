@@ -2010,7 +2010,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 177
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 178
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.

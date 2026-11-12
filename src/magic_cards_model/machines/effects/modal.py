@@ -5228,6 +5228,13 @@ _ABILITY_THOSE_TOKENS_ALTERNATIVE_RE = re.compile(
 _ABILITY_BASE_TOKEN_RE = re.compile(
     rf"^create (?P<count>{COUNT}) (?P<desc>.+?) tokens?(?P<tail>\b.*)$", re.IGNORECASE
 )
+#: ... and a base that makes one copy ("Create a token that's a copy of target
+#: creature[, except it has menace]" - Rite of Replication, Mirror Universe
+#: Intrusion): "N of those tokens" is N copies of the same object, so the base's
+#: own "a copy of `<what>`" tail is carried over whole, exception included.
+_ABILITY_BASE_TOKEN_COPY_RE = re.compile(
+    r"^create (?:a|one) token that['\u2019]?s a copy of (?P<copied>.+)$", re.IGNORECASE
+)
 
 
 def _ability_instead_alternative_text(base: str, alternative: str) -> str | None:
@@ -5243,6 +5250,10 @@ def _ability_instead_alternative_text(base: str, alternative: str) -> str | None
         found = amounts[0]
         return f"{base[: found.start('n')]}{elided.group('m')}{base[found.end('n') :]}"
     if those := _ABILITY_THOSE_TOKENS_ALTERNATIVE_RE.fullmatch(alternative):
+        if copy := _ABILITY_BASE_TOKEN_COPY_RE.fullmatch(base.strip()):
+            return collapsed(
+                f"create {those.group('count')} tokens that are copies of {copy.group('copied')}"
+            ) + (those.group("where") or "")
         token = _ABILITY_BASE_TOKEN_RE.fullmatch(base.strip())
         if token is None:
             return None

@@ -177,6 +177,22 @@ class CopyException(EngineModel):
     #: `(kind, amount)` pairs, placed as the copy enters, only when
     #: `if_type` holds (or always, with no gate).
     enters_with_counters: tuple[tuple[str, int], ...] = ()
+    #: "except it isn't legendary" - the copy lacks the supertype the original
+    #: has (CR 707.9b: the final set of values becomes part of the copiable
+    #: values). The mirror of `added_supertypes`, which adds one.
+    not_legendary: bool = False
+    #: "it enters with additional counters on it equal to the same number and
+    #: kinds of counters the copied permanent has on it" - CR 707.9e's
+    #: additional effect: every counter the copied permanent holds as it is
+    #: copied is placed again, kind for kind (Dominion Saboteur's second
+    #: sentence, read as part of the exception it belongs to).
+    copies_counters: bool = False
+    #: "it enters with an additional +1/+1 counter on it if it's a creature, it
+    #: enters with an additional loyalty counter on it if it's a planeswalker"
+    #: (Spark Double) - `(card type, kind, amount)` triples, each gated on its
+    #: own type (CR 707.9f: judged on the copy without that exception), unlike
+    #: `enters_with_counters`, whose single gate is `if_type`.
+    if_type_counters: tuple[tuple[Type, str, int], ...] = ()
 
 
 class ReplacementEffect(EngineModel):

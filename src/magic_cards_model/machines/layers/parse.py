@@ -1492,6 +1492,7 @@ def _become_a_copy_builder(
     copiable_values: Characteristics | None = None,
     added_supertypes: Sequence[Supertype] = (),
     added_colors: Sequence[Color] = (),
+    removed_supertypes: Sequence[Supertype] = (),
 ) -> EffectBuilder:
     """`_BECOME_A_COPY_RE`'s shape.
 
@@ -1543,6 +1544,10 @@ def _become_a_copy_builder(
     Mockingbird's flying, Phantasmal Image's quoted trigger - appended to the
     copied ability lines, once.
 
+    `removed_supertypes` is the opposite exception, "except it isn't legendary"
+    (CR 707.9b: the final set of values for the characteristic becomes part of
+    the copiable values): the supertype is left out of the copy's own.
+
     `copiable_values`, when a caller has them, replaces the printed read of
     `targets[0]`: CR 707.2's copiable values are the printed ones "as modified
     by other copy effects", which `copiable_characteristics` computes and
@@ -1576,9 +1581,15 @@ def _become_a_copy_builder(
             mana_value=copied.mana_value,
             # Moritte of the Frost's "legendary and snow in addition to its
             # other types" (CR 707.9b, CR 205.1b).
-            supertypes=copied.supertypes
-            + tuple(
-                supertype for supertype in added_supertypes if supertype not in copied.supertypes
+            supertypes=tuple(
+                supertype
+                for supertype in copied.supertypes
+                + tuple(
+                    supertype
+                    for supertype in added_supertypes
+                    if supertype not in copied.supertypes
+                )
+                if supertype not in removed_supertypes
             ),
             types=types,
             subtypes=subtypes,
