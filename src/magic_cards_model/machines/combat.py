@@ -642,6 +642,11 @@ def attack_refusal(game: "Game", creature: CardState, defender: TargetRef) -> st
         # text the way the defender check above is.
         return f"{creature.name} can't attack this turn (CR 508.1c)"
 
+    if game.players_cant_attack_turns.get(active) == int(game.turn.turns_taken):
+        # CR 508.1c: "they can't attack this turn" (Peace in Our Time) names
+        # the player, not a creature: none of their creatures may attack.
+        return f"{creature.name} can't attack: {active} can't attack this turn (CR 508.1c)"
+
     from .combat_statics import extra_attack_refusal, power_threshold_restriction_refusal
 
     return (

@@ -761,6 +761,15 @@ class Game(
     so a scenario says in advance what a given card's trigger aims at.
     """
 
+    players_cant_attack_turns: dict[str, int] = Field(default_factory=dict)
+    """CR 508.1c: "they can't attack this turn" (Peace in Our Time) - a
+    player-wide restriction, over every creature that player controls, keyed
+    by username. The value is the `TurnMachine.turns_taken` the restriction
+    was granted on, compared with the current turn exactly as
+    `creatures_cant_attack_until_turns_taken` is: it goes stale the moment
+    the turn ends and nothing clears it early. `combat.attack_refusal` reads
+    it; `continuous.parse_player_cant_attack_this_turn_clause` writes it."""
+
     creatures_cant_attack_until_turns_taken: int | None = None
     """CR 508.1c: "restrictions (effects that say a creature can't attack...)"
     - Orim's Chant's kicked "creatures can't attack this turn" is a blanket
@@ -2010,7 +2019,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 178
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 179
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2460,6 +2469,12 @@ class Game(
     #: counts ("for each <type> card in your graveyard", "card types among
     #: cards in your graveyard", "that player's graveyard") now resolve where
     #: an older dump would have resolved the same text as a no-op.
+    #: 179 (T-136 b1): `Game` gained `players_cant_attack_turns` (CR 508.1c: "they
+    #: can't attack this turn", Peace in Our Time), read by `combat.attack_refusal`;
+    #: and dispatch a decoded game could already point at now reads "that player
+    #: may <draw>. If they do, ..." triggers, "<base>. <base>. If ..., <alt> instead"
+    #: ability texts, "the owners of those cards shuffle them" and "that player may
+    #: exile it. If they don't, ..."; an older dump could not say so.
     #: 178 (T-136 b4): `layers.model.GrantGroup` gained `token` ("Nontoken creatures you
     #: control have ...", CR 111.1), reachable from `Game.continuous_effects` through a group
     #: quoted-ability grant; a decoded game's type-qualified grants ("Artifact creatures you
