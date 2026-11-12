@@ -84,6 +84,7 @@ if TYPE_CHECKING:
 from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES, SPELL_TEXT
 from ._common import (
     _SACRIFICED_MANA_VALUE_TERM,
+    ENTERS_WITH_COUNTERS_TAIL,
     AbilityEffect,
     ClauseEffect,
     Effect,
@@ -794,7 +795,7 @@ _SEARCH_MV_EQUAL_TO_SACRIFICED_RE = re.compile(
     rf"|x or less, where x is {count_pattern('at_most', article=False)}) "
     rf"{_SACRIFICED_MANA_VALUE_TERM}[,.] "
     r"put (?:that card|it) onto the battlefield"
-    rf"(?: with {count_pattern('counters')} additional \+1/\+1 counters? on it)?"
+    rf"(?:{ENTERS_WITH_COUNTERS_TAIL})?"
     r",? then shuffle\.?$",
     re.IGNORECASE,
 )
@@ -817,11 +818,9 @@ def _sacrificed_mana_value_search(text: str) -> _SacrificedManaValueSearch | Non
     Fail-closed on a quality `_search_quality_is_readable` cannot read
     (CR 608.2c: no half-run instruction).
 
-    **The +1/+1 counter is put on after the permanent has entered**, not as
-    part of the entering event: `Game.enter_the_battlefield` takes no
-    externally supplied counters, and nothing between the two moments can
-    tell the difference - CR 704.3 checks state-based actions only when a
-    player would receive priority, never mid-resolution.
+    **The counters are put on as part of the entering event** (CR 614.1c's
+    "enters with"), through the tail every search-and-put shares
+    (`ENTERS_WITH_COUNTERS_TAIL`, `counters.entering_counters`).
     """
     match = _SEARCH_MV_EQUAL_TO_SACRIFICED_RE.fullmatch(collapsed(text.strip()))
     if match is None:
@@ -841,8 +840,7 @@ def _sacrificed_mana_value_search(text: str) -> _SacrificedManaValueSearch | Non
     offset = parse_count(equal if equal is not None else match.group("at_most"), article=False)
     if offset is None:
         return None
-    counters_word = match.group("counters")
-    counters = 0 if counters_word is None else parse_count(counters_word)
+    counters = entering_counters(match)
     if counters is None:
         return None
 
@@ -863,9 +861,7 @@ def _sacrificed_mana_value_search(text: str) -> _SacrificedManaValueSearch | Non
         found = _search_library(game, player, matches, source=source, source_id=source_id)
         if found is None:
             return
-        permanent = game.put_onto_battlefield(found, player.username)
-        if counters and permanent is not None and permanent.zone is Zone.BATTLEFIELD:
-            game.add_counters(permanent, Counter.PLUS_ONE, counters)
+        game.put_onto_battlefield(found, player.username, counters=counters or None)
 
     return run
 
@@ -10685,7 +10681,7 @@ from .continuous import (  # noqa: E402
     grant_suspend,
 )
 from .control_copy import _parse_copy_that_spell_clause, _read_copy_exception_list  # noqa: E402
-from .counters import _counter_kind  # noqa: E402
+from .counters import _counter_kind, entering_counters  # noqa: E402
 from .damage import _lethal_amount_before_damage, _parse_damage_that_player_clause  # noqa: E402
 from .dispatch import (  # noqa: E402
     _ability_effect_or_notice,

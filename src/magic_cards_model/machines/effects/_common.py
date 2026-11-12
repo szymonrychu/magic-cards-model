@@ -334,6 +334,17 @@ _HAVING_PATTERN = (
 )
 
 
+#: " with a/an/`<n>` [additional] `<kind>` counter(s) on it/them" - the rider
+#: of "put it onto the battlefield" (CR 614.1c's "enters with" replacement),
+#: shared by every search whose find arrives carrying counters: Captain
+#: Jean-Luc Picard's "with seven charge counters on it" and Neoform's "with an
+#: additional +1/+1 counter on it". `counters.entering_counters` reads it.
+ENTERS_WITH_COUNTERS_TAIL = (
+    rf" with (?:an? )?(?:(?P<enter_counter_n>{COUNT}) )?(?:additional )?"
+    r"(?P<enter_counter_kind>[a-z0-9+/-]+) counters? on (?:it|them|that card|those cards)"
+)
+
+
 _SEARCH_AND_PUT_RE = re.compile(
     # "Its controller may search ..." is deliberately not an alternative here
     # any more - that subject names a different player than whoever controls
@@ -426,6 +437,8 @@ _SEARCH_AND_PUT_RE = re.compile(
     r"(?P<reveal>, reveal (?:it|them|that card|those cards))?"
     r", put (?:it|them|that card|those cards) "
     r"(?P<dest>into your hand|into your graveyard|onto the battlefield(?P<tapped> tapped)?)"
+    # Read for any destination; `_search_and_place_for` refuses it off the battlefield.
+    rf"(?:{ENTERS_WITH_COUNTERS_TAIL})?"
     r"(?:, then shuffle)?\.?",
     re.IGNORECASE,
 )

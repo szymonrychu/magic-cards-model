@@ -1724,6 +1724,7 @@ class ZonesMixin:
         count: int = 1,
         reveal: bool = False,
         tapped: bool = False,
+        counters: Mapping[str, int] | None = None,
         source: str | None = None,
         source_id: str | None = None,
         caused_by: str | None = None,
@@ -1750,6 +1751,10 @@ class ZonesMixin:
         which zone a search may name, and `player.add` already stamps a
         card's owner correctly for any of the seven rules zones.
 
+        `counters` is the finds' "put it onto the battlefield with seven charge
+        counters on it": each arrives with them (CR 614.1c), so it is only
+        meaningful for `Zone.BATTLEFIELD` and refused for any other destination.
+
         `caused_by` is `Game.search_library`'s own Ashiok, Dream Render gate -
         see that method's docstring. Checked again here, ahead of calling
         `search_library` at all, because this method's own trailing shuffle is
@@ -1764,6 +1769,8 @@ class ZonesMixin:
                     "a search puts its finds into a hand, onto the battlefield, or "
                     f"into a graveyard, not {destination.value}"
                 )
+            if counters and destination is not Zone.BATTLEFIELD:
+                raise ValueError("only a find put onto the battlefield can arrive with counters")
             if (
                 caused_by is not None
                 and caused_by == player.username
@@ -1788,7 +1795,9 @@ class ZonesMixin:
                     self.reveal(state, source=source)
             for state in found:
                 if destination is Zone.BATTLEFIELD:
-                    self.put_onto_battlefield(state, player.username, tapped=tapped)
+                    self.put_onto_battlefield(
+                        state, player.username, tapped=tapped, counters=counters
+                    )
                 elif destination is Zone.GRAVEYARD:
                     # CR 400.6/614.1a: this is an ordinary "put into a
                     # graveyard" - Enroot's own "search your library for a

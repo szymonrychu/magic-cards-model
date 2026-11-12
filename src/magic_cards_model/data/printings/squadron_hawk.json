@@ -1,0 +1,123 @@
+{
+  "object": "card",
+  "id": "9e81806d-5d87-4032-ad94-c2cdeabecdbf",
+  "oracle_id": "00ab9841-934f-4a66-a98d-68d01661b1c9",
+  "multiverse_ids": [
+    442023
+  ],
+  "mtgo_id": 66982,
+  "mtgo_foil_id": 66983,
+  "tcgplayer_id": 161898,
+  "cardmarket_id": 319462,
+  "name": "Squadron Hawk",
+  "lang": "en",
+  "released_at": "2018-03-16",
+  "uri": "https://api.scryfall.com/cards/9e81806d-5d87-4032-ad94-c2cdeabecdbf",
+  "scryfall_uri": "https://scryfall.com/card/a25/34/squadron-hawk?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:33:09Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/e/9e81806d-5d87-4032-ad94-c2cdeabecdbf.jpg?1783935189",
+    "normal": "https://cards.scryfall.io/normal/front/9/e/9e81806d-5d87-4032-ad94-c2cdeabecdbf.jpg?1783935189",
+    "large": "https://cards.scryfall.io/large/front/9/e/9e81806d-5d87-4032-ad94-c2cdeabecdbf.jpg?1783935189",
+    "png": "https://cards.scryfall.io/png/front/9/e/9e81806d-5d87-4032-ad94-c2cdeabecdbf.png?1783935189",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/e/9e81806d-5d87-4032-ad94-c2cdeabecdbf.jpg?1783935189",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/e/9e81806d-5d87-4032-ad94-c2cdeabecdbf.jpg?1783935189",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/e/9e81806d-5d87-4032-ad94-c2cdeabecdbf.webp?1783935189",
+    "grid": "https://cards.scryfall.io/grid/front/9/e/9e81806d-5d87-4032-ad94-c2cdeabecdbf.webp?1783935189",
+    "display": "https://cards.scryfall.io/display/front/9/e/9e81806d-5d87-4032-ad94-c2cdeabecdbf.webp?1783935189",
+    "art": "https://cards.scryfall.io/art/front/9/e/9e81806d-5d87-4032-ad94-c2cdeabecdbf.webp?1783935189",
+    "crop": "https://cards.scryfall.io/crop/front/9/e/9e81806d-5d87-4032-ad94-c2cdeabecdbf.webp?1783935189",
+    "jpeg": "https://cards.scryfall.io/normal/front/9/e/9e81806d-5d87-4032-ad94-c2cdeabecdbf.jpg?1783935189"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Bird",
+  "oracle_text": "Flying\nWhen this creature enters, you may search your library for up to three cards named Squadron Hawk, reveal them, put them into your hand, then shuffle.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Flying"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "41ee6e2f-69b3-4c53-8a8e-960f5e974cfc",
+  "set": "a25",
+  "set_name": "Masters 25",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/41ee6e2f-69b3-4c53-8a8e-960f5e974cfc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aa25&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/a25?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9e81806d-5d87-4032-ad94-c2cdeabecdbf/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A00ab9841-934f-4a66-a98d-68d01661b1c9&unique=prints",
+  "collector_number": "34",
+  "digital": false,
+  "rarity": "common",
+  "watermark": "set",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "30fead7c-da53-4c1b-b514-4be6e5ce487c"
+  ],
+  "illustration_id": "edecc78b-50a6-4c7f-8775-9a7498605678",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 30430,
+  "penny_rank": 1278,
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=442023&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSquadron%2BHawk",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSquadron%2BHawk",
+    "edhrec": "https://edhrec.com/route/?cc=Squadron+Hawk"
+  }
+}
