@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "a82f5db5-787e-4e4a-ab3c-4a488c6f4990",
+  "oracle_id": "852c38fe-8bfa-420b-b961-7b91af9b38d1",
+  "multiverse_ids": [],
+  "resource_id": "0A8F8B9FFA00D7F4A6BB2ECA6B1D9682590E0E28E0FBB0062D5A25D45A6D0177",
+  "mtgo_id": 158262,
+  "tcgplayer_id": 726692,
+  "cardmarket_id": 919797,
+  "name": "Gwyndala, the Progeny",
+  "lang": "en",
+  "released_at": "2026-11-13",
+  "uri": "https://api.scryfall.com/cards/a82f5db5-787e-4e4a-ab3c-4a488c6f4990",
+  "scryfall_uri": "https://scryfall.com/card/trk/61/gwyndala-the-progeny?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-10-28T11:46:33Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/8/a82f5db5-787e-4e4a-ab3c-4a488c6f4990.jpg?1793187993",
+    "normal": "https://cards.scryfall.io/normal/front/a/8/a82f5db5-787e-4e4a-ab3c-4a488c6f4990.jpg?1793187993",
+    "large": "https://cards.scryfall.io/large/front/a/8/a82f5db5-787e-4e4a-ab3c-4a488c6f4990.jpg?1793187993",
+    "png": "https://cards.scryfall.io/png/front/a/8/a82f5db5-787e-4e4a-ab3c-4a488c6f4990.png?1793187993",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/8/a82f5db5-787e-4e4a-ab3c-4a488c6f4990.jpg?1793187993",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/8/a82f5db5-787e-4e4a-ab3c-4a488c6f4990.jpg?1793187993",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/8/a82f5db5-787e-4e4a-ab3c-4a488c6f4990.webp?1793187993",
+    "grid": "https://cards.scryfall.io/grid/front/a/8/a82f5db5-787e-4e4a-ab3c-4a488c6f4990.webp?1793187993",
+    "display": "https://cards.scryfall.io/display/front/a/8/a82f5db5-787e-4e4a-ab3c-4a488c6f4990.webp?1793187993",
+    "art": "https://cards.scryfall.io/art/front/a/8/a82f5db5-787e-4e4a-ab3c-4a488c6f4990.webp?1793187993",
+    "crop": "https://cards.scryfall.io/crop/front/a/8/a82f5db5-787e-4e4a-ab3c-4a488c6f4990.webp?1793187993",
+    "jpeg": "https://cards.scryfall.io/normal/front/a/8/a82f5db5-787e-4e4a-ab3c-4a488c6f4990.jpg?1793187993"
+  },
+  "mana_cost": "{1}{U}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Vau-N'Akat Advisor",
+  "oracle_text": "When Gwyndala enters, create a colorless Equipment artifact token named Neuroflux Heirloom with \"Equipped creature gets +1/+1\" and equip {2}. Attach it to Gwyndala.\n{2}: Each Equipment token you control becomes a copy of target Equipment you control until end of turn.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "d811c3c3-6b5b-4b42-be4f-0a455313ccd3",
+      "component": "token",
+      "name": "Neuroflux Heirloom",
+      "type_line": "Token Artifact \u2014 Equipment",
+      "uri": "https://api.scryfall.com/cards/d811c3c3-6b5b-4b42-be4f-0a455313ccd3"
+    },
+    {
+      "object": "related_card",
+      "id": "2f1e927f-dd27-4af3-8941-64ce80e16e36",
+      "component": "combo_piece",
+      "name": "Gwyndala, the Progeny",
+      "type_line": "Legendary Creature \u2014 Vau-N'Akat Advisor",
+      "uri": "https://api.scryfall.com/cards/2f1e927f-dd27-4af3-8941-64ce80e16e36"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set": "trk",
+  "set_name": "Star Trek",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atrk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/trk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a82f5db5-787e-4e4a-ab3c-4a488c6f4990/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A852c38fe-8bfa-420b-b961-7b91af9b38d1&unique=prints",
+  "collector_number": "61",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "af0b5c5b-b496-46df-a026-cceefb5b3ef8"
+  ],
+  "illustration_id": "b4ebc65b-aa89-4b59-943e-19989465a84d",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 29903,
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGwyndala%252C%2Bthe%2BProgeny",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGwyndala%252C%2Bthe%2BProgeny",
+    "edhrec": "https://edhrec.com/route/?cc=Gwyndala%2C+the+Progeny"
+  }
+}
