@@ -1,0 +1,122 @@
+{
+  "object": "card",
+  "id": "383c9aa5-30ad-4a2a-8b64-65d4b333c613",
+  "oracle_id": "7ef8df9f-3fab-44fd-b5a9-f57e54dbc38e",
+  "multiverse_ids": [
+    279861
+  ],
+  "mtgo_id": 45258,
+  "mtgo_foil_id": 45259,
+  "tcgplayer_id": 59918,
+  "cardmarket_id": 257012,
+  "name": "Guardians of Akrasa",
+  "lang": "en",
+  "released_at": "2012-07-13",
+  "uri": "https://api.scryfall.com/cards/383c9aa5-30ad-4a2a-8b64-65d4b333c613",
+  "scryfall_uri": "https://scryfall.com/card/m13/18/guardians-of-akrasa?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:01:57Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/8/383c9aa5-30ad-4a2a-8b64-65d4b333c613.jpg?1783940517",
+    "normal": "https://cards.scryfall.io/normal/front/3/8/383c9aa5-30ad-4a2a-8b64-65d4b333c613.jpg?1783940517",
+    "large": "https://cards.scryfall.io/large/front/3/8/383c9aa5-30ad-4a2a-8b64-65d4b333c613.jpg?1783940517",
+    "png": "https://cards.scryfall.io/png/front/3/8/383c9aa5-30ad-4a2a-8b64-65d4b333c613.png?1783940517",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/8/383c9aa5-30ad-4a2a-8b64-65d4b333c613.jpg?1783940517",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/8/383c9aa5-30ad-4a2a-8b64-65d4b333c613.jpg?1783940517",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/8/383c9aa5-30ad-4a2a-8b64-65d4b333c613.webp?1783940517",
+    "grid": "https://cards.scryfall.io/grid/front/3/8/383c9aa5-30ad-4a2a-8b64-65d4b333c613.webp?1783940517",
+    "display": "https://cards.scryfall.io/display/front/3/8/383c9aa5-30ad-4a2a-8b64-65d4b333c613.webp?1783940517",
+    "art": "https://cards.scryfall.io/art/front/3/8/383c9aa5-30ad-4a2a-8b64-65d4b333c613.webp?1783940517",
+    "crop": "https://cards.scryfall.io/crop/front/3/8/383c9aa5-30ad-4a2a-8b64-65d4b333c613.webp?1783940517",
+    "jpeg": "https://cards.scryfall.io/normal/front/3/8/383c9aa5-30ad-4a2a-8b64-65d4b333c613.jpg?1783940517"
+  },
+  "mana_cost": "{2}{W}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Human Soldier",
+  "oracle_text": "Defender (This creature can't attack.)\nExalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)",
+  "power": "0",
+  "toughness": "4",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Exalted",
+    "Defender"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "f9b0c6f4-8a4f-4f36-ad3c-e1e16fb8535d",
+  "set": "m13",
+  "set_name": "Magic 2013",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/f9b0c6f4-8a4f-4f36-ad3c-e1e16fb8535d",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Am13&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/m13?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/383c9aa5-30ad-4a2a-8b64-65d4b333c613/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7ef8df9f-3fab-44fd-b5a9-f57e54dbc38e&unique=prints",
+  "collector_number": "18",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "70c20ea3-5ad6-4082-a337-6e994ae5828e"
+  ],
+  "illustration_id": "7524ddd7-a501-4624-a925-c8b6b97f9a63",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 17828,
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=279861&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGuardians%2Bof%2BAkrasa",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGuardians%2Bof%2BAkrasa",
+    "edhrec": "https://edhrec.com/route/?cc=Guardians+of+Akrasa"
+  }
+}
