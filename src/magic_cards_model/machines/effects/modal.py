@@ -1550,7 +1550,7 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     # Ahead of `_parse_target_player_mode`: "Target player mills three cards,
     # then you return ..." names a second subject ("you") for its second
     # instruction, which that reader would wrongly run against the target.
-    mill_then_return_to_hand = _parse_mill_then_return_to_hand_clause(text, for_spell=True)
+    mill_then_return_to_hand = _parse_mill_then_return_to_hand_clause(text)
     if mill_then_return_to_hand is not None:
         return mill_then_return_to_hand
     mill_then_puts_into_own_hand = _parse_target_player_mills_then_puts_milled_into_own_hand_clause(

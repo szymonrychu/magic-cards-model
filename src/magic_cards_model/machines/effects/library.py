@@ -6046,9 +6046,9 @@ _MILL_THEN_RETURN_TO_HAND_RE = re.compile(
 )
 
 
-@ABILITY_TEXT.rung("s32", for_spell=False)
-@SPELL_TEXT.rung("s22", for_spell=True)
-def _parse_mill_then_return_to_hand_clause(text: str, *, for_spell: bool) -> TargetedClause | None:
+@ABILITY_TEXT.rung("s32")
+@SPELL_TEXT.rung("s22")
+def _parse_mill_then_return_to_hand_clause(text: str) -> TargetedClause | None:
     """`_MILL_THEN_RETURN_TO_HAND_RE`'s shape, for a spell, a mode, or an
     activated or triggered ability alike - the effect reads only
     `Game.controller_of` and the stack object's own targets, both of which
@@ -6082,12 +6082,16 @@ def _parse_mill_then_return_to_hand_clause(text: str, *, for_spell: bool) -> Tar
         return None
     targets_a_player = (match.group("subject") or "").lower() == "target player"
     optional = match.group("may") is not None
-    fallback: TargetedClause | None = None
+    # Both readings up front, picked at resolution by what resolves (a spell
+    # is a `CardState`), as `_mill_then_may_take_from_milled_runner` does: the
+    # same text is a spell, a mode of either, or an ability.
+    fallback_for_spell = fallback_for_ability = None
     if match.group("fallback") is not None:
         if optional:
             return None
-        fallback = if_you_cant_fallback(match.group("fallback"), for_spell=for_spell)
-        if fallback is None:
+        fallback_for_spell = if_you_cant_fallback(match.group("fallback"), for_spell=True)
+        fallback_for_ability = if_you_cant_fallback(match.group("fallback"), for_spell=False)
+        if fallback_for_spell is None and fallback_for_ability is None:
             return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -6132,8 +6136,11 @@ def _parse_mill_then_return_to_hand_clause(text: str, *, for_spell: bool) -> Tar
                 if state is not None and state.zone is Zone.GRAVEYARD:
                     controller.move(state, Zone.HAND)
                     returned = True
-        if fallback is not None and not returned:
-            fallback(game, stack_object)
+        if not returned:
+            is_spell = isinstance(stack_object, CardState)
+            fallback = fallback_for_spell if is_spell else fallback_for_ability
+            if fallback is not None:
+                fallback(game, stack_object)
 
     return effect
 
