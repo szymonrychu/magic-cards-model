@@ -21,12 +21,17 @@ this file:
 
 - **CR 500.6** - "at the beginning of" a step triggers as it begins; the
   combat phase opens with its beginning of combat step (CR 506.1).
+- **CR 702.11b** - hexproof only stops targeting by an opponent's spells and
+  abilities; the delayed ability does not target (CR 603.7c: it refers to the
+  creature), so a creature that gained hexproof is still borrowed.
 - **CR 715.3a / 715.2b** - the Saga enters with a lore counter, and chapter
   I triggers on it.
 - **CR 603.7a** - resolving the chapter ability creates the delayed ability.
 - **CR 603.7b** - it triggers only once; "this turn" bounds it to this turn.
 - **CR 603.7c** - it refers to that creature; one that left the battlefield
   and came back is a new object (CR 400.7) and is not affected.
+- **CR 400.7** - a control change keeps the same object, so the delayed ability
+  still affects a creature whose controller changed before it resolved.
 - **CR 603.7e** - its controller is the chapter ability's, so the Saga's
   controller gains control.
 - **CR 613.1b** - the control change is a layer 2 effect.
@@ -42,11 +47,24 @@ from tests.scenarios.harness import Scenario
 _KHAN = "The Wrath of Khan"
 
 
-def _board(bob_battlefield: list[str]) -> Scenario:
+def _board(
+    bob_battlefield: list[str],
+    *,
+    alice_hand: tuple[str, ...] = (),
+    alice_battlefield: tuple[str, ...] = (),
+    bob_hand: tuple[str, ...] = (),
+) -> Scenario:
     return (
         Scenario()
-        .player("alice", hand=[_KHAN], library=["Island"] * 6)
-        .player("bob", battlefield=bob_battlefield, library=["Island"] * 6, life=20)
+        .player(
+            "alice",
+            hand=[_KHAN, *alice_hand],
+            battlefield=list(alice_battlefield),
+            library=["Island"] * 6,
+        )
+        .player(
+            "bob", hand=list(bob_hand), battlefield=bob_battlefield, library=["Island"] * 6, life=20
+        )
     )
 
 
@@ -187,4 +205,56 @@ def test_with_no_combat_left_this_turn_nothing_is_borrowed_next_turn():
         scenario.advance()
     scenario.game.put_triggers_on_stack()
     assert scenario.stack_names() == []
+    assert _controller(scenario, dreadmaw) == "bob"
+
+
+def test_a_creature_that_gained_hexproof_is_still_borrowed():
+    """CR 702.11b: hexproof stops targeting, and the delayed ability refers to
+    the creature rather than targeting it (CR 603.7c). Bob makes Colossal
+    Dreadmaw hexproof (Snakeskin Veil) after chapter I resolved; Alice still
+    gains control of it at the beginning of combat."""
+    scenario = _board(["Colossal Dreadmaw", "Forest"], bob_hand=("Snakeskin Veil",)).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
+    _chapter_one(scenario, dreadmaw)
+    scenario.pass_priority("alice")
+    (forest,) = scenario.untapped_sources("Forest", username="bob")
+    scenario.cast_onto_stack("Snakeskin Veil", forest, username="bob", targets=[dreadmaw])
+    scenario.pass_until_resolved()
+    assert scenario.game.computed_board().of(dreadmaw).has_ability("Hexproof")
+
+    _to_beginning_of_combat(scenario)
+
+    assert _controller(scenario, dreadmaw) == "alice"
+    assert not dreadmaw.tapped
+    assert scenario.can_attack(dreadmaw)
+
+
+def test_a_creature_whose_controller_changed_earlier_is_still_affected():
+    """CR 400.7 does not apply to a control change (the object stays), so the
+    delayed ability still untaps and hastes a creature Alice already took with
+    Act of Treason and then tapped; both effects end together at cleanup
+    (CR 611.2a) and the creature goes home to Bob."""
+    scenario = _board(
+        ["Colossal Dreadmaw"], alice_hand=("Act of Treason",), alice_battlefield=("Mountain",) * 3
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
+    _chapter_one(scenario, dreadmaw)
+    scenario.cast_and_resolve(
+        "Act of Treason",
+        *scenario.untapped_sources("Mountain", "Mountain", "Mountain"),
+        targets=[dreadmaw],
+    )
+    assert _controller(scenario, dreadmaw) == "alice"
+    dreadmaw.tap()
+
+    _to_beginning_of_combat(scenario)
+
+    assert _controller(scenario, dreadmaw) == "alice"
+    assert not dreadmaw.tapped, "the delayed ability's untap still applied"
+    assert scenario.game.delayed_triggers.triggers == []
+    while scenario.step is not Step.CLEANUP:
+        scenario.advance()
+    scenario.advance()
     assert _controller(scenario, dreadmaw) == "bob"
