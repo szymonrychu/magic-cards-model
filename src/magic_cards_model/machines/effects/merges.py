@@ -3478,6 +3478,54 @@ def _merge_choose_target_then_owner_puts_it_into_library_clauses(
     return 2, _owner_puts_it_into_library_effect(for_spell=for_spell, depth=depth)
 
 
+#: "The owners of those cards shuffle them into their libraries." - the
+#: anaphoric second sentence of Those Old Scientists' chapter III and Turn the
+#: Earth: "those cards" are the targets the clause before it chose, and every
+#: owner (CR 108.3) shuffles their own library after the cards went in.
+_OWNERS_SHUFFLE_THOSE_CARDS_RE = re.compile(
+    r"^(?:the|their) owners(?: of those cards)? shuffle them into their libraries\.?$",
+    re.IGNORECASE,
+)
+
+
+def _merge_choose_targets_then_owners_shuffle_them_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """ "(Choose )?up to N target cards in graveyards. The owners of those
+    cards shuffle them into their libraries." - the plural twin of
+    `modal._parse_choose_target_owner_shuffles_it_clause`'s "Its owner shuffles
+    it into their library", but a merge rather than a whole-text reader so a
+    rider sentence after it ("You gain 2 life.", Turn the Earth) is read by the
+    ordinary pipeline.
+
+    Each target still in the graveyard it was chosen in goes into its owner's
+    library (CR 608.2b) and each owner who received a card shuffles (CR
+    701.24a, 108.3). Unlike a controller's "shuffle target cards into your
+    library", nobody shuffles when no target is left: the shuffling is the
+    owners' act, and a target that is no longer legal is not acted on.
+    """
+    if index + 1 >= len(clauses):
+        return None
+    if _OWNERS_SHUFFLE_THOSE_CARDS_RE.fullmatch(clauses[index + 1].strip()) is None:
+        return None
+    phrase = _CHOOSE_TARGET_PREFIX_RE.sub("", clauses[index].strip())
+    if not _targets_understood(phrase, count_agnostic=True, battlefield_only=False):
+        return None
+    if "graveyard" not in phrase.lower():
+        return None  # the effect moves cards out of a graveyard only
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        moved = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.GRAVEYARD
+        ]
+        if moved:
+            _shuffle_targets_into_owners_libraries(game, stack_object, moved)
+
+    return 2, effect
+
+
 def _merge_reveal_hand_choose_discard_clauses(
     clauses: list[str], index: int, *, for_spell: bool, anaphoric_revealer: bool = False
 ) -> tuple[int, TargetedClause] | None:
@@ -6612,6 +6660,7 @@ from .library import (  # noqa: E402
     _reveal_take_one_of_each_kind,
     _reveal_until_n_of_kind,
     _shuffle_remainder_to_bottom,
+    _shuffle_targets_into_owners_libraries,
 )
 from .life import _loses_life_unless_step  # noqa: E402
 from .mana import read_add_mana_instruction  # noqa: E402

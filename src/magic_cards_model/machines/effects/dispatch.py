@@ -5638,6 +5638,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             parsed.append(effect)
             index += consumed
             continue
+        merged = _merge_choose_targets_then_owners_shuffle_them_clauses(
+            clauses, index, for_spell=for_spell
+        )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
         # -- end G1c multi-clause merge ---------------------------------------
         merged = _merge_destroy_cant_regenerate_then_referent_clauses(
             clauses, index, for_spell=for_spell
@@ -6615,6 +6623,7 @@ from .merges import (  # noqa: E402
     _merge_add_any_combination_mana_with_restriction_clauses,
     _merge_choose_a_color_then_add_clauses,
     _merge_choose_target_then_owner_puts_it_into_library_clauses,
+    _merge_choose_targets_then_owners_shuffle_them_clauses,
     _merge_continuous_pump_keyword_clauses,
     _merge_converge_may_draw_then_discard_clauses,
     _merge_counted_if_you_do_clauses,
