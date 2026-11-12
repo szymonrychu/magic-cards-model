@@ -20,7 +20,7 @@ file:
 
 - **CR 122.1** - counters with the same name are interchangeable, so the
   "kind" is the name.
-- **CR 122.6 / 122.6a** - giving a counter is putting one (replacement effects
+- **CR 122.6** - giving a counter is putting one (replacement effects
   such as Hardened Scales apply), and the ability's controller puts it.
 - **CR 608.2d** - the choice is made as the ability resolves, by its
   controller, and cannot be an illegal option: a kind the target has none of.

@@ -612,13 +612,18 @@ def _qualities_hold(seen: _Seen, state: "CardState", phrase: str) -> bool:
 def _is_quality(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "it's a creature", "this permanent is an enchantment", "enchanted
     creature is a Wolf or Werewolf", "this creature is blue", "it was a
-    Human", "it wasn't a Demon", "it was historic"."""
+    Human", "it wasn't a Demon", "it was historic", and with "spell" after the
+    quality ("it's a Saga spell", Dathon's cast trigger) the event's spell."""
     subject = _subject(context, match.group("subject"))
     if subject is None:
         return False
     verb = match.group("verb").strip()
     past = verb.startswith("was") or verb == "were"
     holds = _qualities_hold(_Seen(context, subject, past=past), subject, match.group("quality"))
+    if match.group("spell") is not None:
+        # CR 112.1 / CR 601.2a: "a Saga spell" is a card that is on the stack
+        # as a spell; the same card anywhere else is no spell.
+        holds = holds and subject.zone is Zone.STACK
     return not holds if ("n't" in verb or verb.endswith(" not")) else holds
 
 
@@ -1223,7 +1228,7 @@ READERS: tuple[ConditionReader, ...] = (
     ConditionReader(
         re.compile(
             rf"(?P<subject>{SUBJECT})(?P<verb>'s| is| was| isn't| wasn't| is not| was not| are"
-            rf"| were) (?P<quality>{_QUALITY_LIST})"
+            rf"| were) (?P<quality>{_QUALITY_LIST})(?P<spell> spell)?"
         ),
         _is_quality,
     ),

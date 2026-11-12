@@ -1522,8 +1522,12 @@ _DIVIDED_DAMAGE_RE = re.compile(
 #: Scourge of Valkas' variant, "it deals X damage to each opponent, where X
 #: is the number of Dragons you control", would otherwise be silent purely
 #: for lacking a fixed digit.
+#: The `(?!if\b)` keeps a leading "If <condition>, " from being swallowed as
+#: part of the source (Dathon's "If it's a Saga spell, Dathon deals 2 damage to
+#: each opponent." is a gated clause, never an unconditional one).
 _DAMAGE_EACH_OPPONENT_RE = re.compile(
-    rf".*\bdeals? (?P<n>{AMOUNT}) damage to each opponent{where_x_pattern()}\.?$", re.IGNORECASE
+    rf"(?!if\b).*\bdeals? (?P<n>{AMOUNT}) damage to each opponent{where_x_pattern()}\.?$",
+    re.IGNORECASE,
 )
 #: "<Source> deals N damage to itself." (CR 119.3, 120.2b) - Goblin
 #: Kaboomist's own coin-flip loser. Same `.*\bdeals?` source-agnostic prefix
