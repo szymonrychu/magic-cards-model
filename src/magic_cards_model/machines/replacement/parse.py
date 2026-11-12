@@ -172,6 +172,23 @@ _COPY_EXCEPT_ENTERS_WITH_COUNTERS = re.compile(
     re.IGNORECASE,
 )
 
+#: "it isn't legendary" (Dominion Saboteur) - the copy loses the legendary
+#: supertype as part of the copying process (CR 707.9b).
+_COPY_EXCEPT_NOT_LEGENDARY = re.compile(
+    r"^(?:he|she|it|they)(?: isn't| is not|'s not| aren't| are not) legendary$", re.IGNORECASE
+)
+
+#: The linked sentence after such an exception: "If you do, it enters with
+#: additional counters on it equal to the same number and kinds of counters the
+#: copied permanent has on it." (CR 707.9e). Carried on the copy effect's
+#: exception, not parsed as a replacement of its own.
+_COPY_COUNTERS_RIDER = re.compile(
+    r"^if you do, (?:he|she|it|they) enters? with additional counters on (?:him|her|it|them) "
+    r"equal to the same number and kinds of counters the copied "
+    r"(?:permanent|creature|artifact) has on (?:him|her|it|them)\.?$",
+    re.IGNORECASE,
+)
+
 _SUPERTYPE_WORDS = {"legendary": Supertype.LEGENDARY, "snow": Supertype.SNOW}
 
 #: A copy exception's own colour word ("black", "blue", ...) - kept local
@@ -222,6 +239,7 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
     if_type: Type | None = None
     if_type_abilities: list[str] = []
     enters_with_counters: list[tuple[str, int]] = []
+    not_legendary = False
 
     clause = clause.strip()
     if gated := _COPY_EXCEPT_IF_TYPE.match(clause):
@@ -283,6 +301,9 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
                 return None
             added_abilities.extend(granted)
             continue
+        if _COPY_EXCEPT_NOT_LEGENDARY.match(part):
+            not_legendary = True
+            continue
         if match := _COPY_EXCEPT_SUPERTYPES.match(part):
             added_supertypes.extend(
                 _SUPERTYPE_WORDS[word.lower()] for word in match.group("supertypes").split(" and ")
@@ -300,9 +321,11 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
         and not added_colors
         and not if_type_abilities
         and not enters_with_counters
+        and not not_legendary
     ):
         return None
     return CopyException(
+        not_legendary=not_legendary,
         name=name,
         power=power,
         toughness=toughness,
@@ -519,9 +542,20 @@ def _parse_oracle_text(
             # of it and has no existence apart from it, so it is carried on
             # that sentence's effect rather than parsed as one of its own.
             following = sentences[index + 1] if index + 1 < len(sentences) else None
-            linked = following if following and _REFLEXIVE_OPENER.match(following) else None
+            if _COPY_COUNTERS_RIDER.match(sentence):
+                continue  # carried by the copy effect in front of it, below
+            copies_counters = bool(following and _COPY_COUNTERS_RIDER.match(following))
+            linked = (
+                following
+                if following and not copies_counters and _REFLEXIVE_OPENER.match(following)
+                else None
+            )
             for effect in _parse_sentence(sentence, names):
                 update = {"raw": paragraph, "reminder": reminder, "face": face}
+                if copies_counters and effect.kind is ReplacementKind.ENTERS_AS_COPY:
+                    exception = effect.copy_exception or CopyException()
+                    update["copy_exception"] = exception.model_copy(update={"copy_counters": True})
+                    update["copy_exception_unparsed"] = None
                 if linked is not None and (
                     effect.kind in ENTERS_KINDS or effect.kind is ReplacementKind.IF_WOULD_INSTEAD
                 ):

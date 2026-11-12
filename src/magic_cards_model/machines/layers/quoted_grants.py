@@ -189,6 +189,10 @@ def group_quoted_grant_of(sentence: str) -> GroupQuotedGrant | None:
             lowered = qualifier.lower()
             if lowered in _COLORS:
                 colors.append(_COLORS[lowered])
+            elif lowered in _TYPE_NOUNS:
+                # "Artifact creatures you control" (Hive Mind Coprocessor): a
+                # card type naming the group's second requirement.
+                required.append(_TYPE_NOUNS[lowered])
             elif (subtype := _singular(lowered)) is not None:
                 any_subtypes.append(subtype)
             else:

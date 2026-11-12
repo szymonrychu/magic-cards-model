@@ -41,7 +41,7 @@
       }
     },
     "decisions": [],
-    "fields_changed": ["continuous_effects", "known_carries"],
+    "fields_changed": ["continuous_effects", "known_carries", "turn_counts"],
     "notices": {},
     "objects": {
       "Bonesplitter@alice#2": {

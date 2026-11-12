@@ -2195,7 +2195,7 @@ def _choose_colors(count: int, card_name: str) -> Apply:
 #: (CR 109.5: "you" on an object is its controller).
 _COPY_CANDIDATES_RE = re.compile(
     r"^(?:any|an?) (?:non(?P<excluded>artifact|creature|enchantment|land|planeswalker) )?"
-    r"(?P<filter>artifact|creature|enchantment|land|permanent|planeswalker)"
+    r"(?P<filter>artifact or creature|artifact|creature|enchantment|land|permanent|planeswalker)"
     r"(?P<zone> on the battlefield| card in a graveyard| you control)"
     r"(?: with mana value (?P<bound>.+))?$",
     re.IGNORECASE,
@@ -2293,8 +2293,12 @@ def _copy_candidates(game: "Game", phrase: str, entering: CardState) -> list[Car
     if match is None:
         return None
     word = match.group("filter").lower()
-    wanted = None if word == "permanent" else _CARD_TYPE_WORDS.get(word)
-    if wanted is None and word != "permanent":
+    wanted = (
+        None
+        if word == "permanent"
+        else tuple(_CARD_TYPE_WORDS.get(part) for part in word.split(" or "))
+    )
+    if wanted is not None and None in wanted:
         return None
     excluded = _CARD_TYPE_WORDS.get((match.group("excluded") or "").lower())
     bound: int | None = None
@@ -2305,7 +2309,7 @@ def _copy_candidates(game: "Game", phrase: str, entering: CardState) -> list[Car
 
     def admitted(types: Iterable[Type], mana_value: float) -> bool:
         kinds = set(types)
-        if wanted is not None and wanted not in kinds:
+        if wanted is not None and not any(kind in kinds for kind in wanted):
             return False
         if excluded is not None and excluded in kinds:
             return False
@@ -2444,6 +2448,11 @@ def _apply_copy_of(
         # additional effect of the replacement, not a copiable value.
         for kind, amount in exception.enters_with_counters:
             event.counters[kind] = event.counters.get(kind, 0) + amount
+    if exception.copy_counters:
+        # "the same number and kinds of counters the copied permanent has on
+        # it", as it is now (CR 608.2h).
+        for kind, amount in chosen_card.counters.counts.items():
+            event.counters[kind] = event.counters.get(kind, 0) + amount
     # CR 306.5b / CR 714.3a / CR 310.4b: a planeswalker's loyalty, a
     # Saga's lore counter and a battle's defense are intrinsic "enters
     # with" abilities of what is copied, read off its copiable values
@@ -2468,6 +2477,7 @@ def _apply_copy_of(
         added_abilities=added_abilities,
         added_supertypes=exception.added_supertypes,
         added_colors=exception.added_colors,
+        removed_supertypes=(Supertype.LEGENDARY,) if exception.not_legendary else (),
         copiable_values=copiable,
     )(entering, game.continuous_effects.tick(), chosen, LayerContext())
     for built in built_effects:

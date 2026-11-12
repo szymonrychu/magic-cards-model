@@ -62,6 +62,7 @@ from ..delayed import (
     CreateAttackingTokens,
     CreateTokensForController,
     DelayedTrigger,
+    GainControlUntapHasteOfSubject,
     PayOrLoseTheGame,
     PumpEventSubject,
     ReflexiveConsequence,
@@ -9674,6 +9675,100 @@ def _parse_pump_per_discard_then_delayed_draw_clause(text: str) -> AbilityEffect
                 remaining=None,
                 expires_end_of_turn=True,
                 effect=CombatDamageToPlayerDraw(),
+            )
+        )
+
+    return effect
+
+
+#: T-110 B6: "<damage sentence>. At the beginning of the next combat this turn,
+#: gain control of that creature until end of turn. Untap it. It gains haste until
+#: end of turn." - The Wrath of Khan's chapter I. The damage sentence is read by
+#: the ordinary clause reader; the rest is a delayed triggered ability (CR 603.7)
+#: about the one target, running Threaten's three instructions at the next
+#: beginning of combat (`GainControlUntapHasteOfSubject`).
+_DAMAGE_THEN_BORROW_AT_COMBAT_RE = re.compile(
+    r"^(?P<first>[^.]+ deals \d+ damage to target creature[^.]*)\.\s*"
+    r"at the beginning of the next combat this turn, "
+    r"gain control of that creature until end of turn\.\s*untap it\.\s*"
+    r"it gains haste until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s35")
+def _parse_damage_then_borrow_at_combat_text(text: str) -> AbilityEffect | None:
+    """`_DAMAGE_THEN_BORROW_AT_COMBAT_RE`'s shape - see the banner above."""
+    match = _DAMAGE_THEN_BORROW_AT_COMBAT_RE.fullmatch(collapsed(text.strip()))
+    if match is None:
+        return None
+    from .dispatch import _ability_effect_or_notice
+
+    first = _ability_effect_or_notice(match.group("first") + ".")
+    if first is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        target = next((t for t in game.resolve_targets(ability) if isinstance(t, CardState)), None)
+        first(game, ability)
+        if target is None or target.zone is not Zone.BATTLEFIELD:
+            return
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text="At the beginning of the next combat this turn, gain control of that "
+                "creature until end of turn. Untap it. It gains haste until end of turn.",
+                controller=game.controller_of(ability).username,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=Step.BEGINNING_OF_COMBAT,
+                subject_id=target.id,
+                expected_zone=Zone.BATTLEFIELD,
+                expected_stamp=target.zone_change_stamp,
+                effect=GainControlUntapHasteOfSubject(),
+            )
+        )
+
+    return effect
+
+
+#: T-110 B6: "Choose target creature. Whenever it deals combat damage to a player
+#: this turn, you draw that many cards." - The Inner Light's chapter II. The same
+#: delayed trigger Captain Howler's draw makes (`CombatDamageToPlayerDraw`),
+#: watching the chosen creature for the rest of the turn, but drawing as many
+#: cards as the combat damage it dealt (`GameEvent.amount`).
+_CHOOSE_CREATURE_DEALS_DAMAGE_DRAW_RE = re.compile(
+    r"^choose target creature\.\s*"
+    r"whenever it deals combat damage to a player this turn, "
+    r"you draw (?P<amount>a card|that many cards)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s35")
+def _parse_choose_creature_deals_damage_draw_text(text: str) -> AbilityEffect | None:
+    """`_CHOOSE_CREATURE_DEALS_DAMAGE_DRAW_RE`'s shape - see the banner above."""
+    match = _CHOOSE_CREATURE_DEALS_DAMAGE_DRAW_RE.fullmatch(collapsed(text.strip()))
+    if match is None or not _targets_understood("target creature"):
+        return None
+    many = match.group("amount").lower() == "that many cards"
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        target = next((t for t in game.resolve_targets(ability) if isinstance(t, CardState)), None)
+        if target is None:
+            return
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text="Whenever it deals combat damage to a player this turn, "
+                + ("you draw that many cards." if many else "you draw a card."),
+                controller=game.controller_of(ability).username,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                event=TriggerEvent.DEALS_DAMAGE,
+                subject_id=target.id,
+                remaining=None,
+                expires_end_of_turn=True,
+                effect=CombatDamageToPlayerDraw(that_many=many),
             )
         )
 

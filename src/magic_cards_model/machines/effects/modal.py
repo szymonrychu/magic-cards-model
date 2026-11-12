@@ -4260,6 +4260,43 @@ def _parse_choose_target_owner_shuffles_it_clause(
     return effect
 
 
+#: T-110 B6: "Choose up to two target cards in graveyards. The owners of those
+#: cards shuffle them into their libraries." (Those Old Scientists' chapter III) -
+#: the plural twin of `_CHOOSE_TARGET_OWNER_SHUFFLES_IT_RE`: each target goes into
+#: its owner's library, and each owner shuffles once after all have moved.
+_CHOOSE_TARGETS_OWNERS_SHUFFLE_THEM_RE = re.compile(
+    r"^choose (?P<desc>up to \w+ target .+?)\.\s*"
+    r"the owners of those cards shuffle them into their libraries\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+@ABILITY_TEXT.rung("s17", for_spell=False)
+@SPELL_TEXT.rung("s11", for_spell=True)
+def _parse_choose_targets_owners_shuffle_them_clause(
+    text: str, *, for_spell: bool
+) -> AbilityEffect | None:
+    """`_CHOOSE_TARGETS_OWNERS_SHUFFLE_THEM_RE`'s shape; see the banner above."""
+    match = _CHOOSE_TARGETS_OWNERS_SHUFFLE_THEM_RE.fullmatch(text.strip())
+    if match is None or not _targets_understood(
+        match.group("desc").strip(), count_agnostic=True, battlefield_only=False
+    ):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        moved = [
+            t
+            for t in game.resolve_targets(stack_object)
+            if isinstance(t, CardState) and t.zone is Zone.GRAVEYARD
+        ]  # CR 608.2b: a target that left the graveyard is no longer legal.
+        owners = list(dict.fromkeys(t.owner for t in moved))
+        game.put_cards_into_library(moved)
+        for username in owners:
+            game.shuffle_library(game.player(username))
+
+    return effect
+
+
 #: "Choose a creature type. Destroy all creatures that aren't of the chosen
 #: type." (CR 701.6, CR 701.6a) - Kindred Judgment's own text, and the real,
 #: off-set printing Kindred Dominance's identical wording.
@@ -6974,6 +7011,63 @@ def _parse_if_self_isnt_a_creature_clause(effect_text: str) -> AbilityEffect | N
             ability_text=layer_sentence,
             game=game,
         )
+
+    return effect
+
+
+#: T-110 B6: "that player may draw a card. If they do, they can't attack this
+#: turn and you put a <kind> counter on this <noun>." - Peace in Our Time's
+#: beginning-of-combat trigger on each player's turn. "That player" is the
+#: player whose turn it is (CR 500.1: the active player), who alone decides the
+#: "may" (CR 608.2d); "if they do" is whether the draw was made. Every creature
+#: that player controls then can't attack this turn (CR 508.1c) - the only
+#: attackers on their own turn - read through the same blanket restriction
+#: Orim's Chant uses.
+_THAT_PLAYER_MAY_DRAW_IF_THEY_DO_RE = re.compile(
+    r"^that player may draw a card\.\s*if they do, (?P<riders>.+?)\.?$", re.IGNORECASE
+)
+_THEY_CANT_ATTACK_THIS_TURN_RE = re.compile(r"^they can'?t attack this turn$", re.IGNORECASE)
+_YOU_PUT_COUNTER_ON_THIS_RE = re.compile(
+    r"^you put an? (?P<kind>[a-z][a-z+/-]*) counter on this (?P<noun>[a-z]+)$", re.IGNORECASE
+)
+
+
+@ABILITY_TEXT.rung("s20")
+def _parse_that_player_may_draw_if_they_do_text(text: str) -> AbilityEffect | None:
+    """`_THAT_PLAYER_MAY_DRAW_IF_THEY_DO_RE`'s shape - see the banner above."""
+    match = _THAT_PLAYER_MAY_DRAW_IF_THEY_DO_RE.fullmatch(
+        collapsed(_strip_non_effect_preamble(text).strip())
+    )
+    if match is None:
+        return None
+    cant_attack = False
+    counter_kind: str | None = None
+    for rider in re.split(r" and ", match.group("riders")):
+        if _THEY_CANT_ATTACK_THIS_TURN_RE.fullmatch(rider.strip()):
+            cant_attack = True
+        elif (put := _YOU_PUT_COUNTER_ON_THIS_RE.fullmatch(rider.strip())) is not None:
+            counter_kind = put.group("kind").lower()
+        else:
+            return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if game.turn is None:
+            return
+        player = game.player(game.turn.active_player)
+        if not game.may(
+            player.username,
+            "draw a card",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
+        if not game.draw_cards(player, 1):
+            return
+        if cant_attack:
+            game.creatures_cant_attack_until_turns_taken = int(game.turn.turns_taken)
+        source = ability.source(game)
+        if counter_kind is not None and source is not None and source.zone is Zone.BATTLEFIELD:
+            game.add_counters(source, counter_kind, 1, putter=ability.controller)
 
     return effect
 

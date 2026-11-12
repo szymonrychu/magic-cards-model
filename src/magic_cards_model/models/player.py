@@ -429,6 +429,12 @@ class Player(EngineModel):
     the player rather than read off the emblem because the count is the rule's
     own state; `Game.ring_tempts` rewrites the emblem's text from it."""
 
+    spells_cast_this_game: int = 0
+    """How many spells this player has cast this game (CR 601.2i: a spell
+    becomes cast as it is put on the stack; a copy is never cast, CR 707.10).
+    Bumped in `Game._put_on_stack`; read by
+    "the first spell you've cast this game"."""
+
     ring_bearer_id: UUID | None = None
     """The `CardState.id` of this player's Ring-bearer (CR 701.54a/b), or
     `None`. An id, never the object - see `companion_id` below.

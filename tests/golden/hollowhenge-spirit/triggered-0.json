@@ -5,32 +5,32 @@
     "modes": [],
     "on_stack": true,
     "source": "Hollowhenge Spirit@alice#1",
-    "targets": ["Memnite@alice#1"],
+    "targets": ["Memnite@bob#1"],
     "x": 0
   },
   "board": {
     "busy_turn": false,
     "entering": [],
-    "order": ["alice", "bob"],
+    "order": ["bob", "alice"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Grizzly Bears", "Grizzly Bears", "Grizzly Bears"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Hollowhenge Spirit"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade", "Grizzly Bears", "Grizzly Bears", "Grizzly Bears"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade", "Memnite"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       }
     },
-    "step": "precombat_main",
+    "step": "declare_attackers",
     "tapped": [],
     "tokens": [],
-    "variant": "war",
-    "war_turn": true
+    "variant": "quiet",
+    "war_turn": false
   },
   "card": "Hollowhenge Spirit",
   "delta": {
@@ -47,11 +47,9 @@
   "kind": "enters_the_battlefield",
   "number": 0,
   "recipe": {
-    "attempt": "put",
-    "index": 0,
-    "params": {
-      "tapped": false
-    },
-    "variant": "war"
+    "attempt": "during_an_attack",
+    "index": 1,
+    "params": {},
+    "variant": "quiet"
   }
 }

@@ -1931,6 +1931,122 @@ def _parse_look_top_x_put_permanents_clause(text: str) -> AbilityEffect | None:
 
 
 # --------------------------------------------------------------------------
+# T-110 B6: "Reveal the top N cards of your library. Put a <quality> card from
+# among them <destination> and the rest into your graveyard." (CR 701.20a)
+# --------------------------------------------------------------------------
+#
+# Hit It!'s enters trigger puts one revealed land onto the battlefield tapped
+# and the other four into the graveyard. Which card goes is CR 608.2d's plain
+# choice among the revealed cards that qualify; with none that qualify, every
+# revealed card goes to the graveyard. Every card is revealed while it is still
+# in the library (CR 701.20a), before any of them move.
+_REVEAL_TOP_PUT_ONE_QUALITY_REST_GRAVEYARD_RE = re.compile(
+    rf"^reveal the top (?P<n>{COUNT}) cards of your library\.\s*"
+    r"put (?:a|one) (?P<quality>[a-z]+(?: or [a-z]+)?) card from among them "
+    r"(?P<dest>onto the battlefield tapped|onto the battlefield|into your hand) "
+    r"and the rest into your graveyard\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s34")
+def _parse_reveal_top_put_one_quality_rest_graveyard_clause(text: str) -> AbilityEffect | None:
+    """`_REVEAL_TOP_PUT_ONE_QUALITY_REST_GRAVEYARD_RE`'s shape - see the banner above."""
+    match = _REVEAL_TOP_PUT_ONE_QUALITY_REST_GRAVEYARD_RE.fullmatch(
+        collapsed(_strip_non_effect_preamble(text).strip())
+    )
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    if count is None:
+        return None
+    quality_matches = _quality_matcher(match.group("quality"))
+    destination = match.group("dest").lower()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        revealed = list(controller.library[:count])
+        for state in revealed:
+            game.reveal(state, source=ability.source_name)
+        candidates = [state for state in revealed if quality_matches(state)]
+        chosen: CardState | None = None
+        if candidates:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt=f"put one of them {destination}",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    amount=1,
+                    cards=tuple(state.id for state in candidates),
+                )
+            )
+            by_id = {state.id: state for state in candidates}
+            chosen = next((by_id[card_id] for card_id in chosen_ids if card_id in by_id), None)
+        for state in revealed:
+            if state is chosen:
+                continue
+            game.put_into_graveyard(state)
+        if chosen is None:
+            return
+        if destination.startswith("onto the battlefield"):
+            game.put_onto_battlefield(
+                chosen, controller.username, tapped=destination.endswith("tapped")
+            )
+        else:
+            controller.move(chosen, Zone.HAND)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# T-110 B6: "Exile the top N cards of your library. Put all <quality> cards
+# exiled this way <destination>." (CR 406.2, CR 701.7a)
+# --------------------------------------------------------------------------
+#
+# Deep Space 9's enters and upkeep trigger. Nothing is chosen: every exiled
+# card that qualifies is put (CR 608.2c's fixed instruction), the others stay
+# in exile. No second Modern/Pioneer/Standard card prints this shape.
+_EXILE_TOP_PUT_ALL_QUALITY_RE = re.compile(
+    rf"^exile the top (?P<n>{COUNT}) cards? of your library\.\s*"
+    r"put all (?P<quality>[a-z]+(?: or [a-z]+)?) cards exiled this way "
+    r"(?P<dest>onto the battlefield tapped|onto the battlefield|into your hand)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s34")
+def _parse_exile_top_put_all_quality_clause(text: str) -> AbilityEffect | None:
+    """`_EXILE_TOP_PUT_ALL_QUALITY_RE`'s shape - see the banner above."""
+    match = _EXILE_TOP_PUT_ALL_QUALITY_RE.fullmatch(
+        collapsed(_strip_non_effect_preamble(text).strip())
+    )
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    if count is None:
+        return None
+    quality_matches = _quality_matcher(match.group("quality"))
+    destination = match.group("dest").lower()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        exiled = game.exile_cards(list(controller.library[:count]))
+        for state in exiled:
+            if state.zone is not Zone.EXILE or not quality_matches(state):
+                continue
+            if destination.startswith("onto the battlefield"):
+                game.put_onto_battlefield(
+                    state, controller.username, tapped=destination.endswith("tapped")
+                )
+            else:
+                controller.move(state, Zone.HAND)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
 # ecl-T8: "Mill N cards, then [you may ]put a[n] <quality> card [from among
 # them|from your graveyard] on top of your library." (CR 701.17a's mill)
 # --------------------------------------------------------------------------
@@ -3224,6 +3340,79 @@ def _parse_look_hand_may_exile_owner_may_play_clause(text: str) -> AbilityEffect
             until_end_of_turn=False,
             cost_increase=increase,
         )
+
+    return effect
+
+
+#: T-110 B6: "Look at target opponent's hand. You may choose a <quality> card
+#: from it. If you do, that player exiles that card, then draws a card." - Salt
+#: Vampire. CR 701.20e's private look, the controller's optional choice
+#: (CR 608.2d), then the player whose hand it is performs the exile (or
+#: discard) themselves, and draws only when a card was actually chosen.
+_LOOK_HAND_MAY_CHOOSE_THEN_RE = re.compile(
+    r"^look at target (?:opponent|player)'?s hand\.\s*"
+    r"you may choose an? (?:(?P<quality>[a-z]+) )?card from it\.\s*"
+    r"if you do, that player (?P<verb>exiles|discards) that card"
+    r"(?P<draw>, then draws a card)?\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s34")
+def _parse_look_hand_may_choose_then_text(text: str) -> AbilityEffect | None:
+    """`_LOOK_HAND_MAY_CHOOSE_THEN_RE`'s shape - see the banner above."""
+    match = _LOOK_HAND_MAY_CHOOSE_THEN_RE.fullmatch(collapsed(text.strip()))
+    if match is None:
+        return None
+    quality = (match.group("quality") or "").strip()
+    if quality and not _search_quality_is_readable(quality):
+        return None
+    matches_quality = _quality_matcher(quality) if quality else (lambda _state: True)
+    exiles = match.group("verb").lower() == "exiles"
+    draws = match.group("draw") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        opponent = next(
+            (target for target in game.resolve_targets(ability) if isinstance(target, Player)),
+            None,
+        )
+        if opponent is None:
+            return
+        for state in list(opponent.hand):
+            game.look(state, controller.username, source=ability.source_name)
+        candidates = [state for state in opponent.hand if matches_quality(state)]
+        if not candidates:
+            return
+        kind = f"{with_indefinite_article(quality)} card" if quality else "a card"
+        prompt = f"choose {kind} from {opponent.username}'s hand"
+        if not game.may(
+            controller, prompt, source=ability.source_name, source_id=source_id_of(ability)
+        ):
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt=prompt,
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                amount=1,
+                cards=tuple(state.id for state in candidates),
+                card_labels=tuple(state.name for state in candidates),
+                exact=False,
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        if not chosen_ids:
+            return
+        chosen = {state.id: state for state in candidates}[chosen_ids[0]]
+        if exiles:
+            game.exile_cards([chosen])
+        else:
+            game.discard_cards(opponent.username, [chosen], source=ability.source_name)
+        if draws:
+            game.draw_cards(opponent, 1)
 
     return effect
 
@@ -6190,6 +6379,11 @@ _MILL_THEN_MAY_TAKE_FROM_MILLED_RE = re.compile(
     r"|milled this way) "
     r"(?P<dest>into your hand|to your hand|onto the battlefield(?: under your control)?)"
     r"\.(?:\s*you gain (?P<life>\d+) life\.?)?"
+    # First Contact's rider: "If this spell is the first spell you've cast this
+    # game, you gain 2 life." - checked at resolution against the controller's
+    # cast count, which already includes this spell (CR 601.2i).
+    r"(?:\s*if this spell is the first spell you(?:'ve| have) cast this game, "
+    r"you gain (?P<first_life>\d+) life\.?)?"
     # Cache Grab's own rider: "If you control a Squirrel or returned a
     # Squirrel card to your hand this way, create a Food token." - a
     # resolution-time condition (CR 608.2c, checked once the mill and the
@@ -6277,6 +6471,7 @@ def _mill_then_may_take_from_milled_runner(
         # move as "put a card ... into your hand" - only the verb differs.
         destination = "into your hand"
     life = int(match.group("life")) if match.group("life") else 0
+    first_spell_life = int(match.group("first_life")) if match.group("first_life") else 0
     condition_subtype = match.group("subtype")
     consequence_text = (match.group("consequence") or "").strip()
     consequence_for_spell = (
@@ -6394,6 +6589,8 @@ def _mill_then_may_take_from_milled_runner(
                 game.put_onto_battlefield(state, controller.username)
         if life:
             game.gain_life(controller, life)
+        if first_spell_life and controller.spells_cast_this_game == 1:
+            game.gain_life(controller, first_spell_life)
         if condition_subtype and stack_object is not None:
             # Cache Grab's own rider (CR 608.2c, checked once the put/return
             # above has already happened): "you control a `<subtype>`" reads
@@ -6789,6 +6986,49 @@ def _parse_may_cast_from_hand_free_clause(clause: str, *, for_spell: bool) -> Ta
         assert isinstance(chosen_ids, tuple)
         chosen = next(card for card in legal if card.id == chosen_ids[0])
         game.cast_during_resolution(chosen, player.username, source_name=source, rule="CR 608.2g")
+
+    return effect
+
+
+#: T-110 B6: "Choose target `<spell>`. That player may exile it. If they don't,
+#: you may cast a noncreature spell from your hand without paying its mana cost."
+#: (Brazen Bluff) - the targeted spell's controller decides (CR 608.2d: a "may"
+#: belongs to the player the instruction names, "that player"), exiling it from
+#: the stack if they accept; if they decline, the caster's free cast is the
+#: ordinary `_MAY_CAST_FROM_HAND_FREE_RE` instruction. A target that is no longer
+#: a legal target by resolution makes the whole spell do nothing (CR 608.2b).
+_CHOOSE_SPELL_OWNER_MAY_EXILE_ELSE_FREE_CAST_RE = re.compile(
+    r"^choose (?P<phrase>target [^.]*?spell[^.]*?)\.\s*that player may exile it\.\s*"
+    r"if they don'?t, (?P<free>you may cast [^.]+ from your hand without paying its mana cost)"
+    r"\.?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s22")
+def _parse_choose_spell_may_exile_else_free_cast(text: str) -> Effect | None:
+    """`_CHOOSE_SPELL_OWNER_MAY_EXILE_ELSE_FREE_CAST_RE`'s shape - see the banner above."""
+    match = _CHOOSE_SPELL_OWNER_MAY_EXILE_ELSE_FREE_CAST_RE.fullmatch(collapsed(text.strip()))
+    if match is None or not _targets_understood(match.group("phrase"), battlefield_only=False):
+        return None
+    free = _parse_may_cast_from_hand_free_clause(match.group("free") + ".", for_spell=True)
+    if free is None:
+        return None
+
+    def effect(game: "Game", spell: "StackObject") -> None:
+        target = next((t for t in game.resolve_targets(spell) if isinstance(t, CardState)), None)
+        if target is None:
+            return
+        chooser = game.controller_of(target)
+        if game.may(
+            chooser,
+            f"exile {target.name}",
+            source=spell.name,  # type: ignore[union-attr]
+            source_id=source_id_of(spell),
+        ):
+            game.exile_permanent(target)
+            return
+        free(game, spell)
 
     return effect
 

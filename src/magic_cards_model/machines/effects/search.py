@@ -334,6 +334,12 @@ def _search_and_place_for(match: re.Match[str], *, optional: bool) -> Callable[.
         else Zone.BATTLEFIELD
     )
     reveal = bool(match.groupdict().get("reveal"))
+    enters_with: dict[str, int] = {}
+    if match.groupdict().get("with_n") is not None:
+        with_count = parse_count(match.group("with_n"))
+        if with_count is None:
+            return None
+        enters_with[_counter_kind(match.group("with_kind"))] = with_count
     unique_word = match.groupdict().get("unique_word")
     if unique_word is not None:
         description = (
@@ -391,6 +397,7 @@ def _search_and_place_for(match: re.Match[str], *, optional: bool) -> Callable[.
             count=count,
             reveal=reveal,
             tapped=tapped,
+            counters=enters_with or None,
             source=source,
             source_id=source_id,
             caused_by=caused_by,
@@ -1668,10 +1675,13 @@ def _parse_target_player_may_search_named_card_clause(
 #: own optional search already honours. "named A or B" (Bogbrew Witch) accepts
 #: either name, and the find may go onto the battlefield, tapped or not,
 #: instead of into the hand (CR 701.23e: revealed only when the text says so).
+#: "any number of cards named [name]" (Andromedan Automatons, Battalion Foot
+#: Soldier) is CR 107.1c's zero-or-more: every copy in the library is offered.
 _YOU_SEARCH_NAMED_CARD_RE = re.compile(
-    r"^(?P<may>you may )?search your library for a card named (?P<name>.+?), "
-    r"(?:(?P<reveal>reveal it, put it into your hand)|"
-    r"put it onto the battlefield(?P<tapped> tapped)?), then shuffle$",
+    r"^(?P<may>you may )?search your library for (?:a card|(?P<many>any number of cards)) "
+    r"named (?P<name>.+?), "
+    r"(?:(?P<reveal>reveal (?:it|them), put (?:it|them) into your hand)|"
+    r"put (?:it|them) onto the battlefield(?P<tapped> tapped)?), then shuffle$",
     re.IGNORECASE,
 )
 _SELF_NAME_RE = re.compile(
@@ -1692,6 +1702,7 @@ def _parse_you_search_named_card_clause(clause: str, *, for_spell: bool) -> Targ
     optional = match.group("may") is not None
     reveal = match.group("reveal") is not None
     tapped = match.group("tapped") is not None
+    many = match.group("many") is not None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
@@ -1709,6 +1720,7 @@ def _parse_you_search_named_card_clause(clause: str, *, for_spell: bool) -> Targ
             controller,
             lambda state: state.name in names,
             destination=Zone.HAND if reveal else Zone.BATTLEFIELD,
+            count=len(controller.library) if many else 1,
             reveal=reveal,
             tapped=tapped,
             source=source,
@@ -2335,6 +2347,7 @@ from .amounts import (  # noqa: E402
     count_expression,
     that_many,
 )
+from .counters import _counter_kind  # noqa: E402
 from .library import (  # noqa: E402
     _read_reveal_from_outside_the_game,
     _reveal_a_quality_card_from_outside_the_game,

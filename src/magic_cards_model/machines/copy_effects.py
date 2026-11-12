@@ -691,9 +691,11 @@ def _copy_then_rider(
 
 
 #: "Each `<group>` becomes a copy of target `<quality>`[ until end of turn]."
-#: - Mirrorform's "Each nonland permanent you control becomes a copy of
-#: target non-Aura permanent." and Mirrorweave's "Each other creature becomes
-#: a copy of target nonlegendary creature until end of turn." CR 707.4: each
+#: ("Each Equipment token you control", Gwyndala, the Progeny: a subtype word
+#: before "token" is a subtype the member must have) - Mirrorform's "Each
+#: nonland permanent you control becomes a copy of target non-Aura permanent."
+#: and Mirrorweave's "Each other creature becomes a copy of target
+#: nonlegendary creature until end of turn." CR 707.4: each
 #: permanent in the group stays on the battlefield and copies the target's
 #: copiable values (CR 707.2, as modified by other copy effects), in one
 #: layer 1a effect each (CR 613.1a) sharing one timestamp (CR 613.7b). The
@@ -702,7 +704,7 @@ def _copy_then_rider(
 #: no duration the copies last until the end of the game (CR 611.2a).
 _EACH_BECOMES_A_COPY_RE = re.compile(
     r"^each (?P<other>other )?(?P<group>(?:non(?:land|creature|token|artifact) )?"
-    r"(?:permanent|creature|artifact|enchantment|land|token))"
+    r"(?:permanent|creature|artifact|enchantment|land|token|[a-z]+ token))"
     r"(?P<whose> you control| your opponents control)?"
     r" becomes a copy of (?P<object>target [^.]+?|that creature)"
     r"(?P<trail> until end of turn| until your next turn)?\.?$",
@@ -731,6 +733,11 @@ def _each_group_member(characteristics: Characteristics, group: str) -> bool:
         if wanted is not None and wanted not in characteristics.types:
             return False
     for word in words[:-1]:
+        if not word.startswith("non"):
+            # "Equipment token" (Gwyndala, the Progeny): a subtype the member must have.
+            if not any(subtype.lower() == word for subtype in characteristics.subtypes):
+                return False
+            continue
         excluded = word.removeprefix("non")
         if excluded == "token":
             if characteristics.is_token:

@@ -613,6 +613,15 @@ def _parse_add_one_of_listed_mana_clause(text: str) -> TargetedClause | None:
     return effect
 
 
+@ABILITY_TEXT.rung("s22")
+def _parse_add_one_of_listed_mana_text(text: str) -> AbilityEffect | None:
+    """A whole non-mana ability that is only "Add {R} or {G}." - Dal R'El,
+    Augment Orphan's landfall trigger. A landfall or enters trigger does not
+    fire from a mana ability, so CR 605.1b does not make it one: it uses the
+    stack and the colour is chosen as it resolves (CR 608.2d)."""
+    return _parse_add_one_of_listed_mana_clause(_strip_non_effect_preamble(text))
+
+
 #: "you may pay `<N>`. If you do, `<consequence>`." - Proft, Consulting
 #: Detective's own "Whenever you scry or surveil, you may pay {2}. If you do,
 #: put a +1/+1 counter on Proft and draw a card." - the ordinary-mana twin of

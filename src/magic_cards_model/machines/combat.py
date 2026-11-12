@@ -165,6 +165,10 @@ KEYWORDS_OUTSIDE_COMBAT: frozenset[str] = frozenset(
         # by name, so a grant ("gain fear", "gain skulk") is recognised too.
         "skulk",
         "fear",
+        # CR 702.73a: "Changeling is a characteristic-defining ability" - a
+        # grant ("except it has changeling", Dominion Infiltration) puts the
+        # line in the abilities, which the computed subtypes read.
+        "changeling",
     }
 )
 
