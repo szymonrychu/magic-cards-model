@@ -900,7 +900,168 @@
       "name": "Zendikar Rising",
       "released_at": "2020-09-25",
       "card_count": 392
+    },
+    "trk": {
+      "name": "Star Trek",
+      "released_at": "2026-11-13",
+      "card_count": 586
+    },
+    "mdd": {
+      "name": "Marvel: Darkhold Destiny",
+      "released_at": "2027-04-09",
+      "card_count": 12
+    },
+    "mbc": {
+      "name": "Mystery Booster Commander Edition",
+      "released_at": "2026-10-19",
+      "card_count": 80
     }
   },
-  "cards_reported": []
+  "cards_reported": [
+    {
+      "name": "All Good Things...",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Andromedan Automatons",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Brazen Bluff",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Captain Jean-Luc Picard",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Conquest Mission",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Dal R'El, Augment Orphan",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Dathon, His Heart Open",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "De-evolve",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Deep Space 9",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "First Contact",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Gwyndala, the Progeny",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Hit It!",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "I'm a Doctor, Not a . . .",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Jett Reno, Problem Solver",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Peace in Our Time",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Replicator",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Support Mission",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Temporal Conqueror",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "The Inner Light",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "The Measure of a Man",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "The Wrath of Khan",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Those Old Scientists",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Will Riker, First in the Field",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Antagonist Incorporator",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Dominion Infiltration",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Dominion Saboteur",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Hive Mind Coprocessor",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Mirror Universe Intrusion",
+      "set": "trk",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "Salt Vampire",
+      "set": "trk",
+      "date": "2026-11-12"
+    }
+  ]
 }
