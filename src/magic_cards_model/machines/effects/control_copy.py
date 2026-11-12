@@ -36,8 +36,8 @@ from ..layers import (
     Layer,
     grant_ability,
     only_this_incarnation,
-    split_and_validate_keywords,
 )
+from ..replacement import copy_exception_keywords
 from ..targeting import (
     RetargetScope,
     profile_for_text,
@@ -1255,7 +1255,7 @@ def _read_copy_exception_list(except_text: str | None) -> _CopyExceptionList | N
         elif (granted := _EXCEPT_HAS_QUOTE_PART_RE.fullmatch(part)) is not None:
             abilities.append(quoted[int(granted.group("index"))])
         elif (has := _EXCEPT_HAS_PART_RE.fullmatch(part)) is not None:
-            keywords = split_and_validate_keywords(has.group("keywords"))
+            keywords = copy_exception_keywords(has.group("keywords"))
             if keywords is None:
                 return None
             abilities.append(", ".join(keywords))
