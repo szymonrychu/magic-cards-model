@@ -6338,27 +6338,29 @@ def _merge_target_then_life_equal_to_its_mana_value_clauses(
 
 #: "You may exile `<n>` [`<quality>`] cards from your graveyard. If you do,
 #: `<consequence>`." (Emeritus of Ideation's attack trigger, Aegis
-#: Sculptor's upkeep trigger). CR 118.12: the exile is a cost paid as the
-#: ability resolves, and "if you do" checks whether it was paid; CR 118.3:
-#: "A player can't pay a cost without having the necessary resources to pay
-#: it fully" - so with fewer than `<n>` such cards the question is never
-#: asked and nothing is exiled. The consequence may name the ability's own
-#: source ("this creature becomes prepared", "put a +1/+1 counter on this
-#: creature"), so it is read by `_parse_mixed_clause` when the player-clause
-#: reader cannot read it.
-_MAY_EXILE_FROM_GRAVEYARD_COST_RE = re.compile(
-    rf"^you may exile (?P<n>{COUNT}) (?:(?P<quality>[a-z]+) )?cards? from your graveyard\.?$",
+#: Sculptor's upkeep trigger) and the same pair for the hand - "You may exile
+#: a card from your hand. If you do, draw a card." (The Wrath of Khan's
+#: chapter II). CR 118.12: the exile is a cost paid as the ability resolves,
+#: and "if you do" checks whether it was paid; CR 118.3: "A player can't pay a
+#: cost without having the necessary resources to pay it fully" - so with
+#: fewer than `<n>` such cards the question is never asked and nothing is
+#: exiled. The consequence may name the ability's own source ("this creature
+#: becomes prepared", "put a +1/+1 counter on this creature"), so it is read
+#: by `_parse_mixed_clause` when the player-clause reader cannot read it.
+_MAY_EXILE_FROM_OWN_ZONE_COST_RE = re.compile(
+    rf"^you may exile (?P<n>{COUNT}) (?:(?P<quality>[a-z]+) )?cards? from your "
+    r"(?P<zone>graveyard|hand)\.?$",
     re.IGNORECASE,
 )
 
 
-def _merge_may_exile_from_graveyard_if_you_do_clauses(
+def _merge_may_exile_from_own_zone_if_you_do_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
-    """`_MAY_EXILE_FROM_GRAVEYARD_COST_RE`, then "If you do, `<clause>`"."""
+    """`_MAY_EXILE_FROM_OWN_ZONE_COST_RE`, then "If you do, `<clause>`"."""
     if index + 1 >= len(clauses):
         return None
-    cost = _MAY_EXILE_FROM_GRAVEYARD_COST_RE.fullmatch(clauses[index].strip())
+    cost = _MAY_EXILE_FROM_OWN_ZONE_COST_RE.fullmatch(clauses[index].strip())
     if cost is None:
         return None
     if_match = _IF_YOU_DO_RE.fullmatch(clauses[index + 1].strip())
@@ -6373,6 +6375,7 @@ def _merge_may_exile_from_graveyard_if_you_do_clauses(
         predicate = _nonland_or_typed_card_matcher(quality) or _quality_matcher(quality)
         if predicate is None:
             return None
+    from_hand = cost.group("zone").lower() == "hand"
     consequence_text = if_match.group("consequence").strip().rstrip(".")
     player_consequence = parse_clause_effect(consequence_text)
     object_consequence = (
@@ -6388,14 +6391,14 @@ def _merge_may_exile_from_graveyard_if_you_do_clauses(
         player = game.controller_of(stack_object)
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
         source_id = source_id_of(stack_object)
-        pool = [card for card in player.graveyard if predicate is None or predicate(card)]
+        zone = player.hand if from_hand else player.graveyard
+        pool = [card for card in zone if predicate is None or predicate(card)]
         if len(pool) < count:
             return  # CR 118.3: the cost can't be paid, so it wasn't.
         if not game.may(player, prompt, source=source, source_id=source_id):
             return
-        _exile_cards_from_graveyard(
-            game, player, count, source, source_id=source_id, predicate=predicate
-        )
+        exile_cards = _exile_cards_from_hand if from_hand else _exile_cards_from_graveyard
+        exile_cards(game, player, count, source, source_id=source_id, predicate=predicate)
         game.announce_batched_events()
         if player_consequence is not None:
             player_consequence(game, player, source, source_id)
@@ -6625,6 +6628,7 @@ from .removal import (  # noqa: E402
     _cost_sacrificed_mana_value,
     _each_player_exile_until,
     _exile_cards_from_graveyard,
+    _exile_cards_from_hand,
     _may_sacrifice_for_its_mana_value,
     _parse_exile_antecedent,
     _parse_exile_top_of_other_libraries_antecedent,

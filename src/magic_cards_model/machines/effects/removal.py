@@ -987,6 +987,45 @@ def _exile_cards_from_graveyard(
     return exiled
 
 
+def _exile_cards_from_hand(
+    game: "Game",
+    player: Player,
+    count: int,
+    source: str,
+    *,
+    source_id: str | None,
+    predicate: Callable[[CardState], bool] | None = None,
+    prompt: str | None = None,
+) -> list[CardState]:
+    """CR 608.2d: `player` exiles `count` cards of their own choice from their
+    own hand (CR 701.13a's move to the exile zone), the hand twin of
+    `_exile_cards_from_graveyard`. A hand holding fewer qualifying cards than
+    `count` exiles what is there (CR 609.3), and one holding none asks
+    nothing. Returns the cards exiled; `Game.record_count` is left at their
+    number for a later "that many"."""
+    pool = [card for card in player.hand if predicate is None or predicate(card)]
+    needed = min(count, len(pool))
+    if needed <= 0:
+        game.record_count(0)
+        return []
+    chosen_ids = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=player.username,
+            prompt=prompt or f"exile {needed} card(s) from your hand",
+            source=source,
+            amount=needed,
+            cards=tuple(state.id for state in pool),
+            source_id=source_id,
+        )
+    )
+    assert isinstance(chosen_ids, tuple)
+    by_id = {state.id: state for state in pool}
+    exiled = game.exile_cards([by_id[card_id] for card_id in chosen_ids])
+    game.record_count(len(exiled))
+    return exiled
+
+
 def regenerate_ability_targets(game: "Game", stack_object: "StackObject") -> None:
     """Create a CR 701.19a regeneration shield on each permanent this still
     legally targets - Asceticism's `{1}{G}`, Welding Jar's sacrifice ability.
@@ -2865,24 +2904,14 @@ def _parse_exile_cards_from_your_hand_clause(text: str) -> AbilityEffect | None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        player = game.player(ability.controller)
-        hand = list(player.hand)
-        if not hand:
-            return
-        chosen = game.ask(
-            Decision(
-                kind=DecisionKind.CHOOSE_CARDS,
-                player=player.username,
-                prompt=text.strip().rstrip(".").lower(),
-                source=ability.source_name,
-                source_id=source_id_of(ability),
-                amount=min(count, len(hand)),
-                cards=tuple(state.id for state in hand),
-            )
+        _exile_cards_from_hand(
+            game,
+            game.player(ability.controller),
+            count,
+            ability.source_name,
+            source_id=source_id_of(ability),
+            prompt=text.strip().rstrip(".").lower(),
         )
-        assert isinstance(chosen, tuple)
-        by_id = {state.id: state for state in hand}
-        game.exile_cards([by_id[card_id] for card_id in chosen])
 
     return effect
 
