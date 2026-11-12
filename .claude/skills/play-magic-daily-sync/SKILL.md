@@ -23,13 +23,14 @@ The API has a path dependency `../magic-cards-model` and `scripts/card_coverage.
 mkdir -p ~/play-magic && cd ~/play-magic
 git clone https://github.com/szymonrychu/magic-cards-model      # or git pull --ff-only if present
 git clone https://github.com/szymonrychu/magic-cards-model-api
-(cd magic-cards-model && mise trust && mise install && mise run install)
+(cd magic-cards-model && mise trust && mise install && mise run install && mise run rules:pull)
 (cd magic-cards-model-api && mise trust && mise install && mise run install)
 ```
 
-Secret hygiene: never print or commit env values, tokens or `.env`. Before each commit run
-`gitleaks git --pre-commit --staged --redact --no-banner`; before each push run
-`gitleaks git --redact --no-banner --log-opts="origin/main..HEAD"`. Never `--no-verify`.
+Secret hygiene: never print or commit env values, tokens or `.env`. Before each commit, in
+every repo committed to (engine and API), run `gitleaks git --pre-commit --staged --redact
+--no-banner`; before each push, same repos, run `gitleaks git --redact --no-banner
+--log-opts="origin/main..HEAD"`. Never `--no-verify`.
 
 Work on branch `chore/daily-sync-YYYY-MM-DD` in the engine repo, cut from fresh `origin/main`.
 
@@ -39,6 +40,10 @@ Work on branch `chore/daily-sync-YYYY-MM-DD` in the engine repo, cut from fresh 
 (`{code: {name, released_at, card_count}}` at the last check) and `cards_reported`
 (`[{name, set, date}]`). Read it; every report is a delta against it. Update it in this
 run's PR.
+
+Seeding: if `sets_seen` is empty, record all current Scryfall sets (types of step 4) without
+processing them, and process only sets with a future `released_at` or released within the
+last 30 days.
 
 ## 3. Metagame and decklists
 
@@ -50,9 +55,11 @@ run's PR.
    import json
    from scripts.spellslinger_client import MCPTransport, SpellslingerClient
    c = SpellslingerClient(MCPTransport())
-   print(json.dumps(c.statistics_decks(format='modern', date_from='YYYY-MM-DD', limit=50, include_cards='full'))[:200000])"
+   r = c.statistics_decks(format='modern', date_from='YYYY-MM-DD', limit=50, include_cards='full')
+   json.dump(r, open('decks.json', 'w'))"
    ```
-   with `date_from` = the previous `metagame_as_of` (or 14 days ago when null). Real lists only:
+   with `date_from` a `YYYY-MM-DD` literal: the previous `metagame_as_of` (or 14 days ago when
+   null). Read `decks.json` selectively (jq or python), never print it whole. Real lists only:
    never build a list from `statistics_archetypes` core cards. Check legality of every card
    with the spellslinger `resolve_cards` tool (`format="modern"`, `fields="legality"`).
 3. Pick new top lists (best placing per archetype, not already in
@@ -119,4 +126,6 @@ Start the card implementor (skill play-magic-card-implementor) with this list.
 ```
 
 Errors are one line each in the same message. Nothing else, no chatter. If the orchestrator
-tools are missing, print the same text as the final answer.
+tools are missing or `orchestrator_session_send` fails, print the full report as the final
+answer and, if a PR was merged, note the report in its body (`gh pr edit <n> --body ...`) so
+the delta is not lost.

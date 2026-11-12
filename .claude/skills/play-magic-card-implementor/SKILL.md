@@ -9,6 +9,9 @@ Long run. Implement the mechanics behind the listed cards, merge, release, deplo
 
 ## 0. Read first
 
+0. Test deploy rights: `kubectl auth can-i create deployments -n mtg-engine`. If no, plan to
+   stop after the image release (working default Q7) and say so in the first superleader note.
+
 1. `docs/automation/user-decisions.md` (answered decisions and working defaults override
    this skill).
 2. Engine `CLAUDE.md`, `ROADMAP.md`, the tail of `MEMORY.md`, the titles of `memory/*.md`
@@ -36,15 +39,19 @@ Long run. Implement the mechanics behind the listed cards, merge, release, deplo
 mkdir -p ~/play-magic && cd ~/play-magic
 git clone https://github.com/szymonrychu/magic-cards-model      # or git pull --ff-only
 git clone https://github.com/szymonrychu/magic-cards-model-api
-(cd magic-cards-model && mise trust && mise install && mise run install)
-(cd magic-cards-model-api && mise trust && mise install && mise run install)
+for r in magic-cards-model magic-cards-model-api; do
+  (cd $r && mise trust && mise install && mise run install && mise run rules:pull)
+done
 ```
 
-Siblings are required (API path dependency `../magic-cards-model`). One git worktree per
-mechanic branch inside the engine repo's parent dir. Never print or commit env values or
-`.env`. Before each commit: `gitleaks git --pre-commit --staged --redact --no-banner`.
-Before each push: `gitleaks git --redact --no-banner --log-opts="origin/main..HEAD"`.
-Never `--no-verify`.
+Work in these main sibling clones (API path dependency `../magic-cards-model`,
+`card_coverage.py` reads `../magic-cards-model-api/decks`), one mechanic branch at a time via
+`git switch -c feat/<mechanic> origin/main`; no per-mechanic worktrees. Parallel subagents
+must not switch branches in the shared clone: if parallelism is used, each gets its own
+`~/play-magic/<n>/` pair of sibling clones with the same setup. Never print or commit env
+values or `.env`. Before each commit, in every repo committed to (engine and API):
+`gitleaks git --pre-commit --staged --redact --no-banner`. Before each push, same repos:
+`gitleaks git --redact --no-banner --log-opts="origin/main..HEAD"`. Never `--no-verify`.
 
 ## 2. Main must be green
 
@@ -54,8 +61,9 @@ Never `--no-verify`.
 ## 3. Input
 
 The card list from the start prompt. If it says "the latest daily report" or is absent,
-recompute: newest `docs/card_coverage/*/status.md` rows with bucket `not_working` for sets in
-`docs/automation/sync-state.json`, plus `docs/card_coverage/000-metagame/status.md`.
+recompute: all sets in `docs/automation/sync-state.json` `sets_seen` with a future or recent
+(last 30 days) `released_at`, using their `docs/card_coverage/<NNN>-<code>/status.md` "Cards
+needing work" table (bucket `not_working`), plus `docs/card_coverage/000-metagame/status.md`.
 Re-verify each card before working: `uv run python scripts/survey_cards.py "Name" ...`
 (a card may be fixed already; drop it).
 
@@ -93,11 +101,14 @@ CLAUDE.md `SWEEP_DRIVER_GAPS` is for sweep cases the harness cannot drive.
 
 The engine has no release; images pick up engine main at the next API main build.
 
-1. API repo: open a PR to main that carries the release, either the new decks from daily-sync
-   or a `chore(engine): pick up <PR titles>` change (a PR needs a diff: append one dated line
-   to the API `MEMORY.md`; conventional title; `scripts/next_version.py` gives feat=minor, `!`=major, else patch).
-2. `gh pr checks <n> --watch`, squash-merge, then wait for the API CI `images` job to push the
-   tag: `git fetch --tags && git tag -l 'v*' --sort=-v:refname | head -1` -> `vX.Y.Z`.
+1. API repo: open a PR to main that carries the release. Prefer a real diff (new decks or
+   coverage the API needs). Fallback: append-only `docs/engine-releases.md` in the API repo
+   (created on first use), one line per release: date, engine main sha, cards/mechanics. Do
+   not touch the API `MEMORY.md`. Title `chore(engine): <summary>`; the bump is a patch via
+   `scripts/next_version.py` (verify its output; feat=minor, `!`=major).
+2. `gh pr checks <n> --watch`, squash-merge, wait for the API CI `images` job to push the
+   tag, then in the API repo: `git fetch --tags && git tag -l 'v*' --sort=-v:refname | head -1`
+   -> `vX.Y.Z`.
 3. Deploy: `cd ~/play-magic/magic-cards-model-api && mise run k8s:deploy X.Y.Z` (the single
    argument is the bare version `X.Y.Z`; env alternative `MTG_VERSION`). Watch the phases:
    CNPG ready, migration Job `mtg-migrate-X.Y.Z` complete, Deployment rollout

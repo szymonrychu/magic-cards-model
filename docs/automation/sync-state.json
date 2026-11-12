@@ -1,5 +1,906 @@
 {
-  "metagame_as_of": null,
-  "sets_seen": {},
+  "metagame_as_of": "2026-10-11",
+  "sets_seen": {
+    "10e": {
+      "name": "Tenth Edition",
+      "released_at": "2007-07-13",
+      "card_count": 510
+    },
+    "2ed": {
+      "name": "Unlimited Edition",
+      "released_at": "1993-12-01",
+      "card_count": 302
+    },
+    "2x2": {
+      "name": "Double Masters 2022",
+      "released_at": "2022-07-08",
+      "card_count": 579
+    },
+    "2xm": {
+      "name": "Double Masters",
+      "released_at": "2020-08-07",
+      "card_count": 384
+    },
+    "3ed": {
+      "name": "Revised Edition",
+      "released_at": "1994-04-11",
+      "card_count": 306
+    },
+    "4bb": {
+      "name": "Fourth Edition Foreign Black Border",
+      "released_at": "1995-04-01",
+      "card_count": 378
+    },
+    "4ed": {
+      "name": "Fourth Edition",
+      "released_at": "1995-04-01",
+      "card_count": 380
+    },
+    "5dn": {
+      "name": "Fifth Dawn",
+      "released_at": "2004-06-04",
+      "card_count": 165
+    },
+    "5ed": {
+      "name": "Fifth Edition",
+      "released_at": "1997-03-24",
+      "card_count": 460
+    },
+    "6ed": {
+      "name": "Classic Sixth Edition",
+      "released_at": "1999-04-21",
+      "card_count": 351
+    },
+    "7ed": {
+      "name": "Seventh Edition",
+      "released_at": "2001-04-11",
+      "card_count": 708
+    },
+    "8ed": {
+      "name": "Eighth Edition",
+      "released_at": "2003-07-28",
+      "card_count": 711
+    },
+    "9ed": {
+      "name": "Ninth Edition",
+      "released_at": "2005-07-29",
+      "card_count": 710
+    },
+    "a25": {
+      "name": "Masters 25",
+      "released_at": "2018-03-16",
+      "card_count": 249
+    },
+    "acr": {
+      "name": "Assassin's Creed",
+      "released_at": "2024-07-05",
+      "card_count": 309
+    },
+    "aer": {
+      "name": "Aether Revolt",
+      "released_at": "2017-01-20",
+      "card_count": 197
+    },
+    "afr": {
+      "name": "Adventures in the Forgotten Realms",
+      "released_at": "2021-07-23",
+      "card_count": 402
+    },
+    "akh": {
+      "name": "Amonkhet",
+      "released_at": "2017-04-28",
+      "card_count": 287
+    },
+    "ala": {
+      "name": "Shards of Alara",
+      "released_at": "2008-10-03",
+      "card_count": 250
+    },
+    "all": {
+      "name": "Alliances",
+      "released_at": "1996-06-10",
+      "card_count": 199
+    },
+    "apc": {
+      "name": "Apocalypse",
+      "released_at": "2001-06-04",
+      "card_count": 143
+    },
+    "arb": {
+      "name": "Alara Reborn",
+      "released_at": "2009-04-30",
+      "card_count": 145
+    },
+    "arn": {
+      "name": "Arabian Nights",
+      "released_at": "1993-12-17",
+      "card_count": 92
+    },
+    "atq": {
+      "name": "Antiquities",
+      "released_at": "1994-03-04",
+      "card_count": 102
+    },
+    "avr": {
+      "name": "Avacyn Restored",
+      "released_at": "2012-05-04",
+      "card_count": 244
+    },
+    "bbd": {
+      "name": "Battlebond",
+      "released_at": "2018-06-08",
+      "card_count": 256
+    },
+    "bchr": {
+      "name": "Chronicles Foreign Black Border",
+      "released_at": "1995-07-01",
+      "card_count": 125
+    },
+    "bfz": {
+      "name": "Battle for Zendikar",
+      "released_at": "2015-10-02",
+      "card_count": 299
+    },
+    "big": {
+      "name": "The Big Score",
+      "released_at": "2024-04-19",
+      "card_count": 95
+    },
+    "blb": {
+      "name": "Bloomburrow",
+      "released_at": "2024-08-02",
+      "card_count": 397
+    },
+    "bng": {
+      "name": "Born of the Gods",
+      "released_at": "2014-02-07",
+      "card_count": 165
+    },
+    "bok": {
+      "name": "Betrayers of Kamigawa",
+      "released_at": "2005-02-04",
+      "card_count": 165
+    },
+    "bro": {
+      "name": "The Brothers' War",
+      "released_at": "2022-11-18",
+      "card_count": 387
+    },
+    "chk": {
+      "name": "Champions of Kamigawa",
+      "released_at": "2004-10-01",
+      "card_count": 307
+    },
+    "chr": {
+      "name": "Chronicles",
+      "released_at": "1995-07-01",
+      "card_count": 125
+    },
+    "clb": {
+      "name": "Commander Legends: Battle for Baldur's Gate",
+      "released_at": "2022-06-10",
+      "card_count": 936
+    },
+    "clu": {
+      "name": "Ravnica: Clue Edition",
+      "released_at": "2024-02-23",
+      "card_count": 284
+    },
+    "cmm": {
+      "name": "Commander Masters",
+      "released_at": "2023-08-04",
+      "card_count": 1067
+    },
+    "cmr": {
+      "name": "Commander Legends",
+      "released_at": "2020-11-20",
+      "card_count": 718
+    },
+    "cn2": {
+      "name": "Conspiracy: Take the Crown",
+      "released_at": "2016-08-26",
+      "card_count": 222
+    },
+    "cns": {
+      "name": "Conspiracy",
+      "released_at": "2014-06-06",
+      "card_count": 210
+    },
+    "con": {
+      "name": "Conflux",
+      "released_at": "2009-02-06",
+      "card_count": 145
+    },
+    "csp": {
+      "name": "Coldsnap",
+      "released_at": "2006-07-21",
+      "card_count": 155
+    },
+    "dbl": {
+      "name": "Innistrad: Double Feature",
+      "released_at": "2022-01-28",
+      "card_count": 535
+    },
+    "dft": {
+      "name": "Aetherdrift",
+      "released_at": "2025-02-14",
+      "card_count": 553
+    },
+    "dgm": {
+      "name": "Dragon's Maze",
+      "released_at": "2013-05-03",
+      "card_count": 156
+    },
+    "dis": {
+      "name": "Dissension",
+      "released_at": "2006-05-05",
+      "card_count": 180
+    },
+    "dka": {
+      "name": "Dark Ascension",
+      "released_at": "2012-02-03",
+      "card_count": 158
+    },
+    "dmr": {
+      "name": "Dominaria Remastered",
+      "released_at": "2023-01-13",
+      "card_count": 457
+    },
+    "dmu": {
+      "name": "Dominaria United",
+      "released_at": "2022-09-09",
+      "card_count": 436
+    },
+    "dom": {
+      "name": "Dominaria",
+      "released_at": "2018-04-27",
+      "card_count": 280
+    },
+    "drk": {
+      "name": "The Dark",
+      "released_at": "1994-08-01",
+      "card_count": 122
+    },
+    "dsk": {
+      "name": "Duskmourn: House of Horror",
+      "released_at": "2024-09-27",
+      "card_count": 417
+    },
+    "dst": {
+      "name": "Darksteel",
+      "released_at": "2004-02-06",
+      "card_count": 165
+    },
+    "dtk": {
+      "name": "Dragons of Tarkir",
+      "released_at": "2015-03-27",
+      "card_count": 264
+    },
+    "ecl": {
+      "name": "Lorwyn Eclipsed",
+      "released_at": "2026-01-23",
+      "card_count": 408
+    },
+    "eld": {
+      "name": "Throne of Eldraine",
+      "released_at": "2019-10-04",
+      "card_count": 397
+    },
+    "ema": {
+      "name": "Eternal Masters",
+      "released_at": "2016-06-10",
+      "card_count": 249
+    },
+    "emn": {
+      "name": "Eldritch Moon",
+      "released_at": "2016-07-22",
+      "card_count": 208
+    },
+    "eoe": {
+      "name": "Edge of Eternities",
+      "released_at": "2025-08-01",
+      "card_count": 400
+    },
+    "eve": {
+      "name": "Eventide",
+      "released_at": "2008-07-25",
+      "card_count": 180
+    },
+    "exo": {
+      "name": "Exodus",
+      "released_at": "1998-06-15",
+      "card_count": 143
+    },
+    "fbb": {
+      "name": "Foreign Black Border",
+      "released_at": "1994-04-11",
+      "card_count": 307
+    },
+    "fdn": {
+      "name": "Foundations",
+      "released_at": "2024-11-15",
+      "card_count": 771
+    },
+    "fem": {
+      "name": "Fallen Empires",
+      "released_at": "1994-11-01",
+      "card_count": 187
+    },
+    "fin": {
+      "name": "Final Fantasy",
+      "released_at": "2025-06-13",
+      "card_count": 598
+    },
+    "fra": {
+      "name": "Reality Fracture",
+      "released_at": "2026-10-02",
+      "card_count": 462
+    },
+    "frf": {
+      "name": "Fate Reforged",
+      "released_at": "2015-01-23",
+      "card_count": 191
+    },
+    "fut": {
+      "name": "Future Sight",
+      "released_at": "2007-05-04",
+      "card_count": 180
+    },
+    "gpt": {
+      "name": "Guildpact",
+      "released_at": "2006-02-03",
+      "card_count": 167
+    },
+    "grn": {
+      "name": "Guilds of Ravnica",
+      "released_at": "2018-10-05",
+      "card_count": 273
+    },
+    "gtc": {
+      "name": "Gatecrash",
+      "released_at": "2013-02-01",
+      "card_count": 249
+    },
+    "h1r": {
+      "name": "Modern Horizons 1 Timeshifts",
+      "released_at": "2021-06-18",
+      "card_count": 40
+    },
+    "h2r": {
+      "name": "Modern Horizons 2 Timeshifts",
+      "released_at": "2024-06-14",
+      "card_count": 16
+    },
+    "hml": {
+      "name": "Homelands",
+      "released_at": "1995-10-01",
+      "card_count": 140
+    },
+    "hob": {
+      "name": "The Hobbit",
+      "released_at": "2026-08-14",
+      "card_count": 321
+    },
+    "hou": {
+      "name": "Hour of Devastation",
+      "released_at": "2017-07-14",
+      "card_count": 209
+    },
+    "ice": {
+      "name": "Ice Age",
+      "released_at": "1995-06-03",
+      "card_count": 383
+    },
+    "iko": {
+      "name": "Ikoria: Lair of Behemoths",
+      "released_at": "2020-04-24",
+      "card_count": 389
+    },
+    "ima": {
+      "name": "Iconic Masters",
+      "released_at": "2017-11-17",
+      "card_count": 249
+    },
+    "inr": {
+      "name": "Innistrad Remastered",
+      "released_at": "2025-01-24",
+      "card_count": 495
+    },
+    "inv": {
+      "name": "Invasion",
+      "released_at": "2000-10-02",
+      "card_count": 354
+    },
+    "isd": {
+      "name": "Innistrad",
+      "released_at": "2011-09-30",
+      "card_count": 264
+    },
+    "j22": {
+      "name": "Jumpstart 2022",
+      "released_at": "2022-12-02",
+      "card_count": 835
+    },
+    "j25": {
+      "name": "Foundations Jumpstart",
+      "released_at": "2024-11-15",
+      "card_count": 779
+    },
+    "jmp": {
+      "name": "Jumpstart",
+      "released_at": "2020-07-17",
+      "card_count": 496
+    },
+    "jou": {
+      "name": "Journey into Nyx",
+      "released_at": "2014-05-02",
+      "card_count": 165
+    },
+    "jud": {
+      "name": "Judgment",
+      "released_at": "2002-05-27",
+      "card_count": 143
+    },
+    "khm": {
+      "name": "Kaldheim",
+      "released_at": "2021-02-05",
+      "card_count": 407
+    },
+    "kld": {
+      "name": "Kaladesh",
+      "released_at": "2016-09-30",
+      "card_count": 278
+    },
+    "ktk": {
+      "name": "Khans of Tarkir",
+      "released_at": "2014-09-26",
+      "card_count": 293
+    },
+    "lci": {
+      "name": "The Lost Caverns of Ixalan",
+      "released_at": "2023-11-17",
+      "card_count": 415
+    },
+    "lea": {
+      "name": "Limited Edition Alpha",
+      "released_at": "1993-08-05",
+      "card_count": 295
+    },
+    "leb": {
+      "name": "Limited Edition Beta",
+      "released_at": "1993-10-04",
+      "card_count": 302
+    },
+    "leg": {
+      "name": "Legends",
+      "released_at": "1994-06-01",
+      "card_count": 310
+    },
+    "lgn": {
+      "name": "Legions",
+      "released_at": "2003-02-03",
+      "card_count": 145
+    },
+    "lrw": {
+      "name": "Lorwyn",
+      "released_at": "2007-10-12",
+      "card_count": 301
+    },
+    "ltr": {
+      "name": "The Lord of the Rings: Tales of Middle-earth",
+      "released_at": "2023-06-23",
+      "card_count": 854
+    },
+    "m10": {
+      "name": "Magic 2010",
+      "released_at": "2009-07-17",
+      "card_count": 249
+    },
+    "m11": {
+      "name": "Magic 2011",
+      "released_at": "2010-07-16",
+      "card_count": 249
+    },
+    "m12": {
+      "name": "Magic 2012",
+      "released_at": "2011-07-15",
+      "card_count": 249
+    },
+    "m13": {
+      "name": "Magic 2013",
+      "released_at": "2012-07-13",
+      "card_count": 249
+    },
+    "m14": {
+      "name": "Magic 2014",
+      "released_at": "2013-07-19",
+      "card_count": 249
+    },
+    "m15": {
+      "name": "Magic 2015",
+      "released_at": "2014-07-18",
+      "card_count": 284
+    },
+    "m19": {
+      "name": "Core Set 2019",
+      "released_at": "2018-07-13",
+      "card_count": 314
+    },
+    "m20": {
+      "name": "Core Set 2020",
+      "released_at": "2019-07-12",
+      "card_count": 345
+    },
+    "m21": {
+      "name": "Core Set 2021",
+      "released_at": "2020-07-03",
+      "card_count": 397
+    },
+    "mat": {
+      "name": "March of the Machine: The Aftermath",
+      "released_at": "2023-05-12",
+      "card_count": 230
+    },
+    "mb2": {
+      "name": "Mystery Booster 2",
+      "released_at": "2024-08-02",
+      "card_count": 385
+    },
+    "mbs": {
+      "name": "Mirrodin Besieged",
+      "released_at": "2011-02-04",
+      "card_count": 155
+    },
+    "mh1": {
+      "name": "Modern Horizons",
+      "released_at": "2019-06-14",
+      "card_count": 255
+    },
+    "mh2": {
+      "name": "Modern Horizons 2",
+      "released_at": "2021-06-18",
+      "card_count": 492
+    },
+    "mh3": {
+      "name": "Modern Horizons 3",
+      "released_at": "2024-06-14",
+      "card_count": 524
+    },
+    "mid": {
+      "name": "Innistrad: Midnight Hunt",
+      "released_at": "2021-09-24",
+      "card_count": 392
+    },
+    "mir": {
+      "name": "Mirage",
+      "released_at": "1996-10-08",
+      "card_count": 353
+    },
+    "mkm": {
+      "name": "Murders at Karlov Manor",
+      "released_at": "2024-02-09",
+      "card_count": 451
+    },
+    "mm2": {
+      "name": "Modern Masters 2015",
+      "released_at": "2015-05-22",
+      "card_count": 249
+    },
+    "mm3": {
+      "name": "Modern Masters 2017",
+      "released_at": "2017-03-17",
+      "card_count": 249
+    },
+    "mma": {
+      "name": "Modern Masters",
+      "released_at": "2013-06-07",
+      "card_count": 229
+    },
+    "mmq": {
+      "name": "Mercadian Masques",
+      "released_at": "1999-10-04",
+      "card_count": 350
+    },
+    "mom": {
+      "name": "March of the Machine",
+      "released_at": "2023-04-21",
+      "card_count": 387
+    },
+    "mor": {
+      "name": "Morningtide",
+      "released_at": "2008-02-01",
+      "card_count": 150
+    },
+    "mrd": {
+      "name": "Mirrodin",
+      "released_at": "2003-10-02",
+      "card_count": 306
+    },
+    "msh": {
+      "name": "Marvel Super Heroes",
+      "released_at": "2026-06-26",
+      "card_count": 453
+    },
+    "nem": {
+      "name": "Nemesis",
+      "released_at": "2000-02-14",
+      "card_count": 143
+    },
+    "neo": {
+      "name": "Kamigawa: Neon Dynasty",
+      "released_at": "2022-02-18",
+      "card_count": 515
+    },
+    "nph": {
+      "name": "New Phyrexia",
+      "released_at": "2011-05-13",
+      "card_count": 175
+    },
+    "ody": {
+      "name": "Odyssey",
+      "released_at": "2001-10-01",
+      "card_count": 353
+    },
+    "ogw": {
+      "name": "Oath of the Gatewatch",
+      "released_at": "2016-01-22",
+      "card_count": 187
+    },
+    "one": {
+      "name": "Phyrexia: All Will Be One",
+      "released_at": "2023-02-10",
+      "card_count": 479
+    },
+    "ons": {
+      "name": "Onslaught",
+      "released_at": "2002-10-07",
+      "card_count": 351
+    },
+    "ori": {
+      "name": "Magic Origins",
+      "released_at": "2015-07-17",
+      "card_count": 288
+    },
+    "otj": {
+      "name": "Outlaws of Thunder Junction",
+      "released_at": "2024-04-19",
+      "card_count": 374
+    },
+    "pcy": {
+      "name": "Prophecy",
+      "released_at": "2000-06-05",
+      "card_count": 144
+    },
+    "plc": {
+      "name": "Planar Chaos",
+      "released_at": "2007-02-02",
+      "card_count": 165
+    },
+    "pls": {
+      "name": "Planeshift",
+      "released_at": "2001-02-05",
+      "card_count": 146
+    },
+    "plst": {
+      "name": "The List",
+      "released_at": "2020-09-26",
+      "card_count": 5741
+    },
+    "rav": {
+      "name": "Ravnica: City of Guilds",
+      "released_at": "2005-10-07",
+      "card_count": 306
+    },
+    "ren": {
+      "name": "Renaissance",
+      "released_at": "1995-08-01",
+      "card_count": 122
+    },
+    "rin": {
+      "name": "Rinascimento",
+      "released_at": "1995-08-01",
+      "card_count": 69
+    },
+    "rix": {
+      "name": "Rivals of Ixalan",
+      "released_at": "2018-01-19",
+      "card_count": 205
+    },
+    "rna": {
+      "name": "Ravnica Allegiance",
+      "released_at": "2019-01-25",
+      "card_count": 273
+    },
+    "roe": {
+      "name": "Rise of the Eldrazi",
+      "released_at": "2010-04-23",
+      "card_count": 248
+    },
+    "rtr": {
+      "name": "Return to Ravnica",
+      "released_at": "2012-10-05",
+      "card_count": 274
+    },
+    "rvr": {
+      "name": "Ravnica Remastered",
+      "released_at": "2024-01-12",
+      "card_count": 531
+    },
+    "scg": {
+      "name": "Scourge",
+      "released_at": "2003-05-26",
+      "card_count": 143
+    },
+    "shm": {
+      "name": "Shadowmoor",
+      "released_at": "2008-05-02",
+      "card_count": 302
+    },
+    "slx": {
+      "name": "Universes Within",
+      "released_at": "2022-03-03",
+      "card_count": 30
+    },
+    "snc": {
+      "name": "Streets of New Capenna",
+      "released_at": "2022-04-29",
+      "card_count": 469
+    },
+    "soi": {
+      "name": "Shadows over Innistrad",
+      "released_at": "2016-04-08",
+      "card_count": 302
+    },
+    "sok": {
+      "name": "Saviors of Kamigawa",
+      "released_at": "2005-06-03",
+      "card_count": 165
+    },
+    "som": {
+      "name": "Scars of Mirrodin",
+      "released_at": "2010-10-01",
+      "card_count": 249
+    },
+    "sos": {
+      "name": "Secrets of Strixhaven",
+      "released_at": "2026-04-24",
+      "card_count": 368
+    },
+    "spm": {
+      "name": "Marvel's Spider-Man",
+      "released_at": "2025-09-26",
+      "card_count": 286
+    },
+    "sth": {
+      "name": "Stronghold",
+      "released_at": "1998-03-02",
+      "card_count": 143
+    },
+    "stx": {
+      "name": "Strixhaven: School of Mages",
+      "released_at": "2021-04-23",
+      "card_count": 383
+    },
+    "sum": {
+      "name": "Summer Magic / Edgar",
+      "released_at": "1994-06-21",
+      "card_count": 306
+    },
+    "tdm": {
+      "name": "Tarkir: Dragonstorm",
+      "released_at": "2025-04-11",
+      "card_count": 426
+    },
+    "thb": {
+      "name": "Theros Beyond Death",
+      "released_at": "2020-01-24",
+      "card_count": 358
+    },
+    "ths": {
+      "name": "Theros",
+      "released_at": "2013-09-27",
+      "card_count": 249
+    },
+    "tla": {
+      "name": "Avatar: The Last Airbender",
+      "released_at": "2025-11-21",
+      "card_count": 394
+    },
+    "tmp": {
+      "name": "Tempest",
+      "released_at": "1997-10-14",
+      "card_count": 350
+    },
+    "tmt": {
+      "name": "Teenage Mutant Ninja Turtles",
+      "released_at": "2026-03-06",
+      "card_count": 320
+    },
+    "tor": {
+      "name": "Torment",
+      "released_at": "2002-02-04",
+      "card_count": 143
+    },
+    "tsb": {
+      "name": "Time Spiral Timeshifted",
+      "released_at": "2006-10-06",
+      "card_count": 121
+    },
+    "tsp": {
+      "name": "Time Spiral",
+      "released_at": "2006-10-06",
+      "card_count": 301
+    },
+    "tsr": {
+      "name": "Time Spiral Remastered",
+      "released_at": "2021-03-19",
+      "card_count": 411
+    },
+    "uds": {
+      "name": "Urza's Destiny",
+      "released_at": "1999-06-07",
+      "card_count": 143
+    },
+    "ulg": {
+      "name": "Urza's Legacy",
+      "released_at": "1999-02-15",
+      "card_count": 143
+    },
+    "uma": {
+      "name": "Ultimate Masters",
+      "released_at": "2018-12-07",
+      "card_count": 254
+    },
+    "usg": {
+      "name": "Urza's Saga",
+      "released_at": "1998-10-12",
+      "card_count": 357
+    },
+    "vis": {
+      "name": "Visions",
+      "released_at": "1997-02-03",
+      "card_count": 167
+    },
+    "vow": {
+      "name": "Innistrad: Crimson Vow",
+      "released_at": "2021-11-19",
+      "card_count": 412
+    },
+    "war": {
+      "name": "War of the Spark",
+      "released_at": "2019-05-03",
+      "card_count": 311
+    },
+    "woe": {
+      "name": "Wilds of Eldraine",
+      "released_at": "2023-09-08",
+      "card_count": 381
+    },
+    "wth": {
+      "name": "Weatherlight",
+      "released_at": "1997-06-09",
+      "card_count": 167
+    },
+    "wwk": {
+      "name": "Worldwake",
+      "released_at": "2010-02-05",
+      "card_count": 145
+    },
+    "xln": {
+      "name": "Ixalan",
+      "released_at": "2017-09-29",
+      "card_count": 289
+    },
+    "zen": {
+      "name": "Zendikar",
+      "released_at": "2009-10-02",
+      "card_count": 269
+    },
+    "znr": {
+      "name": "Zendikar Rising",
+      "released_at": "2020-09-25",
+      "card_count": 392
+    }
+  },
   "cards_reported": []
 }
