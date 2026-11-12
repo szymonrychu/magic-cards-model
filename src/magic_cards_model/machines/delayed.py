@@ -3339,11 +3339,34 @@ _ANAPHOR_AGREEMENT: dict[str, Callable[[CardState, "Game | None"], bool]] = {
     "those tokens": lambda state, game: state.token,
     "the tokens": lambda state, game: state.token,
     "those creatures": lambda state, game: Type.CREATURE in _agreement_types(state, game),
+    # "those <type>s" for the other permanent types and "those permanents":
+    # Will Riker, First in the Field's "Put those land cards onto the
+    # battlefield ... Sacrifice those lands at the beginning of your next end
+    # step." The type word agrees object by object, as "those creatures" does.
+    "those lands": lambda state, game: Type.LAND in _agreement_types(state, game),
+    "those artifacts": lambda state, game: Type.ARTIFACT in _agreement_types(state, game),
+    "those enchantments": lambda state, game: Type.ENCHANTMENT in _agreement_types(state, game),
+    "those planeswalkers": lambda state, game: Type.PLANESWALKER in _agreement_types(state, game),
+    "those permanents": lambda state, game: bool(
+        set(_agreement_types(state, game)) & PERMANENT_TYPES
+    ),
 }
 
 #: The pronouns that name several objects at once: one delayed triggered
 #: ability about all of them (`ActOnEachSubject`), not one per object.
-_PLURAL_ANAPHORS = frozenset({"them", "those tokens", "the tokens", "those creatures"})
+_PLURAL_ANAPHORS = frozenset(
+    {
+        "them",
+        "those tokens",
+        "the tokens",
+        "those creatures",
+        "those lands",
+        "those artifacts",
+        "those enchantments",
+        "those planeswalkers",
+        "those permanents",
+    }
+)
 
 #: What `ActOnEachSubject` does for each verb a plural pronoun can take.
 _PLURAL_ACTIONS: dict[str, Literal["exile", "sacrifice", "destroy", "return_to_hand"]] = {
