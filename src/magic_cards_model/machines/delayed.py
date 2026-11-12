@@ -2704,6 +2704,36 @@ class ChosenObjectTriggeredAbility(DelayedEffectSpecBase):
         effect(game, acting)
 
 
+class SubjectInstructionsAtStep(DelayedEffectSpecBase):
+    """ "At the beginning of the next combat this turn, gain control of that
+    creature until end of turn. Untap it. It gains haste until end of turn."
+    (The Wrath of Khan, chapter I) - a delayed triggered ability (CR 603.7a)
+    whose body is several instructions about the one object an earlier
+    instruction targeted (CR 603.7c), kept as the printed body text and read
+    again when it resolves by `machines/effects/text.subject_instructions_
+    effect`, the same way `ChosenObjectTriggeredAbility` keeps its line.
+
+    The object is the trigger's own `subject_id`/`expected_stamp`
+    (`DelayedTrigger.still_affects`): one that left the battlefield, or came
+    back as a new object (CR 400.7), is not affected. CR 603.7e: the
+    controller is the creating ability's, so "gain control" is that
+    player's.
+    """
+
+    kind: Literal["subject_instructions"] = "subject_instructions"
+
+    instructions: str
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .effects.text import subject_instructions_effect
+
+        subject = trigger.still_affects(game)
+        effect = subject_instructions_effect(self.instructions)
+        if subject is None or effect is None:
+            return
+        effect(game, ability, subject)
+
+
 def chosen_object_turn_trigger_line(text: str) -> str | None:
     """ "Whenever that creature `<condition>` this turn, `<effect>`" as the
     chosen object's own printed trigger ("Whenever this creature
@@ -2832,6 +2862,7 @@ DelayedEffectSpec = Annotated[
     | DiscardCardsAtRandomForController
     | ThatCreatureDiesConsequence
     | ChosenObjectTriggeredAbility
+    | SubjectInstructionsAtStep
     | CounterOnSubjectWhileSourceTapped
     | RemoveCountersFromLinkedCreature
     | PutCountersOnSubject

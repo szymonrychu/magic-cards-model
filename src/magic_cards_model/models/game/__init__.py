@@ -2010,7 +2010,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 177
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 178
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2460,6 +2460,12 @@ class Game(
     #: counts ("for each <type> card in your graveyard", "card types among
     #: cards in your graveyard", "that player's graveyard") now resolve where
     #: an older dump would have resolved the same text as a no-op.
+    #: 178 (T-136 b6): `DelayedEffectSpec` gained the `SubjectInstructionsAtStep`
+    #: variant (a next-combat delayed ability about one targeted creature, The
+    #: Wrath of Khan's chapter I), which an older decode cannot name; and
+    #: "Whenever it ... this turn", "those lands"/"those <type>s" delayed
+    #: sacrifices and "you may exile it. If you do, return it" now resolve
+    #: where an older dump resolved the same text as a no-op.
     #: 177 (T-110 B4): `TurnMachine` gained `extra_turns_begun_by` (CR 500.7,
     #: "haven't begun an extra turn this game"), `ReplaceableEvent` gained
     #: `attacking` (CR 508.4), and a decoded game's permanents now read honorific

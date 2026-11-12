@@ -14,6 +14,11 @@ the same ability written "Whenever it ...":
   many cards from the top of your library. Until the end of your next turn,
   you may play those cards." A spell, no "Choose" opener: "it" is the
   pumped target, and the delayed ability's body is two sentences.
+- **Long River Lurker** (a second proof, an enters trigger) - "... target
+  creature you control can't be blocked this turn. Whenever that creature
+  deals combat damage this turn, you may exile it. If you do, return it to
+  the battlefield under its owner's control." The "that creature" wording
+  after a targeted head, with a may-if-you-do body.
 
 Rules, each looked up with `mise run rules:find` in the session that wrote
 this file:
