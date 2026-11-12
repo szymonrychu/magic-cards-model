@@ -3415,7 +3415,7 @@ _REVEAL_HAND_RE = re.compile(
 #: "two cards" (Gruesome Discovery, no quality at all), "up to two". X is not
 #: read here - nothing in this merge knows the spell's X.
 _CHOOSE_CARD_FROM_REVEALED_RE = re.compile(
-    rf"^you choose (?P<count>(?:up to )?{COUNT}) (?:(?P<quality>.+?) )?cards? from it"
+    rf"^you (?P<may>may )?choose (?P<count>(?:up to )?{COUNT}) (?:(?P<quality>.+?) )?cards? from it"
     r"(?: with mana value (?P<max_mv>\d+) or less)?$",
     re.IGNORECASE,
 )
@@ -3428,6 +3428,24 @@ _DISCARD_THAT_CARD_RE = re.compile(
 #: "exile that card" (Thought-Knot Seer, when not folded into the previous
 #: sentence) - CR 701.13a's move, straight from the revealed hand.
 _EXILE_THAT_CARD_RE = re.compile(r"^(?:then )?exile (?:that card|those cards|them)$", re.IGNORECASE)
+#: "look at target opponent's hand" (Salt Vampire, Vendilion Clique): the
+#: looking twin of `_REVEAL_HAND_RE`. Looking at a hand is not revealing it:
+#: CR 701.20e shows the cards only to the looking player, so the run below
+#: records a `Game.look` for the controller instead of a public reveal.
+_LOOK_AT_HAND_RE = re.compile(
+    r"^look at (?P<who>target (?:player|opponent))'s hand$", re.IGNORECASE
+)
+#: "If you do, that player exiles that card" / "... reveals the chosen card,
+#: puts it on the bottom of their library" - the "may choose" run's gated
+#: consequence, the chosen card moved by its owner's instruction. `verb` is
+#: the move; the optional `then_draw` clause ("draws a card") is the
+#: `_THEN_DRAWS_RE` tail the clause splitter cuts off behind ", then".
+_IF_YOU_DO_THAT_PLAYER_MOVES_RE = re.compile(
+    r"^if you do, that player (?:(?P<exile>exiles that card)"
+    r"|(?P<library>reveals the chosen card, puts it on the bottom of their library))$",
+    re.IGNORECASE,
+)
+_THEN_DRAWS_RE = re.compile(r"^(?:then )?draws? (?P<n>" + COUNT + r") cards?$", re.IGNORECASE)
 #: "you lose N life" - Thoughtseize's own optional fourth sentence.
 _YOU_LOSE_LIFE_RE = re.compile(r"^you lose (?P<life>\d+) life$", re.IGNORECASE)
 
@@ -3517,6 +3535,16 @@ def _merge_reveal_hand_choose_discard_clauses(
     Discovery): the chooser picks that many, or every qualifying card when
     the hand holds fewer (CR 609.3), and the consequence moves all of them.
 
+    The same run reads the "look at" shape (Salt Vampire, Vendilion Clique):
+    "look at target opponent's hand" records a CR 701.20e look for the
+    controller instead of a public reveal, "You may choose ..." asks the
+    controller `Game.may` first, and the consequence is gated ("If you do,
+    that player exiles that card" or "reveals the chosen card, puts it on the
+    bottom of their library"), with an optional ", then draws a card" tail that
+    belongs to the same gate: nothing chosen, nothing drawn. The bare "You
+    choose" pairs with the ungated consequences above and "You may choose"
+    with the gated ones, so the two never claim the same text.
+
     `anaphoric_revealer` lets the first clause say "that player reveals their
     hand" - the player a preceding sentence already targeted, which only a
     caller that has read that sentence (`_parse_condition_instead_clause`)
@@ -3525,10 +3553,14 @@ def _merge_reveal_hand_choose_discard_clauses(
     if index + 2 >= len(clauses):
         return None
     reveal_clause = clauses[index].strip()
-    reveal_match = _REVEAL_HAND_RE.fullmatch(reveal_clause)
-    if reveal_match is None:
+    looks = _LOOK_AT_HAND_RE.fullmatch(reveal_clause)
+    reveal_match = None if looks else _REVEAL_HAND_RE.fullmatch(reveal_clause)
+    if looks is not None:
+        if not _targets_understood(looks.group("who"), allow_player_targets=True):
+            return None
+    elif reveal_match is None:
         return None
-    if reveal_match.group("who").lower() == "that player":
+    elif reveal_match.group("who").lower() == "that player":
         if not anaphoric_revealer:
             return None
     elif not _targets_understood(reveal_clause.split(" reveals", 1)[0], allow_player_targets=True):
@@ -3561,16 +3593,33 @@ def _merge_reveal_hand_choose_discard_clauses(
         return max_mv is None or state.mana_value <= max_mv
 
     consequence_clause = clauses[index + 2].strip()
-    to_exile = _EXILE_THAT_CARD_RE.fullmatch(consequence_clause) is not None
-    if not to_exile and _DISCARD_THAT_CARD_RE.fullmatch(consequence_clause) is None:
+    may_choose = choose_match.group("may") is not None
+    moves = _IF_YOU_DO_THAT_PLAYER_MOVES_RE.fullmatch(consequence_clause)
+    to_library = moves is not None and moves.group("library") is not None
+    to_exile = moves is not None and moves.group("exile") is not None
+    if moves is None:
+        to_exile = _EXILE_THAT_CARD_RE.fullmatch(consequence_clause) is not None
+        if not to_exile and _DISCARD_THAT_CARD_RE.fullmatch(consequence_clause) is None:
+            return None
+    if may_choose != (moves is not None):
+        # "You may choose" pairs with the gated "If you do" consequence, and
+        # the bare "You choose" with the ungated one (Thoughtseize and kin).
         return None
     consumed = 3
+    draw_count = 0
+    if moves is not None and index + 3 < len(clauses):
+        draw_match = _THEN_DRAWS_RE.fullmatch(clauses[index + 3].strip())
+        if draw_match is not None:
+            draw_count = parse_count(draw_match.group("n")) or 0
+            if not draw_count:
+                return None
+            consumed = 4
     life_loss = 0
-    if index + 3 < len(clauses):
-        life_match = _YOU_LOSE_LIFE_RE.fullmatch(clauses[index + 3].strip())
+    if index + consumed < len(clauses):
+        life_match = _YOU_LOSE_LIFE_RE.fullmatch(clauses[index + consumed].strip())
         if life_match is not None:
             life_loss = int(life_match.group("life"))
-            consumed = 4
+            consumed += 1
 
     quality_description = (quality_text or "").strip()
     if max_mv is not None:
@@ -3587,9 +3636,20 @@ def _merge_reveal_hand_choose_discard_clauses(
         )
         if revealer is not None:
             for state in list(revealer.hand):
-                game.reveal(state, source=source)
+                if looks is None:
+                    game.reveal(state, source=source)
+                else:
+                    game.look(state, controller.username, source=source)
             candidates = [state for state in revealer.hand if matches(state)]
-            if candidates:
+            if candidates and (
+                not may_choose
+                or game.may(
+                    controller,
+                    f"choose a card from {revealer.username}'s hand?",
+                    source=source,
+                    source_id=source_id_of(stack_object),
+                )
+            ):
                 most = min(printed_count, len(candidates))
                 noun = f"{quality_description} card".strip()
                 if exact and most == 1:
@@ -3617,8 +3677,14 @@ def _merge_reveal_hand_choose_discard_clauses(
                         _grant_cast_exiled_card_permission_from_sibling_static(
                             game, stack_object, exiled
                         )
+                elif to_library:
+                    for card in chosen:
+                        game.reveal(card, source=source)
+                    game.put_cards_into_library(chosen, to_bottom=True)
                 elif chosen:
                     game.discard_cards(revealer.username, chosen, source=source)
+                if chosen and draw_count:
+                    game.draw_cards(revealer, draw_count)
         if life_loss:
             game.lose_life(controller, life_loss)
 
@@ -6338,27 +6404,29 @@ def _merge_target_then_life_equal_to_its_mana_value_clauses(
 
 #: "You may exile `<n>` [`<quality>`] cards from your graveyard. If you do,
 #: `<consequence>`." (Emeritus of Ideation's attack trigger, Aegis
-#: Sculptor's upkeep trigger). CR 118.12: the exile is a cost paid as the
-#: ability resolves, and "if you do" checks whether it was paid; CR 118.3:
-#: "A player can't pay a cost without having the necessary resources to pay
-#: it fully" - so with fewer than `<n>` such cards the question is never
-#: asked and nothing is exiled. The consequence may name the ability's own
-#: source ("this creature becomes prepared", "put a +1/+1 counter on this
-#: creature"), so it is read by `_parse_mixed_clause` when the player-clause
-#: reader cannot read it.
-_MAY_EXILE_FROM_GRAVEYARD_COST_RE = re.compile(
-    rf"^you may exile (?P<n>{COUNT}) (?:(?P<quality>[a-z]+) )?cards? from your graveyard\.?$",
+#: Sculptor's upkeep trigger) and the same pair for the hand - "You may exile
+#: a card from your hand. If you do, draw a card." (The Wrath of Khan's
+#: chapter II). CR 118.12: the exile is a cost paid as the ability resolves,
+#: and "if you do" checks whether it was paid; CR 118.3: "A player can't pay a
+#: cost without having the necessary resources to pay it fully" - so with
+#: fewer than `<n>` such cards the question is never asked and nothing is
+#: exiled. The consequence may name the ability's own source ("this creature
+#: becomes prepared", "put a +1/+1 counter on this creature"), so it is read
+#: by `_parse_mixed_clause` when the player-clause reader cannot read it.
+_MAY_EXILE_FROM_OWN_ZONE_COST_RE = re.compile(
+    rf"^you may exile (?P<n>{COUNT}) (?:(?P<quality>[a-z]+) )?cards? from your "
+    r"(?P<zone>graveyard|hand)\.?$",
     re.IGNORECASE,
 )
 
 
-def _merge_may_exile_from_graveyard_if_you_do_clauses(
+def _merge_may_exile_from_own_zone_if_you_do_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
-    """`_MAY_EXILE_FROM_GRAVEYARD_COST_RE`, then "If you do, `<clause>`"."""
+    """`_MAY_EXILE_FROM_OWN_ZONE_COST_RE`, then "If you do, `<clause>`"."""
     if index + 1 >= len(clauses):
         return None
-    cost = _MAY_EXILE_FROM_GRAVEYARD_COST_RE.fullmatch(clauses[index].strip())
+    cost = _MAY_EXILE_FROM_OWN_ZONE_COST_RE.fullmatch(clauses[index].strip())
     if cost is None:
         return None
     if_match = _IF_YOU_DO_RE.fullmatch(clauses[index + 1].strip())
@@ -6373,6 +6441,7 @@ def _merge_may_exile_from_graveyard_if_you_do_clauses(
         predicate = _nonland_or_typed_card_matcher(quality) or _quality_matcher(quality)
         if predicate is None:
             return None
+    from_hand = cost.group("zone").lower() == "hand"
     consequence_text = if_match.group("consequence").strip().rstrip(".")
     player_consequence = parse_clause_effect(consequence_text)
     object_consequence = (
@@ -6388,14 +6457,14 @@ def _merge_may_exile_from_graveyard_if_you_do_clauses(
         player = game.controller_of(stack_object)
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
         source_id = source_id_of(stack_object)
-        pool = [card for card in player.graveyard if predicate is None or predicate(card)]
+        zone = player.hand if from_hand else player.graveyard
+        pool = [card for card in zone if predicate is None or predicate(card)]
         if len(pool) < count:
             return  # CR 118.3: the cost can't be paid, so it wasn't.
         if not game.may(player, prompt, source=source, source_id=source_id):
             return
-        _exile_cards_from_graveyard(
-            game, player, count, source, source_id=source_id, predicate=predicate
-        )
+        exile_cards = _exile_cards_from_hand if from_hand else _exile_cards_from_graveyard
+        exile_cards(game, player, count, source, source_id=source_id, predicate=predicate)
         game.announce_batched_events()
         if player_consequence is not None:
             player_consequence(game, player, source, source_id)
@@ -6625,6 +6694,7 @@ from .removal import (  # noqa: E402
     _cost_sacrificed_mana_value,
     _each_player_exile_until,
     _exile_cards_from_graveyard,
+    _exile_cards_from_hand,
     _may_sacrifice_for_its_mana_value,
     _parse_exile_antecedent,
     _parse_exile_top_of_other_libraries_antecedent,

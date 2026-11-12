@@ -66,7 +66,7 @@ if TYPE_CHECKING:
 
 _SELF_NOUN = (
     r"this (?:creature|permanent|artifact|enchantment|card|land|aura|equipment|vehicle"
-    r"|planeswalker|spell|battle|mount|spacecraft)"
+    r"|planeswalker|spell|battle|mount|spacecraft|saga)"
 )
 _EVENT_PRONOUN = r"it|he|she|they|that creature|that permanent|that spell|that card|that land"
 _ATTACHED_TO = (
@@ -848,6 +848,29 @@ def _shares_a_card_type_with_exiled(context: "ConditionContext", match: re.Match
     return any(mine.intersection(card.types) for card in exiled)
 
 
+def _all_exiled_with_share_a_card_type(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "all cards exiled with this Saga share a card type" (All Good
+    Things...): the pile of cards exiled with the holder (CR 607.2a) has one
+    card type, CR 205.2a's list, common to every card in it. An object with
+    several card types satisfies the criteria of each (CR 205.2b), so an
+    artifact creature and a creature share "creature"; three cards that
+    overlap only two at a time share nothing.
+
+    The CR does not define "share a card type" and no ruling exists yet, so
+    the edges follow the owner's decision of 2026-11-12 (T-136 decision 464,
+    `docs/automation/user-decisions.md`): no card exiled is false, a single
+    card is true, two or more are true when their card-type sets intersect."""
+    cards = _exiled_with(context, match.group("holder"))
+    if not cards:
+        return False
+    if len(cards) == 1:
+        return True
+    common = set(cards[0].types)
+    for card in cards[1:]:
+        common &= set(card.types)
+    return bool(common)
+
+
 def _attached_to_quality(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "enchanted Equipment is attached to a creature" (Artificer's Hex)."""
     subject = _subject(context, match.group("subject"))
@@ -1287,6 +1310,10 @@ READERS: tuple[ConditionReader, ...] = (
     ConditionReader(
         re.compile(rf"(?P<subject>{SUBJECT}) shares a card type with the exiled card"),
         _shares_a_card_type_with_exiled,
+    ),
+    ConditionReader(
+        re.compile(rf"all (?:the )?cards exiled with (?P<holder>{SUBJECT}) share a card type"),
+        _all_exiled_with_share_a_card_type,
     ),
     ConditionReader(
         re.compile(rf"(?P<subject>{SUBJECT}) is attached to (?P<quality>{_QUALITY_LIST})"),

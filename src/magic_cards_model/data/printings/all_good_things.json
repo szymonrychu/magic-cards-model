@@ -1,0 +1,129 @@
+{
+  "object": "card",
+  "id": "fe5dda31-159c-49c7-962e-a04b771256ea",
+  "oracle_id": "61dc9770-1e29-49fa-a31b-b63b5f0496fb",
+  "multiverse_ids": [],
+  "resource_id": "2B43D14265AE7C02D790D6C5417C7A73F144E376AC0063114607CE6BD436C6F1",
+  "mtgo_id": 158592,
+  "tcgplayer_id": 725820,
+  "cardmarket_id": 918742,
+  "name": "All Good Things...",
+  "lang": "en",
+  "released_at": "2026-11-13",
+  "uri": "https://api.scryfall.com/cards/fe5dda31-159c-49c7-962e-a04b771256ea",
+  "scryfall_uri": "https://scryfall.com/card/trk/226/all-good-things?utm_source=api",
+  "layout": "saga",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-11-09T10:58:09Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/e/fe5dda31-159c-49c7-962e-a04b771256ea.jpg?1794221889",
+    "normal": "https://cards.scryfall.io/normal/front/f/e/fe5dda31-159c-49c7-962e-a04b771256ea.jpg?1794221889",
+    "large": "https://cards.scryfall.io/large/front/f/e/fe5dda31-159c-49c7-962e-a04b771256ea.jpg?1794221889",
+    "png": "https://cards.scryfall.io/png/front/f/e/fe5dda31-159c-49c7-962e-a04b771256ea.png?1794221889",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/e/fe5dda31-159c-49c7-962e-a04b771256ea.jpg?1794221889",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/e/fe5dda31-159c-49c7-962e-a04b771256ea.jpg?1794221889",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/e/fe5dda31-159c-49c7-962e-a04b771256ea.webp?1794221889",
+    "grid": "https://cards.scryfall.io/grid/front/f/e/fe5dda31-159c-49c7-962e-a04b771256ea.webp?1794221889",
+    "display": "https://cards.scryfall.io/display/front/f/e/fe5dda31-159c-49c7-962e-a04b771256ea.webp?1794221889",
+    "art": "https://cards.scryfall.io/art/front/f/e/fe5dda31-159c-49c7-962e-a04b771256ea.webp?1794221889",
+    "crop": "https://cards.scryfall.io/crop/front/f/e/fe5dda31-159c-49c7-962e-a04b771256ea.webp?1794221889",
+    "jpeg": "https://cards.scryfall.io/normal/front/f/e/fe5dda31-159c-49c7-962e-a04b771256ea.jpg?1794221889"
+  },
+  "mana_cost": "{3}{G}{U}",
+  "cmc": 5.0,
+  "type_line": "Enchantment \u2014 Saga",
+  "oracle_text": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.)\nI, II, III \u2014 Draw two cards, then exile a card from your hand.\nIV \u2014 If all cards exiled with this Saga share a card type, you gain 10 life.",
+  "colors": [
+    "G",
+    "U"
+  ],
+  "color_identity": [
+    "G",
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set": "trk",
+  "set_name": "Star Trek",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b47039dc-da5a-448c-8feb-e77d458108a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atrk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/trk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/fe5dda31-159c-49c7-962e-a04b771256ea/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A61dc9770-1e29-49fa-a31b-b63b5f0496fb&unique=prints",
+  "collector_number": "226",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "d6008283-c1d2-44bd-9775-c8c0493b3183"
+  ],
+  "illustration_id": "fe586f50-3b77-44b9-8eaf-a30d92666a82",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 31820,
+  "preview": {
+    "source": "Polygon",
+    "source_uri": "https://www.polygon.com/magic-the-gathering-star-trek-exclusive-reveal/",
+    "previewed_at": "2026-10-22"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAll%2BGood%2BThings...",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAll%2BGood%2BThings...",
+    "edhrec": "https://edhrec.com/route/?cc=All+Good+Things..."
+  }
+}
