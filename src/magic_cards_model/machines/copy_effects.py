@@ -701,7 +701,7 @@ def _copy_then_rider(
 #: other than the target (and the source, for a permanent's ability). With
 #: no duration the copies last until the end of the game (CR 611.2a).
 _EACH_BECOMES_A_COPY_RE = re.compile(
-    r"^each (?P<other>other )?(?P<group>(?:non(?:land|creature|token|artifact) )?"
+    r"^each (?P<other>other )?(?P<group>(?:[a-z][a-z'-]* )*?"
     r"(?:permanent|creature|artifact|enchantment|land|token))"
     r"(?P<whose> you control| your opponents control)?"
     r" becomes a copy of (?P<object>target [^.]+?|that creature)"
@@ -718,11 +718,39 @@ _GROUP_TYPE_WORDS = {
 }
 
 
+#: The "non`<word>`" qualifiers a group may carry ("nonland permanent",
+#: "nontoken creature"); every other qualifier must be a subtype.
+_GROUP_EXCLUDED_WORDS = frozenset({"land", "creature", "token", "artifact"})
+
+
+def _group_qualifiers(group: str) -> tuple[list[str], list[str]] | None:
+    """`group`'s qualifier words split into the "non`<word>`" exclusions and the
+    subtypes ("Equipment token", "nonland Aura permanent"), or `None` when any
+    qualifier is neither - the clause is then not read at all, because a word
+    that matches no type line would read as a group that is empty while
+    claiming to have been understood (`canonical_subtype`)."""
+    from ..data.subtypes import canonical_subtype
+
+    exclusions: list[str] = []
+    subtypes: list[str] = []
+    for word in group.lower().split()[:-1]:
+        if word.startswith("non") and word.removeprefix("non") in _GROUP_EXCLUDED_WORDS:
+            exclusions.append(word.removeprefix("non"))
+        elif (subtype := canonical_subtype(word)) is not None:
+            subtypes.append(subtype)
+        else:
+            return None
+    return exclusions, subtypes
+
+
 def _each_group_member(characteristics: Characteristics, group: str) -> bool:
     """Whether a permanent with these computed characteristics (CR 613.5) is
-    one of `group`'s ("nonland permanent", "creature", "nontoken creature")."""
-    words = group.lower().split()
-    noun = words[-1]
+    one of `group`'s ("nonland permanent", "nontoken creature", "Equipment
+    token"): the noun, none of the "non" exclusions and every subtype."""
+    qualifiers = _group_qualifiers(group)
+    assert qualifiers is not None, "the clause reader refuses an unread qualifier"
+    exclusions, subtypes = qualifiers
+    noun = group.lower().split()[-1]
     if noun == "token":
         if not characteristics.is_token:
             return False
@@ -730,8 +758,7 @@ def _each_group_member(characteristics: Characteristics, group: str) -> bool:
         wanted = _GROUP_TYPE_WORDS[noun]
         if wanted is not None and wanted not in characteristics.types:
             return False
-    for word in words[:-1]:
-        excluded = word.removeprefix("non")
+    for excluded in exclusions:
         if excluded == "token":
             if characteristics.is_token:
                 return False
@@ -739,7 +766,8 @@ def _each_group_member(characteristics: Characteristics, group: str) -> bool:
         excluded_type = _GROUP_TYPE_WORDS.get(excluded)
         if excluded_type is not None and excluded_type in characteristics.types:
             return False
-    return True
+    own = {each.lower() for each in characteristics.subtypes}
+    return all(subtype in own for subtype in subtypes)
 
 
 def _parse_each_becomes_a_copy_clause(
@@ -749,6 +777,8 @@ def _parse_each_becomes_a_copy_clause(
     if match is None:
         return None
     group = match.group("group")
+    if _group_qualifiers(group) is None:
+        return None
     other = match.group("other") is not None
     whose = (match.group("whose") or "").strip().lower()
     duration = _copy_duration(match.group("trail"))
