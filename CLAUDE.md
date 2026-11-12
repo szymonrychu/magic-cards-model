@@ -10,6 +10,9 @@ path works; it is done when the interactions around it are covered. See
 and check it before writing a scenario, because a mechanic listed as missing
 needs an `xfail` test rather than a test bent until it passes.
 
+Automation: `docs/automation/user-decisions.md` (read first) and the skills
+`play-magic-daily-sync` and `play-magic-card-implementor` in `.claude/skills/`.
+
 ## NEVER state a rule from memory. Look EVERY rule up. No exceptions.
 
 **Your training data is WRONG about the Comprehensive Rules.** Not vague - wrong.
