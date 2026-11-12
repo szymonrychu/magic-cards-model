@@ -39,7 +39,6 @@ card that needed the reader:
   Captain Benjamin Sisko's widened cast-any-number reader.
 """
 
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.conditions.history import DILEMMAS_FACED
@@ -380,13 +379,6 @@ def test_jett_reno_grows_with_each_dilemma() -> None:
     assert jett.counter_count(Counter.PLUS_ONE) == 1
 
 
-_HER_POWER = (
-    "'If her power is 4 or greater' is pronoun self-reference, the T-110 B4 reader; "
-    "this batch rebases on B4 for it (docs/plans T-110 implementation, B2)"
-)
-
-
-@pytest.mark.xfail(strict=True, reason=_HER_POWER)
 def test_jett_reno_surveils_when_she_becomes_tapped() -> None:
     scenario = (
         Scenario()
@@ -407,7 +399,6 @@ def test_jett_reno_surveils_when_she_becomes_tapped() -> None:
     assert top[0].zone is Zone.GRAVEYARD
 
 
-@pytest.mark.xfail(strict=True, reason=_HER_POWER)
 def test_jett_reno_draws_instead_at_power_four() -> None:
     scenario = (
         Scenario()

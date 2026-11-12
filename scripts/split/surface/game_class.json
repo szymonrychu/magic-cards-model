@@ -740,6 +740,7 @@
     "fizzled",
     "pending_triggers",
     "trigger_targets",
+    "players_cant_attack_turns",
     "creatures_cant_attack_until_turns_taken",
     "phased_out",
     "players_skipping_next_untap",
