@@ -2517,6 +2517,49 @@ _GAINS_OR_LOSES_ALL_CREATURE_TYPES_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "<subject> gets +N/+N and <type change> until end of turn." - I'm a Doctor,
+#: Not a . . .'s "it gets +1/+1 and becomes a Doctor" and Nameless Inversion's
+#: "Target creature gets +3/-3 and loses all creature types". Two instructions
+#: in one sentence (CR 608.2c): the pump is sublayer 7c (CR 613.4c) and the
+#: type change is layer 4 (CR 613.1d), both lasting as stated, so each half is
+#: read by the reader of the sentence it would be alone and built from the one
+#: resolution, sharing its timestamp (CR 613.7b). The second half is limited to
+#: the type-change verbs: any other tail ("gains flying", a quoted ability) has
+#: a reader of its own earlier in `_parse_layer_sentence_ungated`.
+_PUMP_AND_TYPE_CHANGE_RE = re.compile(
+    rf"^(?P<subject>{_SUBJECT}) gets? (?P<pump>[+-]\d+/[+-]\d+) and "
+    r"(?P<change>(?:becomes|loses all|gains all) .+?) "
+    r"(?P<duration>until end of turn|until your next turn)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_pump_and_type_change(sentence: str) -> EffectBuilder | None:
+    """`_PUMP_AND_TYPE_CHANGE_RE`'s two halves as one builder, or `None` if
+    either half is not a sentence the layer reader already reads alone."""
+    match = _PUMP_AND_TYPE_CHANGE_RE.fullmatch(sentence)
+    if match is None:
+        return None
+    subject, duration = match["subject"], match["duration"]
+    pump = _parse_layer_sentence_ungated(f"{subject} gets {match['pump']} {duration}.")
+    change = _parse_layer_sentence_ungated(f"{subject} {match['change']} {duration}.")
+    if pump is None or change is None:
+        return None
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            *pump(source, timestamp, targets, context),
+            *change(source, timestamp, targets, context),
+        ]
+
+    return builder
+
+
 #: The card types a "becomes a[n] <type> creature" sentence can name besides
 #: creature itself - CR 300.1's other permanent types, since only a permanent
 #: sits on a battlefield to be targeted this way. Read the same way
@@ -12370,6 +12413,9 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
     if (animation := _parse_animation_sentence(sentence)) is not None:
         return animation
     if (builder := _parse_static_layer_sentence(sentence)) is not None:
+        return builder
+
+    if (builder := _parse_pump_and_type_change(sentence)) is not None:
         return builder
 
     return parse_attached_sentence(sentence) or parse_group_quoted_sentence(sentence)

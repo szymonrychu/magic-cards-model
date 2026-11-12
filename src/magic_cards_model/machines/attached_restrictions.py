@@ -33,7 +33,7 @@ _RESTRICTION_RE = re.compile(
     r"^(?P<cond>as long as another player controls enchanted creature, )?"
     rf"(?P<subject>{_SUBJECT})"
     r"(?: is an? (?P<becomes>[a-z]+) and)?"
-    r"(?: gets [+-]\d+/[+-]\d+ and)?"
+    r"(?: gets [+-]\d+/[+-]\d+(?: and|,))?"
     r"(?: doesn't untap during its controller's untap step and)?"
     rf" can't (?P<what>{_ITEM}(?:(?:, or | or |, | and )(?:{_ITEM}))*)"
     r"(?P<tail>.*?)\.?$",
@@ -66,6 +66,12 @@ _DEACTIVATE_TAIL_RE = re.compile(
 #: creature.
 CONDITIONAL_UMBRA_RE = re.compile(r"otherwise, this aura has umbra armor", re.IGNORECASE)
 _PAY_TAIL_RE = re.compile(r"^ unless its controller pays (?P<cost>.+)$", re.IGNORECASE)
+#: "Enchanted creature gets -4/-0, can't block, and is a Salamander." (De-evolve):
+#: the last part of the list is a layer 4 type set, built by the layer system
+#: (`parse_attached_compound_grant`); this module reads only the restriction.
+_IS_A_TYPE_TAIL_RE = re.compile(
+    r"^,? and is an? [a-z' -]+?(?: in addition to its other types)?$", re.IGNORECASE
+)
 _REQUIREMENT_RE = re.compile(
     r"^(?:enchanted|equipped) creature attacks each combat if able\.?$", re.IGNORECASE
 )
@@ -99,6 +105,9 @@ class AttachedRestriction:
     #: block." - the gate is the pump's, and a restriction on a permanent that
     #: is not a creature matters to nothing.
     block_requirement: bool = False
+    #: The sentence ends in ", and is a <type>" (De-evolve): a layer 4 part this
+    #: module does not build, so the sentence is not a pure restriction.
+    type_tail: bool = False
 
 
 #: "As long as enchanted permanent is a creature, it gets -1/-1 and can't
@@ -174,6 +183,8 @@ def parse_attached(sentence: str) -> AttachedRestriction | None:
     pay = _PAY_TAIL_RE.fullmatch(tail)
     if pay is not None:
         return AttachedRestriction(**{**base.__dict__, "pay": pay["cost"]})
+    if _IS_A_TYPE_TAIL_RE.fullmatch(tail.strip()):
+        return AttachedRestriction(**{**base.__dict__, "type_tail": True})
     return None
 
 
@@ -233,7 +244,15 @@ def _compound_half(subject: str, predicate: str, *, gated: bool):  # noqa: ANN20
     from .layers.parse import _parse_layer_sentence_ungated
 
     sentence = f"{subject} {predicate}."
-    if parse_attached(sentence) is not None:
+    # A restriction that rides on a pump or a type set ("gets -4/-0, can't
+    # block") is not a pure restriction: its first part is a layer shape and
+    # would be dropped, so it is split by `_compound_parts` instead.
+    restriction = parse_attached(sentence)
+    if (
+        restriction is not None
+        and not restriction.type_tail
+        and not re.match(r"(?:gets|has|is an?) ", predicate, re.IGNORECASE)
+    ):
         return _no_effect
     if gated and predicate.lower().startswith("can't be blocked"):
         return _no_effect
@@ -241,6 +260,27 @@ def _compound_half(subject: str, predicate: str, *, gated: bool):  # noqa: ANN20
     if builder is None and not subject.lower().endswith("creature"):
         builder = _parse_layer_sentence_ungated(f"{subject.split()[0]} creature {predicate}.")
     return builder
+
+
+_PART_BREAK_RE = re.compile(r",? and |, ")
+
+
+def _compound_parts(subject: str, predicate: str, *, gated: bool):  # noqa: ANN202
+    """The layer builders of every part of an "and"/comma-joined predicate, or
+    None when some part is unread. The predicate is split at each break first
+    and both sides read the same way, so "gets -4/-0, can't block, and is a
+    Salamander" is three parts and Marooned's "doesn't untap during its
+    controller's untap step and can't be beamed up" is a layer part and a
+    restriction (read whole, `parse_attached` would take the sentence as a pure
+    restriction and drop the untap lock). A predicate no split reads is one
+    part when a reader takes it whole ("has first strike and vigilance")."""
+    for found in _PART_BREAK_RE.finditer(predicate):
+        left = _compound_parts(subject, predicate[: found.start()], gated=gated)
+        right = _compound_parts(subject, predicate[found.end() :], gated=gated)
+        if left is not None and right is not None:
+            return left + right
+    whole = _compound_half(subject, predicate, gated=gated)
+    return None if whole is None else [whole]
 
 
 def parse_attached_compound_grant(sentence: str):  # noqa: ANN201
@@ -251,56 +291,52 @@ def parse_attached_compound_grant(sentence: str):  # noqa: ANN201
     "During your turn, equipped creature has hexproof and can't be blocked."
     (Bilbo's Ring - the turn gate is asked of the layer context, CR 611.3a), and
     "As long as enchanted permanent is a creature, it gets -1/-1 and can't
-    block." (Clawing Torment). None when either half is unread."""
+    block." (Clawing Torment). A part may itself be a comma list, so "Enchanted
+    creature gets -4/-0, can't block, and is a Salamander." (De-evolve) is read
+    part by part. None when any part is unread."""
     text = normalize_attached_sentence(sentence)
     creature_gate = text != sentence.strip()
     match = _COMPOUND_RE.fullmatch(text)
-    if match is None or " and " not in match["rest"]:
+    if match is None or not _PART_BREAK_RE.search(match["rest"]):
         return None
     subject, rest, gated = match["subject"], match["rest"], match["during"] is not None
-    for found in re.finditer(r" and ", rest):
-        left, right = rest[: found.start()], rest[found.end() :]
-        halves = [
-            _compound_half(subject, left, gated=gated),
-            _compound_half(subject, right, gated=gated),
+    halves = _compound_parts(subject, rest, gated=gated)
+    if halves is None or len(halves) < 2:
+        return None
+
+    def builder(
+        source,
+        timestamp,
+        targets,
+        context,
+        halves=halves,
+        gated=gated,
+        creature_gate=creature_gate,
+    ):  # noqa: ANN001, ANN202
+        if gated and context.active_player != source.controller:
+            return []
+        from .layers.parse import _source_line_for
+
+        line = _source_line_for(source, sentence)
+        built = [
+            effect.model_copy(update={"source_ability": line})
+            for half in halves
+            for effect in half(source, timestamp, targets, context)
         ]
-        if any(half is None for half in halves):
-            continue
+        if creature_gate:
+            from .layers.model import Only, OnlyIfCreature
 
-        def builder(
-            source,
-            timestamp,
-            targets,
-            context,
-            halves=halves,
-            gated=gated,
-            creature_gate=creature_gate,
-        ):  # noqa: ANN001, ANN202
-            if gated and context.active_player != source.controller:
-                return []
-            from .layers.parse import _source_line_for
-
-            line = _source_line_for(source, sentence)
             built = [
-                effect.model_copy(update={"source_ability": line})
-                for half in halves
-                for effect in half(source, timestamp, targets, context)
+                effect.model_copy(
+                    update={"selector": OnlyIfCreature(card_id=effect.selector.card_id)}
+                )
+                if isinstance(effect.selector, Only)
+                else effect
+                for effect in built
             ]
-            if creature_gate:
-                from .layers.model import Only, OnlyIfCreature
+        return built
 
-                built = [
-                    effect.model_copy(
-                        update={"selector": OnlyIfCreature(card_id=effect.selector.card_id)}
-                    )
-                    if isinstance(effect.selector, Only)
-                    else effect
-                    for effect in built
-                ]
-            return built
-
-        return builder
-    return None
+    return builder
 
 
 def _attached_restrictions(game: "Game", subject: "CardState"):
