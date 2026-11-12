@@ -4404,7 +4404,9 @@ _TRAILING_THAT_OBJECT_TURN_TRIGGER_RE = re.compile(
 )
 
 
-@ABILITY_TEXT.rung("s20", for_spell=False)
+@ABILITY_TEXT.rung(
+    "s35", for_spell=False, after=["_parse_pump_per_discard_then_delayed_draw_clause"]
+)
 @SPELL_TEXT.rung("s10", for_spell=True)
 def _parse_head_then_that_object_turn_trigger_text(
     text: str, *, for_spell: bool
@@ -4417,7 +4419,11 @@ def _parse_head_then_that_object_turn_trigger_text(
     player this turn, exile that many cards ...". The head is read by the
     ordinary ladder for its side and must be a real effect; the trigger is
     `machines/delayed.ChosenObjectTriggeredAbility`, created after the head
-    resolves (CR 603.7a) about the target if it is still there (CR 608.2b)."""
+    resolves (CR 603.7a) about the target if it is still there (CR 608.2b).
+
+    It runs after the readers whose head counts something the trigger event
+    did (Captain Howler's "for each card discarded this way"): the ordinary
+    ladder reads such a head alone without that count."""
     match = _TRAILING_THAT_OBJECT_TURN_TRIGGER_RE.fullmatch(
         collapsed(_strip_non_effect_preamble(text).strip())
     )
