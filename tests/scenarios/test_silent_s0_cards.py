@@ -1,8 +1,9 @@
 """Scenario: T-109 S0, exalted and ripple cards credited by the keyword oracle.
 
 CR 702.83a: exalted is "Whenever a creature you control attacks alone, that
-creature gets +1/+1 until end of turn", and CR 702.83b: each instance triggers
-separately. CR 702.60a: ripple N is "When you cast this spell, you may reveal
+creature gets +1/+1 until end of turn"; CR 702.83b: a creature attacks alone
+when it is the only one declared, and CR 113.2c: each instance of an ability
+functions independently. CR 702.60a: ripple N is "When you cast this spell, you may reveal
 the top N cards of your library. You may cast spells with the same name as this
 spell from among the revealed cards without paying their mana costs. Put all
 revealed cards not cast this way on the bottom of your library in any order."
@@ -159,7 +160,7 @@ def test_guardians_of_akrasa_defender_cannot_attack_but_exalts_another():
 
 
 def test_two_exalted_creatures_stack_on_a_lone_attacker():
-    """CR 702.83b: two instances of exalted trigger separately."""
+    """CR 113.2c: two instances of exalted trigger separately."""
     assert is_handled("Akrasan Squire") and is_handled("Ethercaste Knight")
     scenario = combat_board(["Akrasan Squire", "Ethercaste Knight"])
     squire = scenario.creature("Akrasan Squire")
@@ -344,7 +345,7 @@ def test_frontline_sage_exalted_and_loots_for_blue():
 
 
 def test_sublime_archangel_gives_other_creatures_exalted_so_they_stack():
-    """CR 702.83b: the Archangel's own instance plus the granted one on the lone attacker."""
+    """CR 113.2c: the Archangel's own instance plus the granted one on the lone attacker."""
     assert is_handled("Sublime Archangel")
     scenario = combat_board(["Sublime Archangel", "Grizzly Bears"])
     bears = scenario.creature("Grizzly Bears")
