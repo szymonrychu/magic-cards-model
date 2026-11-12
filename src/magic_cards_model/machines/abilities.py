@@ -5267,6 +5267,21 @@ _TRIGGERED_MANA_SNOW_INSTEAD_RE = re.compile(
 )
 #: CR 106.6's "Spend this mana only ..." sentence, carried on the mana.
 _TRIGGERED_MANA_SPEND_ONLY_RE = re.compile(r"^spend this mana only\b.*$", re.IGNORECASE)
+#: "{R} or {G}" / "{W}, {U}, or {B}" (Dal R'El, Kessig Naturalist): one mana of
+#: a colour its adder picks among the printed symbols (CR 608.2d), unlike the
+#: run "{R}{G}", which is two mana. Needs the "or": a bare comma list or a
+#: single symbol is not a choice.
+_TRIGGERED_MANA_ONE_OF_RE = re.compile(
+    r"^(?P<first>\{[WUBRG]\})(?P<middle>(?:,\s*\{[WUBRG]\})*),?\s+or\s+(?P<last>\{[WUBRG]\})$",
+    re.IGNORECASE,
+)
+#: "Until end of turn, you don't lose this mana as steps and phases end."
+#: (CR 500.5b): the mana an "add" sentence just made is kept, not emptied,
+#: until the cleanup step (CR 514.2).
+KEEP_MANA_UNTIL_END_OF_TURN_RE = re.compile(
+    r"^until end of turn, you don'?t lose this mana as steps and phases end\.?$",
+    re.IGNORECASE,
+)
 #: What "for each" counts: "<Subtype or card type> on the battlefield" (every
 #: player's) or "<Subtype or card type> you control".
 _MANA_COUNT_PHRASE_RE = re.compile(
@@ -5313,8 +5328,11 @@ def parse_mana_count(phrase: str) -> tuple[str, Type | None, str] | None:
 class TriggeredManaShape(EngineModel):
     """The mana a triggered mana ability adds (CR 605.1b), as data.
 
-    Exactly one of `colors`, `chosen_color`, `any_color` or `produced_type`
-    describes the mana; `recipient` says whose pool it goes to. `count` is a
+    Exactly one of `colors`, `one_of`, `chosen_color`, `any_color` or
+    `produced_type` describes the mana (`one_of` is a printed list the adder
+    picks one colour from, "{R} or {G}"); `recipient` says whose pool it goes
+    to. `retain_until_end_of_turn` is CR 500.5b's "you don't lose this mana
+    as steps and phases end" rider. `count` is a
     "for each" phrase multiplying it (`parse_mana_count`), `optional` a "may
     add" (CR 608.2d), `snow_colors` the literal mana added instead when the
     tapped permanent is snow, and `restriction` CR 106.6's "Spend this mana
@@ -5325,6 +5343,7 @@ class TriggeredManaShape(EngineModel):
 
     recipient: Literal["controller", "its_controller", "that_player"] = "controller"
     colors: tuple[Color, ...] = ()
+    one_of: tuple[Color, ...] = ()
     chosen_color: bool = False
     any_color: int = 0
     produced_type: bool = False
@@ -5332,6 +5351,7 @@ class TriggeredManaShape(EngineModel):
     count: str | None = None
     snow_colors: tuple[Color, ...] | None = None
     restriction: str | None = None
+    retain_until_end_of_turn: bool = False
 
 
 def _parse_add_mana_sentence(sentence: str) -> TriggeredManaShape | None:
@@ -5366,6 +5386,14 @@ def _parse_add_mana_sentence(sentence: str) -> TriggeredManaShape | None:
         word = any_color.group("count").lower()
         amount = parse_count(word) or 0
         return TriggeredManaShape(any_color=amount, **common) if amount else None
+    one_of = _TRIGGERED_MANA_ONE_OF_RE.fullmatch(mana)
+    if one_of is not None:
+        listed = _TRIGGERED_MANA_SYMBOLS_RE.findall(
+            f"{one_of.group('first')}{one_of.group('middle')}{one_of.group('last')}"
+        )
+        options = tuple(dict.fromkeys(Color(symbol.upper()) for symbol in listed))
+        # "{R} or {R}" is no choice: fail closed rather than read it as one.
+        return TriggeredManaShape(one_of=options, **common) if len(options) == len(listed) else None
     symbols = _TRIGGERED_MANA_SYMBOLS_RE.findall(mana)
     round_trip = "".join(f"{{{symbol}}}" for symbol in symbols)
     if not symbols or round_trip.lower() != mana.lower().replace(" ", ""):
@@ -5383,9 +5411,17 @@ def parse_triggered_mana(effect: str) -> TriggeredManaShape | None:
     sentences = [part for part in re.split(r"(?<=\.)\s+", effect.strip()) if part]
     if not sentences:
         return None
+    retain = False
     restriction: str | None = None
-    if len(sentences) > 1 and _TRIGGERED_MANA_SPEND_ONLY_RE.fullmatch(sentences[-1]):
-        restriction = sentences.pop()
+    # The two riders may come in either order after the add sentence.
+    while len(sentences) > 1:
+        if not retain and KEEP_MANA_UNTIL_END_OF_TURN_RE.fullmatch(sentences[-1]):
+            retain = True
+        elif restriction is None and _TRIGGERED_MANA_SPEND_ONLY_RE.fullmatch(sentences[-1]):
+            restriction = sentences[-1]
+        else:
+            break
+        sentences.pop()
     snow: TriggeredManaShape | None = None
     if len(sentences) == 2:
         instead = _TRIGGERED_MANA_SNOW_INSTEAD_RE.fullmatch(sentences[1])
@@ -5413,6 +5449,8 @@ def parse_triggered_mana(effect: str) -> TriggeredManaShape | None:
         update["snow_colors"] = snow.colors
     if restriction is not None:
         update["restriction"] = restriction
+    if retain:
+        update["retain_until_end_of_turn"] = True
     return shape.model_copy(update=update) if update else shape
 
 

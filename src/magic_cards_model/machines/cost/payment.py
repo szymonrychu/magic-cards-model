@@ -1362,6 +1362,8 @@ def _triggered_mana_alternatives(
         colors = shape.snow_colors
     if colors:
         return [list(colors) * times]
+    if shape.one_of:
+        return [list(combo) for combo in combinations_with_replacement(shape.one_of, times)]
     if shape.chosen_color:
         choice = trigger_source.choice
         if choice is None or choice.kind is not ChoiceKind.COLOR:

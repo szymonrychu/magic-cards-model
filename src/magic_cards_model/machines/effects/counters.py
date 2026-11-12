@@ -2853,13 +2853,18 @@ def _parse_counter_on_subject_and_shared_type_clause(text: str) -> AbilityEffect
 #: or "it has N or more" / "this `<noun>` has N or more" (The Emperor of
 #: Palamecia's "Then if it has three or more +1/+1 counters on it, transform
 #: it."), or "no" counters at all. The kind is a P/T pair or a word.
+#: The source as the sentences name it: "this artifact", or the pronoun a legend
+#: or character takes in place of its name ("on her", "she has": Beckett
+#: Mariner's "put a promotion counter on her. Then if there are three or more
+#: promotion counters on her, remove those counters and she deals 2 damage to
+#: each opponent."). The threshold sentence refers to the same source.
 _COUNTER_THRESHOLD_RE = re.compile(
     r"^(?P<pre>(?:[^.]+\.\s+)*?)"
-    r"(?P<put>(?:put|remove) [^.]+? (?:on|from) this (?P<noun>[a-z]+))\.\s*"
-    r"then if (?:there (?:are|is)|(?:it|this (?P=noun)) has) "
+    r"(?P<put>(?:put|remove) [^.]+? (?:on|from) (?:this (?P<noun>[a-z]+)|it|her|him|them))\.\s*"
+    r"then if (?:there (?:are|is)|(?:it|she|he|they|this (?(noun)(?P=noun)|[a-z]+)) has) "
     rf"(?:(?P<threshold>{COUNT}) or more|(?P<none>no)) "
     r"(?P<kind>[+-]\d+/[+-]\d+|[a-z]+) counters? on "
-    r"(?:it|this (?P=noun)), (?P<rest>[^.]+)\.?$",
+    r"(?:it|her|him|them|this (?(noun)(?P=noun)|[a-z]+)), (?P<rest>[^.]+)\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 #: The consequence list's own separators: a comma (optionally ", and" /
@@ -4719,6 +4724,67 @@ def _parse_self_counter_then_rider(text: str) -> AbilityEffect | None:
         )
 
     return counter_then_reflexive
+
+
+#: "Choose a counter on target `<object>`. Put another counter of that kind on
+#: it." (Dathon, His Heart Open), "... Put an additional counter of that kind
+#: on that permanent." (Ichormoon Gauntlet), "... Give that permanent or
+#: player another counter of that kind." (Animation Module). CR 122.1: a
+#: counter's kind is its name, so the choice is among the distinct names
+#: already on the target; CR 608.2d: its controller chooses as the ability
+#: resolves, from the kinds the target actually has. The giving is CR 122.6's
+#: putting on a battlefield object, so replacement effects (Hardened Scales)
+#: apply, by the ability's controller (CR 109.5). The target is a
+#: permanent and/or a player, whichever the text names - legality is
+#: `machines/targeting.py`'s, read off the same sentence.
+_CHOOSE_A_COUNTER_ADD_ANOTHER_RE = re.compile(
+    r"^choose a counter on target [^.]+?\. "
+    r"(?:put|give) (?:(?:that [a-z ]+|it) )?(?:another|an additional) counter of that kind"
+    r"(?: on (?:it|that [a-z ]+?))?\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s26")
+def _parse_choose_a_counter_put_another_of_that_kind(text: str) -> AbilityEffect | None:
+    """`_CHOOSE_A_COUNTER_ADD_ANOTHER_RE`'s shape (CR 122.1, 122.6, 608.2d)."""
+    if not text.lower().startswith("choose a counter on target"):
+        return None
+    if _CHOOSE_A_COUNTER_ADD_ANOTHER_RE.fullmatch(collapsed(text)) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability).username
+        for target in game.resolve_targets(ability):
+            if isinstance(target, CardState):
+                if target.zone is not Zone.BATTLEFIELD:
+                    continue
+            elif not isinstance(target, Player):
+                continue
+            kinds = [str(kind) for kind, count in target.counters.counts.items() if count > 0]
+            if not kinds:
+                continue  # nothing to choose (CR 608.2d: no illegal option)
+            kind = kinds[0]
+            if len(kinds) > 1:
+                subject = target.name if isinstance(target, CardState) else target.username
+                answer = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_A_QUALITY,
+                        player=controller,
+                        prompt=f"choose a counter on {subject}",
+                        source=ability.source_name,
+                        source_id=source_id_of(ability),
+                        options=tuple(kinds),
+                    )
+                )
+                assert isinstance(answer, str)
+                kind = answer
+            if isinstance(target, CardState):
+                game.add_counters(target, kind, 1, putter=controller)
+            else:
+                game.add_player_counters(target, kind, 1)
+
+    return effect
 
 
 from ._common import (  # noqa: E402

@@ -298,9 +298,11 @@ def test_the_hand_at_the_start_of_the_turn_condition_reads_for_any_source():
 
 
 def test_the_if_guard_does_not_silence_gated_damage_to_each_opponent():
-    """Only the `damage to you` reader refuses a leading "If <condition>, ":
-    the printed "If ..., X deals 2 damage to each opponent." riders (Reckless
-    Handling, Grab the Prize) still read as handled."""
+    """The printed "If ..., X deals 2 damage to each opponent." riders (Reckless
+    Handling, Grab the Prize) still read as handled. The each-opponent reader
+    refuses a leading "If <condition>, " like the `damage to you` one, so these
+    are read with their condition kept (`test_conditional_each_opponent_damage_
+    clause`) instead of being dealt with the condition dropped."""
     from magic_cards_model.machines.effects import effect_for
     from magic_cards_model.support import card_support
     from tests.cards import card
