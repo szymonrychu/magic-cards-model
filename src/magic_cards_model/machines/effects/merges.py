@@ -37,6 +37,7 @@ from ..cost import (
     spend_restriction,
 )
 from ..decisions import Decision, DecisionKind, source_id_of
+from ..delayed import parse_anaphoric_delayed_clause
 from ..layers import (
     BASIC_LAND_TYPES,
     ContinuousEffect,
@@ -998,6 +999,13 @@ def _merge_reveal_until_n_kind_put_onto_battlefield_clauses(
     until_kind_then_put_clauses` is one: the cards that stopped the reveal
     are live objects only the caller resolving this ability holds, and "the
     rest" is everything else that same reveal showed.
+
+    A fourth clause that is a plural anaphoric delayed instruction about the
+    cards just put down (Will Riker, First in the Field's "Sacrifice those
+    lands at the beginning of your next end step.") is read with them: CR
+    603.7a creates that one ability as this resolves, about exactly the
+    permanents the put made (CR 603.7c: each by its own incarnation). A
+    fourth clause of any other shape is left to the next reader.
     """
     if index + 2 >= len(clauses):
         return None
@@ -1021,6 +1029,14 @@ def _merge_reveal_until_n_kind_put_onto_battlefield_clauses(
     if count is None:
         return None
     tapped = put_match.group("tapped") is not None
+    delayed = None
+    if index + 3 < len(clauses):
+        delayed = parse_anaphoric_delayed_clause(clauses[index + 3])
+        if delayed is not None and not delayed.plural:
+            delayed = None
+    delayed_text = clauses[index + 3].strip() if delayed is not None else ""
+    if delayed_text and not delayed_text.endswith("."):
+        delayed_text += "."
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
@@ -1028,11 +1044,29 @@ def _merge_reveal_until_n_kind_put_onto_battlefield_clauses(
         matches, remainder = _reveal_until_n_of_kind(
             game, controller, predicate, count, source=source
         )
-        for state in matches:
+        entered = [
             game.put_onto_battlefield(state, controller.username, tapped=tapped)
+            for state in matches
+        ]
         _shuffle_remainder_to_bottom(game, controller, remainder)
+        if delayed is None:
+            return
+        entered = [state for state in entered if state.zone is Zone.BATTLEFIELD]
+        if for_spell:
+            source_id: UUID | None = stack_object.id
+        else:
+            source_id = stack_object.source_id  # type: ignore[union-attr]
+        triggers = delayed.triggers_for_all(
+            entered,
+            controller=controller.username,
+            source_id=source_id,
+            source_name=source,
+            game=game,
+        )
+        for trigger in triggers or []:
+            game.create_delayed_trigger(trigger.model_copy(update={"text": delayed_text}))
 
-    return 3, effect
+    return (3 if delayed is None else 4), effect
 
 
 #: Part in Friendship's own trigger: "reveal cards from the top of your

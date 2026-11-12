@@ -2580,9 +2580,12 @@ _THAT_MUCH_RE = re.compile(r"\bthat (?:much|many)\b", re.IGNORECASE)
 
 #: "Whenever that <noun> <condition> this turn, <effect>" - a delayed
 #: triggered ability (CR 603.7a) about one particular object (CR 603.7c), with
-#: CR 603.7b's stated duration. `noun` is what the earlier text chose.
+#: CR 603.7b's stated duration. `noun` is what the earlier text chose; the bare
+#: pronoun "Whenever it ..." (The Inner Light, Fire Giant's Fury) names the
+#: same one object without a noun, read as "this permanent" (every object the
+#: earlier text could have chosen and that can still trigger is a permanent).
 _THAT_OBJECT_TURN_TRIGGER_RE = re.compile(
-    r"^whenever that (?P<noun>creature|permanent|planeswalker|artifact|land) "
+    r"^whenever (?:that (?P<noun>creature|permanent|planeswalker|artifact|land)|it) "
     r"(?P<condition>[^,.]+?) this turn,\s*(?P<effect>[^\n]+?)\s*$",
     re.IGNORECASE,
 )
@@ -2701,6 +2704,36 @@ class ChosenObjectTriggeredAbility(DelayedEffectSpecBase):
         effect(game, acting)
 
 
+class SubjectInstructionsAtStep(DelayedEffectSpecBase):
+    """ "At the beginning of the next combat this turn, gain control of that
+    creature until end of turn. Untap it. It gains haste until end of turn."
+    (The Wrath of Khan, chapter I) - a delayed triggered ability (CR 603.7a)
+    whose body is several instructions about the one object an earlier
+    instruction targeted (CR 603.7c), kept as the printed body text and read
+    again when it resolves by `machines/effects/text.subject_instructions_
+    effect`, the same way `ChosenObjectTriggeredAbility` keeps its line.
+
+    The object is the trigger's own `subject_id`/`expected_stamp`
+    (`DelayedTrigger.still_affects`): one that left the battlefield, or came
+    back as a new object (CR 400.7), is not affected. CR 603.7e: the
+    controller is the creating ability's, so "gain control" is that
+    player's.
+    """
+
+    kind: Literal["subject_instructions"] = "subject_instructions"
+
+    instructions: str
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .effects.text import subject_instructions_effect
+
+        subject = trigger.still_affects(game)
+        effect = subject_instructions_effect(self.instructions)
+        if subject is None or effect is None:
+            return
+        effect(game, ability, subject)
+
+
 def chosen_object_turn_trigger_line(text: str) -> str | None:
     """ "Whenever that creature `<condition>` this turn, `<effect>`" as the
     chosen object's own printed trigger ("Whenever this creature
@@ -2713,7 +2746,8 @@ def chosen_object_turn_trigger_line(text: str) -> str | None:
     if match is None:
         return None
     effect_text = match.group("effect")
-    line = f"Whenever this {match.group('noun').lower()} {match.group('condition')}, {effect_text}"
+    noun = (match.group("noun") or "permanent").lower()
+    line = f"Whenever this {noun} {match.group('condition')}, {effect_text}"
     parsed = _created_ability(line)
     if (
         parsed is None
@@ -2828,6 +2862,7 @@ DelayedEffectSpec = Annotated[
     | DiscardCardsAtRandomForController
     | ThatCreatureDiesConsequence
     | ChosenObjectTriggeredAbility
+    | SubjectInstructionsAtStep
     | CounterOnSubjectWhileSourceTapped
     | RemoveCountersFromLinkedCreature
     | PutCountersOnSubject
@@ -3335,11 +3370,34 @@ _ANAPHOR_AGREEMENT: dict[str, Callable[[CardState, "Game | None"], bool]] = {
     "those tokens": lambda state, game: state.token,
     "the tokens": lambda state, game: state.token,
     "those creatures": lambda state, game: Type.CREATURE in _agreement_types(state, game),
+    # "those <type>s" for the other permanent types and "those permanents":
+    # Will Riker, First in the Field's "Put those land cards onto the
+    # battlefield ... Sacrifice those lands at the beginning of your next end
+    # step." The type word agrees object by object, as "those creatures" does.
+    "those lands": lambda state, game: Type.LAND in _agreement_types(state, game),
+    "those artifacts": lambda state, game: Type.ARTIFACT in _agreement_types(state, game),
+    "those enchantments": lambda state, game: Type.ENCHANTMENT in _agreement_types(state, game),
+    "those planeswalkers": lambda state, game: Type.PLANESWALKER in _agreement_types(state, game),
+    "those permanents": lambda state, game: bool(
+        set(_agreement_types(state, game)) & PERMANENT_TYPES
+    ),
 }
 
 #: The pronouns that name several objects at once: one delayed triggered
 #: ability about all of them (`ActOnEachSubject`), not one per object.
-_PLURAL_ANAPHORS = frozenset({"them", "those tokens", "the tokens", "those creatures"})
+_PLURAL_ANAPHORS = frozenset(
+    {
+        "them",
+        "those tokens",
+        "the tokens",
+        "those creatures",
+        "those lands",
+        "those artifacts",
+        "those enchantments",
+        "those planeswalkers",
+        "those permanents",
+    }
+)
 
 #: What `ActOnEachSubject` does for each verb a plural pronoun can take.
 _PLURAL_ACTIONS: dict[str, Literal["exile", "sacrifice", "destroy", "return_to_hand"]] = {

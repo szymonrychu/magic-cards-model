@@ -34,6 +34,7 @@ from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import (
     DelayedTrigger,
     RevokeGrantedAbility,
+    SubjectInstructionsAtStep,
     anaphoric_delayed_trigger,
     chosen_object_turn_trigger_line,
     create_chosen_object_turn_trigger,
@@ -3318,7 +3319,7 @@ def _referent_of_it(game: "Game", ability: AbilityOnStack) -> CardState | None:
 #: object to bind it to and would watch every creature, so it is refused here
 #: and read by `_parse_that_object_turn_trigger_*` (CR 603.7c) instead.
 _CREATED_TRIGGER_ANAPHORIC_CONDITION_RE = re.compile(
-    r"^whenever (?:that|those|target)\b[^,]*,", re.IGNORECASE
+    r"^whenever (?:that|those|target|it)\b[^,]*,", re.IGNORECASE
 )
 
 
@@ -4358,8 +4359,17 @@ def _parse_that_object_turn_trigger_ability_text(text: str) -> AbilityEffect | N
     """The ability side of `_parse_that_object_turn_trigger_spell_text`:
     Niko Aris's "+1: Up to one target creature you control can't be blocked
     this turn. Whenever that creature deals damage this turn, return it to
-    its owner's hand." - its second sentence, bound to the ability's target."""
-    line = chosen_object_turn_trigger_line(_strip_non_effect_preamble(text))
+    its owner's hand." - its second sentence, bound to the ability's target.
+    A "Choose <target>." opener (The Inner Light's chapter II, "Choose target
+    creature. Whenever it deals combat damage to a player this turn, ...")
+    only names that target (CR 115.1d), so the trigger is the rest."""
+    whole = _strip_non_effect_preamble(text)
+    prelude = split_choose_target_prelude(whole)
+    if prelude is not None:
+        phrase, whole = prelude
+        if not _targets_understood(phrase, count_agnostic=True):
+            return None
+    line = chosen_object_turn_trigger_line(whole)
     if line is None:
         return None
     printed = collapsed(text.strip())
@@ -4376,6 +4386,198 @@ def _parse_that_object_turn_trigger_ability_text(text: str) -> AbilityEffect | N
             controller=ability.controller,
             source_id=ability.source_id,
             source_name=ability.source_name,
+        )
+
+    return effect
+
+
+#: The sentence that opens a "Whenever that creature/it ... this turn, ..."
+#: trigger after a targeted instruction, and everything after it in the
+#: paragraph: CR 603.1 writes a triggered ability as "[When/Whenever/At]
+#: [trigger condition or event], [effect]. [Instructions (if any).]", so the
+#: sentences that follow belong to the created ability, not to the spell
+#: (Fire Giant's Fury's "... exile that many cards from the top of your
+#: library. Until the end of your next turn, you may play those cards.").
+_TRAILING_THAT_OBJECT_TURN_TRIGGER_RE = re.compile(
+    r"^(?P<head>[^\n]+?\.)\s+(?P<trigger>whenever (?:that [a-z]+|it) [^,.\n]+? this turn,[^\n]+)$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung(
+    "s35", for_spell=False, after=["_parse_pump_per_discard_then_delayed_draw_clause"]
+)
+@SPELL_TEXT.rung("s10", for_spell=True)
+def _parse_head_then_that_object_turn_trigger_text(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """A targeted instruction, then "Whenever that creature/it `<condition>`
+    this turn, `<effect>`" about the one object it targeted (CR 608.2c: later
+    text may refer to earlier text; CR 603.7c: the delayed ability is about
+    that object). Fire Giant's Fury: "Target Giant you control gets +2/+2
+    and gains trample until end of turn. Whenever it deals combat damage to a
+    player this turn, exile that many cards ...". The head is read by the
+    ordinary ladder for its side and must be a real effect; the trigger is
+    `machines/delayed.ChosenObjectTriggeredAbility`, created after the head
+    resolves (CR 603.7a) about the target if it is still there (CR 608.2b).
+
+    It runs after the readers whose head counts something the trigger event
+    did (Captain Howler's "for each card discarded this way"): the ordinary
+    ladder reads such a head alone without that count."""
+    match = _TRAILING_THAT_OBJECT_TURN_TRIGGER_RE.fullmatch(
+        collapsed(_strip_non_effect_preamble(text).strip())
+    )
+    if match is None:
+        return None
+    head_text = match.group("head").strip()
+    if len(re.findall(r"\btargets?\b", head_text, re.IGNORECASE)) != 1:
+        return None
+    if re.search(r"\btargets?\b", match.group("trigger"), re.IGNORECASE):
+        return None
+    line = chosen_object_turn_trigger_line(match.group("trigger"))
+    if line is None:
+        return None
+    head = _spell_effect_or_notice(head_text) if for_spell else _ability_effect_or_notice(head_text)
+    if not _readable(head):
+        return None
+    assert head is not None
+    printed = match.group("trigger").strip()
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        head(game, stack_object)  # type: ignore[arg-type]
+        chosen = _the_one_chosen_permanent(game, stack_object)
+        if chosen is None:
+            return
+        if isinstance(stack_object, AbilityOnStack):
+            source_id, source_name = stack_object.source_id, stack_object.source_name
+        else:
+            source_id, source_name = stack_object.id, stack_object.name
+        create_chosen_object_turn_trigger(
+            game,
+            line,
+            chosen,
+            text=printed,
+            controller=game.controller_of(stack_object).username,
+            source_id=source_id,
+            source_name=source_name,
+        )
+
+    return effect
+
+
+#: The opening of a borrow body written about an object an earlier
+#: instruction named: "gain control of that creature ..." / "untap it and
+#: gain control of it ...". The anaphor is the one object the delayed
+#: ability refers to (CR 603.7c), so it is read as the target phrase the
+#: printed templates (`continuous._gain_control_untap_grant`) name.
+_SUBJECT_BORROW_OPENING_RE = re.compile(
+    r"^(?:gain control of|untap) (?P<anaphor>that (?:creature|permanent|artifact)|it)\b",
+    re.IGNORECASE,
+)
+
+
+def subject_instructions_effect(
+    body: str,
+) -> "Callable[[Game, AbilityOnStack, CardState], None] | None":
+    """The instructions of a delayed triggered ability about one object
+    (`machines/delayed.SubjectInstructionsAtStep`), as an effect on that
+    object, or `None` when the body is not read.
+
+    Read: the borrow template in both of its word orders - Act of Treason's
+    "Gain control of ... until end of turn. Untap ... . ... gains haste until
+    end of turn." and Threaten's "Untap ... and gain control of it until end
+    of turn. That creature gains haste until end of turn." - with the object
+    named by "that creature" or "it" instead of a target. The control change
+    (CR 613.1b) and the grant are built against that one object and recorded
+    against the ability's source (CR 113.7a: or its last known information);
+    the untap is CR 701.26b."""
+    text = collapsed(body.strip())
+    opening = _SUBJECT_BORROW_OPENING_RE.match(text)
+    if opening is None:
+        return None
+    noun = opening.group("anaphor").lower().removeprefix("that ")
+    noun = "creature" if noun == "it" else noun
+    as_target = text[: opening.start("anaphor")] + f"target {noun}" + text[opening.end("anaphor") :]
+    sentences = _gain_control_untap_grant(as_target)
+    if sentences is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack, subject: CardState) -> None:
+        source = ability.source_or_last_known(game)
+        if source is None:
+            return
+        _untap_and_apply_control_sentences(
+            game, source, game.controller_of(ability), [subject], sentences
+        )
+
+    return effect
+
+
+#: "<instruction about one target>. At the beginning of the next combat[
+#: this turn], <instructions about that object>" - The Wrath of Khan's
+#: chapter I. CR 500.6: "at the beginning of" a step triggers as it begins,
+#: and the combat phase opens with its beginning of combat step (CR 506.1).
+_HEAD_THEN_NEXT_COMBAT_RE = re.compile(
+    r"^(?P<head>[^\n]+?\.)\s+(?P<delayed>at the beginning of the next combat"
+    r"(?P<this_turn> this turn)?,\s*(?P<body>[^\n]+))$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s20", for_spell=False)
+@SPELL_TEXT.rung("s10", for_spell=True)
+def _parse_head_then_next_combat_subject_instructions_text(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """A targeted instruction, then a delayed triggered ability at the
+    beginning of the next combat about that one target (CR 608.2c: later
+    text may refer to earlier text; CR 603.7c: the ability refers to that
+    object). The head is read by the ordinary ladder for its side and must
+    be a real effect; the body is `subject_instructions_effect`'s. Resolving
+    creates the ability (CR 603.7a) about the target if it is still there
+    (CR 608.2b); "this turn" bounds it to this turn (CR 603.7b), so with no
+    combat left it ends in the cleanup step."""
+    match = _HEAD_THEN_NEXT_COMBAT_RE.fullmatch(collapsed(_strip_non_effect_preamble(text).strip()))
+    if match is None:
+        return None
+    head_text = match.group("head").strip()
+    if len(re.findall(r"\btargets?\b", head_text, re.IGNORECASE)) != 1:
+        return None
+    body = match.group("body").strip()
+    if re.search(r"\btargets?\b", body, re.IGNORECASE):
+        return None
+    if subject_instructions_effect(body) is None:
+        return None
+    head = _spell_effect_or_notice(head_text) if for_spell else _ability_effect_or_notice(head_text)
+    if not _readable(head):
+        return None
+    assert head is not None
+    printed = match.group("delayed").strip()
+    this_turn = match.group("this_turn") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        head(game, stack_object)  # type: ignore[arg-type]
+        chosen = _the_one_chosen_permanent(game, stack_object)
+        if chosen is None:
+            return
+        if isinstance(stack_object, AbilityOnStack):
+            source_id, source_name = stack_object.source_id, stack_object.source_name
+        else:
+            source_id, source_name = stack_object.id, stack_object.name
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=printed,
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=Step.BEGINNING_OF_COMBAT,
+                controller=game.controller_of(stack_object).username,
+                source_id=source_id,
+                source_name=source_name,
+                subject_id=chosen.id,
+                expected_zone=Zone.BATTLEFIELD,
+                expected_stamp=chosen.zone_change_stamp,
+                expires_end_of_turn=this_turn,
+                effect=SubjectInstructionsAtStep(instructions=body),
+            )
         )
 
     return effect
@@ -4406,11 +4608,13 @@ from .amounts import count_expression  # noqa: E402
 from .continuous import (  # noqa: E402
     _attached_object,
     _block_restriction_duration,
+    _gain_control_untap_grant,
     _is_keyword_ability_line,
     _layer_antecedent_clause,
     _parse_attach_referent_to_chosen_clause,
     _parse_if_type_may_attach_equipment_referent_clause,
     _parse_loses_keyword_referent_rider,
+    _untap_and_apply_control_sentences,
     layer_context_for,
 )
 from .counters import _counter_kind  # noqa: E402

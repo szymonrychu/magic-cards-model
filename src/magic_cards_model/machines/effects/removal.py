@@ -2615,8 +2615,13 @@ def _parse_exile_top_n_put_from_among_clause(text: str) -> AbilityEffect | None:
 #: The control clause is required, exactly as it is for the targeted shape: a
 #: bare "return him to the battlefield" names no controller, and CR 110.2a
 #: leaves that to the effect, which one regex on one sentence cannot decide.
+#:
+#: "you may exile it. If you do, return it ..." (Long River Lurker's created
+#: trigger) is the same instruction with its condition spelled out: "it" is
+#: the trigger's own referent (the event's subject, else the source), and CR
+#: 400.7j lets the return find the card the exile just moved.
 _MAY_EXILE_SELF_THEN_RETURN_RE = re.compile(
-    r"^you may exile (?P<name>[^,]+), then return (?:it|him|her|them)"
+    r"^you may exile (?P<name>it|[^,.]+)(?:, then|\. if you do,) return (?:it|him|her|them)"
     r" to the battlefield"
     r"(?P<tapped> tapped)?"
     r"(?P<transformed> transformed)?"
@@ -2656,13 +2661,16 @@ def _parse_may_exile_self_then_return_clause(text: str) -> AbilityEffect | None:
     prompt = f"exile {named}, then return {'it' if not transformed else 'it transformed'}"
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        source = ability.source(game)
+        if named.lower() == "it":
+            source = _referent_of_it(game, ability)
+        else:
+            source = ability.source(game)
+            # CR 201.5: the name means *this* object. A source whose name has
+            # nothing to do with the printed one is not what this sentence is
+            # about, so nothing happens rather than the wrong permanent blinking.
+            if source is not None and named.lower() not in (source.name or "").lower():
+                return
         if source is None or source.zone is not Zone.BATTLEFIELD:
-            return
-        # CR 201.5: the name means *this* object. A source whose name has
-        # nothing to do with the printed one is not what this sentence is
-        # about, so nothing happens rather than the wrong permanent blinking.
-        if named.lower() not in (source.name or "").lower():
             return
         decision = Decision(
             kind=DecisionKind.MAY,
@@ -10723,6 +10731,7 @@ from .text import (  # noqa: E402
     _parse_chosen_target_card_antecedent,
     _parse_referent_clause,
     _referent_color_count,
+    _referent_of_it,
     _singular_card_type,
     _strip_non_effect_preamble,
 )
