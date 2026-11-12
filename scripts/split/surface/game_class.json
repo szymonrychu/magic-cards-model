@@ -777,6 +777,7 @@
     "announced_reveal_counts",
     "library_orders_kept",
     "mana_spent_on_spells_this_turn",
+    "spells_cast_this_game",
     "spells_cast_this_turn",
     "cards_drawn_in_own_draw_step",
     "cards_drawn_this_turn",
