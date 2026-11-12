@@ -32,6 +32,8 @@ this file:
   in the combat damage step; other damage is not combat damage.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
@@ -46,7 +48,13 @@ def _inner_light_board(*, bob_battlefield: list[str] | None = None) -> Scenario:
         Scenario()
         .player(
             "alice",
-            battlefield=["The Inner Light", "Hill Giant", "Grizzly Bears", "Fencing Ace", "Raging Goblin"],
+            battlefield=[
+                "The Inner Light",
+                "Hill Giant",
+                "Grizzly Bears",
+                "Fencing Ace",
+                "Raging Goblin",
+            ],
             library=["Island"] * 8,
         )
         .player("bob", battlefield=bob_battlefield or [], life=20)
@@ -227,7 +235,7 @@ def test_fury_exiles_as_many_cards_as_the_giant_deals_and_lets_alice_play_them()
     scenario.pass_until_resolved()
 
     assert scenario.player("bob").life == 15
-    exiled = [state.name for state in scenario.player("alice").exile]
+    exiled = [state.name for state in scenario.game.exile]
     assert exiled == ["Lightning Bolt", "Mountain", "Shock", "Island", "Forest"]
     bolt = scenario.find("Lightning Bolt", Zone.EXILE, "alice")
     assert scenario.game.play_permission_for(bolt, "alice") is not None
@@ -243,4 +251,91 @@ def test_fury_does_not_fire_for_a_creature_it_did_not_target():
     _combat(scenario, bears)
 
     assert scenario.stack_names() == []
-    assert scenario.player("alice").exile == []
+    assert scenario.game.exile == []
+
+
+# --------------------------------------------------------------------------
+# Long River Lurker (the "that creature" wording after a targeted head, with
+# a two-sentence body; a notice before the head-then-trigger reader)
+# --------------------------------------------------------------------------
+
+
+def _lurker_board() -> Scenario:
+    return (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Long River Lurker"],
+            battlefield=["Hill Giant", "Grizzly Bears"],
+            library=["Island"] * 3,
+        )
+        .player("bob", battlefield=["Savannah Lions"], life=20)
+    )
+
+
+def _lurker_enters_targeting(scenario, target) -> None:
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.choose_trigger_targets("Long River Lurker", [target])
+    scenario.put_onto_battlefield("Long River Lurker", "alice")
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+
+def test_lurker_makes_the_target_unblockable_and_blinks_it_after_it_connects():
+    """The head ("can't be blocked this turn") applies to the target, and the
+    created trigger exiles and returns that creature once it deals combat
+    damage (CR 603.7c: that one creature)."""
+    scenario = _lurker_board().build()
+    giant = scenario.creature("Hill Giant", "alice")
+    lions = scenario.creature("Savannah Lions", "bob")
+    _lurker_enters_targeting(scenario, giant)
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(giant)
+    with pytest.raises(ValueError):
+        scenario.block(giant, lions)  # the target can't be blocked this turn
+    scenario.no_blocks()
+    scenario.combat_damage()
+    scenario.game.put_triggers_on_stack()
+    scenario.will_take_the_may(True)
+    scenario.pass_until_resolved()
+
+    assert scenario.player("bob").life == 17
+    returned = scenario.creature("Hill Giant", "alice")
+    assert returned.zone is Zone.BATTLEFIELD
+    assert returned not in scenario.attackers(), "a new object, removed from combat (CR 400.7)"
+
+
+def test_lurker_trigger_ignores_another_creatures_combat_damage():
+    scenario = _lurker_board().build()
+    giant = scenario.creature("Hill Giant", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    _lurker_enters_targeting(scenario, giant)
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears)
+    scenario.no_blocks()
+    scenario.combat_damage()
+    scenario.game.put_triggers_on_stack()
+
+    assert scenario.stack_names() == []
+
+
+def test_lurker_declining_the_may_leaves_the_creature_in_combat():
+    """ "If you do": declining the exile returns nothing and moves nothing."""
+    scenario = _lurker_board().build()
+    giant = scenario.creature("Hill Giant", "alice")
+    _lurker_enters_targeting(scenario, giant)
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(giant)
+    scenario.no_blocks()
+    scenario.combat_damage()
+    scenario.game.put_triggers_on_stack()
+    scenario.will_take_the_may(False)
+    scenario.pass_until_resolved()
+
+    assert giant.zone is Zone.BATTLEFIELD
+    assert giant in scenario.attackers()
+    assert scenario.game.exile == []

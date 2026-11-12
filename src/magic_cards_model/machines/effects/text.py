@@ -4390,6 +4390,74 @@ def _parse_that_object_turn_trigger_ability_text(text: str) -> AbilityEffect | N
     return effect
 
 
+#: The sentence that opens a "Whenever that creature/it ... this turn, ..."
+#: trigger after a targeted instruction, and everything after it in the
+#: paragraph: CR 603.1 writes a triggered ability as "[When/Whenever/At]
+#: [trigger condition or event], [effect]. [Instructions (if any).]", so the
+#: sentences that follow belong to the created ability, not to the spell
+#: (Fire Giant's Fury's "... exile that many cards from the top of your
+#: library. Until the end of your next turn, you may play those cards.").
+_TRAILING_THAT_OBJECT_TURN_TRIGGER_RE = re.compile(
+    r"^(?P<head>[^\n]+?\.)\s+(?P<trigger>whenever (?:that [a-z]+|it) [^,.\n]+? this turn,[^\n]+)$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s20", for_spell=False)
+@SPELL_TEXT.rung("s10", for_spell=True)
+def _parse_head_then_that_object_turn_trigger_text(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """A targeted instruction, then "Whenever that creature/it `<condition>`
+    this turn, `<effect>`" about the one object it targeted (CR 608.2c: later
+    text may refer to earlier text; CR 603.7c: the delayed ability is about
+    that object). Fire Giant's Fury: "Target Giant you control gets +2/+2
+    and gains trample until end of turn. Whenever it deals combat damage to a
+    player this turn, exile that many cards ...". The head is read by the
+    ordinary ladder for its side and must be a real effect; the trigger is
+    `machines/delayed.ChosenObjectTriggeredAbility`, created after the head
+    resolves (CR 603.7a) about the target if it is still there (CR 608.2b)."""
+    match = _TRAILING_THAT_OBJECT_TURN_TRIGGER_RE.fullmatch(
+        collapsed(_strip_non_effect_preamble(text).strip())
+    )
+    if match is None:
+        return None
+    head_text = match.group("head").strip()
+    if len(re.findall(r"\btargets?\b", head_text, re.IGNORECASE)) != 1:
+        return None
+    if re.search(r"\btargets?\b", match.group("trigger"), re.IGNORECASE):
+        return None
+    line = chosen_object_turn_trigger_line(match.group("trigger"))
+    if line is None:
+        return None
+    head = _spell_effect_or_notice(head_text) if for_spell else _ability_effect_or_notice(head_text)
+    if not _readable(head):
+        return None
+    assert head is not None
+    printed = match.group("trigger").strip()
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        head(game, stack_object)  # type: ignore[arg-type]
+        chosen = _the_one_chosen_permanent(game, stack_object)
+        if chosen is None:
+            return
+        if isinstance(stack_object, AbilityOnStack):
+            source_id, source_name = stack_object.source_id, stack_object.source_name
+        else:
+            source_id, source_name = stack_object.id, stack_object.name
+        create_chosen_object_turn_trigger(
+            game,
+            line,
+            chosen,
+            text=printed,
+            controller=game.controller_of(stack_object).username,
+            source_id=source_id,
+            source_name=source_name,
+        )
+
+    return effect
+
+
 from ._common import (  # noqa: E402
     _ANAPHORIC_SUBJECT_RE,
     _CLAUSE_SEPARATOR,
