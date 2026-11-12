@@ -3526,6 +3526,70 @@ def _merge_choose_targets_then_owners_shuffle_them_clauses(
     return 2, effect
 
 
+#: "That player may exile it." and "If they don't, `<otherwise>`." - the second
+#: and third sentences of Brazen Bluff's "Choose target noncreature spell an
+#: opponent controls. That player may exile it. If they don't, you may cast a
+#: noncreature spell from your hand without paying its mana cost."
+_THAT_PLAYER_MAY_EXILE_IT_RE = re.compile(r"^that player may exile it$", re.IGNORECASE)
+_IF_THEY_DONT_RE = re.compile(
+    r"^if (?:they|that player) (?:don'?t|doesn'?t), (?P<otherwise>.+)$", re.IGNORECASE
+)
+
+
+def _merge_choose_target_then_controller_may_exile_it_else_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """ "(Choose )?target `<X>`. That player may exile it. If they don't,
+    `<otherwise>`." - the choice (CR 608.2d) belongs to the controller of the
+    target (CR 115.1, "that player"), not to the resolving spell or ability's
+    controller; if they take it, the target is exiled (the ordinary "exile
+    target `<X>`" clause, so a spell leaves the stack by CR 701.13a and a
+    permanent by the battlefield path); if they decline, `<otherwise>` runs
+    for the controller of the resolving object, with the target left alone.
+
+    A merge of three clauses: "that player" and "it" are CR 607.1 anaphora
+    back to the first clause's target, and the "if they don't" branch is only
+    meaningful beside the "may" it negates. With the target gone (CR 608.2b)
+    nobody is asked and nothing happens.
+    """
+    if index + 2 >= len(clauses):
+        return None
+    if _THAT_PLAYER_MAY_EXILE_IT_RE.fullmatch(clauses[index + 1].strip()) is None:
+        return None
+    otherwise_match = _IF_THEY_DONT_RE.fullmatch(clauses[index + 2].strip())
+    if otherwise_match is None:
+        return None
+    phrase = _CHOOSE_TARGET_PREFIX_RE.sub("", clauses[index].strip())
+    if not phrase.lower().startswith("target "):
+        return None
+    if not _targets_understood(phrase, count_agnostic=False, battlefield_only=False):
+        return None
+    exile = _parse_mixed_clause(f"Exile {phrase}", for_spell=for_spell)
+    otherwise = _parse_mixed_clause(otherwise_match.group("otherwise").strip(), for_spell=for_spell)
+    if exile is None or otherwise is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        target = next(
+            (t for t in game.resolve_targets(stack_object) if isinstance(t, CardState)), None
+        )
+        if target is None:
+            return  # CR 608.2b: the target is no longer legal, so nobody chooses.
+        chooser = game.controller_of(target)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        if game.may(
+            chooser,
+            f"exile {target.name}",
+            source=source,
+            source_id=source_id_of(stack_object),
+        ):
+            exile(game, stack_object)
+        else:
+            otherwise(game, stack_object)
+
+    return 3, effect
+
+
 def _merge_reveal_hand_choose_discard_clauses(
     clauses: list[str], index: int, *, for_spell: bool, anaphoric_revealer: bool = False
 ) -> tuple[int, TargetedClause] | None:
