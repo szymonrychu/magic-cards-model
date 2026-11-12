@@ -2543,12 +2543,15 @@ def _parse_may_exile_from_hand_becomes_plotted(text: str) -> AbilityEffect | Non
 # qualifying cards; "all" asks nothing. "Them" is the cards this instruction
 # just exiled, never the rest of the exile zone, and whatever is not put onto
 # the battlefield simply stays exiled - there is no "the rest" instruction to
-# move it. CR 609.3: a library shorter than N exiles what there is.
+# move it. CR 609.3: a library shorter than N exiles what there is. Deep
+# Space 9's "Put all permanent cards exiled this way onto the battlefield."
+# names the same cards with the other anaphor ("exiled this way") after the
+# noun instead of "from among them".
 _EXILE_TOP_N_PUT_FROM_AMONG_RE = re.compile(
     rf"^exile the top (?P<n>{COUNT}) cards of your library\.\s*"
     r"(?:(?P<may>you may )?put (?P<quantifier>any number of|all) )"
     r"(?P<quality>[a-z]+(?:(?:,| or| and/or) [a-z]+)*?) cards?"
-    r" from among them onto the battlefield(?P<tapped> tapped)?\.?$",
+    r" (?:from among them|exiled this way) onto the battlefield(?P<tapped> tapped)?\.?$",
     re.IGNORECASE,
 )
 

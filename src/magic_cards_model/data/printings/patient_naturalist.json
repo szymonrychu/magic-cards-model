@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "1dd17cea-9e8c-4dba-b6ab-a6b9de87a306",
+  "oracle_id": "ba7c1062-f777-4ba9-84df-ec340a9ec514",
+  "multiverse_ids": [
+    655115
+  ],
+  "mtgo_id": 124259,
+  "arena_id": 90520,
+  "tcgplayer_id": 544416,
+  "cardmarket_id": 763946,
+  "name": "Patient Naturalist",
+  "lang": "en",
+  "released_at": "2024-04-19",
+  "uri": "https://api.scryfall.com/cards/1dd17cea-9e8c-4dba-b6ab-a6b9de87a306",
+  "scryfall_uri": "https://scryfall.com/card/otj/174/patient-naturalist?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:03:24Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/d/1dd17cea-9e8c-4dba-b6ab-a6b9de87a306.jpg?1783911804",
+    "normal": "https://cards.scryfall.io/normal/front/1/d/1dd17cea-9e8c-4dba-b6ab-a6b9de87a306.jpg?1783911804",
+    "large": "https://cards.scryfall.io/large/front/1/d/1dd17cea-9e8c-4dba-b6ab-a6b9de87a306.jpg?1783911804",
+    "png": "https://cards.scryfall.io/png/front/1/d/1dd17cea-9e8c-4dba-b6ab-a6b9de87a306.png?1783911804",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/d/1dd17cea-9e8c-4dba-b6ab-a6b9de87a306.jpg?1783911804",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/d/1dd17cea-9e8c-4dba-b6ab-a6b9de87a306.jpg?1783911804",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/d/1dd17cea-9e8c-4dba-b6ab-a6b9de87a306.webp?1783911804",
+    "grid": "https://cards.scryfall.io/grid/front/1/d/1dd17cea-9e8c-4dba-b6ab-a6b9de87a306.webp?1783911804",
+    "display": "https://cards.scryfall.io/display/front/1/d/1dd17cea-9e8c-4dba-b6ab-a6b9de87a306.webp?1783911804",
+    "art": "https://cards.scryfall.io/art/front/1/d/1dd17cea-9e8c-4dba-b6ab-a6b9de87a306.webp?1783911804",
+    "crop": "https://cards.scryfall.io/crop/front/1/d/1dd17cea-9e8c-4dba-b6ab-a6b9de87a306.webp?1783911804",
+    "jpeg": "https://cards.scryfall.io/normal/front/1/d/1dd17cea-9e8c-4dba-b6ab-a6b9de87a306.jpg?1783911804"
+  },
+  "mana_cost": "{2}{G}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Human Scout",
+  "oracle_text": "When this creature enters, mill three cards. Put a land card from among the milled cards into your hand. If you can't, create a Treasure token. (To mill three cards, put the top three cards of your library into your graveyard.)",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Treasure",
+    "Mill"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "7ec6f053-96f7-4e57-b2eb-4e7699a40a4f",
+      "component": "token",
+      "name": "Treasure",
+      "type_line": "Token Artifact \u2014 Treasure",
+      "uri": "https://api.scryfall.com/cards/7ec6f053-96f7-4e57-b2eb-4e7699a40a4f"
+    },
+    {
+      "object": "related_card",
+      "id": "1dd17cea-9e8c-4dba-b6ab-a6b9de87a306",
+      "component": "combo_piece",
+      "name": "Patient Naturalist",
+      "type_line": "Creature \u2014 Human Scout",
+      "uri": "https://api.scryfall.com/cards/1dd17cea-9e8c-4dba-b6ab-a6b9de87a306"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set": "otj",
+  "set_name": "Outlaws of Thunder Junction",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aotj&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/otj?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/1dd17cea-9e8c-4dba-b6ab-a6b9de87a306/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aba7c1062-f777-4ba9-84df-ec340a9ec514&unique=prints",
+  "collector_number": "174",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "3f93408e-c510-42a5-beef-9ddbc56d9056"
+  ],
+  "illustration_id": "4a665908-d44b-4835-aaac-a55ea2a19210",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 16357,
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=655115&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPatient%2BNaturalist",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPatient%2BNaturalist",
+    "edhrec": "https://edhrec.com/route/?cc=Patient+Naturalist"
+  }
+}
