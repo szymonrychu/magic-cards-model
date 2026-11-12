@@ -146,6 +146,25 @@ def _attached_to_of(context: "ConditionContext") -> "CardState | None":
     return found if isinstance(found, CardState) else None
 
 
+def _discarded_by_the_cost(context: "ConditionContext") -> "CardState | None":
+    """The card the source spell's additional cost discarded - "the discarded
+    card" of "As an additional cost to cast this spell, discard a card. ... If
+    the discarded card wasn't a land card, ..." (CR 118.8a, CR 601.2h). The
+    cast record keeps the cards each cost verb consumed; the card is read
+    wherever paying left it (the graveyard)."""
+    source = context.source
+    if source is None:
+        return None
+    record = context.game.cast_record_of(source)
+    if record is None:
+        return None
+    paid = zip(record.additional_cost_cards, record.additional_cost_kinds, strict=False)
+    for card_id, kind in paid:
+        if kind == "discard":
+            return context.game.find_by_id(card_id)
+    return None
+
+
 def _subject(context: "ConditionContext", phrase: str) -> "CardState | None":
     """Who `phrase` names - see the module docstring."""
     phrase = phrase.strip()
@@ -625,6 +644,19 @@ def _is_quality(context: "ConditionContext", match: re.Match[str]) -> bool:
         # as a spell; the same card anywhere else is no spell.
         holds = holds and subject.zone is Zone.STACK
     return not holds if ("n't" in verb or verb.endswith(" not")) else holds
+
+
+def _discarded_card_is_quality(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "the discarded card wasn't a land card", "the discarded card was a
+    creature card": the card the source spell's additional discard cost moved,
+    judged as it is now in the graveyard (CR 118.8a). A source with no such
+    card (no discard cost, or not a cast spell) answers False either way:
+    there is nothing to judge."""
+    discarded = _discarded_by_the_cost(context)
+    if discarded is None:
+        return False
+    holds = _qualities_hold(_Seen(context, discarded, past=True), discarded, match.group("quality"))
+    return not holds if "n't" in match.group("verb") else holds
 
 
 def _attachments(context: "ConditionContext", state: "CardState", *, past: bool) -> list:
@@ -1231,6 +1263,12 @@ READERS: tuple[ConditionReader, ...] = (
             rf"| were) (?P<quality>{_QUALITY_LIST})(?P<spell> spell)?"
         ),
         _is_quality,
+    ),
+    ConditionReader(
+        re.compile(
+            rf"the discarded card (?P<verb>was|wasn't|is|isn't) (?P<quality>{_QUALITY_LIST}) card"
+        ),
+        _discarded_card_is_quality,
     ),
     ConditionReader(
         re.compile(

@@ -131,14 +131,28 @@ _SEARCH_HAND_SHUFFLE_RE = re.compile(
 )
 
 
+#: "If a(n) `<quality>` card was discarded this way, `<instruction>`." - the
+#: clause after a discard whose gate is the discard's own result (CR 608.2c):
+#: Reckless Handling's "If an artifact card was discarded this way, Reckless
+#: Handling deals 2 damage to each opponent." The instruction is read by the
+#: ordinary per-clause dispatcher, so it can be anything it reads.
+_IF_DISCARDED_THIS_WAY_RE = re.compile(
+    r"^if an? (?P<quality>.+?) cards? (?:was|is) discarded this way, (?P<rest>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
 def _merge_search_hand_shuffle_then_discard_random_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
     """`_SEARCH_HAND_SHUFFLE_RE` immediately followed by `_DISCARD_AT_RANDOM_
     RE`'s own "discard `<n>` card(s) at random" - Curse-Marred Demon's own
-    two clauses, and Reckless Handling's own leading pair ahead of its own
-    "if an artifact card was discarded this way" third clause, which this
-    merge leaves alone for whatever else reads it."""
+    two clauses, and Reckless Handling's three: the leading pair plus its
+    "if an artifact card was discarded this way, `<instruction>`" third clause
+    (`_IF_DISCARDED_THIS_WAY_RE`), run only when a card of that quality was
+    among those the random discard just moved. The tutored card may be the one
+    discarded, so the gate reads the discard's own result, never a snapshot of
+    the hand taken before the search."""
     if index + 1 >= len(clauses):
         return None
     search_match = _SEARCH_HAND_SHUFFLE_RE.fullmatch(clauses[index].strip())
@@ -158,6 +172,17 @@ def _merge_search_hand_shuffle_then_discard_random_clauses(
     discard_count = parse_count(discard_match.group("n")) if discard_match.group("n") else 1
     if discard_count is None:
         return None
+    gated = None
+    if index + 2 < len(clauses) and (
+        gate_match := _IF_DISCARDED_THIS_WAY_RE.fullmatch(clauses[index + 2].strip())
+    ):
+        gate_quality = _quality_matcher(gate_match.group("quality"))
+        rest_text = gate_match.group("rest").strip()
+        consequence = (
+            parse_mixed_effect_for_spell(rest_text) if for_spell else parse_mixed_effect(rest_text)
+        )
+        if gate_quality is not None and consequence is not None:
+            gated = (gate_quality, consequence)
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
@@ -172,9 +197,11 @@ def _merge_search_hand_shuffle_then_discard_random_clauses(
             source=source,
             source_id=source_id,
         )
-        _discard_at_random(game, player, discard_count, source)
+        discarded = _discard_at_random(game, player, discard_count, source)
+        if gated is not None and any(gated[0](card) for card in discarded):
+            gated[1](game, stack_object)
 
-    return 2, effect
+    return (2 if gated is None else 3), effect
 
 
 #: "`<quality>` card(s)[ with mana value N or less| with mana value X or

@@ -969,9 +969,10 @@ def _each_opponent_draws_clause(clause: str) -> ClauseEffect | None:
     return each_opponent_draws
 
 
-def _discard_at_random(game: "Game", player: Player, count: int, source: str) -> None:
+def _discard_at_random(game: "Game", player: Player, count: int, source: str) -> list[CardState]:
     """CR 701.9b's random discard: `count` cards go, with no
-    decision asked of anybody.
+    decision asked of anybody. The cards discarded are returned, for a later
+    "if a `<quality>` card was discarded this way" (CR 608.2c).
 
     A hand shorter than `count` discards the whole hand, the same floor
     `_discard_cards` applies to a chosen discard. The randomness reuses
@@ -980,11 +981,11 @@ def _discard_at_random(game: "Game", player: Player, count: int, source: str) ->
     """
     hand = list(player.hand)
     if not hand:
-        return
+        return []
     rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:discard-at-random")  # noqa: S311
     rng.shuffle(hand)
     game.shuffles_performed += 1
-    game.discard_cards(player.username, hand[:count], source=source)
+    return game.discard_cards(player.username, hand[:count], source=source)
 
 
 #: "Draw X cards, where X is the number of cards that were put into target

@@ -2853,13 +2853,18 @@ def _parse_counter_on_subject_and_shared_type_clause(text: str) -> AbilityEffect
 #: or "it has N or more" / "this `<noun>` has N or more" (The Emperor of
 #: Palamecia's "Then if it has three or more +1/+1 counters on it, transform
 #: it."), or "no" counters at all. The kind is a P/T pair or a word.
+#: The source as the sentences name it: "this artifact", or the pronoun a legend
+#: or character takes in place of its name ("on her", "she has": Beckett
+#: Mariner's "put a promotion counter on her. Then if there are three or more
+#: promotion counters on her, remove those counters and she deals 2 damage to
+#: each opponent."). The threshold sentence refers to the same source.
 _COUNTER_THRESHOLD_RE = re.compile(
     r"^(?P<pre>(?:[^.]+\.\s+)*?)"
-    r"(?P<put>(?:put|remove) [^.]+? (?:on|from) this (?P<noun>[a-z]+))\.\s*"
-    r"then if (?:there (?:are|is)|(?:it|this (?P=noun)) has) "
+    r"(?P<put>(?:put|remove) [^.]+? (?:on|from) (?:this (?P<noun>[a-z]+)|it|her|him|them))\.\s*"
+    r"then if (?:there (?:are|is)|(?:it|she|he|they|this (?(noun)(?P=noun)|[a-z]+)) has) "
     rf"(?:(?P<threshold>{COUNT}) or more|(?P<none>no)) "
     r"(?P<kind>[+-]\d+/[+-]\d+|[a-z]+) counters? on "
-    r"(?:it|this (?P=noun)), (?P<rest>[^.]+)\.?$",
+    r"(?:it|her|him|them|this (?(noun)(?P=noun)|[a-z]+)), (?P<rest>[^.]+)\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 #: The consequence list's own separators: a comma (optionally ", and" /
