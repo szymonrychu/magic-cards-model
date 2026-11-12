@@ -1120,6 +1120,28 @@ def _counter_kind(word: str) -> Counter | str:
         return lowered
 
 
+def entering_counters(match: re.Match[str]) -> dict[str, int] | None:
+    """The counters `ENTERS_WITH_COUNTERS_TAIL` named on `match`, keyed the
+    way `Game.put_onto_battlefield(counters=...)` takes them: `{}` when the
+    clause prints no such tail, `None` when it prints one with a count this
+    engine cannot read (the caller fails closed).
+
+    One tail for every "put it onto the battlefield with `<n>` `<kind>`
+    counters on it" - Captain Jean-Luc Picard's seven charge counters and
+    Neoform's "an additional +1/+1 counter" are the same CR 614.1c "enters
+    with" replacement, so the counters are on the permanent as it arrives.
+    """
+    groups = match.groupdict()
+    kind = groups.get("enter_counter_kind")
+    if kind is None:
+        return {}
+    count_word = groups.get("enter_counter_n")
+    amount = 1 if count_word is None else parse_count(count_word)
+    if amount is None:
+        return None
+    return {str(_counter_kind(kind)): amount}
+
+
 #: "Distribute seven +1/+1 counters among any number of target creatures you
 #: control." (Vorinclex // The Grand Evolution's own Saga chapter II) -
 #: CR 601.2d's "divide or distribute an effect (such as damage or counters)

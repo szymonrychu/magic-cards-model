@@ -334,6 +334,9 @@ def _search_and_place_for(match: re.Match[str], *, optional: bool) -> Callable[.
         else Zone.BATTLEFIELD
     )
     reveal = bool(match.groupdict().get("reveal"))
+    counters = entering_counters(match)
+    if counters is None or (counters and destination is not Zone.BATTLEFIELD):
+        return None  # a count this engine cannot read, or counters on a card put in a hand
     unique_word = match.groupdict().get("unique_word")
     if unique_word is not None:
         description = (
@@ -391,6 +394,7 @@ def _search_and_place_for(match: re.Match[str], *, optional: bool) -> Callable[.
             count=count,
             reveal=reveal,
             tapped=tapped,
+            counters=counters or None,
             source=source,
             source_id=source_id,
             caused_by=caused_by,
@@ -1658,10 +1662,14 @@ def _parse_target_player_may_search_named_card_clause(
     return effect
 
 
-#: "[You may ]search your library for a card named [name], reveal it, put it
-#: into your hand, then shuffle." - Asmoranomardicadaistinaculdacar's enters
-#: trigger and Tempest Hawk's combat-damage trigger,
-#: whose name is its own (CR 201.5: after self-name normalisation it reads
+#: "[You may ]search your library for `<count>` card(s) named [name], reveal
+#: it/them, put it/them into your hand, then shuffle." - Asmoranomardicadaistinaculdacar's
+#: enters trigger and Tempest Hawk's combat-damage trigger ("a card named"),
+#: and the plural family: Squadron Hawk's "up to three cards named", Battalion
+#: Foot Soldier's and Andromedan Automatons' "any number of cards named". The
+#: count slot is `_SEARCH_AND_PUT_RE`'s own (`_read_search_count`): "a", "up to
+#: N", "N", "any number of" (CR 107.1c: bounded only by the library).
+#: The name is its own (CR 201.5: after self-name normalisation it reads
 #: "a card named this creature", the object's own name). The controller's
 #: twin of `_TARGET_PLAYER_MAY_SEARCH_NAMED_CARD_RE`; CR 701.23b lets the
 #: searcher fail to find even a present card, which `Game.search_and_put`'s
@@ -1669,9 +1677,11 @@ def _parse_target_player_may_search_named_card_clause(
 #: either name, and the find may go onto the battlefield, tapped or not,
 #: instead of into the hand (CR 701.23e: revealed only when the text says so).
 _YOU_SEARCH_NAMED_CARD_RE = re.compile(
-    r"^(?P<may>you may )?search your library for a card named (?P<name>.+?), "
-    r"(?:(?P<reveal>reveal it, put it into your hand)|"
-    r"put it onto the battlefield(?P<tapped> tapped)?), then shuffle$",
+    r"^(?P<may>you may )?search your library for "
+    rf"(?:(?P<any_number>any number of )|(?P<upto>up to )?(?P<n>{COUNT}) )"
+    r"cards? named (?P<name>.+?), "
+    r"(?:(?P<reveal>reveal (?:it|them), put (?:it|them) into your hand)|"
+    r"put (?:it|them) onto the battlefield(?P<tapped> tapped)?), then shuffle$",
     re.IGNORECASE,
 )
 _SELF_NAME_RE = re.compile(
@@ -1689,9 +1699,13 @@ def _parse_you_search_named_card_clause(clause: str, *, for_spell: bool) -> Targ
     printed = match.group("name").strip()
     if not printed:
         return None
+    count_reader = _read_search_count(match)
+    if count_reader is None:
+        return None
     optional = match.group("may") is not None
     reveal = match.group("reveal") is not None
     tapped = match.group("tapped") is not None
+    plural = match.group("any_number") is not None or parse_count(match.group("n")) != 1
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
@@ -1702,17 +1716,24 @@ def _parse_you_search_named_card_clause(clause: str, *, for_spell: bool) -> Targ
             else [alternative.strip() for alternative in printed.split(" or ")]
         )
         controller = game.controller_of(stack_object)
-        prompt = f"search your library for a card named {' or '.join(names)}"
+        count = count_reader(game, controller.username)
+        if count is None:
+            return
+        prompt = (
+            f"search your library for {'cards' if plural else 'a card'} named {' or '.join(names)}"
+        )
         if optional and not game.may(controller, prompt, source=source, source_id=source_id):
             return
         game.search_and_put(
             controller,
             lambda state: state.name in names,
             destination=Zone.HAND if reveal else Zone.BATTLEFIELD,
+            count=count,
             reveal=reveal,
             tapped=tapped,
             source=source,
             source_id=source_id,
+            caused_by=controller.username,
         )
 
     return effect
@@ -2395,3 +2416,6 @@ def _parse_search_exact_mana_value_ability(text: str) -> AbilityEffect | None:
             create_tokens(game, PREDEFINED["Treasure"], controller.username)
 
     return effect
+
+
+from .counters import entering_counters  # noqa: E402
