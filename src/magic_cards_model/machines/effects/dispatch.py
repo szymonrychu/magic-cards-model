@@ -374,6 +374,14 @@ _EXILE_CARDS_FROM_OWN_GRAVEYARD_RE = re.compile(
     rf"^exiles? (?P<n>{COUNT})\s+(?:(?P<quality>[a-z]+) )?cards? from (?:your|their) graveyard$",
     re.IGNORECASE,
 )
+# "Exile a card from your hand" / "that player exiles a nonland card from their
+# hand" as a player clause - the hand twin of the graveyard clause above (All
+# Good Things..., Wrath of Khan, Ego Drain): the subject chooses their own card
+# (CR 608.2d).
+_EXILE_CARDS_FROM_OWN_HAND_RE = re.compile(
+    rf"^exiles? (?P<n>{COUNT})\s+(?:(?P<quality>[a-z]+) )?cards? from (?:your|their) hand$",
+    re.IGNORECASE,
+)
 # "Discard your hand." (Behold the Beyond, second person, addressed to the
 # caster) and "discards their hand"/"discards his or her hand" (the same
 # verb, third person - Reforge the Soul's "Each player discards their hand,
@@ -948,6 +956,27 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
             source,
             source_id=source_id,
             predicate=exile_predicate,
+        )
+
+    if match := _EXILE_CARDS_FROM_OWN_HAND_RE.fullmatch(clause):
+        quality_word = match.group("quality")
+        hand_predicate: Callable[[CardState], bool] | None = None
+        if quality_word is not None:
+            hand_predicate = _nonland_or_typed_card_matcher(quality_word) or _quality_matcher(
+                quality_word
+            )
+            if hand_predicate is None:
+                return None
+        hand_amount = parse_count(match.group("n"))
+        if hand_amount is None:
+            return None
+        return lambda game, player, source, source_id: _exile_cards_from_hand(
+            game,
+            player,
+            hand_amount,
+            source,
+            source_id=source_id,
+            predicate=hand_predicate,
         )
 
     if (half_zone := parse_half_of_zone_clause(clause)) is not None:
@@ -5354,7 +5383,7 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             parsed.append(effect)
             index += consumed
             continue
-        merged = _merge_may_exile_from_graveyard_if_you_do_clauses(
+        merged = _merge_may_exile_from_own_zone_if_you_do_clauses(
             clauses, index, for_spell=for_spell
         )
         if merged is not None:
@@ -6649,7 +6678,7 @@ from .merges import (  # noqa: E402
     _merge_look_top_x_split_hand_graveyard_clauses,
     _merge_may_discard_if_you_do_clauses,
     _merge_may_exile_discarded_card_then_play_permission_clauses,
-    _merge_may_exile_from_graveyard_if_you_do_clauses,
+    _merge_may_exile_from_own_zone_if_you_do_clauses,
     _merge_may_exile_top_conditional_pump_then_play_clauses,
     _merge_may_then_if_you_do_clauses,
     _merge_prevent_damage_from_target_clauses,
@@ -6701,6 +6730,7 @@ from .modal import (  # noqa: E402
 from .removal import (  # noqa: E402
     _counter_unless_pays_effect,
     _exile_cards_from_graveyard,
+    _exile_cards_from_hand,
     _exile_matching_from_all_graveyards,
     _graveyard_exile_quality_matcher,
     _hand_exile_quality_matcher,
