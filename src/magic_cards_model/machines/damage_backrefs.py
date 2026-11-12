@@ -748,8 +748,9 @@ def public_card_ids(game: "Game") -> set[Any]:
     }
 
 
-def newly_discarded(game: "Game", before: set[Any], username: str) -> list[CardState]:
-    """The cards `username` discarded since `before` was taken: CR 701.9a's
+def newly_discarded(game: "Game", before: set[Any], username: str | None = None) -> list[CardState]:
+    """The cards `username` (anyone, when `None`) discarded since `before` was
+    taken, as their owner's cards: CR 701.9a's
     discard puts them in their owner's graveyard (or exile, for madness, CR
     702.35a), marked `discarded_by`. "That card" in the next sentence is this
     card (CR 608.2c), and its mana value is read off the card where it now is
@@ -758,5 +759,7 @@ def newly_discarded(game: "Game", before: set[Any], username: str) -> list[CardS
     return [
         card
         for card in moved
-        if card.id not in before and card.discarded_by is not None and card.owner == username
+        if card.id not in before
+        and card.discarded_by is not None
+        and (username is None or card.owner == username)
     ]

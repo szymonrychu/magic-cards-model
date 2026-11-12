@@ -31,6 +31,7 @@ from ..abilities import (
 from ..casting import (
     PlayAction,
 )
+from ..damage_backrefs import newly_discarded, public_card_ids
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import (
     DelayedTrigger,
@@ -3081,6 +3082,7 @@ from .modal import (  # noqa: E402
     _choose_land_from_hand,
     _choose_lands_from_hand,
     _choose_permanents_to_sacrifice,
+    _condition_holds_for_stack_object,
     reflexive_consequence_effect,
 )
 from .removal import (  # noqa: E402
@@ -3159,3 +3161,91 @@ def _parse_draw_if_life_at_least_noted_then_note_clause(text: str) -> AbilityEff
         source.choice = Choice(kind=ChoiceKind.NUMBER, value=str(life))
 
     return effect
+
+
+#: "`<instructions that discard>`. [If `<condition>`, ]you may cast the discarded card
+#: [without paying its mana cost]." (Malcolm, Alluring Scoundrel) - the last sentence
+#: names the card an earlier instruction of the same spell or ability discarded.
+_CAST_DISCARDED_TAIL_RE = re.compile(
+    r"(?:^|(?<=\.)\s+)(?P<tail>(?:if (?P<condition>[^.]+?), )?you may cast "
+    r"(?:the discarded card|that card)(?P<free> without paying its mana cost)?\.?)$",
+    re.IGNORECASE,
+)
+_DISCARD_WORD_RE = re.compile(r"\bdiscards?\b", re.IGNORECASE)
+#: A head that makes several players discard: "the discarded card" would name one
+#: of several owners' cards, which this reader does not choose between.
+_EVERY_PLAYER_RE = re.compile(
+    r"\b(?:each|every|all) (?:other )?(?:player|players|opponent|opponents)\b", re.IGNORECASE
+)
+
+
+def _discard_then_may_cast_discarded(text: str, *, for_spell: bool) -> Callable | None:
+    """A paragraph whose last sentence offers a cast of the card it just discarded.
+
+    CR 608.2c: the sentence after the discard refers to what the discard did, so
+    the paragraph is read as the instructions that discard, then the optional
+    cast (CR 608.2g: cast during resolution, no priority, CR 118.9 for the free
+    one, which CR 118.9b lets the player decline). A cast of "that card" is only
+    read after a discard, where it can mean nothing else. The condition is
+    checked after the earlier instructions ran (CR 608.2c orders them), against
+    the source's last known information if it left (CR 608.2h). A discarded land
+    is never offered: it can only be played (CR 305.9)."""
+    whole = collapsed(_strip_non_effect_preamble(text).strip())
+    match = _CAST_DISCARDED_TAIL_RE.search(whole)
+    if match is None:
+        return None
+    head = whole[: match.start()].strip()
+    condition = match.group("condition")
+    if _DISCARD_WORD_RE.search(head) is None or _EVERY_PLAYER_RE.search(head) is not None:
+        return None
+    if condition is not None and not _effect_condition_is_readable(condition):
+        return None
+    head_effect = (_spell_effect_or_notice if for_spell else _ability_effect_or_notice)(head)
+    if head_effect is None or _is_notice_only(head_effect):
+        return None
+    free = match.group("free") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        before = public_card_ids(game)
+        head_effect(game, stack_object)
+        discarded = newly_discarded(game, before)
+        if not discarded:
+            return
+        if for_spell:
+            source = stack_object
+            source_name = stack_object.name
+        else:
+            source = stack_object.source_or_last_known(game)
+            source_name = stack_object.source_name
+        if condition is not None and not _condition_holds_for_stack_object(
+            game, stack_object, condition, source
+        ):
+            return
+        for card in discarded:
+            if card.card.is_land:
+                continue
+            game.may_cast_during_resolution(
+                card,
+                controller,
+                prompt=f"cast {card.name}" + (" without paying its mana cost" if free else ""),
+                source=source_name,
+                source_id=source_id_of(stack_object),
+                source_name=source_name,
+                rule="CR 608.2g",
+                pays_mana_cost=not free,
+            )
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s23")
+def _parse_discard_then_cast_discarded_ability_text(text: str) -> AbilityEffect | None:
+    """The ability side of `_discard_then_may_cast_discarded`."""
+    return _discard_then_may_cast_discarded(text, for_spell=False)
+
+
+@SPELL_TEXT.rung("s21")
+def _parse_discard_then_cast_discarded_spell_text(text: str) -> Effect | None:
+    """The spell side of `_discard_then_may_cast_discarded`."""
+    return _discard_then_may_cast_discarded(text, for_spell=True)

@@ -8724,3 +8724,14 @@ Not modelled yet: Jett Reno, Problem Solver's "If her power is 4 or greater, ins
 | "<target> gets +N/+N and becomes a <creature type> until end of turn" / "... and loses all creature types": the pump (sublayer 7c) and the type change (layer 4) are two readers of the one resolution, sharing its timestamp, one duration | 613.4c, 613.1d, 205.1a, 611.2a, 611.2c, 613.7b, 514.2, 704.5f | `layers/parse._parse_pump_and_type_change` (last rung of `_parse_layer_sentence_ungated`) | I'm a Doctor, Not a . . . (proof: Nameless Inversion) | `scenarios/test_pump_and_become_creature_type.py` |
 
 Schema: `Game.CURRENT_SCHEMA_VERSION` 177 -> 178 (`GrantGroup.token`).
+
+## T-157 b9: named counter kinds and the free cast of the discarded card
+
+| Mechanic | Reader | Card that exposed it | Proof | Test |
+|---|---|---|---|---|
+| A counter kind is its name (CR 122.1: counters with the same name are interchangeable); no closed list. The engine already keyed counters by `Counter \| str`; magic-cards-model-api's `PATCH .../cards/{id}` and `.../players/{name}` accept any well-formed name (it refused every name outside the enum) | `Game.condition_holds` "there are N or more `<kind>` counters on this `<type>`" | Malcolm, Alluring Scoundrel ("chorus") | Blademane Baku ("ki"), the API's own PATCH tests | `test_named_counter_kinds.py`, API `tests/test_patch_named_counters.py` |
+| "`<instructions that discard>`. [If `<condition>`, ]you may cast the discarded card [without paying its mana cost]." - the cast names what the discard moved; the condition is read after the earlier instructions; a land is never offered (CR 305.9); declining leaves the card in the graveyard (CR 118.9b) | `draw_discard._discard_then_may_cast_discarded` (ability and spell rungs) | Malcolm, Alluring Scoundrel | no second printing exists (Scryfall, 2026-11-12); generality is the discard head, the condition and the paying variant | `test_discarded_card_free_cast.py` |
+
+CR 608.2h: a source that left before its "there are N counters on `<it>`" ability resolved reads its last known counters (`test_malcolm_gone_before_resolution_uses_its_last_known_counters`).
+
+No schema bump: nothing persisted changed (the discarded cards are read from the zones while the ability resolves).
