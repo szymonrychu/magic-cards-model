@@ -1056,15 +1056,16 @@ def _parse_self_copy_token_clause(clause: str, *, for_spell: bool) -> TargetedCl
     return effect  # type: ignore[return-value]
 
 
-#: "For each creature target player controls, create a token that's a copy of
-#: that creature[, except it has `<keyword>`[ and "`<ability>`"]]." - Clone
-#: Legion (no "except" tail) and Face Yourself's own "except it has haste and
-#: '...'" - a mixed keyword-then-quoted-ability tail neither
+#: "For each creature target `<player|opponent>` controls, create a token that's
+#: a copy of that creature[, except it has `<keyword>`[ and "`<ability>`"]]." -
+#: Clone Legion ("target player", no "except" tail), Mirror Universe Intrusion's
+#: kicked half ("target opponent") and Face Yourself's own "except it has haste
+#: and '...'" - a mixed keyword-then-quoted-ability tail neither
 #: `_parse_token_tail` (a single quoted string *or* bare keywords, never
 #: both) nor `_CREATE_TOKEN_COPIES_EXCEPT_RE`'s own tail (quoted only) reads,
 #: so `_parse_copy_added_ability_lines` below reads it directly.
 _FOR_EACH_CREATURE_TARGET_PLAYER_COPY_RE = re.compile(
-    r"^for each creature target player controls,\s*"
+    r"^for each creature (?P<who>target (?:player|opponent)) controls,\s*"
     r"create a token that'?s a copy of that creature"
     r"(?:,\s*except (?:it has|they have)\s+(?P<except_tail>.+?))?\.?$",
     re.IGNORECASE | re.DOTALL,
@@ -1105,6 +1106,7 @@ def _parse_copy_added_ability_lines(tail: str) -> tuple[str, ...] | None:
     return tuple(added)
 
 
+@MIXED_CLAUSE.rung("s21", for_spell=FORWARD)
 @ABILITY_TEXT.rung("s15", for_spell=False)
 @SPELL_TEXT.rung("s13", for_spell=True)
 def _parse_for_each_creature_target_player_copy_clause(
@@ -1121,7 +1123,7 @@ def _parse_for_each_creature_target_player_copy_clause(
     match = _FOR_EACH_CREATURE_TARGET_PLAYER_COPY_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    if not _targets_understood("target player", allow_player_targets=True):
+    if not _targets_understood(match.group("who").lower(), allow_player_targets=True):
         return None
     added: tuple[str, ...] = ()
     except_tail = match.group("except_tail")

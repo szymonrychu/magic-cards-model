@@ -172,6 +172,37 @@ _COPY_EXCEPT_ENTERS_WITH_COUNTERS = re.compile(
     re.IGNORECASE,
 )
 
+#: The same additional effect with its own gate, one per part (Spark Double):
+#: "it enters with an additional +1/+1 counter on it if it's a creature" (CR
+#: 707.9e's additional effect, CR 707.9f's "only if the copy is or has certain
+#: characteristics").
+_COPY_EXCEPT_GATED_COUNTERS = re.compile(
+    rf"^(?:he|she|it|they) enters? with (?P<n>{COUNT}) additional "
+    r"(?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?:him|her|it|them) "
+    r"if (?:he|she|it|they)(?:['\u2019]s| is|['\u2019]re| are) an? "
+    r"(?P<type>artifact|creature|enchantment|land|planeswalker)$",
+    re.IGNORECASE,
+)
+
+#: "it isn't legendary" - the exception that takes a supertype away.
+_COPY_EXCEPT_NOT_LEGENDARY = re.compile(
+    r"^(?:he|she|it|they)"
+    r"(?: isn['\u2019]t| is not|['\u2019]s not| aren['\u2019]t| are not) legendary$",
+    re.IGNORECASE,
+)
+
+#: The sentence after an "enter as a copy" one that carries the copied
+#: permanent's counters over: "If you do, it enters with additional counters
+#: on it equal to the same number and kinds of counters the copied permanent
+#: has on it." (Dominion Saboteur). Folded into the copy's `CopyException`
+#: (`copies_counters`) instead of being read as a bare `ENTERS_WITH`.
+_COPIED_COUNTERS_SENTENCE = re.compile(
+    r"^(?:if you do,\s*)?(?:he|she|it|they) enters? with additional counters on "
+    r"(?:him|her|it|them) equal to the same number and kinds of counters the copied "
+    r"(?:permanent|creature|artifact|object) has on (?:him|her|it|them)\.?$",
+    re.IGNORECASE,
+)
+
 _SUPERTYPE_WORDS = {"legendary": Supertype.LEGENDARY, "snow": Supertype.SNOW}
 
 #: A copy exception's own colour word ("black", "blue", ...) - kept local
@@ -222,6 +253,8 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
     if_type: Type | None = None
     if_type_abilities: list[str] = []
     enters_with_counters: list[tuple[str, int]] = []
+    if_type_counters: list[tuple[Type, str, int]] = []
+    not_legendary = False
 
     clause = clause.strip()
     if gated := _COPY_EXCEPT_IF_TYPE.match(clause):
@@ -251,6 +284,17 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
             return None
 
     for part in _split_exception_parts(clause.strip()):
+        if _COPY_EXCEPT_NOT_LEGENDARY.match(part):
+            not_legendary = True
+            continue
+        if match := _COPY_EXCEPT_GATED_COUNTERS.match(part):
+            amount = parse_count(match.group("n"))
+            if amount is None:
+                return None
+            if_type_counters.append(
+                (_CARD_TYPE_WORDS[match.group("type").lower()], match.group("kind").lower(), amount)
+            )
+            continue
         if match := _COPY_EXCEPT_NAME.match(part):
             name = match.group("name").strip()
             continue
@@ -300,6 +344,8 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
         and not added_colors
         and not if_type_abilities
         and not enters_with_counters
+        and not if_type_counters
+        and not not_legendary
     ):
         return None
     return CopyException(
@@ -314,6 +360,8 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
         if_type=if_type,
         if_type_abilities=tuple(if_type_abilities),
         enters_with_counters=tuple(enters_with_counters),
+        not_legendary=not_legendary,
+        if_type_counters=tuple(if_type_counters),
     )
 
 
@@ -546,6 +594,22 @@ def _parse_oracle_text(
             # CR 603.12's reflexive ability is linked to the sentence in front
             # of it and has no existence apart from it, so it is carried on
             # that sentence's effect rather than parsed as one of its own.
+            if (
+                _COPIED_COUNTERS_SENTENCE.match(sentence)
+                and effects
+                and effects[-1].kind is ReplacementKind.ENTERS_AS_COPY
+                and effects[-1].raw == paragraph
+                and effects[-1].copy_exception is not None
+            ):
+                # CR 707.9e's additional effect, printed as its own sentence.
+                effects[-1] = effects[-1].model_copy(
+                    update={
+                        "copy_exception": effects[-1].copy_exception.model_copy(
+                            update={"copies_counters": True}
+                        )
+                    }
+                )
+                continue
             following = sentences[index + 1] if index + 1 < len(sentences) else None
             linked = following if following and _REFLEXIVE_OPENER.match(following) else None
             for effect in _parse_sentence(sentence, names):

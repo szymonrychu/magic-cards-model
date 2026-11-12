@@ -2195,7 +2195,8 @@ def _choose_colors(count: int, card_name: str) -> Apply:
 #: (CR 109.5: "you" on an object is its controller).
 _COPY_CANDIDATES_RE = re.compile(
     r"^(?:any|an?) (?:non(?P<excluded>artifact|creature|enchantment|land|planeswalker) )?"
-    r"(?P<filter>artifact|creature|enchantment|land|permanent|planeswalker)"
+    r"(?P<filter>(?:artifact|creature|enchantment|land|permanent|planeswalker)"
+    r"(?: or (?:artifact|creature|enchantment|land|planeswalker))*)"
     r"(?P<zone> on the battlefield| card in a graveyard| you control)"
     r"(?: with mana value (?P<bound>.+))?$",
     re.IGNORECASE,
@@ -2277,13 +2278,16 @@ def _copy_candidates(game: "Game", phrase: str, entering: CardState) -> list[Car
     Spider-Man's "any creature card in a graveyard" - "a graveyard", not "your
     graveyard", so every player's is searched).
 
-    The type filter is one card type, "permanent" for any, and an optional
-    "non<type>" in front of it (Clever Impersonator's "any nonland permanent
-    on the battlefield"). An optional mana value bound follows it
-    (`_COPY_MANA_VALUE_BOUND_RE`): Mockingbird's "with mana value less than
-    or equal to the amount of mana spent to cast this creature", read against
-    each candidate's mana value as it is on the battlefield (CR 202.3 - a
-    Clone copying a two-drop has the two-drop's mana value, CR 707.2).
+    The type filter is one card type, or several joined by "or" (Dominion
+    Saboteur's "any artifact or creature on the battlefield", Spark Double's
+    "a creature or planeswalker you control" - a permanent of any listed type
+    is a candidate), "permanent" for any, and an optional "non<type>" in front
+    of it (Clever Impersonator's "any nonland permanent on the battlefield").
+    An optional mana value bound follows it (`_COPY_MANA_VALUE_BOUND_RE`):
+    Mockingbird's "with mana value less than or equal to the amount of mana
+    spent to cast this creature", read against each candidate's mana value as
+    it is on the battlefield (CR 202.3 - a Clone copying a two-drop has the
+    two-drop's mana value, CR 707.2).
 
     The entering object is excluded: it is not on the battlefield yet, so this
     is belt and braces against a caller that put it there first.
@@ -2292,10 +2296,12 @@ def _copy_candidates(game: "Game", phrase: str, entering: CardState) -> list[Car
     match = _COPY_CANDIDATES_RE.match(cleaned)
     if match is None:
         return None
-    word = match.group("filter").lower()
-    wanted = None if word == "permanent" else _CARD_TYPE_WORDS.get(word)
-    if wanted is None and word != "permanent":
-        return None
+    words = match.group("filter").lower().split(" or ")
+    wanted: set[Type] | None = None
+    if words != ["permanent"]:
+        wanted = {_CARD_TYPE_WORDS[word] for word in words if word in _CARD_TYPE_WORDS}
+        if len(wanted) != len(words):
+            return None
     excluded = _CARD_TYPE_WORDS.get((match.group("excluded") or "").lower())
     bound: int | None = None
     if match.group("bound") is not None:
@@ -2305,7 +2311,7 @@ def _copy_candidates(game: "Game", phrase: str, entering: CardState) -> list[Car
 
     def admitted(types: Iterable[Type], mana_value: float) -> bool:
         kinds = set(types)
-        if wanted is not None and wanted not in kinds:
+        if wanted is not None and wanted.isdisjoint(kinds):
             return False
         if excluded is not None and excluded in kinds:
             return False
@@ -2444,6 +2450,17 @@ def _apply_copy_of(
         # additional effect of the replacement, not a copiable value.
         for kind, amount in exception.enters_with_counters:
             event.counters[kind] = event.counters.get(kind, 0) + amount
+    for gated_type, kind, amount in exception.if_type_counters:
+        # Spark Double: each additional counter has its own type gate.
+        if gated_type in copied_types:
+            event.counters[kind] = event.counters.get(kind, 0) + amount
+    if exception.copies_counters:
+        # Dominion Saboteur: the same number and kinds of counters the copied
+        # permanent has on it right now (CR 707.9e's additional effect; CR 707.2
+        # leaves counters out of the copiable values, so this is the only way
+        # they arrive).
+        for kind, amount in chosen_card.counters.counts.items():
+            event.counters[kind] = event.counters.get(kind, 0) + amount
     # CR 306.5b / CR 714.3a / CR 310.4b: a planeswalker's loyalty, a
     # Saga's lore counter and a battle's defense are intrinsic "enters
     # with" abilities of what is copied, read off its copiable values
@@ -2468,6 +2485,7 @@ def _apply_copy_of(
         added_abilities=added_abilities,
         added_supertypes=exception.added_supertypes,
         added_colors=exception.added_colors,
+        removed_supertypes=(Supertype.LEGENDARY,) if exception.not_legendary else (),
         copiable_values=copiable,
     )(entering, game.continuous_effects.tick(), chosen, LayerContext())
     for built in built_effects:
