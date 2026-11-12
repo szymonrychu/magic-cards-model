@@ -8714,3 +8714,13 @@ Schema: `Game.CURRENT_SCHEMA_VERSION` 169 -> 170 (`PlayPermission.harmonize`, th
 | "You may cast any number of spells with mana value less than or equal to `<count>` from among those cards without paying their mana costs." - the bound read at resolution (CR 608.2h), "those cards" the same pile as "them" | `merges._CAST_ANY_NUMBER_FROM_AMONG_THEM_FREE_RE` widened | Captain Benjamin Sisko | Etali, Primal Storm | same |
 
 Not modelled yet: Jett Reno, Problem Solver's "If her power is 4 or greater, instead draw a card." - pronoun self-reference is T-110 B4's reader; the two tap-trigger tests are strict xfail until B2 rebases on B4.
+
+## T-136 b2: copy variants (trk)
+
+| Shape | Reader | Cards | Second printing | Test |
+|---|---|---|---|---|
+| "{2},{T}: Create a tapped token that's a copy of target token you control." (CR 707.2) | `tokens._CREATE_TOKEN_COPY_OF_TARGET_RE` tapped slot -> `token_copy_of(tapped=True)` | Replicator | none exists (Esika's Chariot, Kambal regress) | `test_tapped_token_copy.py` |
+| Token copy "except it has changeling" (CR 702.73a, 707.9a) | `replacement.parse.copy_exception_keywords` shared by the token-copy exception readers | Dominion Infiltration | none exists (Omni-Changeling regresses) | `test_token_copy_except_changeling.py` |
+| "Each `<subtype>` token you control becomes a copy of target `<permanent>` until end of turn"; "Choose target X. Each other X you control becomes a copy of that X ..."; the copy brings the original's static abilities (CR 707.2, 604.2) | `copy_effects._group_qualifiers`, `modal._parse_choose_target_then_each_becomes_a_copy_pair`, `layers.apply._copied_values` | Gwyndala, the Progeny | Masterful Replication (Mirrorweave regresses) | `test_each_subtype_token_becomes_a_copy.py` |
+| "If this spell was kicked, instead for each creature target opponent controls, create a token that's a copy of that creature, except ..."; "create five of those tokens instead" (CR 601.2c, 614.1a) | `targeting._KICKED_INSTEAD_ANY_TARGETS_RE`, `control_copy._FOR_EACH_CREATURE_TARGET_PLAYER_COPY_RE`, `modal._ABILITY_BASE_TOKEN_COPY_RE` | Mirror Universe Intrusion | Rite of Replication | `test_kicked_instead_token_copies.py` |
+| "enter as a copy of any artifact or creature ..., except it isn't legendary. If you do, it enters with additional counters ... the copied permanent has on it"; per-type gated additional counters (CR 707.9b, 707.9e, 707.9f) | `replacement.parse._COPY_EXCEPT_NOT_LEGENDARY`, `_COPIED_COUNTERS_SENTENCE`, `_COPY_EXCEPT_GATED_COUNTERS`; `enters._apply_copy_of`, `_COPY_CANDIDATES_RE` "A or B" | Dominion Saboteur | Spark Double | `test_enter_as_copy_not_legendary.py` |
