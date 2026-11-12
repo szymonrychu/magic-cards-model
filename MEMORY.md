@@ -1721,6 +1721,13 @@ Flagged by `mise run regression:guard -- --base 57bcac56 --ratchet` on this bran
 - 2026-11-11 T-110 B3: a changeling is every creature type including Borg (CR 702.73a), so "non-Borg creatures" leaves it out entirely rather than counting every type.
 - 2026-11-11 T-110 B3: "draw a card for every five X" counts complete groups only (floor); CR 107.1a forbids drawing a fractional card.
 
+## T-136 b7: search variants (plural named search, counters on a searched find)
+
+- 2026-11-12 T-136 b7: the "put it onto the battlefield with `<n>` `<kind>` counters on it" rider is one shared regex fragment (`_common.ENTERS_WITH_COUNTERS_TAIL`) read by `counters.entering_counters`, used by `_SEARCH_AND_PUT_RE` and by the sacrificed-mana-value search (Neoform), which had its own "additional +1/+1" rider. Why: both are CR 614.1c's "enters with" replacement, so the counters arrive with the permanent. Neoform used to add the counter after the permanent had entered; it now passes `counters=` to `put_onto_battlefield`, which also makes the entering event carry them (checked by the Neoform scenarios).
+- 2026-11-12 T-136 b7: counters on a find put into a hand or graveyard is refused (`Game.search_and_put` raises, the parser returns None so the clause stays a notice): no card prints it and CR 614.1c only concerns a permanent entering.
+- 2026-11-12 T-136 b7: the plural named search extends `_YOU_SEARCH_NAMED_CARD_RE` with `_read_search_count` instead of adding a second regex: one count reader for "a", "up to N", "N", "any number of" (CR 107.1c). The find is still optional under CR 701.23b (an unrevealed hidden-zone search need not find every copy), proven with "choose none" scenarios.
+- 2026-11-12 T-136 b7: generality. Named cards: Squadron Hawk ("up to three") and Battalion Foot Soldier ("any number of") are differently worded real printings. Counters: no clean second search-with-counters printing exists, so Neoform (a spell, "an additional +1/+1 counter") is folded onto the shared tail as the differently worded proof, as the plan said.
+
 ## T-109 S0: keyword oracle credit
 
 - [Keyword oracle credit and the "it" referent](memory/keyword-oracle-credit-and-it-referent.md) - exalted and ripple had machines but were not credited by keywords.executes; "it gains X" on a trigger now reaches the event subject, not the source
