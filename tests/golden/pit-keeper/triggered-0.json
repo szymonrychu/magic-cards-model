@@ -46,7 +46,7 @@
         "source": "Pit Keeper"
       }
     ],
-    "fields_changed": ["known_carries"],
+    "fields_changed": ["known_carries", "turn_counts"],
     "notices": {},
     "objects": {
       "Grizzly Bears@alice#2": {

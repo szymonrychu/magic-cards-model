@@ -1,0 +1,90 @@
+{
+  "ability": "At the beginning of combat on your turn, you may pay {1} and exile a card from your graveyard. When you do, put a +1/+1 counter on target creature.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Sylvia Tilly, Joy of Discovery@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Sylvia Tilly, Joy of Discovery"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": null,
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Sylvia Tilly, Joy of Discovery",
+  "delta": {
+    "created": {},
+    "decisions": [
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Sylvia Tilly, Joy of Discovery"
+      },
+      {
+        "amount": 1,
+        "cards": ["Grizzly Bears@alice#2", "Lightning Bolt@alice#2", "Forest@alice#5", "Bonesplitter@alice#2", "Opt@alice#2", "Memnite@alice#2", "Island@alice#4", "Llanowar Elves@alice#1", "Swamp@alice#4", "Serra Angel@alice#1"],
+        "kind": "choose_cards",
+        "player": "alice",
+        "players": [],
+        "prompt": "exile a card from your graveyard",
+        "source": "Sylvia Tilly, Joy of Discovery"
+      },
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "choose_targets",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose targets for Sylvia Tilly, Joy of Discovery",
+        "source": "Sylvia Tilly, Joy of Discovery"
+      }
+    ],
+    "fields_changed": ["became_tapped_count_this_turn", "delayed_triggers", "exile_residents_seen", "turn_counts"],
+    "notices": {},
+    "objects": {
+      "Serra Angel@alice#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Swamp@alice#1": {
+        "tapped": [false, true]
+      }
+    },
+    "players": {},
+    "stack": ["ability of Sylvia Tilly, Joy of Discovery@alice#1: put a +1/+1 counter on target creature"]
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "beginning_of_step",
+  "number": 1,
+  "recipe": {
+    "attempt": "staged",
+    "index": 0,
+    "params": {},
+    "variant": "quiet"
+  }
+}

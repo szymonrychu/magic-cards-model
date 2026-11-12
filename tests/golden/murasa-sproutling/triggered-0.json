@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["known_carries"],
+    "fields_changed": ["known_carries", "turn_counts"],
     "notices": {},
     "objects": {
       "Academy Drake@alice#1": {
