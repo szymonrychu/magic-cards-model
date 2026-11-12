@@ -10,7 +10,7 @@ Rules:
   session message), the agent that learned it appends an entry and lands it in its next
   PR (or in a tiny docs PR).
 - Entries are append-only and never edited. Newest at the bottom of the log.
-- Until a question below is answered, follow its working default.
+- Until a question is answered, follow the skill text.
 
 Entry format:
 
@@ -21,32 +21,47 @@ Answer: <verbatim>
 Source: <T-134 decision id | session slug | PR>
 ```
 
-## Working defaults (pending answers)
-
-The 8 open questions on T-134 (https://lab.szymonrichert.pl/tasks/T-134). The leader moves
-each into the log below once answered. A = play-magic-daily-sync, B = play-magic-card-implementor.
-
-1. Q1 decklists: A refreshes `docs/card_coverage/metagame.json` daily (`mise run metagame:fetch`)
-   as a data-only engine PR, self-merged on green CI. New real top Modern tournament lists
-   (`statistics_decks`, legality checked via `resolve_cards`) whose cards are all supported and
-   pooled are added by A to the API repo `decks/` (API PR). Lists needing new cards are handed
-   to B. `mtg-decks` is untouched.
-2. Q2 formats: Modern only (new-set cards count when Modern-legal or when they will be on release).
-3. Q3 scope: all Not-working cards of each new Modern-legal set, plus any Not-working card in
-   current metagame lists.
-4. Q4 previews: report as soon as a card is previewed on Scryfall. A re-reports a set while new
-   previews keep arriving (only the delta).
-5. Q5 hard cards: build missing subsystems generally (fix the mechanic, never the card). Only if
-   truly impossible: strict xfail with a reason, listed in the summary.
-6. Q6 merge: self-merge (squash) once the owner gate (engine `lint` + `test:full` on the rebased
-   branch, API `lint` + `test` + `test:pg` against it) and GitHub CI are green and an
-   independent reviewer subagent found no real issue.
-7. Q7 deploy: B releases through an API PR to main (new decks, or a `chore(engine): ...` commit;
-   conventional title so `scripts/next_version.py` bumps) and runs `mise run k8s:deploy X.Y.Z`
-   in the API repo, then smoke-checks https://play-magic.szymonrichert.pl/ . If B lacks
-   `mtg-engine` access, it stops after the image release and reports the version to the
-   superleader.
-8. Q8 questions: B sends the question to the superleader session, keeps working on other cards,
-   and records the answer here.
+All setup questions are answered; new ones are appended to the log below.
 
 ## Log (append below)
+
+### 2026-11-12 - decklists
+Question: "Q1. Which decklists should the daily worker (A) pull and where should they land?"
+Answer: "A: refresh metagame.json daily (engine PR, self-merge on green CI); new top Modern lists go to API decks/ via B"
+Option description: "Recommended. A stays cheap: data-only PR. New tournament lists whose cards are all supported are added by A to API decks/; lists needing new cards are handed to B. mtg-decks untouched."
+Source: T-134 decision 448
+
+### 2026-11-12 - formats
+Question: "Q2. Which formats count for decklists and new-card detection?"
+Answer: "Modern only"
+Source: T-134 decision 449
+
+### 2026-11-12 - implementation scope
+Question: "Q3. Which new cards must B implement?"
+Answer: "All Not-working cards of each new Modern-legal set, plus any card in current metagame lists"
+Source: T-134 decision 450
+
+### 2026-11-12 - previews
+Question: "Q4. Previewed (unreleased) cards: when should they be reported and implemented?"
+Answer: "As soon as previewed on Scryfall; A reports a set once a day while new previews keep arriving"
+Source: T-134 decision 451
+
+### 2026-11-12 - hard cards
+Question: "Q5. How far should B go with hard cards that need an unmodelled subsystem (battles, phasing, flip, layer-1 sublayers, block requirements...)?"
+Answer: "Build the subsystem generally (the engine rule: fix the mechanic, never the card); only if truly impossible, strict xfail with a reason and list it in the summary"
+Source: T-134 decision 452
+
+### 2026-11-12 - merging
+Question: "Q6. May the agents merge their own PRs without human review?"
+Answer: "Yes: self-merge (squash) once the owner gate and CI are green and an independent sonnet reviewer subagent found no real issue"
+Source: T-134 decision 453
+
+### 2026-11-12 - release and deploy
+Question: "Q7. Release and deploy after B merges engine changes?"
+Answer: "B releases (API PR, e.g. new decks or a chore(engine) bump commit) and runs k8s:deploy of the new semver, then smoke-checks play-magic; preset B gets kube_namespace_access {mtg-engine: [edit]}"
+Source: T-134 decision 454
+
+### 2026-11-12 - questions
+Question: "Q8. When B hits a question it cannot settle from code, rules or the decisions file, what should it do?"
+Answer: "Send it to the superleader (who posts it as a decision for you), keep working on other cards, and record your answer in the decisions file"
+Source: T-134 decision 455

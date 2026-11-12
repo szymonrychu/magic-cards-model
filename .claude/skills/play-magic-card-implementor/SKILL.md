@@ -10,9 +10,9 @@ Long run. Implement the mechanics behind the listed cards, merge, release, deplo
 ## 0. Read first
 
 0. Test deploy rights: `kubectl auth can-i create deployments -n mtg-engine`. If no, plan to
-   stop after the image release (working default Q7) and say so in the first superleader note.
+   stop after the image release (see the decision log entry on release and deploy) and say so in the first superleader note.
 
-1. `docs/automation/user-decisions.md` (answered decisions and working defaults override
+1. `docs/automation/user-decisions.md` (the decision log entries override
    this skill).
 2. Engine `CLAUDE.md`, `ROADMAP.md`, the tail of `MEMORY.md`, the titles of `memory/*.md`
    (open the relevant ones; `memory/subagents-on-cheaper-model.md` says dispatch subagents
@@ -91,13 +91,13 @@ number of cards a mechanic unlocks. Keep the plan in the workspace, not in the r
    findings (superpowers:receiving-code-review), re-run the gate for the changed parts.
 7. `gh pr merge <n> --squash --delete-branch`, then one line to the superleader (step 9).
 
-## 6. Hard cards (working default Q5)
+## 6. Hard cards (see the decision log entry on hard cards)
 
 Build the missing subsystem generally; fix the mechanic, never the card. Only if truly
 impossible, a strict xfail with a reason (never a bare skip), listed in the final summary.
 CLAUDE.md `SWEEP_DRIVER_GAPS` is for sweep cases the harness cannot drive.
 
-## 7. Release and deploy (working default Q7)
+## 7. Release and deploy (see the decision log entry on release and deploy)
 
 The engine has no release; images pick up engine main at the next API main build.
 
@@ -118,7 +118,7 @@ The engine has no release; images pick up engine main at the next API main build
 5. If `kubectl` lacks write access to namespace `mtg-engine`, stop after the image tag and
    report the version to the superleader. Never deploy a sha tag.
 
-## 8. Questions (working default Q8)
+## 8. Questions (see the decision log entry on questions)
 
 Ask only what the user must decide. Batch them in one message to the superleader with
 `orchestrator_session_send` (find it: `orchestrator_sessions_list`, `superleader: true`, never

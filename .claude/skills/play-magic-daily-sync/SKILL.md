@@ -6,13 +6,13 @@ description: Use when asked to "Run the play-magic-daily-sync skill." Daily cron
 # play-magic daily sync (agent A)
 
 Budget about 30 minutes. Silent except for the one final report. You must not implement
-cards, edit engine code, touch `mtg-decks`, or ask questions: use the working defaults and
+cards, edit engine code, touch `mtg-decks`, or ask questions: follow the decision log and
 put doubts in the report.
 
 ## 0. Decisions first
 
-Read `docs/automation/user-decisions.md` in the engine repo. Answered decisions in its log
-and the working defaults override this skill where they differ.
+Read `docs/automation/user-decisions.md` in the engine repo. Decisions in its log override
+this skill where they differ.
 
 ## 1. Workspace
 
