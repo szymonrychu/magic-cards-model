@@ -3827,7 +3827,7 @@ def _parse_create_copies_of_self_attacking_clause(
 
 
 _CREATE_TOKEN_COPY_OF_TARGET_RE = re.compile(
-    r"^create a token that['’]?s a copy of "
+    r"^create a (?P<tapped>tapped )?token that['’]?s a copy of "
     r"(?P<phrase>(?:another )?target (?:(?:attacking|blocking|nonlegendary|nontoken) )?"
     r"[a-z]+(?: or [a-z]+)?(?: you control)?)"
     r"(?:, except (?P<except>[^.]+?))?"
@@ -3946,6 +3946,7 @@ def _parse_create_token_copy_of_target_clause(
     tapped_and_attacking = (
         match.group("attacking") is not None or match.group("enters_attacking") is not None
     )
+    enters_tapped = match.group("tapped") is not None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         from ..dies_this_turn import source_id_of_object
@@ -3960,6 +3961,8 @@ def _parse_create_token_copy_of_target_clause(
             options = (
                 _token_copy_tapped_and_attacking(game, target, controller.username)
                 if tapped_and_attacking
+                else {"tapped": True}
+                if enters_tapped
                 else {}
             )
             created = token_copy_of(
