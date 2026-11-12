@@ -1676,10 +1676,12 @@ def _parse_target_player_may_search_named_card_clause(
 #: own optional search already honours. "named A or B" (Bogbrew Witch) accepts
 #: either name, and the find may go onto the battlefield, tapped or not,
 #: instead of into the hand (CR 701.23e: revealed only when the text says so).
+#: "named A and/or a card named B" (Alpine Houndmaster) is two names, not one:
+#: the name group refuses "and/or" so that sentence stays with its own reader.
 _YOU_SEARCH_NAMED_CARD_RE = re.compile(
     r"^(?P<may>you may )?search your library for "
     rf"(?:(?P<any_number>any number of )|(?P<upto>up to )?(?P<n>{COUNT}) )"
-    r"cards? named (?P<name>.+?), "
+    r"cards? named (?P<name>(?:(?!and/or ).)+?), "
     r"(?:(?P<reveal>reveal (?:it|them), put (?:it|them) into your hand)|"
     r"put (?:it|them) onto the battlefield(?P<tapped> tapped)?), then shuffle$",
     re.IGNORECASE,

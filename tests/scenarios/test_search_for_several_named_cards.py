@@ -240,3 +240,21 @@ def test_ashiok_stops_an_opponents_named_search():
     alice = scenario.player("alice")
     assert alice.hand == []
     assert len(alice.library) == 3
+
+
+# -- a sentence naming two cards is not one name ----------------------------------
+
+
+def test_a_search_naming_two_cards_with_and_or_is_not_read_as_one_name():
+    """Alpine Houndmaster's "a card named A and/or a card named B" asks for two
+    different names. The named-card reader must refuse it rather than read
+    "A and/or a card named B" as a single name that no card has; the sentence
+    stays with the reader that knows both names."""
+    from magic_cards_model.machines.effects.search import _parse_you_search_named_card_clause
+
+    clause = (
+        "you may search your library for a card named Alpine Watchdog and/or a card "
+        "named Igneous Cur, reveal them, put them into your hand, then shuffle"
+    )
+
+    assert _parse_you_search_named_card_clause(clause, for_spell=False) is None
