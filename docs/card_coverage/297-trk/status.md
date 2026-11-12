@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 99 | 31.8% |
+| Tested | 101 | 32.5% |
 | Works (untested) | 186 | 59.8% |
 | Partial (unaudited) | 1 | 0.3% |
-| Not working | 25 | 8.0% |
+| Not working | 23 | 7.4% |
 
 ## Cards needing work
 
@@ -42,11 +42,9 @@
 | Replicator | silent | {2}, {T}: Create a tapped token that's a copy of target token you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Support Mission | silent | Whenever a creature you control enters, put a quest counter on this enchantment. Put a +1/+1 counter on that creature. If this enchantment has five or more ques | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Temporal Conqueror | silent | When this creature enters, mill three cards. Then return a land card from your graveyard to your hand. If you can't, create a Treasure token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| The Inner Light | silent | II — Choose target creature. Whenever it deals combat damage to a player this turn, you draw that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Measure of a Man | silent | III — Return the exiled card to the battlefield under its owner's control. You gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Wrath of Khan | silent | II — You may exile a card from your hand. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Those Old Scientists | silent | III — Choose up to two target cards in graveyards. The owners of those cards shuffle them into their libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Will Riker, First in the Field | silent | At the beginning of combat on your turn, reveal cards from the top of your library until you reveal two land cards. Put those land cards onto the battlefield an | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dominion Infiltration | notice | Choose X target creatures your opponents control. For each of them, create a token that's a copy of that creature, except it has changeling. Those tokens gain h | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Dominion Saboteur | notice | You may have this creature enter as a copy of any artifact or creature on the battlefield, except it isn't legendary. If you do, it enters with additional count | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Mirror Universe Intrusion | notice | Kicker {4}{U}{B} (You may pay an additional {4}{U}{B} as you cast this spell.) Create a token that's a copy of target creature an opponent controls, except it h | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -242,7 +240,7 @@
 ## Fully supported
 
 <details>
-<summary>99 cards</summary>
+<summary>101 cards</summary>
 
 - 70,000 Light-Years from Home
 - Adversary by Algorithm
@@ -332,6 +330,7 @@
 - The City on the Edge of Forever
 - The Doctor, EMH
 - The Holodeck
+- The Inner Light
 - The Traveler
 - There's Coffee in that Nebula
 - Transporter Malfunction
@@ -341,6 +340,7 @@
 - Warp Speed
 - Watery Grave
 - Wesley Crusher, Starfleet Cadet
+- Will Riker, First in the Field
 - Worf, Honor-Bound Warrior
 - Worf, Intelligence Contractor
 
@@ -352,9 +352,7 @@
 |---|---|---|---|
 | Landfall | 1 | Dal R'El, Augment Orphan | trk |
 | at the beginning of combat on each player"..."t attack ~ and you put a peace counter on ~. | 1 | Peace in Our Time | trk |
-| at the beginning of combat on your turn, reveal cards from the top of your library until you reveal two land cards. put those land cards onto the battlefield an | 1 | Will Riker, First in the Field | trk |
 | choose N target creatures your opponents control. for each of them, create a token that"..."re every creature type.) | 1 | Dominion Infiltration | trk |
-| choose target creature. whenever it deals combat damage to a player ~, you draw that many cards. | 1 | The Inner Light | trk |
 | choose target noncreature spell an opponent controls. that player may exile it. if they don't, you may cast a noncreature spell from your hand without paying it | 1 | Brazen Bluff | trk |
 | choose up to two target cards in graveyards. the owners of those cards shuffle them into their libraries. | 1 | Those Old Scientists | trk |
 | draw two cards, then exile a card from your hand. | 1 | All Good Things... | trk |
