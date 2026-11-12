@@ -3415,7 +3415,7 @@ _REVEAL_HAND_RE = re.compile(
 #: "two cards" (Gruesome Discovery, no quality at all), "up to two". X is not
 #: read here - nothing in this merge knows the spell's X.
 _CHOOSE_CARD_FROM_REVEALED_RE = re.compile(
-    rf"^you choose (?P<count>(?:up to )?{COUNT}) (?:(?P<quality>.+?) )?cards? from it"
+    rf"^you (?P<may>may )?choose (?P<count>(?:up to )?{COUNT}) (?:(?P<quality>.+?) )?cards? from it"
     r"(?: with mana value (?P<max_mv>\d+) or less)?$",
     re.IGNORECASE,
 )
@@ -3428,6 +3428,24 @@ _DISCARD_THAT_CARD_RE = re.compile(
 #: "exile that card" (Thought-Knot Seer, when not folded into the previous
 #: sentence) - CR 701.13a's move, straight from the revealed hand.
 _EXILE_THAT_CARD_RE = re.compile(r"^(?:then )?exile (?:that card|those cards|them)$", re.IGNORECASE)
+#: "look at target opponent's hand" (Salt Vampire, Vendilion Clique): the
+#: looking twin of `_REVEAL_HAND_RE`. Looking at a hand is not revealing it:
+#: CR 701.20e shows the cards only to the looking player, so the run below
+#: records a `Game.look` for the controller instead of a public reveal.
+_LOOK_AT_HAND_RE = re.compile(
+    r"^look at (?P<who>target (?:player|opponent))'s hand$", re.IGNORECASE
+)
+#: "If you do, that player exiles that card" / "... reveals the chosen card,
+#: puts it on the bottom of their library" - the "may choose" run's gated
+#: consequence, the chosen card moved by its owner's instruction. `verb` is
+#: the move; the optional `then_draw` clause ("draws a card") is the
+#: `_THEN_DRAWS_RE` tail the clause splitter cuts off behind ", then".
+_IF_YOU_DO_THAT_PLAYER_MOVES_RE = re.compile(
+    r"^if you do, that player (?:(?P<exile>exiles that card)"
+    r"|(?P<library>reveals the chosen card, puts it on the bottom of their library))$",
+    re.IGNORECASE,
+)
+_THEN_DRAWS_RE = re.compile(r"^(?:then )?draws? (?P<n>" + COUNT + r") cards?$", re.IGNORECASE)
 #: "you lose N life" - Thoughtseize's own optional fourth sentence.
 _YOU_LOSE_LIFE_RE = re.compile(r"^you lose (?P<life>\d+) life$", re.IGNORECASE)
 
@@ -3517,6 +3535,16 @@ def _merge_reveal_hand_choose_discard_clauses(
     Discovery): the chooser picks that many, or every qualifying card when
     the hand holds fewer (CR 609.3), and the consequence moves all of them.
 
+    The same run reads the "look at" shape (Salt Vampire, Vendilion Clique):
+    "look at target opponent's hand" records a CR 701.20e look for the
+    controller instead of a public reveal, "You may choose ..." asks the
+    controller `Game.may` first, and the consequence is gated ("If you do,
+    that player exiles that card" or "reveals the chosen card, puts it on the
+    bottom of their library"), with an optional ", then draws a card" tail that
+    belongs to the same gate: nothing chosen, nothing drawn. The bare "You
+    choose" pairs with the ungated consequences above and "You may choose"
+    with the gated ones, so the two never claim the same text.
+
     `anaphoric_revealer` lets the first clause say "that player reveals their
     hand" - the player a preceding sentence already targeted, which only a
     caller that has read that sentence (`_parse_condition_instead_clause`)
@@ -3525,10 +3553,14 @@ def _merge_reveal_hand_choose_discard_clauses(
     if index + 2 >= len(clauses):
         return None
     reveal_clause = clauses[index].strip()
-    reveal_match = _REVEAL_HAND_RE.fullmatch(reveal_clause)
-    if reveal_match is None:
+    looks = _LOOK_AT_HAND_RE.fullmatch(reveal_clause)
+    reveal_match = None if looks else _REVEAL_HAND_RE.fullmatch(reveal_clause)
+    if looks is not None:
+        if not _targets_understood(looks.group("who"), allow_player_targets=True):
+            return None
+    elif reveal_match is None:
         return None
-    if reveal_match.group("who").lower() == "that player":
+    elif reveal_match.group("who").lower() == "that player":
         if not anaphoric_revealer:
             return None
     elif not _targets_understood(reveal_clause.split(" reveals", 1)[0], allow_player_targets=True):
@@ -3561,16 +3593,33 @@ def _merge_reveal_hand_choose_discard_clauses(
         return max_mv is None or state.mana_value <= max_mv
 
     consequence_clause = clauses[index + 2].strip()
-    to_exile = _EXILE_THAT_CARD_RE.fullmatch(consequence_clause) is not None
-    if not to_exile and _DISCARD_THAT_CARD_RE.fullmatch(consequence_clause) is None:
+    may_choose = choose_match.group("may") is not None
+    moves = _IF_YOU_DO_THAT_PLAYER_MOVES_RE.fullmatch(consequence_clause)
+    to_library = moves is not None and moves.group("library") is not None
+    to_exile = moves is not None and moves.group("exile") is not None
+    if moves is None:
+        to_exile = _EXILE_THAT_CARD_RE.fullmatch(consequence_clause) is not None
+        if not to_exile and _DISCARD_THAT_CARD_RE.fullmatch(consequence_clause) is None:
+            return None
+    if may_choose != (moves is not None):
+        # "You may choose" pairs with the gated "If you do" consequence, and
+        # the bare "You choose" with the ungated one (Thoughtseize and kin).
         return None
     consumed = 3
+    draw_count = 0
+    if moves is not None and index + 3 < len(clauses):
+        draw_match = _THEN_DRAWS_RE.fullmatch(clauses[index + 3].strip())
+        if draw_match is not None:
+            draw_count = parse_count(draw_match.group("n")) or 0
+            if not draw_count:
+                return None
+            consumed = 4
     life_loss = 0
-    if index + 3 < len(clauses):
-        life_match = _YOU_LOSE_LIFE_RE.fullmatch(clauses[index + 3].strip())
+    if index + consumed < len(clauses):
+        life_match = _YOU_LOSE_LIFE_RE.fullmatch(clauses[index + consumed].strip())
         if life_match is not None:
             life_loss = int(life_match.group("life"))
-            consumed = 4
+            consumed += 1
 
     quality_description = (quality_text or "").strip()
     if max_mv is not None:
@@ -3587,9 +3636,20 @@ def _merge_reveal_hand_choose_discard_clauses(
         )
         if revealer is not None:
             for state in list(revealer.hand):
-                game.reveal(state, source=source)
+                if looks is None:
+                    game.reveal(state, source=source)
+                else:
+                    game.look(state, controller.username, source=source)
             candidates = [state for state in revealer.hand if matches(state)]
-            if candidates:
+            if candidates and (
+                not may_choose
+                or game.may(
+                    controller,
+                    f"choose a card from {revealer.username}'s hand?",
+                    source=source,
+                    source_id=source_id_of(stack_object),
+                )
+            ):
                 most = min(printed_count, len(candidates))
                 noun = f"{quality_description} card".strip()
                 if exact and most == 1:
@@ -3617,8 +3677,14 @@ def _merge_reveal_hand_choose_discard_clauses(
                         _grant_cast_exiled_card_permission_from_sibling_static(
                             game, stack_object, exiled
                         )
+                elif to_library:
+                    for card in chosen:
+                        game.reveal(card, source=source)
+                    game.put_cards_into_library(chosen, to_bottom=True)
                 elif chosen:
                     game.discard_cards(revealer.username, chosen, source=source)
+                if chosen and draw_count:
+                    game.draw_cards(revealer, draw_count)
         if life_loss:
             game.lose_life(controller, life_loss)
 

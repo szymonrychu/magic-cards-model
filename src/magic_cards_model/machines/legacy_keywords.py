@@ -253,18 +253,27 @@ def parse_champion_clause(text: str) -> "AbilityEffect | None":
 
         return champion_enters
     if _CHAMPION_RETURN_RE.fullmatch(flat) is not None:
-
-        def champion_returns(game: "Game", ability: "AbilityOnStack") -> None:
-            if ability.source_id is None:
-                return
-            for card in game.cards_exiled_with(ability.source_id, ability.source_stamp):
-                if card.zone is Zone.EXILE:
-                    game.put_onto_battlefield(
-                        card, card.owner or game.controller_of(ability).username
-                    )
-
-        return champion_returns
+        return return_exiled_cards
     return None
+
+
+def reads_return_exiled_card(clause: str) -> bool:
+    """Whether `clause` is "Return the exiled card to the battlefield under its
+    owner's control" - the second half of a linked pair (CR 607.2a), shared by
+    Champion's leaves trigger and a Saga's last chapter (The Princess Takes
+    Flight, The Measure of a Man)."""
+    return _CHAMPION_RETURN_RE.fullmatch(" ".join(clause.split())) is not None
+
+
+def return_exiled_cards(game: "Game", ability: "AbilityOnStack") -> None:
+    """Put every card exiled with the ability's source back onto the battlefield
+    under its owner's control (CR 607.2a for the link; the source's stamp keeps
+    an earlier incarnation's exile out, CR 400.7)."""
+    if ability.source_id is None:
+        return
+    for card in game.cards_exiled_with(ability.source_id, ability.source_stamp):
+        if card.zone is Zone.EXILE:
+            game.put_onto_battlefield(card, card.owner or game.controller_of(ability).username)
 
 
 def _fateseal_target(

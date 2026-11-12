@@ -1724,3 +1724,12 @@ Flagged by `mise run regression:guard -- --base 57bcac56 --ratchet` on this bran
 ## T-109 S0: keyword oracle credit
 
 - [Keyword oracle credit and the "it" referent](memory/keyword-oracle-credit-and-it-referent.md) - exalted and ripple had machines but were not credited by keywords.executes; "it gains X" on a trigger now reaches the event subject, not the source
+
+## T-136 b5: hand exile and linked returns (trk)
+
+- 2026-11-12 T-136 b5: All Good Things... chapter IV judges "share a card type" per the owner's decision (T-136 decision 464, recorded in `docs/automation/user-decisions.md`): empty pile false, one card true, two or more true when the card-type sets intersect. Why: the CR does not define the phrase for a pile and no ruling exists yet (the set releases 2026-11-13). "Intersect" is read as a type common to every card, not pairwise, so three cards overlapping two at a time share nothing. Revisit when a ruling lands.
+- 2026-11-12 T-136 b5: no non-trk printing exists for "exiled cards share a card type" or for "may exile a card from your hand. If you do, draw", so generality is shown by varying the board inside the set (artifact creature, land creature, lands) and by Ego Drain's differently worded stand-alone "exile a card from your hand" clause.
+- 2026-11-12 T-136 b5: the may / if-you-do exile reader was the graveyard one; it now takes the zone as a group (`_merge_may_exile_from_own_zone_if_you_do_clauses`) instead of a second copy, so Wrath of Khan II and Emeritus of Ideation share one code path.
+- 2026-11-12 T-136 b5: Salt Vampire and Vendilion Clique extend `_merge_reveal_hand_choose_discard_clauses` rather than adding a sibling: opener "look at" records `Game.look` (CR 701.20e), "You may choose" pairs only with the gated "If you do" consequence and the bare "You choose" only with the ungated ones, so the dispatch order test sees no overlap. The ", then draws a card" tail is inside the gate (nothing chosen, nothing drawn). Clique's bottom-of-library move reveals the chosen card first, as printed.
+- 2026-11-12 T-136 b5: the Champion return body moved to `legacy_keywords.return_exiled_cards` so The Measure of a Man's chapter III (return, then "You gain 2 life.") reads through a MIXED_CLAUSE rung; the lone-sentence ability rung still serves The Princess Takes Flight and Champion.
+- 2026-11-12 T-136 b5: Specter's Shriek (a second "reveal, may choose, if you do" printing) stays a notice: its third sentence has no reader and CR 608.2c forbids running part of the text. Not widened (outside the batch).

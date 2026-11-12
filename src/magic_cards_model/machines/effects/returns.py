@@ -447,6 +447,19 @@ def _parse_return_self_to_owners_hand_clause(
     return effect
 
 
+@MIXED_CLAUSE.rung("s34", for_spell=FORWARD)
+def _parse_return_exiled_card_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Return the exiled card to the battlefield under its owner's control"
+    inside a longer ability (The Measure of a Man's "... You gain 2 life.").
+    The whole-ability reader (`removal._parse_champion_clause`) only sees a
+    lone sentence; this is the same body for one clause of a chain."""
+    from ..legacy_keywords import reads_return_exiled_card, return_exiled_cards
+
+    if for_spell or not reads_return_exiled_card(clause):
+        return None
+    return lambda game, stack_object: return_exiled_cards(game, stack_object)  # type: ignore[arg-type]
+
+
 #: A bare "shuffle" left over once `split_effect_clauses` has cut across the
 #: "then" inside a search's own "..., then shuffle." - CR 608.2c's clause
 #: split has no notion that this particular "then" is the tail of the
