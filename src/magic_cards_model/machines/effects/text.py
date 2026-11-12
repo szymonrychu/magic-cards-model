@@ -3318,7 +3318,7 @@ def _referent_of_it(game: "Game", ability: AbilityOnStack) -> CardState | None:
 #: object to bind it to and would watch every creature, so it is refused here
 #: and read by `_parse_that_object_turn_trigger_*` (CR 603.7c) instead.
 _CREATED_TRIGGER_ANAPHORIC_CONDITION_RE = re.compile(
-    r"^whenever (?:that|those|target)\b[^,]*,", re.IGNORECASE
+    r"^whenever (?:that|those|target|it)\b[^,]*,", re.IGNORECASE
 )
 
 
@@ -4358,8 +4358,17 @@ def _parse_that_object_turn_trigger_ability_text(text: str) -> AbilityEffect | N
     """The ability side of `_parse_that_object_turn_trigger_spell_text`:
     Niko Aris's "+1: Up to one target creature you control can't be blocked
     this turn. Whenever that creature deals damage this turn, return it to
-    its owner's hand." - its second sentence, bound to the ability's target."""
-    line = chosen_object_turn_trigger_line(_strip_non_effect_preamble(text))
+    its owner's hand." - its second sentence, bound to the ability's target.
+    A "Choose <target>." opener (The Inner Light's chapter II, "Choose target
+    creature. Whenever it deals combat damage to a player this turn, ...")
+    only names that target (CR 115.1a), so the trigger is the rest."""
+    whole = _strip_non_effect_preamble(text)
+    prelude = split_choose_target_prelude(whole)
+    if prelude is not None:
+        phrase, whole = prelude
+        if not _targets_understood(phrase, count_agnostic=True):
+            return None
+    line = chosen_object_turn_trigger_line(whole)
     if line is None:
         return None
     printed = collapsed(text.strip())

@@ -2580,9 +2580,12 @@ _THAT_MUCH_RE = re.compile(r"\bthat (?:much|many)\b", re.IGNORECASE)
 
 #: "Whenever that <noun> <condition> this turn, <effect>" - a delayed
 #: triggered ability (CR 603.7a) about one particular object (CR 603.7c), with
-#: CR 603.7b's stated duration. `noun` is what the earlier text chose.
+#: CR 603.7b's stated duration. `noun` is what the earlier text chose; the bare
+#: pronoun "Whenever it ..." (The Inner Light, Fire Giant's Fury) names the
+#: same one object without a noun, read as "this permanent" (every object the
+#: earlier text could have chosen and that can still trigger is a permanent).
 _THAT_OBJECT_TURN_TRIGGER_RE = re.compile(
-    r"^whenever that (?P<noun>creature|permanent|planeswalker|artifact|land) "
+    r"^whenever (?:that (?P<noun>creature|permanent|planeswalker|artifact|land)|it) "
     r"(?P<condition>[^,.]+?) this turn,\s*(?P<effect>[^\n]+?)\s*$",
     re.IGNORECASE,
 )
@@ -2713,7 +2716,8 @@ def chosen_object_turn_trigger_line(text: str) -> str | None:
     if match is None:
         return None
     effect_text = match.group("effect")
-    line = f"Whenever this {match.group('noun').lower()} {match.group('condition')}, {effect_text}"
+    noun = (match.group("noun") or "permanent").lower()
+    line = f"Whenever this {noun} {match.group('condition')}, {effect_text}"
     parsed = _created_ability(line)
     if (
         parsed is None
