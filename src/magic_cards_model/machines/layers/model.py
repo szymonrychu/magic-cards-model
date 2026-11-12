@@ -2588,9 +2588,13 @@ class GrantGroup(SelectorBase):
     #: `""` is "a counter of any kind"; otherwise the named kind.
     counter_kind: str | None = None
     keyword: str | None = None
+    #: `False` is "nontoken", `True` "token" (CR 111.1); `None` no restriction.
+    token: bool | None = None
 
     def __call__(self, chars: Characteristics, board: Board) -> bool:
         if not self.any_controller and chars.controller != self.username:
+            return False
+        if self.token is not None and chars.is_token != self.token:
             return False
         if self.exclude_id is not None and chars.card_id == self.exclude_id:
             return False

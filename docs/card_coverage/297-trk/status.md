@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 95 | 30.5% |
+| Tested | 99 | 31.8% |
 | Works (untested) | 186 | 59.8% |
 | Partial (unaudited) | 1 | 0.3% |
-| Not working | 29 | 9.3% |
+| Not working | 25 | 8.0% |
 
 ## Cards needing work
 
@@ -33,12 +33,10 @@
 | Conquest Mission | silent | Whenever a nontoken artifact you control enters, put a quest counter on this enchantment. Create a 1/1 colorless Borg artifact creature token. If this enchantme | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dal R'El, Augment Orphan | silent | Landfall — Whenever a land you control enters, add {R} or {G}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dathon, His Heart Open | silent | {2}: Choose a counter on target enchantment you control. Put another counter of that kind on it. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| De-evolve | silent | Enchanted creature gets -4/-0, can't block, and is a Salamander. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Deep Space 9 | silent | When Deep Space 9 enters and at the beginning of your upkeep, exile the top four cards of your library. Put all permanent cards exiled this way onto the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | First Contact | silent | Mill four cards. You may put a permanent card from among them into your hand. If this spell is the first spell you've cast this game, you gain 2 life. (To mill  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gwyndala, the Progeny | silent | {2}: Each Equipment token you control becomes a copy of target Equipment you control until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hit It! | silent | When this enchantment enters, look at the top five cards of your library. Put a land card from among them onto the battlefield tapped and the rest into your gra | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| I'm a Doctor, Not a . . . | silent | Put a +1/+1 counter on target creature you control. Untap it. Until end of turn, it gets +1/+1 and becomes a Doctor. (It loses all other creature types.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Jett Reno, Problem Solver | silent | Whenever Jett Reno becomes tapped, surveil 1. If her power is 4 or greater, instead draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Peace in Our Time | silent | At the beginning of combat on each player's turn, that player may draw a card. If they do, they can't attack this turn and you put a peace counter on this encha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Replicator | silent | {2}, {T}: Create a tapped token that's a copy of target token you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -49,10 +47,8 @@
 | The Wrath of Khan | silent | II — You may exile a card from your hand. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Those Old Scientists | silent | III — Choose up to two target cards in graveyards. The owners of those cards shuffle them into their libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Will Riker, First in the Field | silent | At the beginning of combat on your turn, reveal cards from the top of your library until you reveal two land cards. Put those land cards onto the battlefield an | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Antagonist Incorporator | notice | Artifact creatures you control have "Whenever this creature deals combat damage to a player, you may pay {1}. If you do, create a 1/1 colorless Borg artifact cr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Dominion Infiltration | notice | Choose X target creatures your opponents control. For each of them, create a token that's a copy of that creature, except it has changeling. Those tokens gain h | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Dominion Saboteur | notice | You may have this creature enter as a copy of any artifact or creature on the battlefield, except it isn't legendary. If you do, it enters with additional count | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Hive Mind Coprocessor | notice | Artifact creatures you control have "Whenever this creature deals combat damage to a player, you may pay 1 life. If you do, draw a card." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Mirror Universe Intrusion | notice | Kicker {4}{U}{B} (You may pay an additional {4}{U}{B} as you cast this spell.) Create a token that's a copy of target creature an opponent controls, except it h | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Salt Vampire | notice | When this creature enters, look at target opponent's hand. You may choose a nonland card from it. If you do, that player exiles that card, then draws a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Overflow Submatrix | unaudited | Once during each of your turns, you may cast an artifact creature spell from your graveyard. If you cast a spell this way, that artifact creature enters with a  | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -246,10 +242,11 @@
 ## Fully supported
 
 <details>
-<summary>95 cards</summary>
+<summary>99 cards</summary>
 
 - 70,000 Light-Years from Home
 - Adversary by Algorithm
+- Antagonist Incorporator
 - Blood Crypt
 - Boarding Action
 - Borg Cube
@@ -262,6 +259,7 @@
 - Captain Michael Burnham
 - Captain Pike, Fullness of Time
 - Culber and Stamets, Star-Crossed
+- De-evolve
 - Death Is Irrelevant
 - Deep Space Scan
 - Dominion Supervisor
@@ -285,8 +283,10 @@
 - Gul Dukat, Colonial Prefect
 - H.M.S. Bounty, Unlikely Timeship
 - Hallowed Fountain
+- Hive Mind Coprocessor
 - Hologram Stalker
 - Hoshi Sato, Exolinguist
+- I'm a Doctor, Not a . . .
 - Infinite Diversity
 - Island
 - Jadzia Dax, Living Legacy
@@ -350,7 +350,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| artifact creatures you control have "..." | 2 | Antagonist Incorporator, Hive Mind Coprocessor | trk |
 | Landfall | 1 | Dal R'El, Augment Orphan | trk |
 | at the beginning of combat on each player"..."t attack ~ and you put a peace counter on ~. | 1 | Peace in Our Time | trk |
 | at the beginning of combat on your turn, reveal cards from the top of your library until you reveal two land cards. put those land cards onto the battlefield an | 1 | Will Riker, First in the Field | trk |
@@ -359,11 +358,9 @@
 | choose target noncreature spell an opponent controls. that player may exile it. if they don't, you may cast a noncreature spell from your hand without paying it | 1 | Brazen Bluff | trk |
 | choose up to two target cards in graveyards. the owners of those cards shuffle them into their libraries. | 1 | Those Old Scientists | trk |
 | draw two cards, then exile a card from your hand. | 1 | All Good Things... | trk |
-| enchanted creature gets -N/-N, can't block, and is a salamander. | 1 | De-evolve | trk |
 | kicker {M}{M}{M} (you may pay an additional {M}{M}{M} as you cast ~.) create a token that"..."s a copy of that creature, except it has menace. | 1 | Mirror Universe Intrusion | trk |
 | mill four cards. you may put a permanent card from among them into your hand. if ~ is the first spell you've cast ~, you gain N life. (to mill four cards, put t | 1 | First Contact | trk |
 | once during each of your turns, you may cast an artifact creature spell from your graveyard. if you cast a spell ~, that artifact creature enters with a finalit | 1 | Overflow Submatrix | trk |
-| put a +N/+N counter on target creature you control. untap it. until end of turn, it gets +N/+N and becomes a doctor. (it loses all other creature types.) | 1 | I'm a Doctor, Not a . . . | trk |
 | return the exiled card to the battlefield under its owner's control. you gain N life. | 1 | The Measure of a Man | trk |
 | tap seven untapped officers you control: search your library for a spacecraft card, put it onto the battlefield with seven charge counters on it, then shuffle. | 1 | Captain Jean-Luc Picard | trk |
 | when ~ enters and at the beginning of your upkeep, exile the top four cards of your library. put all permanent cards exiled ~ onto the battlefield. | 1 | Deep Space 9 | trk |

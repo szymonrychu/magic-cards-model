@@ -98,6 +98,8 @@ class GroupQuotedGrant:
     counter_kind: str | None
     keyword: str | None
     subject: str
+    #: `False` is "nontoken" (Ghired), `None` no token restriction (CR 111.1).
+    token: bool | None = None
 
     def selector(self, source: CardState) -> Selector:
         return GrantGroup(
@@ -110,6 +112,7 @@ class GroupQuotedGrant:
             colors_any=self.colors_any,
             counter_kind=self.counter_kind,
             keyword=self.keyword,
+            token=self.token,
         )
 
 
@@ -163,6 +166,7 @@ def group_quoted_grant_of(sentence: str) -> GroupQuotedGrant | None:
     any_types: list[Type] = []
     any_subtypes: list[str] = []
     colors: list[Color] = []
+    token: bool | None = None
     terms = _terms(head)
     if not terms:
         return None
@@ -189,6 +193,12 @@ def group_quoted_grant_of(sentence: str) -> GroupQuotedGrant | None:
             lowered = qualifier.lower()
             if lowered in _COLORS:
                 colors.append(_COLORS[lowered])
+            elif lowered == "nontoken":
+                token = False
+            elif lowered in _TYPE_NOUNS:
+                # "Artifact creatures": the card type narrows the noun (CR
+                # 205.2a), so an object needs both.
+                required.append(_TYPE_NOUNS[lowered])
             elif (subtype := _singular(lowered)) is not None:
                 any_subtypes.append(subtype)
             else:
@@ -196,7 +206,13 @@ def group_quoted_grant_of(sentence: str) -> GroupQuotedGrant | None:
     # "Permanents you control" with no further limit is a real group; anything
     # else must have named something.
     named_something = (
-        required or any_types or any_subtypes or colors or counter_kind is not None or keyword
+        required
+        or any_types
+        or any_subtypes
+        or colors
+        or token is not None
+        or counter_kind is not None
+        or keyword
     )
     if not named_something and "permanents" not in head.lower():
         return None
@@ -211,6 +227,7 @@ def group_quoted_grant_of(sentence: str) -> GroupQuotedGrant | None:
         counter_kind=counter_kind,
         keyword=keyword,
         subject=sentence.split('"')[0].strip(),
+        token=token,
     )
 
 
