@@ -16,6 +16,7 @@ from ...numbers import (
     where_x_pattern,
 )
 from ..abilities import (
+    KEEP_MANA_UNTIL_END_OF_TURN_RE,
     parse_triggered_mana,
 )
 from ..cost import (
@@ -236,7 +237,7 @@ def _parse_mana_adding_trigger(text: str) -> AbilityEffect | None:
                     return
                 if not game.may(
                     recipient,
-                    f"add {''.join(f'{{{color.value}}}' for color in literal)}",
+                    "add " + (_one_of_label(shape.one_of) if shape.one_of else _symbols(literal)),
                     source=ability.source_name,
                     source_id=source_id_of(ability),
                 ):
@@ -265,14 +266,33 @@ def _parse_mana_adding_trigger(text: str) -> AbilityEffect | None:
                         game, recipient, ability, made, "add one mana of any type it produced"
                     )
                 )
+        for _ in range(times if shape.one_of else 0):
+            produced.append(
+                _choose_mana_color(
+                    game, recipient, ability, shape.one_of, f"add {_one_of_label(shape.one_of)}"
+                )
+            )
         restriction = (
             spend_restriction(shape.restriction, source) if shape.restriction is not None else None
         )
+        retain_until = ManaRetentionScope.END_OF_TURN if shape.retain_until_end_of_turn else None
         pool = game.mana_pool_receiving(recipient)
         for color in produced:
-            pool.add(color, restriction=restriction)
+            pool.add(color, restriction=restriction, retain_until=retain_until)
 
     return effect
+
+
+def _symbols(colors: Sequence[Color]) -> str:
+    return "".join(f"{{{color.value}}}" for color in colors)
+
+
+def _one_of_label(options: Sequence[Color]) -> str:
+    """ "{R} or {G}" / "{W}, {U}, or {B}" - the printed list, as a prompt."""
+    symbols = [f"{{{color.value}}}" for color in options]
+    if len(symbols) == 2:
+        return " or ".join(symbols)
+    return ", ".join(symbols[:-1]) + ", or " + symbols[-1]
 
 
 #: "When this land enters, add one mana of any color." (Crumbling Vestige),
@@ -316,10 +336,7 @@ _ADD_ONE_MANA_OF_ANY_COLOR_TRIGGER_RE = re.compile(
 #: sentence here that matches this regex tags the mana it follows with
 #: `ManaRetentionScope.END_OF_TURN`, whether or not the trigger's count is
 #: Photon's own "that much".
-_KEEP_MANA_UNTIL_END_OF_TURN_RE = re.compile(
-    r"^until end of turn, you don'?t lose this mana as steps and phases end\.?$",
-    re.IGNORECASE,
-)
+_KEEP_MANA_UNTIL_END_OF_TURN_RE = KEEP_MANA_UNTIL_END_OF_TURN_RE
 
 
 #: "Add {R}. Until end of turn, you don't lose this mana as steps and phases
@@ -335,7 +352,7 @@ _ADD_FIXED_MANA_RETAINED_RE = re.compile(
 )
 
 
-@ABILITY_TEXT.rung("s22")
+@ABILITY_TEXT.rung("s22", before=["mana._parse_mana_adding_trigger"])
 def _parse_add_fixed_mana_retained(text: str) -> AbilityEffect | None:
     """`_ADD_FIXED_MANA_RETAINED_RE`'s shape."""
     match = _ADD_FIXED_MANA_RETAINED_RE.fullmatch(text.strip())
