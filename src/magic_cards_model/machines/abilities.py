@@ -3170,6 +3170,18 @@ _LEGENDARY_SELF_PRONOUN_RE = re.compile(r"(?:^|(?<=\. ))(?:he|she) (?=\w)", re.I
 #: any other card.
 _LEGENDARY_SELF_OBJECT_PRONOUN_RE = re.compile(r"\b(?:him|her)(self)?\b", re.IGNORECASE)
 
+#: The same self-reference as a possessive before a characteristic or an
+#: ownership noun - Jett Reno's "If her power is 4 or greater, instead draw a
+#: card." or "equal to his power". "her" is both the object pronoun and the
+#: possessive, so `_LEGENDARY_SELF_OBJECT_PRONOUN_RE` alone turned "her power"
+#: into "it power", which no condition reader accepts. A possessive is read
+#: first, as CR 700.7's "this permanent's", the form a legend's own name
+#: already normalises to ("If Jett Reno's power is ...").
+_LEGENDARY_SELF_POSSESSIVE_RE = re.compile(
+    r"\b(?:his|her) (?=(?:base )?(?:power|toughness|mana value|loyalty|controller|owner)\b)",
+    re.IGNORECASE,
+)
+
 
 def legendary_self_pronoun_normalized(sentence: str) -> str:
     """`sentence` with a legend's own gendered pronoun rewritten to its
@@ -3178,7 +3190,9 @@ def legendary_self_pronoun_normalized(sentence: str) -> str:
     (`_LEGENDARY_SELF_PRONOUN_RE`), and any mid-sentence object
     "him"/"her"/"himself"/"herself" to the "it"/"itself" every other
     self-referential object pronoun in this pool already reads
-    (`_LEGENDARY_SELF_OBJECT_PRONOUN_RE`). Called only for a legendary
+    (`_LEGENDARY_SELF_OBJECT_PRONOUN_RE`), a possessive "his"/"her" before
+    "power" and the like first, to "this permanent's"
+    (`_LEGENDARY_SELF_POSSESSIVE_RE`). Called only for a legendary
     card's own triggered or activated ability: Oracle text uses these
     pronouns only for the legend it is printed on, the same self-reference
     CR 201.5c's shortened name makes (Hydro-Man, Fluid Felon's "if Hydro-Man
@@ -3186,6 +3200,7 @@ def legendary_self_pronoun_normalized(sentence: str) -> str:
     counter on her and draw a card."). Every occurrence is rewritten - a
     legend's own pronoun always means the same object."""
     normalized = _LEGENDARY_SELF_PRONOUN_RE.sub("this permanent ", sentence)
+    normalized = _LEGENDARY_SELF_POSSESSIVE_RE.sub("this permanent's ", normalized)
     return _LEGENDARY_SELF_OBJECT_PRONOUN_RE.sub(
         lambda match: "itself" if match.group(1) else "it", normalized
     )

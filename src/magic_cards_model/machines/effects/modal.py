@@ -5382,6 +5382,73 @@ def _parse_condition_instead_clause_for_ability(effect_text: str) -> AbilityEffe
     return effect
 
 
+#: A sentence that is only the "if" half of `_CONDITION_INSTEAD_RE`'s shape,
+#: with its "instead" at either end: Conquest Mission's "If this enchantment has
+#: six or more quest counters on it, create two of those tokens instead." and
+#: Support Mission's "If this enchantment has five or more quest counters on it,
+#: instead put two +1/+1 counters on that creature."
+_INSTEAD_HALF_SENTENCE_RE = re.compile(
+    r"^(?:[a-z][a-z' ]*?\s+[\u2014-]\s+)?if [^,]+, (?:instead .+|.+ instead)\.?$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_instead_pair_after_leading_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """Every sentence of `text`, each "`<base>`. If `<condition>`, `<alt>`
+    instead." pair of adjacent sentences read whole by the one-base-sentence
+    readers (`_parse_condition_instead_clause` for a spell,
+    `_parse_condition_instead_clause_for_ability` otherwise), the rest one by
+    one through the ordinary pipeline; `None` when no sentence is an
+    "instead" half preceded by a base, when there is nothing before that base
+    (the whole-text readers already own a two-sentence pair), or when any
+    sentence fails to read (CR 608.2c: no half-run instruction).
+
+    Conquest Mission: "Whenever a nontoken artifact you control enters, put a
+    quest counter on this enchantment. Create a 1/1 colorless Borg artifact
+    creature token. If this enchantment has six or more quest counters on it,
+    create two of those tokens instead." The leading counter sentence runs
+    first, so the condition is asked after the counter went on (CR 614.1a: the
+    alternative replaces the base instruction, here the token, whole).
+    """
+    if "instead" not in text.lower():
+        return None
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
+    if len(sentences) < 3:
+        return None
+    pair_reader = (
+        _parse_condition_instead_clause
+        if for_spell
+        else _parse_condition_instead_clause_for_ability
+    )
+    effects: list[TargetedClause] = []
+    paired = False
+    index = 0
+    while index < len(sentences):
+        sentence = sentences[index].strip()
+        following = sentences[index + 1].strip() if index + 1 < len(sentences) else None
+        if (
+            index > 0
+            and following is not None
+            and _INSTEAD_HALF_SENTENCE_RE.fullmatch(following)
+            and not _INSTEAD_HALF_SENTENCE_RE.fullmatch(sentence)
+        ):
+            effect = pair_reader(f"{sentence} {following}")
+            if effect is None:
+                return None
+            effects.append(effect)
+            paired = True
+            index += 2
+            continue
+        rest = _parse_mixed_clauses(sentence, for_spell=for_spell)
+        if rest is None:
+            return None
+        effects.extend(rest)
+        index += 1
+    return effects if paired else None
+
+
 #: "Separate all `<quality>` target player controls into two piles.
 #: `<consequence>` all `<quality>` in the pile of that player's choice." -
 #: CR 700.3's pile primitive, read whole across both sentences the way

@@ -1,0 +1,127 @@
+{
+  "object": "card",
+  "id": "34076a93-9e8f-45d4-a1d7-31f40210a5b6",
+  "oracle_id": "ebb445f7-75da-4af4-9153-93d419c838e0",
+  "multiverse_ids": [
+    534996
+  ],
+  "resource_id": "AB3CC92F26AD6B023E412A4EE6D38163161973F0061E0F07D1163DFBF40E182A",
+  "mtgo_id": 93406,
+  "arena_id": 78567,
+  "tcgplayer_id": 247986,
+  "cardmarket_id": 574807,
+  "name": "Turn the Earth",
+  "lang": "en",
+  "released_at": "2021-09-24",
+  "uri": "https://api.scryfall.com/cards/34076a93-9e8f-45d4-a1d7-31f40210a5b6",
+  "scryfall_uri": "https://scryfall.com/card/mid/205/turn-the-earth?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:52:49Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/4/34076a93-9e8f-45d4-a1d7-31f40210a5b6.jpg?1783925569",
+    "normal": "https://cards.scryfall.io/normal/front/3/4/34076a93-9e8f-45d4-a1d7-31f40210a5b6.jpg?1783925569",
+    "large": "https://cards.scryfall.io/large/front/3/4/34076a93-9e8f-45d4-a1d7-31f40210a5b6.jpg?1783925569",
+    "png": "https://cards.scryfall.io/png/front/3/4/34076a93-9e8f-45d4-a1d7-31f40210a5b6.png?1783925569",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/4/34076a93-9e8f-45d4-a1d7-31f40210a5b6.jpg?1783925569",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/4/34076a93-9e8f-45d4-a1d7-31f40210a5b6.jpg?1783925569",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/4/34076a93-9e8f-45d4-a1d7-31f40210a5b6.webp?1783925569",
+    "grid": "https://cards.scryfall.io/grid/front/3/4/34076a93-9e8f-45d4-a1d7-31f40210a5b6.webp?1783925569",
+    "display": "https://cards.scryfall.io/display/front/3/4/34076a93-9e8f-45d4-a1d7-31f40210a5b6.webp?1783925569",
+    "art": "https://cards.scryfall.io/art/front/3/4/34076a93-9e8f-45d4-a1d7-31f40210a5b6.webp?1783925569",
+    "crop": "https://cards.scryfall.io/crop/front/3/4/34076a93-9e8f-45d4-a1d7-31f40210a5b6.webp?1783925569",
+    "jpeg": "https://cards.scryfall.io/normal/front/3/4/34076a93-9e8f-45d4-a1d7-31f40210a5b6.jpg?1783925569"
+  },
+  "mana_cost": "{G}",
+  "cmc": 1.0,
+  "type_line": "Instant",
+  "oracle_text": "Choose up to three target cards in graveyards. The owners of those cards shuffle them into their libraries. You gain 2 life.\nFlashback {1}{G} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Flashback"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set": "mid",
+  "set_name": "Innistrad: Midnight Hunt",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amid&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mid?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/34076a93-9e8f-45d4-a1d7-31f40210a5b6/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aebb445f7-75da-4af4-9153-93d419c838e0&unique=prints",
+  "collector_number": "205",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "bb677b1a-ce51-4888-83d6-5a94de461ff9"
+  ],
+  "illustration_id": "bb4e745e-ce83-4737-80d9-03ac0938b70d",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 12634,
+  "penny_rank": 6925,
+  "preview": {
+    "source": "Numerama",
+    "source_uri": "https://www.numerama.com/pop-culture/735894-innistrad-chasse-de-minuit-decouvrez-deux-cartes-exclusives-de-la-prochaine-extension-de-magic.html",
+    "previewed_at": "2021-09-06"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=534996&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTurn%2Bthe%2BEarth",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTurn%2Bthe%2BEarth",
+    "edhrec": "https://edhrec.com/route/?cc=Turn+the+Earth"
+  }
+}
