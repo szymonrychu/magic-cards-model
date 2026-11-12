@@ -23,14 +23,19 @@ discard may be a land or a spell, the count may be met by the counter the same
 trigger put on, and the counter and source may be changed in response.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.effects.draw_discard import (
+    _parse_discard_then_cast_discarded_ability_text as ability_reader,
+)
+from magic_cards_model.machines.effects.draw_discard import (
+    _parse_discard_then_cast_discarded_spell_text as spell_reader,
+)
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
 MALCOLM = "Malcolm, Alluring Scoundrel"
 BEARS = "Grizzly Bears"
+_DRAW_DISCARD = "Draw a card, then discard a card."
 
 
 def _board(*, chorus: int, hand=(BEARS,), library=("Island", "Island")):
@@ -196,15 +201,6 @@ def test_four_counters_with_one_removed_in_response_is_met_by_the_new_counter():
     assert bears.zone is Zone.STACK
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "CR 608.2h: a source that left reads its last known counters, but the "
-        "'there are N counters on <subject>' condition reader "
-        "(conditions/objects._there_are_counters_on) reads the live counters of a "
-        "source that is no longer on the battlefield"
-    ),
-)
 def test_malcolm_gone_before_resolution_uses_its_last_known_counters():
     """CR 608.2h: no counter is put on a card that left, but the condition
     reads the source's last known information, and the loot still happens."""
@@ -220,3 +216,125 @@ def test_malcolm_gone_before_resolution_uses_its_last_known_counters():
     assert malcolm.zone is Zone.HAND
     assert malcolm.counter_count("chorus") == 0
     assert bears.zone is Zone.STACK
+
+
+# -- the reader beyond Malcolm's one sentence --------------------------------------
+#
+# No other printing has a discard followed by a cast of the discarded card, so the
+# spell rung, the "that card" form and the paying variant are driven here with a
+# real instant (Opt) as the spell on the stack and the reader called on the oracle-
+# shaped sentence, the way test_scry.py drives `Game.scry` directly. The board, the
+# cards and the engine are real; only the sentence is not printed on a card.
+
+
+def _cast_opt(scenario):
+    casting = scenario.cast("Opt", "alice")
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Island"))
+    return scenario.put_on_stack(casting)
+
+
+def _opt_on_the_stack():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Opt", BEARS],
+            library=["Island", "Island", "Island"],
+            battlefield=["Island", "Forest", "Forest"],
+        )
+        .player("bob", library=["Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario, _cast_opt(scenario)
+
+
+def test_the_spell_rung_offers_the_discarded_card_free():
+    """A spell, not an ability: the stack object is the spell itself (CR 608.2g)."""
+    scenario, opt = _opt_on_the_stack()
+    bears = scenario.find(BEARS, Zone.HAND, "alice")
+    scenario.will_discard(bears, username="alice")
+    scenario.will_take_the_may(True, source="Opt")
+
+    effect = spell_reader(
+        _DRAW_DISCARD + " You may cast the discarded card without paying its mana cost."
+    )
+    assert effect is not None
+    effect(scenario.game, opt)
+
+    assert bears.zone is Zone.STACK
+    scenario.resolve_top()
+    assert bears.zone is Zone.BATTLEFIELD
+
+
+def test_the_that_card_form_reads_the_same_as_the_discarded_card():
+    scenario, opt = _opt_on_the_stack()
+    bears = scenario.find(BEARS, Zone.HAND, "alice")
+    scenario.will_discard(bears, username="alice")
+    scenario.will_take_the_may(True, source="Opt")
+
+    effect = spell_reader(_DRAW_DISCARD + " You may cast that card without paying its mana cost.")
+    assert effect is not None
+    effect(scenario.game, opt)
+
+    assert bears.zone is Zone.STACK
+
+
+def test_the_paying_variant_asks_for_the_mana_cost_instead_of_waiving_it():
+    """Without "without paying its mana cost" the cast pays {1}{G} (CR 601.2h)."""
+    scenario, opt = _opt_on_the_stack()
+    bears = scenario.find(BEARS, Zone.HAND, "alice")
+    scenario.will_discard(bears, username="alice")
+    scenario.will_take_the_may(True, source="Opt")
+    scenario.will_pay_the_mana_cost(True, username="alice")
+
+    effect = spell_reader(_DRAW_DISCARD + " You may cast that card.")
+    assert effect is not None
+    effect(scenario.game, opt)
+
+    assert bears.zone is Zone.STACK
+    assert [land.tapped for land in scenario.game.permanents_controlled_by("alice")].count(
+        True
+    ) >= 2
+
+
+def test_the_paying_variant_cannot_cast_what_it_cannot_afford():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Opt", BEARS], library=["Island", "Island"], battlefield=["Island"])
+        .player("bob", library=["Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    opt = _cast_opt(scenario)
+    bears = scenario.find(BEARS, Zone.HAND, "alice")
+    scenario.will_discard(bears, username="alice")
+    scenario.will_take_the_may(True, source="Opt")
+
+    effect = spell_reader(_DRAW_DISCARD + " You may cast that card.")
+    effect(scenario.game, opt)
+
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def test_an_unconditional_ability_tail_offers_the_cast_without_a_condition():
+    effect = ability_reader(
+        _DRAW_DISCARD + " You may cast the discarded card without paying its mana cost."
+    )
+    assert effect is not None
+
+
+def test_a_head_that_makes_every_player_discard_is_not_read():
+    """ "The discarded card" names one card; "each player discards" makes several
+    owners' cards, so the sentence is left to the readers that can handle it."""
+    sentence = (
+        "Each player discards a card. You may cast the discarded card without paying its mana cost."
+    )
+    assert spell_reader(sentence) is None
+    assert ability_reader(sentence) is None
+
+
+def test_a_tail_without_an_earlier_discard_is_not_read():
+    assert spell_reader("Draw a card. You may cast that card.") is None
+    assert ability_reader("You may cast the discarded card.") is None

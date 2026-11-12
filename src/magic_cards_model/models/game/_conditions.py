@@ -35,6 +35,7 @@ from ..card import (
 )
 from ..card_state import (
     CardState,
+    Counter,
 )
 from ..mana import ManaCost
 from ..zone import Zone
@@ -1889,10 +1890,10 @@ class ConditionsMixin:
         if match := _CONDITION_SELF_COUNTERS.fullmatch(text):
             needed = parse_count(match.group("count") or match.group("count2"))
             kind = (match.group("kind") or match.group("kind2")).lower()
-            if needed is None or source is None:
+            counter = next((each for each in Counter if each.value == kind), None)
+            if needed is None or source is None or counter is None:
                 return None
-            # CR 122.1: counters of any name are counters; the kind is the name.
-            return source.counter_count(kind) >= needed
+            return source.counter_count(counter) >= needed
 
         if match := _CONDITION_LOYALTY_AMONG_NAMED.fullmatch(text):
             needed = parse_count(match.group("count"))

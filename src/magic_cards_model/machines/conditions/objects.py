@@ -264,7 +264,15 @@ def _there_are_counters_on(context: "ConditionContext", match: re.Match[str]) ->
     test = quantity_test(match.group("q"))
     if subject is None or test is None:
         return False
-    return test(_count_of(subject.counters, match.group("kind")))
+    # CR 608.2h: the ability's own source that has since changed zones (CR 400.7: a
+    # new object) is read as it last existed on the battlefield.
+    moved_on = (
+        context.source_stamp is not None
+        and subject.zone is not Zone.BATTLEFIELD
+        and subject.zone_change_stamp != context.source_stamp
+        and subject is context.source
+    )
+    return test(_count_of(_counters_of(subject, past=moved_on), match.group("kind")))
 
 
 def _mana_value_of_subject(context: "ConditionContext", subject: "CardState") -> float:

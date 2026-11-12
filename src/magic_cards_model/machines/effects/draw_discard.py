@@ -3172,6 +3172,11 @@ _CAST_DISCARDED_TAIL_RE = re.compile(
     re.IGNORECASE,
 )
 _DISCARD_WORD_RE = re.compile(r"\bdiscards?\b", re.IGNORECASE)
+#: A head that makes several players discard: "the discarded card" would name one
+#: of several owners' cards, which this reader does not choose between.
+_EVERY_PLAYER_RE = re.compile(
+    r"\b(?:each|every|all) (?:other )?(?:player|players|opponent|opponents)\b", re.IGNORECASE
+)
 
 
 def _discard_then_may_cast_discarded(text: str, *, for_spell: bool) -> Callable | None:
@@ -3191,7 +3196,7 @@ def _discard_then_may_cast_discarded(text: str, *, for_spell: bool) -> Callable 
         return None
     head = whole[: match.start()].strip()
     condition = match.group("condition")
-    if _DISCARD_WORD_RE.search(head) is None:
+    if _DISCARD_WORD_RE.search(head) is None or _EVERY_PLAYER_RE.search(head) is not None:
         return None
     if condition is not None and not _effect_condition_is_readable(condition):
         return None
