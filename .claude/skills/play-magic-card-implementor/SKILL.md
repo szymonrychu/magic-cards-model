@@ -12,7 +12,7 @@ Long run. Implement the mechanics behind the listed cards, merge, release, deplo
 0. Test deploy rights: `kubectl auth can-i create deployments -n mtg-engine`. If no, plan to
    stop after the image release (see the decision log entry on release and deploy) and say so in the first superleader note.
 
-1. `docs/automation/user-decisions.md` (answered decisions and working defaults override
+1. `docs/automation/user-decisions.md` (the decision log entries override
    this skill).
 2. Engine `CLAUDE.md`, `ROADMAP.md`, the tail of `MEMORY.md`, the titles of `memory/*.md`
    (open the relevant ones; `memory/subagents-on-cheaper-model.md` says dispatch subagents
