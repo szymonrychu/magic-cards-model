@@ -1720,3 +1720,7 @@ Flagged by `mise run regression:guard -- --base 57bcac56 --ratchet` on this bran
 - 2026-11-11 T-110 B3: no Modern-legal non-trk printing assimilates (Borg Queen is not Modern legal) or prints "creature types among" (Scryfall, 2026-11-11), so generality is shown inside trk: two differently worded assimilate printings (targeted from any graveyard vs untargeted from the linked exile pile with an "if you can't" fallback) and six Federation printings consuming the count in six positions. CR 701.72c "assimilated with" readers are not built (no legal printing).
 - 2026-11-11 T-110 B3: a changeling is every creature type including Borg (CR 702.73a), so "non-Borg creatures" leaves it out entirely rather than counting every type.
 - 2026-11-11 T-110 B3: "draw a card for every five X" counts complete groups only (floor); CR 107.1a forbids drawing a fractional card.
+
+## T-109 S0: keyword oracle credit
+
+- [Keyword oracle credit and the "it" referent](memory/keyword-oracle-credit-and-it-referent.md) - exalted and ripple had machines but were not credited by keywords.executes; "it gains X" on a trigger now reaches the event subject, not the source

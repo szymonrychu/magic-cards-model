@@ -399,7 +399,7 @@ def _parse_pump_and_becomes_chosen_color_clause(text: str) -> AbilityEffect | No
 #: rewrite, not this reader's), so the subject this reader sees is never the
 #: literal printed name.
 _SELF_KEYWORD_GRANT_UNTIL_EOT_RE = re.compile(
-    r"^(?:it|this permanent) gains "
+    r"^(?P<subject>it|this permanent) gains "
     r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*) "
     r"until end of turn\.?$",
     re.IGNORECASE,
@@ -414,11 +414,27 @@ _SELF_KEYWORD_GRANT_UNTIL_EOT_RE = re.compile(
 #: permanent" alongside "it" for the same self-normalized-name reason as
 #: `_SELF_KEYWORD_GRANT_UNTIL_EOT_RE` above.
 _SELF_CHOICE_KEYWORD_GRANT_UNTIL_EOT_RE = re.compile(
-    r"^(?:it|this permanent) gains your choice of "
+    r"^(?P<subject>it|this permanent) gains your choice of "
     r"(?P<options>[a-z]+(?: [a-z]+)?(?:,\s*[a-z]+(?: [a-z]+)?)*"
     r"(?:,)?\s*or\s+[a-z]+(?: [a-z]+)?) until end of turn\.?$",
     re.IGNORECASE,
 )
+
+
+def _grant_recipient(game: "Game", ability: AbilityOnStack, subject: str) -> CardState | None:
+    """Who "it"/"this permanent" names in a keyword grant that sits on a
+    trigger. "this permanent" is the source; "it" is `_referent_of_it`'s answer,
+    the trigger event's own subject (CR 603.2), so "Whenever a creature you
+    control attacks alone, it gains lifelink until end of turn." (Battlegrace
+    Angel) reaches the attacker, not the Angel. With no event subject (an
+    activated ability, "Whenever this creature attacks, it gains ...") it is
+    the source, as before."""
+    if subject.lower() == "it":
+        return _referent_of_it(game, ability)
+    source = ability.source(game)
+    if source is None or source.zone is not Zone.BATTLEFIELD:
+        return None
+    return source
 
 
 @ABILITY_TEXT.rung("s36", before=["continuous._parse_event_subject_pump_clause"])
@@ -443,9 +459,11 @@ def _parse_self_keyword_grant_until_eot_clause(text: str) -> AbilityEffect | Non
                 return None
             options.append(validated[0])
 
+        subject = match.group("subject")
+
         def choice_effect(game: "Game", ability: AbilityOnStack) -> None:
-            source = ability.source(game)
-            if source is None or source.zone is not Zone.BATTLEFIELD:
+            source = _grant_recipient(game, ability, subject)
+            if source is None:
                 return
             controller = game.controller_of(ability)
             decision = Decision(
@@ -476,9 +494,11 @@ def _parse_self_keyword_grant_until_eot_clause(text: str) -> AbilityEffect | Non
         if keywords is None:
             return None
 
+        subject = match.group("subject")
+
         def plain_effect(game: "Game", ability: AbilityOnStack) -> None:
-            source = ability.source(game)
-            if source is None or source.zone is not Zone.BATTLEFIELD:
+            source = _grant_recipient(game, ability, subject)
+            if source is None:
                 return
             store = continuous_effects(game)
             timestamp = store.tick()

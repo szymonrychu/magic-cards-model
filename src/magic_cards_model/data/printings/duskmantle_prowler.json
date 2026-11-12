@@ -1,0 +1,122 @@
+{
+  "object": "card",
+  "id": "bcb031da-d41a-496a-b78e-0773f6504303",
+  "oracle_id": "9784ccf1-2238-417a-b6d1-cfc2e3dcae5f",
+  "multiverse_ids": [
+    265728
+  ],
+  "mtgo_id": 45550,
+  "mtgo_foil_id": 45551,
+  "tcgplayer_id": 59965,
+  "cardmarket_id": 257063,
+  "name": "Duskmantle Prowler",
+  "lang": "en",
+  "released_at": "2012-07-13",
+  "uri": "https://api.scryfall.com/cards/bcb031da-d41a-496a-b78e-0773f6504303",
+  "scryfall_uri": "https://scryfall.com/card/m13/91/duskmantle-prowler?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:01:34Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/c/bcb031da-d41a-496a-b78e-0773f6504303.jpg?1783940494",
+    "normal": "https://cards.scryfall.io/normal/front/b/c/bcb031da-d41a-496a-b78e-0773f6504303.jpg?1783940494",
+    "large": "https://cards.scryfall.io/large/front/b/c/bcb031da-d41a-496a-b78e-0773f6504303.jpg?1783940494",
+    "png": "https://cards.scryfall.io/png/front/b/c/bcb031da-d41a-496a-b78e-0773f6504303.png?1783940494",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/c/bcb031da-d41a-496a-b78e-0773f6504303.jpg?1783940494",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/c/bcb031da-d41a-496a-b78e-0773f6504303.jpg?1783940494",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/c/bcb031da-d41a-496a-b78e-0773f6504303.webp?1783940494",
+    "grid": "https://cards.scryfall.io/grid/front/b/c/bcb031da-d41a-496a-b78e-0773f6504303.webp?1783940494",
+    "display": "https://cards.scryfall.io/display/front/b/c/bcb031da-d41a-496a-b78e-0773f6504303.webp?1783940494",
+    "art": "https://cards.scryfall.io/art/front/b/c/bcb031da-d41a-496a-b78e-0773f6504303.webp?1783940494",
+    "crop": "https://cards.scryfall.io/crop/front/b/c/bcb031da-d41a-496a-b78e-0773f6504303.webp?1783940494",
+    "jpeg": "https://cards.scryfall.io/normal/front/b/c/bcb031da-d41a-496a-b78e-0773f6504303.jpg?1783940494"
+  },
+  "mana_cost": "{3}{B}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Vampire Rogue",
+  "oracle_text": "Haste (This creature can attack and {T} as soon as it comes under your control.)\nExalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Exalted",
+    "Haste"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "f9b0c6f4-8a4f-4f36-ad3c-e1e16fb8535d",
+  "set": "m13",
+  "set_name": "Magic 2013",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/f9b0c6f4-8a4f-4f36-ad3c-e1e16fb8535d",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Am13&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/m13?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/bcb031da-d41a-496a-b78e-0773f6504303/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9784ccf1-2238-417a-b6d1-cfc2e3dcae5f&unique=prints",
+  "collector_number": "91",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "3593dd7e-c547-4a32-81cd-7da725f60118"
+  ],
+  "illustration_id": "0f3c3ea9-49bc-4190-a174-36ec1e79dbba",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 24441,
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=265728&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDuskmantle%2BProwler",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDuskmantle%2BProwler",
+    "edhrec": "https://edhrec.com/route/?cc=Duskmantle+Prowler"
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "object": "card",
+  "id": "8aaae6a3-ae3c-4b7e-82e8-69147f61ee18",
+  "oracle_id": "e1b7db10-58a1-46fc-ac6c-287393ed96c2",
+  "multiverse_ids": [
+    174959
+  ],
+  "mtgo_id": 31027,
+  "mtgo_foil_id": 31028,
+  "tcgplayer_id": 27775,
+  "cardmarket_id": 19903,
+  "name": "Rhox Charger",
+  "lang": "en",
+  "released_at": "2008-10-03",
+  "uri": "https://api.scryfall.com/cards/8aaae6a3-ae3c-4b7e-82e8-69147f61ee18",
+  "scryfall_uri": "https://scryfall.com/card/ala/145/rhox-charger?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:35:51Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/a/8aaae6a3-ae3c-4b7e-82e8-69147f61ee18.jpg?1783942551",
+    "normal": "https://cards.scryfall.io/normal/front/8/a/8aaae6a3-ae3c-4b7e-82e8-69147f61ee18.jpg?1783942551",
+    "large": "https://cards.scryfall.io/large/front/8/a/8aaae6a3-ae3c-4b7e-82e8-69147f61ee18.jpg?1783942551",
+    "png": "https://cards.scryfall.io/png/front/8/a/8aaae6a3-ae3c-4b7e-82e8-69147f61ee18.png?1783942551",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/a/8aaae6a3-ae3c-4b7e-82e8-69147f61ee18.jpg?1783942551",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/a/8aaae6a3-ae3c-4b7e-82e8-69147f61ee18.jpg?1783942551",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/a/8aaae6a3-ae3c-4b7e-82e8-69147f61ee18.webp?1783942551",
+    "grid": "https://cards.scryfall.io/grid/front/8/a/8aaae6a3-ae3c-4b7e-82e8-69147f61ee18.webp?1783942551",
+    "display": "https://cards.scryfall.io/display/front/8/a/8aaae6a3-ae3c-4b7e-82e8-69147f61ee18.webp?1783942551",
+    "art": "https://cards.scryfall.io/art/front/8/a/8aaae6a3-ae3c-4b7e-82e8-69147f61ee18.webp?1783942551",
+    "crop": "https://cards.scryfall.io/crop/front/8/a/8aaae6a3-ae3c-4b7e-82e8-69147f61ee18.webp?1783942551",
+    "jpeg": "https://cards.scryfall.io/normal/front/8/a/8aaae6a3-ae3c-4b7e-82e8-69147f61ee18.jpg?1783942551"
+  },
+  "mana_cost": "{3}{G}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Rhino Soldier",
+  "oracle_text": "Trample\nExalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Exalted",
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d667aaec-09b7-4406-b6fa-60795132dc11",
+  "set": "ala",
+  "set_name": "Shards of Alara",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/d667aaec-09b7-4406-b6fa-60795132dc11",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aala&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ala?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/8aaae6a3-ae3c-4b7e-82e8-69147f61ee18/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae1b7db10-58a1-46fc-ac6c-287393ed96c2&unique=prints",
+  "collector_number": "145",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "7742047e-0f80-4c0f-a530-d07460165e86"
+  ],
+  "illustration_id": "64cd925e-7463-4cae-a5a7-565eed0fb56f",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 22050,
+  "penny_rank": 16273,
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=174959&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRhox%2BCharger",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRhox%2BCharger",
+    "edhrec": "https://edhrec.com/route/?cc=Rhox+Charger"
+  }
+}

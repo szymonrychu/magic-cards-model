@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "400382a4-aea2-4827-b06a-1b0b3745908b",
+  "oracle_id": "98aa9424-5912-4bd6-9300-b3972a31d8af",
+  "multiverse_ids": [
+    489850
+  ],
+  "mtgo_id": 82388,
+  "tcgplayer_id": 218333,
+  "cardmarket_id": 482829,
+  "name": "Noble Hierarch",
+  "lang": "en",
+  "released_at": "2020-08-07",
+  "uri": "https://api.scryfall.com/cards/400382a4-aea2-4827-b06a-1b0b3745908b",
+  "scryfall_uri": "https://scryfall.com/card/2xm/177/noble-hierarch?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:09:03Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/0/400382a4-aea2-4827-b06a-1b0b3745908b.jpg?1783930143",
+    "normal": "https://cards.scryfall.io/normal/front/4/0/400382a4-aea2-4827-b06a-1b0b3745908b.jpg?1783930143",
+    "large": "https://cards.scryfall.io/large/front/4/0/400382a4-aea2-4827-b06a-1b0b3745908b.jpg?1783930143",
+    "png": "https://cards.scryfall.io/png/front/4/0/400382a4-aea2-4827-b06a-1b0b3745908b.png?1783930143",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/0/400382a4-aea2-4827-b06a-1b0b3745908b.jpg?1783930143",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/0/400382a4-aea2-4827-b06a-1b0b3745908b.jpg?1783930143",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/0/400382a4-aea2-4827-b06a-1b0b3745908b.webp?1783930143",
+    "grid": "https://cards.scryfall.io/grid/front/4/0/400382a4-aea2-4827-b06a-1b0b3745908b.webp?1783930143",
+    "display": "https://cards.scryfall.io/display/front/4/0/400382a4-aea2-4827-b06a-1b0b3745908b.webp?1783930143",
+    "art": "https://cards.scryfall.io/art/front/4/0/400382a4-aea2-4827-b06a-1b0b3745908b.webp?1783930143",
+    "crop": "https://cards.scryfall.io/crop/front/4/0/400382a4-aea2-4827-b06a-1b0b3745908b.webp?1783930143",
+    "jpeg": "https://cards.scryfall.io/normal/front/4/0/400382a4-aea2-4827-b06a-1b0b3745908b.jpg?1783930143"
+  },
+  "mana_cost": "{G}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Human Druid",
+  "oracle_text": "Exalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)\n{T}: Add {G}, {W}, or {U}.",
+  "power": "0",
+  "toughness": "1",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G",
+    "U",
+    "W"
+  ],
+  "keywords": [
+    "Exalted"
+  ],
+  "produced_mana": [
+    "G",
+    "U",
+    "W"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "372dafe8-b5d1-4b81-998f-3ae96b59498a",
+  "set": "2xm",
+  "set_name": "Double Masters",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/372dafe8-b5d1-4b81-998f-3ae96b59498a",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3A2xm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/2xm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/400382a4-aea2-4827-b06a-1b0b3745908b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A98aa9424-5912-4bd6-9300-b3972a31d8af&unique=prints",
+  "collector_number": "177",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "48e2b98c-5467-4671-bd42-4c3746115117"
+  ],
+  "illustration_id": "0a2b9149-9ff1-4097-8377-f3db60ef7ba8",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 774,
+  "preview": {
+    "source": "Andrea Mengucci ",
+    "source_uri": "https://twitter.com/Mengu09/status/1285499578993737731",
+    "previewed_at": "2020-07-21"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=489850&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DNoble%2BHierarch",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DNoble%2BHierarch",
+    "edhrec": "https://edhrec.com/route/?cc=Noble+Hierarch"
+  }
+}

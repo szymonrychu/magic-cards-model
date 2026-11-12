@@ -1,0 +1,123 @@
+{
+  "object": "card",
+  "id": "1e9f43c8-9df6-49df-b145-4a19bc55e8f4",
+  "oracle_id": "34bd39ed-4058-4c65-ba5f-9ac5cf7c166a",
+  "multiverse_ids": [
+    177924
+  ],
+  "mtgo_id": 31853,
+  "mtgo_foil_id": 31854,
+  "tcgplayer_id": 28591,
+  "cardmarket_id": 20765,
+  "name": "Rhox Bodyguard",
+  "lang": "en",
+  "released_at": "2009-02-06",
+  "uri": "https://api.scryfall.com/cards/1e9f43c8-9df6-49df-b145-4a19bc55e8f4",
+  "scryfall_uri": "https://scryfall.com/card/con/122/rhox-bodyguard?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:34:25Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/e/1e9f43c8-9df6-49df-b145-4a19bc55e8f4.jpg?1783942465",
+    "normal": "https://cards.scryfall.io/normal/front/1/e/1e9f43c8-9df6-49df-b145-4a19bc55e8f4.jpg?1783942465",
+    "large": "https://cards.scryfall.io/large/front/1/e/1e9f43c8-9df6-49df-b145-4a19bc55e8f4.jpg?1783942465",
+    "png": "https://cards.scryfall.io/png/front/1/e/1e9f43c8-9df6-49df-b145-4a19bc55e8f4.png?1783942465",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/e/1e9f43c8-9df6-49df-b145-4a19bc55e8f4.jpg?1783942465",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/e/1e9f43c8-9df6-49df-b145-4a19bc55e8f4.jpg?1783942465",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/e/1e9f43c8-9df6-49df-b145-4a19bc55e8f4.webp?1783942465",
+    "grid": "https://cards.scryfall.io/grid/front/1/e/1e9f43c8-9df6-49df-b145-4a19bc55e8f4.webp?1783942465",
+    "display": "https://cards.scryfall.io/display/front/1/e/1e9f43c8-9df6-49df-b145-4a19bc55e8f4.webp?1783942465",
+    "art": "https://cards.scryfall.io/art/front/1/e/1e9f43c8-9df6-49df-b145-4a19bc55e8f4.webp?1783942465",
+    "crop": "https://cards.scryfall.io/crop/front/1/e/1e9f43c8-9df6-49df-b145-4a19bc55e8f4.webp?1783942465",
+    "jpeg": "https://cards.scryfall.io/normal/front/1/e/1e9f43c8-9df6-49df-b145-4a19bc55e8f4.jpg?1783942465"
+  },
+  "mana_cost": "{3}{G}{W}",
+  "cmc": 5.0,
+  "type_line": "Creature \u2014 Rhino Monk Soldier",
+  "oracle_text": "Exalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)\nWhen this creature enters, you gain 3 life.",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "G",
+    "W"
+  ],
+  "color_identity": [
+    "G",
+    "W"
+  ],
+  "keywords": [
+    "Exalted"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "76b2db58-904c-4e49-8580-9f62f7b3cca4",
+  "set": "con",
+  "set_name": "Conflux",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/76b2db58-904c-4e49-8580-9f62f7b3cca4",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acon&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/con?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/1e9f43c8-9df6-49df-b145-4a19bc55e8f4/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A34bd39ed-4058-4c65-ba5f-9ac5cf7c166a&unique=prints",
+  "collector_number": "122",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist_ids": [
+    "0a0b2cc1-67dd-4dec-9e41-49af469012cb"
+  ],
+  "illustration_id": "eabe95e7-8a25-4775-80d0-0b9bae9b53c6",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 26060,
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=177924&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRhox%2BBodyguard",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRhox%2BBodyguard",
+    "edhrec": "https://edhrec.com/route/?cc=Rhox+Bodyguard"
+  }
+}
