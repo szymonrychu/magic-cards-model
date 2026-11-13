@@ -50,7 +50,10 @@ says only "Protection" and never from what.
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.legal_actions import legal_actions
 from magic_cards_model.models import Zone
+from magic_cards_model.models.action import ActionKind
+from magic_cards_model.models.card_state import CardState, on_battlefield
 from magic_cards_model.models.game import protection_qualities
 from tests.cards import card
 
@@ -639,3 +642,103 @@ def test_the_same_permanent_can_target_it_once_it_is_no_longer_cast_this_turn():
 
     assert ability is not None
     assert scenario.game.why_cannot_target(ability, emrakul) is None
+
+
+# -- protection is a permanent's, CR 702.16b/110.1/113.6 ---------------------
+
+
+def _emrakul_spell_on_the_stack() -> tuple[Scenario, CardState]:
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Emrakul, the Promised End"], battlefield=["Wastes"] * 13)
+        .player("bob", hand=["Consign to Memory"], battlefield=["Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    emrakul = scenario.cast_onto_stack("Emrakul, the Promised End", username="alice", auto=True)
+    scenario.pass_priority("alice")
+    return scenario, emrakul
+
+
+def test_consign_to_memory_counters_emrakul_while_it_is_a_spell():
+    """CR 702.16b protects a permanent; a spell on the stack is not one (CR 110.1)."""
+    scenario, emrakul = _emrakul_spell_on_the_stack()
+    (island,) = scenario.untapped_sources("Island", username="bob")
+    scenario.cast_and_resolve("Consign to Memory", island, username="bob", targets=[emrakul])
+    assert emrakul.zone is Zone.GRAVEYARD
+
+
+def test_emrakul_on_the_stack_is_a_consign_candidate():
+    scenario, emrakul = _emrakul_spell_on_the_stack()
+    consign = scenario.find("Consign to Memory", Zone.HAND, "bob")
+    candidates = {
+        candidate
+        for action in legal_actions(scenario.game, "bob")
+        if action.kind is ActionKind.CAST and action.card_id == consign.id
+        for slot in action.target_slots
+        for candidate in slot.candidates
+    }
+    assert emrakul.id in candidates
+
+
+def test_protection_does_not_follow_a_card_into_the_graveyard():
+    """CR 113.6: Progenitus' protection functions only on the battlefield."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Raise Dead"], battlefield=["Swamp"], graveyard=["Progenitus"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    progenitus = scenario.find("Progenitus", Zone.GRAVEYARD, "alice")
+    (swamp,) = scenario.untapped_sources("Swamp", username="alice")
+    scenario.cast_and_resolve("Raise Dead", swamp, username="alice", targets=[progenitus])
+    assert progenitus.zone is Zone.HAND
+
+
+def test_fatal_push_still_cannot_target_emrakul_on_the_battlefield():
+    """Pins the protection message, not Fatal Push's mana value check."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Fatal Push"], battlefield=["Swamp"])
+        .player("bob", battlefield=["Emrakul, the Promised End"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    emrakul = scenario.creature("Emrakul, the Promised End", "bob")
+    (swamp,) = scenario.untapped_sources("Swamp", username="alice")
+    with pytest.raises(ValueError, match="protection from instants"):
+        scenario.cast_and_resolve("Fatal Push", swamp, username="alice", targets=[emrakul])
+
+
+def test_on_battlefield_only_for_battlefield_cards():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            graveyard=["Grizzly Bears"],
+            exile=["Grizzly Bears"],
+            battlefield=["Grizzly Bears", "Forest"],
+            hand=["Grizzly Bears", "Giant Growth"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    for zone in (Zone.HAND, Zone.GRAVEYARD, Zone.EXILE):
+        assert not on_battlefield(scenario.find("Grizzly Bears", zone, "alice"))
+    assert on_battlefield(scenario.creature("Grizzly Bears", "alice"))
+    (forest,) = scenario.untapped_sources("Forest", username="alice")
+    giant_growth = scenario.cast_onto_stack(
+        "Giant Growth",
+        forest,
+        username="alice",
+        targets=[scenario.creature("Grizzly Bears", "alice")],
+    )
+    assert giant_growth.zone is Zone.STACK
+    assert not on_battlefield(giant_growth)
+    assert not on_battlefield(scenario.player("alice"))

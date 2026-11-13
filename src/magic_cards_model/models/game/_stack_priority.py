@@ -137,6 +137,7 @@ from ..card_state import (
     CardState,
     ChoiceKind,
     TargetRef,
+    on_battlefield,
 )
 from ..mana import ManaCost
 from ..player import Player
@@ -3022,7 +3023,9 @@ class StackPriorityMixin:
                 source_state=source_state,
                 source_mana_value=source_mana_value,
             )
-        if not isinstance(target, CardState):
+        if not isinstance(target, CardState) or not on_battlefield(target):
+            # CR 702.16b protects a permanent or a player, and a permanent is
+            # on the battlefield (CR 110.1, CR 113.6).
             return None
         for quality in self._effective_protection_qualities(target):
             if self._player_quality_protects(
@@ -3083,7 +3086,7 @@ class StackPriorityMixin:
             )
         if not isinstance(target, CardState):
             return None
-        if target.zone is not Zone.BATTLEFIELD:
+        if not on_battlefield(target):
             # CR 702.18a speaks of a permanent, and a permanent is on the
             # battlefield (CR 110.1).
             return None
@@ -3137,7 +3140,7 @@ class StackPriorityMixin:
             pronoun = "them"
             rule_plain = "CR 702.11c"
         elif isinstance(target, CardState):
-            if target.zone is not Zone.BATTLEFIELD:
+            if not on_battlefield(target):
                 # CR 702.11b speaks of a permanent, and a permanent is on the
                 # battlefield (CR 110.1).
                 return None
@@ -3343,28 +3346,33 @@ class StackPriorityMixin:
         """Every quality `target` has protection from right now: its own printed
         text plus anything granted to it by another static ability (CR 613.1f).
 
+        Protection protects a permanent or a player only (CR 702.16b), a
+        permanent is a card or token on the battlefield (CR 110.1), and the
+        abilities of an object other than an instant or sorcery spell function
+        only on the battlefield (CR 113.6). So a card in any other zone - a
+        spell on the stack, a card in a graveyard - has no protection at all.
+
         Akroma's Memorial's "creatures you control have ... protection from
         black and from red" is layer 6, not the permanent's own printing, so
         `protection_qualities(target.card)` alone misses it - it only reads
         what `machines/layers.py` left in `Characteristics.abilities` as a
         "Protection from <quality>" line, the same way `combat.has_keyword`
-        reads a granted keyword off the same list. A permanent not on the
-        battlefield (a spell on the stack, say) has no computed board to ask,
-        so only its own printed protection applies there.
+        reads a granted keyword off the same list.
         """
+        if not on_battlefield(target):
+            return []
         # The face that is up (CR 710.2, CR 712.8d): a flip card's protection
         # sits on its flipped half only.
         qualities = _qualities_from_text(target.oracle_text)
-        if target.zone is Zone.BATTLEFIELD:
-            try:
-                characteristics = self.characteristics_of(target)
-            except KeyError:
-                characteristics = None
-            if characteristics is not None:
-                for line in characteristics.abilities:
-                    for quality in _qualities_from_text(line):
-                        if quality not in qualities:
-                            qualities.append(quality)
+        try:
+            characteristics = self.characteristics_of(target)
+        except KeyError:
+            characteristics = None
+        if characteristics is not None:
+            for line in characteristics.abilities:
+                for quality in _qualities_from_text(line):
+                    if quality not in qualities:
+                        qualities.append(quality)
         return qualities
 
     def why_cannot_target(self: "Game", spell: StackObject, target: Targetable) -> str | None:
