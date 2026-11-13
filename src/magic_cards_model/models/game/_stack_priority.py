@@ -137,7 +137,7 @@ from ..card_state import (
     CardState,
     ChoiceKind,
     TargetRef,
-    is_permanent,
+    on_battlefield,
 )
 from ..mana import ManaCost
 from ..player import Player
@@ -3023,7 +3023,7 @@ class StackPriorityMixin:
                 source_state=source_state,
                 source_mana_value=source_mana_value,
             )
-        if not isinstance(target, CardState) or not is_permanent(target):
+        if not isinstance(target, CardState) or not on_battlefield(target):
             # CR 702.16b protects a permanent or a player, and a permanent is
             # on the battlefield (CR 110.1, CR 113.6).
             return None
@@ -3086,7 +3086,7 @@ class StackPriorityMixin:
             )
         if not isinstance(target, CardState):
             return None
-        if not is_permanent(target):
+        if not on_battlefield(target):
             # CR 702.18a speaks of a permanent, and a permanent is on the
             # battlefield (CR 110.1).
             return None
@@ -3140,7 +3140,7 @@ class StackPriorityMixin:
             pronoun = "them"
             rule_plain = "CR 702.11c"
         elif isinstance(target, CardState):
-            if not is_permanent(target):
+            if not on_battlefield(target):
                 # CR 702.11b speaks of a permanent, and a permanent is on the
                 # battlefield (CR 110.1).
                 return None
@@ -3359,7 +3359,7 @@ class StackPriorityMixin:
         "Protection from <quality>" line, the same way `combat.has_keyword`
         reads a granted keyword off the same list.
         """
-        if not is_permanent(target):
+        if not on_battlefield(target):
             return []
         # The face that is up (CR 710.2, CR 712.8d): a flip card's protection
         # sits on its flipped half only.

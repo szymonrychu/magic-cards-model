@@ -53,7 +53,7 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.legal_actions import legal_actions
 from magic_cards_model.models import Zone
 from magic_cards_model.models.action import ActionKind
-from magic_cards_model.models.card_state import CardState, is_permanent
+from magic_cards_model.models.card_state import CardState, on_battlefield
 from magic_cards_model.models.game import protection_qualities
 from tests.cards import card
 
@@ -714,7 +714,7 @@ def test_fatal_push_still_cannot_target_emrakul_on_the_battlefield():
         scenario.cast_and_resolve("Fatal Push", swamp, username="alice", targets=[emrakul])
 
 
-def test_is_permanent_only_for_battlefield_cards():
+def test_on_battlefield_only_for_battlefield_cards():
     scenario = (
         Scenario()
         .manual_turn_based_actions()
@@ -730,8 +730,8 @@ def test_is_permanent_only_for_battlefield_cards():
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     for zone in (Zone.HAND, Zone.GRAVEYARD, Zone.EXILE):
-        assert not is_permanent(scenario.find("Grizzly Bears", zone, "alice"))
-    assert is_permanent(scenario.creature("Grizzly Bears", "alice"))
+        assert not on_battlefield(scenario.find("Grizzly Bears", zone, "alice"))
+    assert on_battlefield(scenario.creature("Grizzly Bears", "alice"))
     (forest,) = scenario.untapped_sources("Forest", username="alice")
     giant_growth = scenario.cast_onto_stack(
         "Giant Growth",
@@ -740,5 +740,5 @@ def test_is_permanent_only_for_battlefield_cards():
         targets=[scenario.creature("Grizzly Bears", "alice")],
     )
     assert giant_growth.zone is Zone.STACK
-    assert not is_permanent(giant_growth)
-    assert not is_permanent(scenario.player("alice"))
+    assert not on_battlefield(giant_growth)
+    assert not on_battlefield(scenario.player("alice"))

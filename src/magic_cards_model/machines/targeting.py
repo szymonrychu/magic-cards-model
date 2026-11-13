@@ -106,7 +106,7 @@ from magic_cards_model.text_norm import collapsed
 
 from ..data.subtypes import noncreature_subtype_card_type
 from ..models.card import Card, Color, Layout, Supertype, Type, has_changeling
-from ..models.card_state import CardState, ChoiceKind, TargetRef
+from ..models.card_state import CardState, ChoiceKind, TargetRef, on_battlefield
 from ..models.zone import Zone
 from ..numbers import parse_count
 from ..serialization import SortedFrozenSet
@@ -7728,7 +7728,7 @@ def ignores_hexproof(game: "Game", target: Any, source_controller: str) -> bool:
 def ward_is_switched_off(game: "Game", warded: CardState) -> bool:
     """Whether "Ward abilities of those creatures don't trigger." covers this
     permanent - one an opponent of that static's controller controls."""
-    if warded.zone is not Zone.BATTLEFIELD:
+    if not on_battlefield(warded):
         return False
     warded_controller = game.controller_of(warded).username
     for controller, read in _hexproof_ignores_on_battlefield(game):
