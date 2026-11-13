@@ -3855,6 +3855,19 @@ class CardState(EngineModel):
         return state
 
 
+def is_permanent(obj: object) -> bool:
+    """True iff `obj` is a card or token on the battlefield (CR 110.1).
+
+    The single home of the default that a card's printed static keywords
+    (protection, shroud, hexproof) function only on the battlefield: CR 113.6
+    says abilities of objects other than instant or sorcery spells usually
+    function only while the object is on the battlefield, and CR 702.16b,
+    CR 702.18a and CR 702.11b speak of a permanent. A player is not a
+    permanent; callers keep handling players themselves.
+    """
+    return isinstance(obj, CardState) and obj.zone is Zone.BATTLEFIELD
+
+
 def bind_all_to_game(states: Iterable[CardState], game: Any) -> None:
     """`bind_to_game` (CR 613.5), over every `CardState` `game` holds.
 

@@ -49,6 +49,7 @@ from ..models.card_state import (
     ExileMarker,
     FaceDownCharacteristics,
     TargetRef,
+    is_permanent,
 )
 from ..models.mana import ManaCost, ManaSpend
 from ..models.zone import Zone
@@ -3852,7 +3853,7 @@ def _protection_refusal_for_attachment(game: Any, attached: CardState, host: Any
     printed and a layer-6-granted protection answer alike. A host that is not
     a card on the battlefield (a player, or nothing) is not asked here.
     """
-    if not isinstance(host, CardState) or host.zone is not Zone.BATTLEFIELD:
+    if not isinstance(host, CardState) or not is_permanent(host):
         return None
     quality = game.protection_quality_against(host, attached)
     if quality is None:
